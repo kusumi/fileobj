@@ -1,0 +1,54 @@
+# cstruct sample
+# usage:
+#     :cstruct <cstruct_name>
+#     :cstruct <path_to_cstruct_file> <cstruct_name>
+
+struct usb_descriptor_header {
+	u8  bLength;
+	u8  bDescriptorType;
+};
+
+struct usb_device_descriptor {
+	struct usb_descriptor_header hdr;
+	u16le bcdUSB;
+	u8  bDeviceClass;
+	u8  bDeviceSubClass;
+	u8  bDeviceProtocol;
+	u8  bMaxPacketSize0;
+	u16le idVendor;
+	u16le idProduct;
+	u16le bcdDevice;
+	u8  iManufacturer;
+	u8  iProduct;
+	u8  iSerialNumber;
+	u8  bNumConfigurations;
+};
+
+struct usb_config_descriptor {
+	struct usb_descriptor_header hdr;
+	u16le wTotalLength;
+	u8  bNumInterfaces;
+	u8  bConfigurationValue;
+	u8  iConfiguration;
+	u8  bmAttributes;
+	u8  bMaxPower;
+};
+
+struct usb_interface_descriptor {
+	struct usb_descriptor_header hdr;
+	u8  bInterfaceNumber;
+	u8  bAlternateSetting;
+	u8  bNumEndpoints;
+	u8  bInterfaceClass;
+	u8  bInterfaceSubClass;
+	u8  bInterfaceProtocol;
+	u8  iInterface;
+};
+
+struct usb_endpoint_descriptor {
+	struct usb_descriptor_header hdr;
+	u8  bEndpointAddress;
+	u8  bmAttributes;
+	u16le wMaxPacketSize;
+	u8  bInterval;
+};
