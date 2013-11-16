@@ -1,6 +1,14 @@
 fileobj
 =======
 
+## Prerequisites
+
++ Python 2.5, 2.6 or 2.7
+
++ Python 3.x is not supported
+
++ Works on Linux and *BSD
+
 ## Install
 
 + Uninstall previous version if exists
