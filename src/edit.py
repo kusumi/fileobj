@@ -139,16 +139,19 @@ class Console (console.Console):
 
     def __sync(self, n, key, seq, arg):
         if key == EDIT:
-            def pfn(i):
-                return self.write_buffer(n, seq)
-            if pfn(0) == -1:
+            if self.write_buffer(n, seq) == -1:
                 pfn = self.co.get_prev_context()
+            else:
+                pfn = None
             def fn(i):
                 try:
                     self.co.extend_trail()
-                    self.go_right(arg.delta)
-                    pfn(i)
-                    self.go_left()
+                    self.co.add_pos(arg.delta)
+                    if pfn:
+                        pfn(i)
+                    else:
+                        self.write_buffer(n, seq)
+                    self.co.add_pos(-1)
                 finally:
                     self.co.shrink_trail()
             self.co.set_prev_context(fn)
@@ -177,6 +180,7 @@ class _binary (Console):
 
     def handle_write(self, x):
         self.write(int(chr(x), 16))
+        self.co.lrepaintf(self.low)
         return EDIT
 
     def handle_escape(self):
@@ -213,11 +217,8 @@ class _binary (Console):
 
     def write(self, x):
         self._do_write(x)
-        if not self.low:
-            self.co.lrepaintf(True)
-        else:
+        if self.low:
             self.co.add_pos(1)
-            self.co.lrepaintf()
         self.low = not self.low
 
     def write_buffer(self, n, seq):
@@ -228,7 +229,6 @@ class _binary (Console):
         self.low = False
         ret = self._do_write_buffer(n, seq, pad)
         self.co.add_pos(ret)
-        self.co.lrepaintf()
 
 class BI (_binary, _insert):
     def _do_write(self, x):
@@ -291,6 +291,7 @@ class _ascii (Console):
 
     def handle_write(self, x):
         self.write(x)
+        self.co.lrepaintf()
         return EDIT
 
     def handle_escape(self):
@@ -320,12 +321,10 @@ class _ascii (Console):
     def write(self, x):
         self._do_write(x)
         self.co.add_pos(1)
-        self.co.lrepaintf()
 
     def write_buffer(self, n, seq):
         ret = self._do_write_buffer(n, seq)
         self.co.add_pos(ret)
-        self.co.lrepaintf()
 
 class AI (_ascii, _insert):
     def _do_write(self, x):

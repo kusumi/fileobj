@@ -65,6 +65,8 @@ class Fileobj (romap.Fileobj):
             log.error(e)
         finally:
             super(Fileobj, self).cleanup()
+            if self.__dead:
+                open(self.get_path(), "w").close()
             if not a:
                 os.utime(self.get_path(),
                     (l[stat.ST_ATIME], l[stat.ST_MTIME]))
@@ -94,10 +96,10 @@ class Fileobj (romap.Fileobj):
         self.__stat = os.stat(self.get_path())
 
     def read(self, x, n):
-        if self.is_empty():
-            return ''
-        else:
+        if not self.is_empty():
             return super(Fileobj, self).read(x, n)
+        else:
+            return ''
 
     def insert(self, x, s, rec=True):
         size = self.get_size()
@@ -179,6 +181,7 @@ class Fileobj (romap.Fileobj):
         if size > n:
             self.map.resize(size - n)
         else:
+            os.utime(self.get_path(), None)
             self.__dead = True
         self.__dirty = True
         self.__sync = False
