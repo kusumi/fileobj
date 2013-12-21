@@ -176,9 +176,6 @@ def get_release_string():
     """Return kernel release string"""
     return platform.release()
 
-def get_nosup_string(s):
-    return "%s not supported" % s
-
 def raise_no_impl(s):
     raise NotImplementedError("No %s" % s)
 

@@ -203,10 +203,7 @@ def is_error(f):
     return _test(get_type(f), _t_error)
 
 def _test(x, bits):
-    if x & bits:
-        return True
-    else:
-        return False
+    return (x & bits) != 0
 
 def get_path_failure_message(o):
     f = o.path

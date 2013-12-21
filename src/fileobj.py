@@ -191,19 +191,26 @@ class Fileobj (object):
 
     def search(self, x, s, end=-1):
         """Return -1 if not found, -2 if interrupted"""
-        raise FileobjError(util.get_nosup_string("search"))
+        self.raise_no_support("search")
     def rsearch(self, x, s, end=-1):
         """Return -1 if not found, -2 if interrupted"""
-        raise FileobjError(util.get_nosup_string("backward search"))
+        self.raise_no_support("backward search")
 
     def read(self, x, n):
-        raise FileobjError(util.get_nosup_string("read"))
+        self.raise_no_support("read")
     def insert(self, x, s, rec=True):
-        raise FileobjError(util.get_nosup_string("insert"))
+        self.raise_no_support("insert")
     def replace(self, x, s, rec=True):
-        raise FileobjError(util.get_nosup_string("replace"))
+        self.raise_no_support("replace")
     def delete(self, x, n, rec=True):
-        raise FileobjError(util.get_nosup_string("delete"))
+        self.raise_no_support("delete")
+
+    def raise_no_support(self, s):
+        if setting.use_readonly and \
+            s in ("insert", "replace", "delete"):
+            raise FileobjError("Using readonly mode")
+        else:
+            raise FileobjError("%s not supported" % s)
 
     def get_undo_size(self):
         return self.__attr.undo.get_undo_log_size()

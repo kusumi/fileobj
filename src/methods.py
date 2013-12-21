@@ -75,7 +75,7 @@ def test_delete_raise(self):
 def __test_permission_raise(self, s):
     fn = getattr(self.co, "test_" + s)
     if not fn():
-        raise fileobj.FileobjError(util.get_nosup_string(s))
+        self.co.raise_no_support(s)
 
 def test_empty_raise(self):
     if self.co.is_empty():

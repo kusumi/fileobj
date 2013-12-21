@@ -1,6 +1,12 @@
 fileobj
 =======
 
+## About
+
++ [http://sourceforge.net/projects/fileobj/](http://sourceforge.net/projects/fileobj/)
+
++ fileobj is a hex editor with vi like interface. This software is written in Python and works on Python 2.5, 2.6 and 2.7. It works on Linux, NetBSD, OpenBSD, FreeBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, saving buffers, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
+
 ## Prerequisites
 
 + Python 2.5, 2.6 or 2.7
