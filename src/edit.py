@@ -48,6 +48,7 @@ class Console (console.Console):
             self.co.flash(e)
         finally:
             assert not self.co.is_barrier_active()
+            self.co.cleanup_region()
             self.co.shrink_trail()
             self.co.lrepaintf()
             self.set_console(None)
@@ -274,14 +275,12 @@ class RangeBR (BR):
     def write_buffer(self, n, seq):
         methods.range_replace(
             self, None, None, get_ascii(*seq[:2]), None)
-        self.co.cleanup_region()
         return -1
 
 class BlockBR (BR):
     def write_buffer(self, n, seq):
         methods.block_replace(
             self, None, None, get_ascii(*seq[:2]), None)
-        self.co.cleanup_region()
         return -1
 
 class _ascii (Console):
@@ -348,14 +347,12 @@ class RangeAR (AR):
     def write_buffer(self, n, seq):
         methods.range_replace(
             self, None, None, chr(seq[0]), None)
-        self.co.cleanup_region()
         return -1
 
 class BlockAR (AR):
     def write_buffer(self, n, seq):
         methods.block_replace(
             self, None, None, chr(seq[0]), None)
-        self.co.cleanup_region()
         return -1
 
 def get_ascii(upper, lower):

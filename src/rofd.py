@@ -67,8 +67,8 @@ class Fileobj (fileobj.Fileobj):
         self.set_align(0)
         self.set_window(1, 1)
         self.open_file('r+')
-        ret = kernel.get_buffer_size(self.get_path()) # may raise exception
-        self.set_size(ret)
+        self.set_size(
+            kernel.get_buffer_size(self.get_path())) # may raise
 
     def cleanup(self):
         if self.fd and not self.fd.closed:
