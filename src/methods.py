@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -246,21 +246,6 @@ def __go_prev_matched(self, cnt, fn):
             self.co.flash("Search interrupted")
             return
 
-_si_dict = {
-    "KB": util.KB,
-    "MB": util.MB,
-    "GB": util.GB,
-    "TB": util.TB,
-    "PB": util.PB,
-    "EB": util.EB, }
-_bi_dict = {
-    "KIB": util.KiB,
-    "MIB": util.MiB,
-    "GIB": util.GiB,
-    "TIB": util.TiB,
-    "PIB": util.PiB,
-    "EIB": util.EiB, }
-
 def start_read_delayed_input(self, amp, ope, args, raw):
     self.co.start_read_delayed_input(
         literal.bracket2_beg.seq[0], literal.bracket2_end.seq[0])
@@ -270,44 +255,17 @@ def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
     self.co.show("")
     self.ope.clear()
-    if not s:
+    ret = util.parse_byte_string(s, self.co.get_sector_size())
+    if ret == 0:
+        return
+    elif ret is None:
         self.co.flash()
         return
-    ss = s[-2:].upper()
-    n = _si_dict.get(ss, 1)
-    if n > 1:
-        s = s[:-len(ss)]
-    else:
-        ss = s[-3:].upper()
-        n = _bi_dict.get(ss, 1)
-        if n > 1:
-            s = s[:-len(ss)]
-        else:
-            n = 1
-            ss = s[-3:].upper()
-            if ss == "LBA":
-                n = self.co.get_sector_size()
-                if n < 0:
-                    n = 1
-            if n > 1:
-                s = s[:-len(ss)]
-    base = 10
-    if s.startswith("0b"):
-        s, base = s[2:], 2
-    elif s.startswith("0x"):
-        s, base = s[2:], 16
-    elif s.startswith("0"):
-        s, base = s[1:], 8
-    if not s:
-        s = "1"
-    try:
-        for s in str(n * int(s, base)):
-            if self.ope.process_incoming(ord(s))[0]:
-                self.co.flash()
-                return
-        return CONTINUE
-    except ValueError:
-        self.co.flash()
+    for s in str(ret):
+        if self.ope.process_incoming(ord(s))[0]:
+            self.co.flash()
+            return
+    return CONTINUE
 
 def goto_first_buffer(self, amp, ope, args, raw):
     if self.co.get_buffer_count() > 1:

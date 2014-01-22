@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -78,10 +78,10 @@ class Fileobj (romap.Fileobj):
         return self.__dirty
 
     def get_size(self):
-        if self.__dead:
-            return 0
-        else:
+        if not self.__dead:
             return super(Fileobj, self).get_size()
+        else:
+            return 0
 
     def sync(self):
         self.map.flush()

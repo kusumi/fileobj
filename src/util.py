@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -185,7 +185,73 @@ GB = MB * KB
 TB = GB * KB
 PB = TB * KB
 EB = PB * KB
-_si_dict = {
+
+KiB = 1024
+MiB = KiB * KiB
+GiB = MiB * KiB
+TiB = GiB * KiB
+PiB = TiB * KiB
+EiB = PiB * KiB
+
+try:
+    PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
+except Exception:
+    PAGE_SIZE = 4 * KiB # pretend 4 KiB
+
+_str_size_dict = {
+    "KB" : KB,
+    "MB" : MB,
+    "GB" : GB,
+    "TB" : TB,
+    "PB" : PB,
+    "EB" : EB,
+    "KIB": KiB,
+    "MIB": MiB,
+    "GIB": GiB,
+    "TIB": TiB,
+    "PIB": PiB,
+    "EIB": EiB, }
+
+def parse_byte_string(s, sector_size=-1):
+    if not s:
+        return None
+    for k, v in _str_size_dict.items():
+        if s[-len(k):].upper() == k:
+            n = v
+            s = s[:-len(k)]
+            break
+    else:
+        if s[-1].upper() == "B":
+            n = 1
+            s = s[:-1]
+        elif s[-3:].upper() == "LBA":
+            if sector_size == -1:
+                return None
+            n = sector_size
+            s = s[:-3]
+        else:
+            n = 1
+    base = 10
+    if s == "0":
+        s, base = "0", 10
+    elif s.startswith("0b"):
+        s, base = s[2:], 2
+    elif s.startswith("0x"):
+        s, base = s[2:], 16
+    elif s.startswith("0"):
+        s, base = s[1:], 8
+    if not s:
+        s = "1"
+    try:
+        ret = n * int(s, base)
+        if ret >= 0:
+            return ret
+        else:
+            return 0
+    except ValueError:
+        return None
+
+_si_str_dict = {
     1 : "B",
     KB: "KB",
     MB: "MB",
@@ -194,13 +260,7 @@ _si_dict = {
     PB: "PB",
     EB: "EB", }
 
-KiB = 1024
-MiB = KiB * KiB
-GiB = MiB * KiB
-TiB = GiB * KiB
-PiB = TiB * KiB
-EiB = PiB * KiB
-_bi_dict = {
+_bi_str_dict = {
     1  : "B",
     KiB: "KiB",
     MiB: "MiB",
@@ -209,18 +269,13 @@ _bi_dict = {
     PiB: "PiB",
     EiB: "EiB", }
 
-try:
-    PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
-except Exception:
-    PAGE_SIZE = 4 * KiB # pretend 4 KiB
-
 def get_byte_string(arg):
     if arg < 0:
         return "%d[B]" % int(arg)
     if setting.use_siprefix:
-        d = _si_dict
+        d = _si_str_dict
     else:
-        d = _bi_dict
+        d = _bi_str_dict
     for n in reversed(sorted(d.keys())):
         x = 1.0 * arg / n
         if x >= 1:

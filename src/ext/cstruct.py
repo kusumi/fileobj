@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -216,6 +216,8 @@ def get_text(co, fo, args):
             return "No struct name"
     else:
         f = fileobj.setting.get_ext_cstruct_path()
+        if fileobj.path.is_noent(f):
+            return "Need %s with struct definition" % f
         if not fileobj.path.is_file(f):
             return "Can not read %s" % f
 
@@ -244,6 +246,6 @@ def get_text(co, fo, args):
             buf = fo.read(pos, o.get_size())
             l.extend(o.get_lines(buf, '', 0))
         else:
-            l.append("No such struct %s" % x)
+            l.append("struct %s is not defined in %s" % (x, f))
         l.append('')
     return l

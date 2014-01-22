@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,4 +21,4 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = 'v0.6.5'
+__version__ = 'v0.6.6'

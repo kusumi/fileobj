@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -84,10 +84,10 @@ def debug(o):
     return _log(o, logging.DEBUG)
 def info(o):
     return _log(o, logging.INFO)
-def error(o):
-    return _log(o, logging.ERROR)
 def warning(o):
     return _log(o, logging.WARNING)
+def error(o):
+    return _log(o, logging.ERROR)
 def critical(o):
     return _log(o, logging.CRITICAL)
 

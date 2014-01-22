@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,7 @@ class Allocator (object):
             return -1
 
     def __is_ro_class(self, cls):
-        if cls._insert or cls._replace or cls._delete:
-            return False
-        else:
-            return True
+        return not (cls._insert or cls._replace or cls._delete)
 
     def __get_ro_class(self, cls):
         if self.__is_ro_class(cls):
@@ -94,7 +91,9 @@ class Allocator (object):
             if cls._enabled:
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
-                    if size != -1 and size < setting.mmap_thresh:
+                    if size == -1:
+                        log.error("Failed to read size of %s" % f)
+                    elif size < setting.mmap_thresh:
                         if self.__is_ro_class(cls):
                             cls = self.robuf
                         else:

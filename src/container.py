@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -152,7 +152,7 @@ class Container (object):
 
     def __alloc_buffer(self, f):
         if not self.has_buffer(f):
-            o = allocator.alloc(path.get_path(f))
+            o = allocator.alloc(f)
             if o:
                 return o
             if not self.has_buffer(''):
