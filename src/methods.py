@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import os
 import platform
 import struct
@@ -94,7 +95,7 @@ def __get_range(self):
 def __get_block(self):
     beg, end, map = self.co.get_region_range()
     siz = end % map.x - beg % map.x + 1
-    cnt = (end - beg) / map.x + 1
+    cnt = (end - beg) // map.x + 1
     return beg, end, map.x, siz, cnt
 
 def go_up(self, amp=None, ope=None, args=None, raw=None):
@@ -451,8 +452,8 @@ def show_current_sector(self, amp, ope, args, raw):
     else:
         self.co.show("%s %d[sectors] at %d" % (
             self.co.get_short_path(),
-            self.co.get_size() / sector_size,
-            self.co.get_pos() / sector_size))
+            self.co.get_size() // sector_size,
+            self.co.get_pos() // sector_size))
 
 def show_self(self, amp, ope, args, raw):
     self.co.show(self)

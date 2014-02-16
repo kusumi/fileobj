@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import string
 import sys
 
@@ -258,9 +259,9 @@ class BR (_binary, _replace):
     def _do_write_buffer(self, n, seq, pad):
         seq *= n
         if pad:
-            siz = len(seq) / n
+            siz = len(seq) // n
             for i in range(siz, siz * (n + 1), siz):
-                x = self.co.get_pos() + i / 2 - 1
+                x = self.co.get_pos() + i // 2 - 1
                 if x < self.co.get_size():
                     s = self.co.read(x, 1)
                 else:

@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 import fileobj.extension
 import fileobj.util
 
@@ -51,7 +53,7 @@ def get_text(co, fo, args):
     return l
 
 def __get_partition(p, offset):
-    n = (offset - 446) / 16 + 1
+    n = (offset - 446) // 16 + 1
     l = ["partition %d" % n]
     boot = '*' if p[0] else ''
     l.append("  %-15s= 0x%02X %s" % ("flag", p[0], boot))

@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import collections
 import sys
 
@@ -282,7 +283,7 @@ class Container (object):
     def __build(self, dry):
         l = console.get_position_y()
         if setting.use_even_size_window:
-            h = l / len(self)
+            h = l // len(self)
             y = 0
             for o in self.__workspaces:
                 ret = self.__build_workspace(o, h, y, dry)
@@ -291,7 +292,7 @@ class Container (object):
                 y += h
         else:
             n = len(self)
-            q = l / n
+            q = l // n
             r = l % n
             y = 0
             for o in self.__workspaces:

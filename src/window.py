@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 from . import panel
 from . import screen
 
@@ -96,7 +98,7 @@ def get_max_bytes_per_line():
     tcanvas = panel.TextCanvas(None, None)
     ret = screen.get_size_x() - panel.get_margin(4)
     ret -= (bcanvas.offset.x + tcanvas.offset.x)
-    ret /= (bcanvas.get_cell()[0] + tcanvas.get_cell()[0])
+    ret //= (bcanvas.get_cell()[0] + tcanvas.get_cell()[0])
     if ret < 1:
         return -1
     else:

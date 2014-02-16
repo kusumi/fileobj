@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import struct
 
 import fileobj.extension
@@ -94,4 +95,4 @@ def __get_bar(n, word):
         s = "MEMORY"
     else:
         s = "MEMORY %08X" % (addr & 0xFFFFFFF0)
-    return "BAR%d %s" % ((n - 0x10) / 4, s)
+    return "BAR%d %s" % ((n - 0x10) // 4, s)

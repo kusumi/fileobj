@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 from . import candidate
 from . import history
 from . import kbd
@@ -339,7 +341,7 @@ class Operand (object):
         end = len(self.__fasts) - 1
         seq = tuple(self.__ope)
         while True:
-            i = (beg + end) / 2
+            i = (beg + end) // 2
             o = self.__fasts[i]
             if o.match(seq):
                 return o

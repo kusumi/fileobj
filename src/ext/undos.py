@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 import fileobj.extension
 import fileobj.roext
 import fileobj.rwext
@@ -43,7 +45,7 @@ def get_text(co, fo, args):
     n = len(l)
     x = 0
     while n:
-        n /= 10
+        n //= 10
         x += 1
     d = {   "num"      : x,
             "path"     : max(l1),

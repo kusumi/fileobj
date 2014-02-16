@@ -38,7 +38,7 @@ class Fileops (fileops.Fileops):
         try:
             l = super(Fileops, self).flush(f)
             if l[0]: # msg
-                print(l[0])
+                util.print_stdout(l[0])
         except fileobj.FileobjError:
             _print_exc_info()
 

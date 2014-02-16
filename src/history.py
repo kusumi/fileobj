@@ -120,7 +120,7 @@ class History (object):
                 log.error("Can not read %s" % f)
             return
         try:
-            prefix = self.__data.keys()
+            prefix = list(self.__data.keys())
             for s in open(f): # from old to new
                 s = s.rstrip()
                 if not s or s.startswith("#"):
@@ -186,4 +186,4 @@ def print_history(f):
                 s = " <NEW>"
             else:
                 s = ''
-            print("%d \"%s\"%s" % (i, v[i], s))
+            util.print_stdout("%d \"%s\"%s" % (i, v[i], s))

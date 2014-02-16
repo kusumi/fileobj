@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 from . import setting
 from . import util
 
@@ -207,7 +209,7 @@ class Fileops (object):
         if bsiz < 0:
             return -1
         assert not self.__ref.get_barrier_size()
-        d = bsiz / 2
+        d = bsiz // 2
         pos = self.get_pos()
         beg = pos - d
         end = pos + d

@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import os
 import sys
 
@@ -272,7 +273,7 @@ def _test_ratio(e):
     try:
         x = int(e)
         if 0 <= x <= 100:
-            return x / 100.0
+            return x / 100
     except Exception:
         pass
 
@@ -632,7 +633,7 @@ def _get_setting_mmap_thresh():
 def _get_setting_robuf_chunk_size():
     e = this.FILEOBJ_ROBUF_CHUNK_SIZE
     try:
-        _ = os.sysconf("SC_PAGE_SIZE") / 4
+        _ = os.sysconf("SC_PAGE_SIZE") // 4
     except Exception:
         _ = 1024
     if e is None:
@@ -664,7 +665,7 @@ def _get_setting_rwbuf_chunk_balance_interval():
 def _get_setting_rwbuf_chunk_size_low():
     e = this.FILEOBJ_RWBUF_CHUNK_SIZE_LOW
     chunk_size = _get_setting_robuf_chunk_size()
-    _ = chunk_size / 5
+    _ = chunk_size // 5
     if e is None:
         return _
     x = _test_gt_zero(e)
@@ -760,7 +761,7 @@ def _get_setting_key_config(s):
 
 def print_env():
     for x in iter_env_name():
-        print("%s=%s" % (x, os.getenv(x)))
+        sys.stdout.write("%s=%s\n" % (x, os.getenv(x)))
 
 this = sys.modules[__name__]
 

@@ -23,7 +23,7 @@ fileobj
 
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.6.6
+        v0.6.7
         $ fileobj
 
 ## Uninstall

@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import os
 
 from . import chunk
@@ -153,7 +154,7 @@ class Fileobj (fileobj.Fileobj):
             beg = 0
             end = len(self.cbuf) - 1
             while True:
-                i = (beg + end) / 2
+                i = (beg + end) // 2
                 o = self.cbuf[i]
                 if pos in o:
                     return self.cbuf.index(o)

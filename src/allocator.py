@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-
 from . import fileobj
 from . import kernel
 from . import log
@@ -44,6 +42,9 @@ class Allocator (object):
             self.__def_class = getattr(self, s)
         else:
             return -1
+
+    def __is_valid_class(self, cls):
+        return cls._enabled
 
     def __is_ro_class(self, cls):
         return not (cls._insert or cls._replace or cls._delete)
@@ -68,6 +69,12 @@ class Allocator (object):
             self.rwblk: self.roblk,
         }.get(cls)
 
+    def __get_blk_class(self, cls):
+        if self.__is_ro_class(cls):
+            return self.roblk
+        else:
+            return self.rwblk
+
     def alloc(self, f):
         o = path.Path(f)
         f = o.path
@@ -79,25 +86,19 @@ class Allocator (object):
             return
 
         cls = self.__def_class
-        if setting.use_readonly or not os.access(f, os.W_OK):
+        if setting.use_readonly or not util.is_writable(f):
             cls = self.__get_ro_class(cls)
         if kernel.is_blkdev(f):
-            if self.__is_ro_class(cls):
-                cls = self.roblk
-            else:
-                cls = self.rwblk
+            cls = self.__get_blk_class(cls)
 
         while cls:
-            if cls._enabled:
+            if self.__is_valid_class(cls):
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
                     if size == -1:
                         log.error("Failed to read size of %s" % f)
                     elif size < setting.mmap_thresh:
-                        if self.__is_ro_class(cls):
-                            cls = self.robuf
-                        else:
-                            cls = self.rwbuf
+                        cls = self.__get_alt_class(cls)
                 return self.__alloc(f, cls)
             cls = self.__get_alt_class(cls)
 

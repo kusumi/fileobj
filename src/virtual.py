@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 from . import panel
 
 class NullFrame (panel.Frame):
@@ -59,13 +61,13 @@ class _canvas (panel.Canvas):
         self.fileops.add_pos(-self.get_capacity() * n)
 
     def go_hpprev(self, n):
-        self.fileops.add_pos(-self.get_capacity() / 2 * n)
+        self.fileops.add_pos(-self.get_capacity() // 2 * n)
 
     def go_pnext(self, n):
         self.fileops.add_pos(self.get_capacity() * n)
 
     def go_hpnext(self, n):
-        self.fileops.add_pos(self.get_capacity() / 2 * n)
+        self.fileops.add_pos(self.get_capacity() // 2 * n)
 
     def go_head(self, n):
         pos = 0
@@ -108,7 +110,7 @@ class _canvas (panel.Canvas):
         if n > self.fileops.get_max_pos():
             n = self.fileops.get_max_pos()
         pgo = self.get_page_offset()
-        pos = pgo + (n - pgo) / 2
+        pos = pgo + (n - pgo) // 2
         self.fileops.set_pos(pos - pos % self.bufmap.x)
 
     def go_ptail(self, n):

@@ -122,7 +122,7 @@ For more information, run the program and enter :help<ENTER>")
         literal.print_literal()
         sys.exit(0)
     if opts.sitepkg:
-        print(util.get_package_dir())
+        util.print_stdout(util.get_package_dir())
         sys.exit(0)
     if opts.env:
         env.print_env()

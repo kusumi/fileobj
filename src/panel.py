@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import string
 import sys
 
@@ -216,7 +217,7 @@ class Canvas (_panel):
     def get_coordinate(self, pos):
         """Return coordinate of the position in curses window"""
         r = pos - self.get_page_offset()
-        y = self.offset.y + r / self.bufmap.x
+        y = self.offset.y + r // self.bufmap.x
         x = self.offset.x + self.get_cell_width(r % self.bufmap.x)
         return y, x
 
@@ -232,7 +233,7 @@ class Canvas (_panel):
     def in_same_page(self, pos, ppos):
         """Return True if two positions are in the same page"""
         x = self.get_capacity()
-        return pos / x == ppos / x
+        return pos // x == ppos // x
 
     def get_line_offset(self, pos):
         """Return offset of the current line"""

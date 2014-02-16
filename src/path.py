@@ -170,7 +170,7 @@ def _get_type_real(f):
                         return _t_error
                 else:
                     return _t_noperm
-            a = os.access(s, os.R_OK)
+            a = util.is_readable(s)
 
     if os.path.isfile(f):
         return _t_file

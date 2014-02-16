@@ -215,6 +215,14 @@ _str_size_dict = {
 def parse_byte_string(s, sector_size=-1):
     if not s:
         return None
+    if s.startswith("+"):
+        s = s[1:]
+        sign = 1
+    elif s.startswith("-"):
+        s = s[1:]
+        sign = -1
+    else:
+        sign = 1
     for k, v in _str_size_dict.items():
         if s[-len(k):].upper() == k:
             n = v
@@ -243,7 +251,7 @@ def parse_byte_string(s, sector_size=-1):
     if not s:
         s = "1"
     try:
-        ret = n * int(s, base)
+        ret = sign * n * int(s, base)
         if ret >= 0:
             return ret
         else:
@@ -459,7 +467,8 @@ def is_same_file(a, b):
 
 def create_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
-    fileno = os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0644)
+    mode = 420 # not using octal 0644 for Python 2.5/3.x compatibility
+    fileno = os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
     return os.fdopen(fileno, 'w+')
 
 def open_temp_file():
@@ -470,6 +479,11 @@ def open_temp_file():
         return tempfile.NamedTemporaryFile(dir=d)
     except Exception:
         return tempfile.NamedTemporaryFile()
+
+def is_readable(f):
+    return os.access(f, os.R_OK)
+def is_writable(f):
+    return os.access(f, os.W_OK)
 
 def fsync(fd):
     if fd and not fd.closed:

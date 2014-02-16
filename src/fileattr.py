@@ -31,7 +31,7 @@ def clear():
     _attrd.clear()
 
 def get_keys():
-    return _attrd.keys()
+    return list(_attrd.keys())
 
 def get(f):
     f = path.get_path(f)

@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import re
 import sys
 
@@ -359,7 +360,7 @@ def find_literal(seq):
         seq = [ord(x) for x in seq]
     seq = tuple(seq)
     while True:
-        i = (beg + end) / 2
+        i = (beg + end) // 2
         if seq == l[i].seq:
             return l[i]
         if seq < l[i].seq:
@@ -383,7 +384,7 @@ def get_lines(l):
 def print_literal():
     init()
     s = get_lines(get_literals())
-    print('\n'.join(s).rstrip())
+    util.print_stdout('\n'.join(s).rstrip())
     cleanup()
 
 def init():
