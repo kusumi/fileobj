@@ -100,14 +100,10 @@ class Fileobj (fileobj.Fileobj):
         self.__ra_window = beg, end
 
     def search(self, x, s, end=-1):
-        if setting.use_ignorecase:
-            s = s.lower()
         n = util.PAGE_SIZE
         while True:
             b = self.read(x, n)
-            if setting.use_ignorecase:
-                b = b.lower()
-            pos = b.find(s)
+            pos = util.find_string(b, s)
             if pos >= 0:
                 return x + pos
             elif x + len(b) >= self.get_size():
@@ -117,18 +113,14 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def rsearch(self, x, s, end=-1):
-        if setting.use_ignorecase:
-            s = s.lower()
         while True:
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
                 i = 0
                 n = x + 1
-            b = self.read(i, n)
-            if setting.use_ignorecase:
-                b = b.lower()
-            pos = b.rfind(s)
+            pos = util.rfind_string(
+                self.read(i, n), s)
             if pos >= 0:
                 return i + pos
             elif not i:

@@ -21,10 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import distutils.sysconfig
 import inspect
 import os
-import pkgutil
 import platform
 import re
 import string
@@ -35,18 +33,22 @@ import tempfile
 import traceback
 
 from . import kbd
+from . import package
 from . import setting
+from . import version
 
 if setting.use_debug:
     import pdb
-    from pdb import set_trace
+    from pdb import set_trace as set_bp
+else:
+    def set_bp():
+        return
 
 NO_NAME = "[No Name]"
 
 class GenericError (Exception):
     """Exception -> BaseException -> object in Python 2.5 or >"""
-    def __init__(self, arg):
-        super(GenericError, self).__init__(arg)
+    pass
 
 class Namespace (object):
     def __init__(self, **kwd):
@@ -67,29 +69,46 @@ class Pair (object):
         self.y = y
         self.x = x
 
+_python_version = tuple(sys.version_info[:3])
 def get_python_version():
-    return tuple(sys.version_info[:3])
+    return _python_version
 
 def get_python_version_string():
     return '.'.join([str(x) for x in get_python_version()])
+
+def is_python2():
+    return get_python_version()[0] == 2
 
 def is_python3():
     return get_python_version()[0] == 3
 
 def is_python_version_or_ht(*l):
-    return get_python_version() >= tuple(x for x in l)
+    v = get_python_version()
+    l = tuple(l)
+    d = len(v) - len(l)
+    if d > 0:
+        l = list(l) + [0 for x in range(d)]
+        return v >= tuple(l)
+    elif d < 0:
+        v = list(v) + [0 for x in range(-d)]
+        return tuple(v) >= l
+    else:
+        return v >= l
+
+def is_python2_version_or_ht(*l):
+    return not is_python3() and is_python_version_or_ht(*l)
+
+def is_python3_version_or_ht(*l):
+    return not is_python2() and is_python_version_or_ht(*l)
+
+def is_python3_supported():
+    return version.get_version() >= (0, 7, 0)
 
 def get_program_path():
     return sys.argv[0]
 
 def get_program_name():
     return os.path.basename(get_program_path())
-
-def get_site_dir():
-    return distutils.sysconfig.get_python_lib()
-
-def get_package_dir():
-    return os.path.join(get_site_dir(), "fileobj")
 
 _Xregex = re.compile(r"\\X[%s]{1,}$" % string.hexdigits)
 _xregex = re.compile(r"\\x([%s]{1,2})" % string.hexdigits)
@@ -132,9 +151,6 @@ def escape_regex_pattern(s):
         l[l.index(")")] = "\)"
     return ''.join(l)
 
-def to_string(l):
-    return ''.join([chr(x) for x in l])
-
 def get_string_format(tmp, **kwd):
     return string.Template(tmp).substitute(kwd)
 
@@ -166,6 +182,18 @@ def chr2(c):
 def ctrl(c):
     """Get str arg and return int"""
     return kbd.ctrl(ord(c))
+
+def find_string(src, s):
+    if setting.use_ignorecase:
+        return src.lower().find(s.lower())
+    else:
+        return src.find(s)
+
+def rfind_string(src, s):
+    if setting.use_ignorecase:
+        return src.lower().rfind(s.lower())
+    else:
+        return src.rfind(s)
 
 def get_system_string():
     """Return os name"""
@@ -212,7 +240,7 @@ _str_size_dict = {
     "PIB": PiB,
     "EIB": EiB, }
 
-def parse_byte_string(s, sector_size=-1):
+def parse_size_string(s, sector_size=-1):
     if not s:
         return None
     if s.startswith("+"):
@@ -277,7 +305,7 @@ _bi_str_dict = {
     PiB: "PiB",
     EiB: "EiB", }
 
-def get_byte_string(arg):
+def get_size_string(arg):
     if arg < 0:
         return "%d[B]" % int(arg)
     if setting.use_siprefix:
@@ -465,7 +493,7 @@ def is_same_file(a, b):
     else:
         return False
 
-def create_file(f):
+def create_text_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
     mode = 420 # not using octal 0644 for Python 2.5/3.x compatibility
     fileno = os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
@@ -490,7 +518,7 @@ def fsync(fd):
         fd.flush()
         os.fsync(fd.fileno()) # call fsync(2)
 
-def run_subprocess(*l):
+def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
     out, err = p.communicate()
@@ -500,59 +528,45 @@ def run_subprocess(*l):
         err = ''
     return out, err, p.returncode
 
-def __iter_next(g):
+def __iter_next_2k(g):
     return g.next()
-def __iter_next3k(g):
+def __iter_next_3k(g):
     return next(g)
 
-def __get_xrange(*l):
+def __get_xrange_2k(*l):
     return xrange(*l)
-def __get_xrange3k(*l):
+def __get_xrange_3k(*l):
     return range(*l)
 
-if is_python3():
-    MAX_INT = sys.maxsize
-    iter_next = __iter_next3k
-    get_xrange = __get_xrange3k
-else:
+if is_python2():
     MAX_INT = sys.maxint
-    iter_next = __iter_next
-    get_xrange = __get_xrange
+    iter_next = __iter_next_2k
+    get_xrange = __get_xrange_2k
+else:
+    MAX_INT = sys.maxsize
+    iter_next = __iter_next_3k
+    get_xrange = __get_xrange_3k
 
 MIN_INT = -MAX_INT - 1
 
-def __iter_site_ext():
-    d = os.path.join(get_package_dir(), "ext")
-    for loader, name, ispkg in pkgutil.iter_modules([d], "ext."): # sorted
-        if not ispkg:
-            yield name
-
-def __iter_site():
-    d = get_package_dir()
-    for loader, name, ispkg in pkgutil.iter_modules([d]): # sorted
-        if not ispkg:
-            yield name
-    for name in __iter_site_ext():
-        yield name
+def iter_site_module():
+    for s in package.iter_module_name():
+        o = import_module(s)
+        if o:
+            yield o
 
 def iter_site_ext_module():
-    for s in __iter_site_ext():
-        o = import_module(s)
-        if o:
+    for o in iter_site_module():
+        if o.__name__.startswith(
+            "%sext." % package.get_prefix()):
             yield o
 
-def iter_site_module():
-    for s in __iter_site():
-        o = import_module(s)
-        if o:
-            yield o
-
-def iter_dir(obj):
+def iter_dir_items(obj):
     for l in obj.__dict__.items():
         yield l
 
 def iter_dir_values(obj):
-    for k, v in iter_dir(obj):
+    for k, v in iter_dir_items(obj):
         yield v
 
 def add_method(obj, fn, name=None):
@@ -569,10 +583,10 @@ def import_module(s):
     if s in _modules:
         return _modules[s]
     try:
-        x = __import__(s, globals(), locals(), [""])
-        if x:
-            _modules[s] = x
-        return x
+        ret = package.import_module(s)
+        if ret:
+            _modules[s] = ret
+        return ret
     except Exception:
         e = sys.exc_info()[1]
         _exceptions[s] = exc_to_string(e)

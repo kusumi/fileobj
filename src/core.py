@@ -34,6 +34,7 @@ from . import history
 from . import kernel
 from . import literal
 from . import log
+from . import package
 from . import screen
 from . import setting
 from . import util
@@ -122,7 +123,8 @@ For more information, run the program and enter :help<ENTER>")
         literal.print_literal()
         sys.exit(0)
     if opts.sitepkg:
-        util.print_stdout(util.get_package_dir())
+        for x in package.get_paths():
+            util.print_stdout(x)
         sys.exit(0)
     if opts.env:
         env.print_env()
@@ -154,8 +156,8 @@ For more information, run the program and enter :help<ENTER>")
         log.error("Failed to make user directory")
     log.debug(sys.argv)
     log.debug("Free ram %s/%s" % (
-        util.get_byte_string(kernel.get_free_ram()),
-        util.get_byte_string(kernel.get_total_ram())))
+        util.get_size_string(kernel.get_free_ram()),
+        util.get_size_string(kernel.get_total_ram())))
 
     signal.signal(signal.SIGINT, sigint_handler)
     signal.signal(signal.SIGTERM, sigterm_handler)

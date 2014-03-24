@@ -24,7 +24,6 @@
 from __future__ import division
 import os
 import platform
-import struct
 import sys
 import time
 
@@ -256,7 +255,7 @@ def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
     self.co.show("")
     self.ope.clear()
-    ret = util.parse_byte_string(s, self.co.get_sector_size())
+    ret = util.parse_size_string(s, self.co.get_sector_size())
     if ret == 0:
         return
     elif ret is None:
@@ -396,7 +395,7 @@ def __set_width(self, args):
     if len(args) == 1:
         self.co.show(prev)
     elif self.co.set_bytes_per_line(args[1]) == -1:
-        self.co.flash("Invalid arg: %s" % str(args[1]))
+        self.co.flash("Invalid arg: %s" % args[1])
     elif self.co.get_bytes_per_line() != prev:
         screen.refresh()
         self.co.build()
@@ -442,8 +441,8 @@ def set_option(self, amp, ope, args, raw):
 def show_current(self, amp, ope, args, raw):
     self.co.show("%s %s at %s" % (
         self.co.get_short_path(),
-        util.get_byte_string(self.co.get_size()),
-        util.get_byte_string(self.co.get_pos())))
+        util.get_size_string(self.co.get_size()),
+        util.get_size_string(self.co.get_pos())))
 
 def show_current_sector(self, amp, ope, args, raw):
     sector_size = self.co.get_sector_size()
@@ -474,13 +473,16 @@ def show_hostname(self, amp, ope, args, raw):
 def show_term(self, amp, ope, args, raw):
     self.co.show(os.getenv("TERM"))
 
+def show_lang(self, amp, ope, args, raw):
+    self.co.show(os.getenv("LANG"))
+
 def show_version(self, amp, ope, args, raw):
     self.co.show(version.__version__)
 
 def show_sector_size(self, amp, ope, args, raw):
     x = self.co.get_sector_size()
     if x != -1:
-        self.co.show(util.get_byte_string(x))
+        self.co.show(util.get_size_string(x))
     else:
         self.co.flash()
 
@@ -844,7 +846,7 @@ def __single_rotate_right(self, shift, beg, end):
     while pos <= end:
         x = self.co.read(pos, 1)
         u = (car & 0xFF) | (ord(x) >> shift)
-        self.co.replace(pos, struct.pack("B", u))
+        self.co.replace(pos, util.int_to_byte(u))
         car = ord(x) << car_shift
         pos += 1
         if screen.test_signal():
@@ -865,7 +867,7 @@ def __buffered_rotate_right(self, shift, beg, end):
 def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
     assert len(buf) == end - beg + 1
     if shift == 8:
-        l = [struct.pack("B", car)] + buf[:-1]
+        l = [util.int_to_byte(car)] + buf[:-1]
         car = ord(buf[-1])
         buf = l
     else:
@@ -874,7 +876,7 @@ def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
         while pos <= end:
             x = buf[pos - beg]
             u = (car & 0xFF) | (ord(x) >> shift)
-            buf[pos - beg] = struct.pack("B", u)
+            buf[pos - beg] = util.int_to_byte(u)
             car = ord(x) << car_shift
             pos += 1
             if screen.test_signal():
@@ -969,7 +971,7 @@ def __single_rotate_left(self, shift, beg, end):
     while pos >= end:
         x = self.co.read(pos, 1)
         u = ((ord(x) << shift) & 0xFF) | car
-        self.co.replace(pos, struct.pack("B", u))
+        self.co.replace(pos, util.int_to_byte(u))
         car = ord(x) >> car_shift
         pos -= 1
         if screen.test_signal():
@@ -990,7 +992,7 @@ def __buffered_rotate_left(self, shift, beg, end):
 def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
     assert len(buf) == beg - end + 1
     if shift == 8:
-        l = buf[1:] + [struct.pack("B", car)]
+        l = buf[1:] + [util.int_to_byte(car)]
         car = ord(buf[0])
         buf = l
     else:
@@ -999,7 +1001,7 @@ def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
         while pos >= end:
             x = buf[pos - end]
             u = ((ord(x) << shift) & 0xFF) | car
-            buf[pos - end] = struct.pack("B", u)
+            buf[pos - end] = util.int_to_byte(u)
             car = ord(x) >> car_shift
             pos -= 1
             if screen.test_signal():
@@ -1179,16 +1181,16 @@ def logical_bit_operation(self, amp, ope, arg, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     amp = get_int(amp)
-    m = (int(ope[1], 16) << 4) | int(ope[2], 16)
-    assert 0 <= m <= 255
-    b = _bit_ops[ope[0]](m)
+    mask = (int(ope[1], 16) << 4) | int(ope[2], 16)
+    assert 0 <= mask <= 255
+    bops = _bit_ops.get(ope[0])(mask)
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
         if __use_single_operation(self, amp):
-            ret = __single_logical_bit_operation(self, pos, amp, b)
+            ret = __single_logical_bit_operation(self, pos, amp, bops)
         else:
-            ret = __buffered_logical_bit_operation(self, pos, amp, b)
+            ret = __buffered_logical_bit_operation(self, pos, amp, bops)
         if ret > 0:
             self.co.merge_undo(ret)
             self.co.add_pos(amp)
@@ -1205,6 +1207,8 @@ def __single_logical_bit_operation(self, pos, amp, fn):
             return x
         self.co.replace(pos, fn(c))
         pos += 1
+        if pos > self.co.get_max_pos():
+            break
         if screen.test_signal():
             self.co.flash("Single logical bit operation interrupted (%d/%d)" %
                 (x, amp))
@@ -1231,16 +1235,16 @@ def range_logical_bit_operation(self, amp, ope, args, raw):
 def block_logical_bit_operation(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
-    m = (int(ope[1], 16) << 4) | int(ope[2], 16)
-    assert 0 <= m <= 255
-    b = _bit_ops[ope[0]](m)
+    mask = (int(ope[1], 16) << 4) | int(ope[2], 16)
+    assert 0 <= mask <= 255
+    bops = _bit_ops.get(ope[0])(mask)
     beg, end, mapx, siz, cnt = __get_block(self)
     self.co.set_pos(beg)
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
         for i in util.get_xrange(cnt):
-            if __buffered_logical_bit_operation(self, pos, siz, b) == 0:
+            if __buffered_logical_bit_operation(self, pos, siz, bops) == 0:
                 self.co.rollback_restore_until(und)
                 return
             pos += mapx
@@ -1260,7 +1264,7 @@ def yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(s)
-        s = util.get_byte_string(self.co.get_yank_buffer_size())
+        s = util.get_size_string(self.co.get_yank_buffer_size())
         self.co.show("%s yanked" % s)
 
 def yank_till_end(self, amp, ope, args, raw):
@@ -1290,7 +1294,7 @@ def block_yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(''.join(l))
-        s = util.get_byte_string(self.co.get_yank_buffer_size())
+        s = util.get_size_string(self.co.get_yank_buffer_size())
         self.co.show("%s yanked" % s)
 
 @_rollback

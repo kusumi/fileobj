@@ -29,6 +29,7 @@ from . import fileattr
 from . import kernel
 from . import log
 from . import magic
+from . import package
 from . import path
 from . import screen
 from . import setting
@@ -163,7 +164,8 @@ class Fileobj (object):
                 self.creat(f)
         except Exception:
             e = sys.exc_info()[1]
-            raise FileobjError("Failed to write: %s" % repr(e))
+            raise FileobjError("Failed to write: %s" % \
+                (repr(e) if setting.use_debug else e))
         else:
             msg += "%s %d[B] written" % (f, self.get_size())
             if creat:
@@ -179,7 +181,7 @@ class Fileobj (object):
         os.utime(self.get_path(), None)
 
     def creat(self, f):
-        with util.create_file(f) as fd:
+        with util.create_text_file(f) as fd:
             pos = 0
             while True:
                 s = self.read(pos, util.PAGE_SIZE)
@@ -401,7 +403,7 @@ class Fileobj (object):
 
 def get_class(s):
     if s:
-        o = util.import_module(s)
+        o = util.import_module(package.get_prefix() + s)
         if o:
             for cls in util.iter_dir_values(o):
                 if util.is_subclass(cls, Fileobj, False):

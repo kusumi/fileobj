@@ -44,11 +44,11 @@ class Console (console.Console):
             self.test()
             self.co.extend_trail()
             self.__listen(arg)
+            assert not self.co.is_barrier_active()
         except fileobj.FileobjError:
             e = sys.exc_info()[1]
             self.co.flash(e)
         finally:
-            assert not self.co.is_barrier_active()
             self.co.cleanup_region()
             self.co.shrink_trail()
             self.co.lrepaintf()
@@ -266,8 +266,7 @@ class BR (_binary, _replace):
                     s = self.co.read(x, 1)
                 else:
                     s = '\x00'
-                s = "%x" % (ord(s) & 0x0F)
-                seq[i - 1] = ord(s)
+                seq[i - 1] = ord(hex(ord(s) & 0x0F)[2:])
         s = get_ascii_string(seq)
         self.co.replace_current(s)
         return len(s)
@@ -331,7 +330,7 @@ class AI (_ascii, _insert):
         self.co.insert_current(chr(x))
 
     def _do_write_buffer(self, n, seq):
-        s = util.to_string(seq) * n
+        s = ''.join([chr(x) for x in seq]) * n
         self.co.insert_current(s)
         return len(s)
 
@@ -340,7 +339,7 @@ class AR (_ascii, _replace):
         self.co.replace_current(chr(x))
 
     def _do_write_buffer(self, n, seq):
-        s = util.to_string(seq) * n
+        s = ''.join([chr(x) for x in seq]) * n
         self.co.replace_current(s)
         return len(s)
 

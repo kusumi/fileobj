@@ -24,6 +24,7 @@
 import copy
 
 from . import edit
+from . import extension
 from . import panel
 from . import screen
 from . import util
@@ -251,7 +252,8 @@ class Workspace (object):
             if cls is def_console_class:
                 o = window.Window(panel.BinaryCanvas, panel.FocusableFrame)
             elif cls is void.ExtConsole:
-                o = window.Window(panel.ExtBinaryCanvas, panel.FocusableFrame)
+                o = window.Window(
+                    extension.ExtBinaryCanvas, panel.FocusableFrame)
             elif cls is visual.Console:
                 o = window.Window(visual.BinaryCanvas, panel.FocusableFrame)
             elif cls is visual.ExtConsole:
@@ -268,7 +270,7 @@ class Workspace (object):
             if cls is def_console_class:
                 o = window.Window(panel.TextCanvas, panel.Frame)
             elif cls is void.ExtConsole:
-                o = window.Window(panel.ExtTextCanvas, panel.Frame)
+                o = window.Window(extension.ExtTextCanvas, panel.Frame)
             elif cls is visual.Console:
                 o = window.Window(visual.TextCanvas, panel.Frame)
             elif cls is visual.ExtConsole:

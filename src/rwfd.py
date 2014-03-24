@@ -37,7 +37,7 @@ class Fileobj (rofd.Fileobj):
 
     def __str__(self):
         return "%s\n\ndiff size %s" % (super(Fileobj, self).__str__(),
-            util.get_byte_string(len(self.__diff)))
+            util.get_size_string(len(self.__diff)))
 
     def clear_dirty(self):
         self.__dirty = False

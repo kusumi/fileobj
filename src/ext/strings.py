@@ -49,8 +49,8 @@ def get_text(co, fo, args):
         if len(b) == n:
             l = [(pos, b)]
 
-    sl = ["Range %s-%s" % (fileobj.util.get_byte_string(pos),
-        fileobj.util.get_byte_string(pos + siz))]
+    sl = ["Range %s-%s" % (fileobj.util.get_size_string(pos),
+        fileobj.util.get_size_string(pos + siz))]
     sl.append("Found %d strings" % len(l))
 
     if l:

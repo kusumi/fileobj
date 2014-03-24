@@ -91,7 +91,7 @@ def _init_color(fg, bg):
         return -1
 
 def _parse_color_string(fg, bg):
-    d = dict([(s, "COLOR_%s" % s.upper()) \
+    d = dict([(s, "COLOR_%s" % s.upper())
         for s in iter_color_name()])
     white = d.get("white")
     black = d.get("black")

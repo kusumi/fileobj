@@ -40,7 +40,7 @@ def get_blkdev_info(fd):
         size = ioctl(fd, d[s])
         s = "DIOCGIDENT"
         b = fcntl.ioctl(fd, d[s], ' ' * 256) # DISK_IDENT_SIZE
-        label = b.strip("\x00")
+        label = b.strip('\x00')
         return size, sector_size, label
     except Exception:
         e = sys.exc_info()[1]
@@ -48,8 +48,7 @@ def get_blkdev_info(fd):
         raise
 
 def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, ' ' * 8)
-    b = b.replace(' ', '\x00')
+    b = fcntl.ioctl(fd, n, '\x00' * 8)
     return util.host_to_int(b)
 
 def get_total_ram():
@@ -58,7 +57,7 @@ def get_total_ram():
     hw.physmem: 1056395264
     """
     try:
-        s = util.run_subprocess("sysctl", "hw.physmem")[0]
+        s = util.execute("sysctl", "hw.physmem")[0]
         x = s.split()[-1]
         return int(x)
     except Exception:

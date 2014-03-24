@@ -21,8 +21,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
+import os
 import platform
+import sys
 
 def _test(version, name):
     if not version:
@@ -34,7 +35,7 @@ def _test(version, name):
 
     s = "Using Python %s" % '.'.join([str(x) for x in version])
     if version < (2, 5, 0):
-        raise Exception("%s\nPython 2.5 or higher is required" % s)
+        raise Exception("%s\nPython 2.5 or above is required" % s)
     elif version >= (3, 0, 0):
         raise Exception("%s\nPython 3.x is not supported" % s)
     elif "windows" in name:
@@ -43,12 +44,21 @@ def _test(version, name):
     del curses
 
 def test():
+    if _ignore_test():
+        return -1
     try:
         _test(None, None)
     except Exception:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)
         sys.exit(1)
+
+def _ignore_test():
+    e = os.getenv("FILEOBJ_USE_TEST")
+    if isinstance(e, str) and e.lower() == "false":
+        return True
+    else:
+        return False
 
 if __name__ == '__main__':
     test()

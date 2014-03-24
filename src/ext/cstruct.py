@@ -145,7 +145,7 @@ class _struct (_node):
             self.__member.append(fileobj.util.Namespace(node=o, name=name))
 
     def get_size(self):
-        return sum([o.node.get_size() for o in self.__member])
+        return sum(o.node.get_size() for o in self.__member)
 
     def get_lines(self, buf, name, indent):
         l = ["%sstruct %s {" % (I(indent), self.type)]

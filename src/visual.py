@@ -25,6 +25,7 @@ import sys
 
 from . import console
 from . import edit
+from . import extension
 from . import kbd
 from . import literal
 from . import methods
@@ -261,7 +262,7 @@ class TextCanvas (panel.TextCanvas, _visual_addon):
         self.update_visual(False)
         self.refresh()
 
-class ExtBinaryCanvas (panel.ExtBinaryCanvas, _visual_addon):
+class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
     def __init__(self, siz, pos):
         self.init_method()
         super(ExtBinaryCanvas, self).__init__(siz, pos)
@@ -330,6 +331,7 @@ class _console (console.Console):
         self.add_method(literal.s_platform   , this,    "_buffer_input")
         self.add_method(literal.s_hostname   , this,    "_buffer_input")
         self.add_method(literal.s_term       , this,    "_buffer_input")
+        self.add_method(literal.s_lang       , this,    "_buffer_input")
         self.add_method(literal.s_version    , this,    "_buffer_input")
         self.add_method(literal.s_sector     , this,    "_buffer_input")
         self.add_method(literal.s_args       , this,    "_buffer_input")

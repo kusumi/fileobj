@@ -45,8 +45,7 @@ def get_blkdev_info(fd):
         raise
 
 def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, ' ' * 8)
-    b = b.replace(' ', '\x00')
+    b = fcntl.ioctl(fd, n, '\x00' * 8)
     return util.host_to_int(b)
 
 def get_total_ram():

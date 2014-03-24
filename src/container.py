@@ -610,7 +610,7 @@ class Container (object):
         self.__yank_buffer.append(buf)
 
     def get_yank_buffer_size(self):
-        return sum([len(x) for x in self.__yank_buffer])
+        return sum(len(x) for x in self.__yank_buffer)
     def get_yank_buffer(self):
         return ''.join(self.__yank_buffer)
 

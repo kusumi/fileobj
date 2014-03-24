@@ -79,8 +79,8 @@ def __get_partition(p, offset):
     l.append("  %-15s= %d" % ("last sector", sect))
     l.append("  %-15s= %d" % ("last cylinder", cyli))
 
-    s = fileobj.util.to_string(p[8:12])
+    s = ''.join([chr(x) for x in p[8:12]])
     l.append("  %-15s= %d" % ("first lba", fileobj.util.le_to_int(s)))
-    s = fileobj.util.to_string(p[12:16])
+    s = ''.join([chr(x) for x in p[12:16]])
     l.append("  %-15s= %d" % ("sectors", fileobj.util.le_to_int(s)))
     return l

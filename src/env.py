@@ -26,6 +26,7 @@ import os
 import sys
 
 def iter_env_name():
+    yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_CURSES"
     yield "FILEOBJ_USE_TRACE"
@@ -101,157 +102,28 @@ def iter_env_name():
     yield "FILEOBJ_KEY_RESIZE"
 
 def get_setting(s):
-    if s == "FILEOBJ_USE_DEBUG":
-        return _get_setting_use_debug()
-    elif s == "FILEOBJ_USE_CURSES":
-        return _get_setting_use_curses()
-    elif s == "FILEOBJ_USE_TRACE":
-        return _get_setting_use_trace()
-    elif s == "FILEOBJ_USE_TRACE_SYMLINK":
-        return _get_setting_use_trace_symlink()
-    elif s == "FILEOBJ_TRACE_WORD_SIZE":
-        return _get_setting_trace_word_size()
-    elif s == "FILEOBJ_TRACE_PATH":
-        return _get_setting_trace_path()
-    elif s == "FILEOBJ_TRACE_BASE":
-        return _get_setting_trace_base()
-    elif s == "FILEOBJ_TRACE_DIR":
-        return _get_setting_trace_dir()
-    elif s == "FILEOBJ_STREAM_PATH":
-        return _get_setting_stream_path()
-    elif s == "FILEOBJ_STREAM_BASE":
-        return _get_setting_stream_base()
-    elif s == "FILEOBJ_STREAM_DIR":
-        return _get_setting_stream_dir()
-    elif s == "FILEOBJ_USERDIR_PATH":
-        return _get_setting_userdir_path()
-    elif s == "FILEOBJ_USERDIR_BASE":
-        return _get_setting_userdir_base()
-    elif s == "FILEOBJ_USERDIR_DIR":
-        return _get_setting_userdir_dir()
-    elif s == "FILEOBJ_PROCFS_MOUNT_DIR":
-        return _get_setting_procfs_mount_dir()
-    elif s == "FILEOBJ_USE_READONLY":
-        return _get_setting_use_readonly()
-    elif s == "FILEOBJ_COLOR_FG":
-        return _get_setting_color_fg()
-    elif s == "FILEOBJ_COLOR_BG":
-        return _get_setting_color_bg()
-    elif s == "FILEOBJ_USE_LOG":
-        return _get_setting_use_log()
-    elif s == "FILEOBJ_USE_LOG_VERBOSE":
-        return _get_setting_use_log_verbose()
-    elif s == "FILEOBJ_LOG_LEVEL":
-        return _get_setting_log_level()
-    elif s == "FILEOBJ_LOG_PATH":
-        return _get_setting_log_path()
-    elif s == "FILEOBJ_LOG_BASE":
-        return _get_setting_log_base()
-    elif s == "FILEOBJ_LOG_DIR":
-        return _get_setting_log_dir()
-    elif s == "FILEOBJ_USE_HISTORY":
-        return _get_setting_use_history()
-    elif s == "FILEOBJ_MAX_HISTORY":
-        return _get_setting_max_history()
-    elif s == "FILEOBJ_HISTORY_PATH":
-        return _get_setting_history_path()
-    elif s == "FILEOBJ_HISTORY_BASE":
-        return _get_setting_history_base()
-    elif s == "FILEOBJ_HISTORY_DIR":
-        return _get_setting_history_dir()
-    elif s == "FILEOBJ_USE_BARRIER":
-        return _get_setting_use_barrier()
-    elif s == "FILEOBJ_BARRIER_SIZE":
-        return _get_setting_barrier_size()
-    elif s == "FILEOBJ_BARRIER_EXTEND":
-        return _get_setting_barrier_extend()
-    elif s == "FILEOBJ_USE_ALT_CHGAT":
-        return _get_setting_use_alt_chgat()
-    elif s == "FILEOBJ_USE_CIRCULAR_BIT_SHIFT":
-        return _get_setting_use_circular_bit_shift()
-    elif s == "FILEOBJ_USE_SINGLE_OPERATION":
-        return _get_setting_use_single_operation()
-    elif s == "FILEOBJ_RAM_THRESH_RATIO":
-        return _get_setting_ram_thresh_ratio()
-    elif s == "FILEOBJ_USE_EVEN_SIZE_WINDOW":
-        return _get_setting_use_even_size_window()
-    elif s == "FILEOBJ_OFFSET_NUM_WIDTH":
-        return _get_setting_offset_num_width()
-    elif s == "FILEOBJ_OFFSET_NUM_RADIX":
-        return _get_setting_offset_num_radix()
-    elif s == "FILEOBJ_EDITMODE":
-        return _get_setting_editmode()
-    elif s == "FILEOBJ_ENDIANNESS":
-        return _get_setting_endianness()
-    elif s == "FILEOBJ_USE_WRAPSCAN":
-        return _get_setting_use_wrapscan()
-    elif s == "FILEOBJ_USE_IGNORECASE":
-        return _get_setting_use_ignorecase()
-    elif s == "FILEOBJ_USE_SIPREFIX":
-        return _get_setting_use_siprefix()
-    elif s == "FILEOBJ_WIDTH":
-        return _get_setting_width()
-    elif s == "FILEOBJ_USE_MAGIC_SCAN":
-        return _get_setting_use_magic_scan()
-    elif s == "FILEOBJ_USE_ALLOC_RETRY":
-        return _get_setting_use_alloc_retry()
-    elif s == "FILEOBJ_USE_ALLOC_RAISE":
-        return _get_setting_use_alloc_raise()
-    elif s == "FILEOBJ_USE_ARRAY_CHUNK":
-        return _get_setting_use_array_chunk()
-    elif s == "FILEOBJ_MMAP_THRESH":
-        return _get_setting_mmap_thresh()
-    elif s == "FILEOBJ_ROBUF_CHUNK_SIZE":
-        return _get_setting_robuf_chunk_size()
-    elif s == "FILEOBJ_ROBUF_SEARCH_THRESH_RATIO":
-        return _get_setting_robuf_search_thresh_ratio()
-    elif s == "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL":
-        return _get_setting_rwbuf_chunk_balance_interval()
-    elif s == "FILEOBJ_RWBUF_CHUNK_SIZE_LOW":
-        return _get_setting_rwbuf_chunk_size_low()
-    elif s == "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH":
-        return _get_setting_rwbuf_chunk_size_high()
-    elif s == "FILEOBJ_ROFD_READ_QUEUE_SIZE":
-        return _get_setting_rofd_read_queue_size()
-    elif s == "FILEOBJ_EXT_STRINGS_RANGE":
-        return _get_setting_ext_strings_range()
-    elif s == "FILEOBJ_EXT_STRINGS_COUNT":
-        return _get_setting_ext_strings_count()
-    elif s == "FILEOBJ_EXT_STRINGS_THRESH":
-        return _get_setting_ext_strings_thresh()
-    elif s == "FILEOBJ_EXT_CSTRUCT_PATH":
-        return _get_setting_ext_cstruct_path()
-    elif s == "FILEOBJ_EXT_CSTRUCT_BASE":
-        return _get_setting_ext_cstruct_base()
-    elif s == "FILEOBJ_EXT_CSTRUCT_DIR":
-        return _get_setting_ext_cstruct_dir()
-    elif s == "FILEOBJ_KEY_TAB":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_ENTER":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_ESCAPE":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_SPACE":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_DOWN":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_UP":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_LEFT":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_RIGHT":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_BACKSPACE":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_DELETE":
-        return _get_setting_key_config(s)
-    elif s == "FILEOBJ_KEY_RESIZE":
-        return _get_setting_key_config(s)
+    if s in _envs_name:
+        fn = getattr(this, "_get_setting_%s" % env_to_setting_name(s))
+        return fn()
     else:
         assert 0, "Invalid env: %s" % s
 
-def _test_bool(e):
-    return e.lower() != "false"
+def env_to_setting_name(s):
+    return s[len("FILEOBJ_"):].lower()
+
+def _test_bool(envname, default):
+    e = getattr(this, envname)
+    if e is None:
+        return default
+    else:
+        return e.lower() != "false"
+
+def _test_name(envname, default):
+    e = getattr(this, envname)
+    if e is None:
+        return default
+    else:
+        return e
 
 def _test_gt_zero(e):
     try:
@@ -277,33 +149,20 @@ def _test_ratio(e):
     except Exception:
         pass
 
+def _get_setting_use_test():
+    return _test_bool("FILEOBJ_USE_TEST", True)
+
 def _get_setting_use_debug():
-    e = this.FILEOBJ_USE_DEBUG
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_DEBUG", False)
 
 def _get_setting_use_curses():
-    e = this.FILEOBJ_USE_CURSES
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_CURSES", True)
 
 def _get_setting_use_trace():
-    e = this.FILEOBJ_USE_TRACE
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_TRACE", False)
 
 def _get_setting_use_trace_symlink():
-    e = this.FILEOBJ_USE_TRACE_SYMLINK
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_TRACE_SYMLINK", False)
 
 def _get_setting_trace_word_size():
     e = this.FILEOBJ_TRACE_WORD_SIZE
@@ -320,11 +179,7 @@ def _get_setting_trace_path():
     return this.FILEOBJ_TRACE_PATH
 
 def _get_setting_trace_base():
-    e = this.FILEOBJ_TRACE_BASE
-    if e is None:
-        return "trace"
-    else:
-        return e
+    return _test_name("FILEOBJ_TRACE_BASE", "trace")
 
 def _get_setting_trace_dir():
     return this.FILEOBJ_TRACE_DIR
@@ -342,11 +197,7 @@ def _get_setting_userdir_path():
     return this.FILEOBJ_USERDIR_PATH
 
 def _get_setting_userdir_base():
-    e = this.FILEOBJ_USERDIR_BASE
-    if e is None:
-        return ".fileobj"
-    else:
-        return e
+    return _test_name("FILEOBJ_USERDIR_BASE", ".fileobj")
 
 def _get_setting_userdir_dir():
     e = this.FILEOBJ_USERDIR_DIR
@@ -356,18 +207,10 @@ def _get_setting_userdir_dir():
         return e
 
 def _get_setting_procfs_mount_dir():
-    e = this.FILEOBJ_PROCFS_MOUNT_DIR
-    if e is None:
-        return "/proc"
-    else:
-        return e
+    return _test_name("FILEOBJ_PROCFS_MOUNT_DIR", "/proc")
 
 def _get_setting_use_readonly():
-    e = this.FILEOBJ_USE_READONLY
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_READONLY", False)
 
 def _get_setting_color_fg():
     e = this.FILEOBJ_COLOR_FG
@@ -384,45 +227,25 @@ def _get_setting_color_bg():
         return e.lower()
 
 def _get_setting_use_log():
-    e = this.FILEOBJ_USE_LOG
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_LOG", True)
 
 def _get_setting_use_log_verbose():
-    e = this.FILEOBJ_USE_LOG_VERBOSE
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_LOG_VERBOSE", True)
 
 def _get_setting_log_level():
-    e = this.FILEOBJ_LOG_LEVEL
-    if e is None:
-        return "WARNING"
-    else:
-        return e.upper()
+    return _test_name("FILEOBJ_LOG_LEVEL", "WARNING")
 
 def _get_setting_log_path():
     return this.FILEOBJ_LOG_PATH
 
 def _get_setting_log_base():
-    e = this.FILEOBJ_LOG_BASE
-    if e is None:
-        return "log"
-    else:
-        return e
+    return _test_name("FILEOBJ_LOG_BASE", "log")
 
 def _get_setting_log_dir():
     return this.FILEOBJ_LOG_DIR
 
 def _get_setting_use_history():
-    e = this.FILEOBJ_USE_HISTORY
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_HISTORY", True)
 
 def _get_setting_max_history():
     e = this.FILEOBJ_MAX_HISTORY
@@ -439,21 +262,13 @@ def _get_setting_history_path():
     return this.FILEOBJ_HISTORY_PATH
 
 def _get_setting_history_base():
-    e = this.FILEOBJ_HISTORY_BASE
-    if e is None:
-        return "history"
-    else:
-        return e
+    return _test_name("FILEOBJ_HISTORY_BASE", "history")
 
 def _get_setting_history_dir():
     return this.FILEOBJ_HISTORY_DIR
 
 def _get_setting_use_barrier():
-    e = this.FILEOBJ_USE_BARRIER
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_BARRIER", True)
 
 def _get_setting_barrier_size():
     e = this.FILEOBJ_BARRIER_SIZE
@@ -478,25 +293,13 @@ def _get_setting_barrier_extend():
         return x
 
 def _get_setting_use_alt_chgat():
-    e = this.FILEOBJ_USE_ALT_CHGAT
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_ALT_CHGAT", False)
 
 def _get_setting_use_circular_bit_shift():
-    e = this.FILEOBJ_USE_CIRCULAR_BIT_SHIFT
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_CIRCULAR_BIT_SHIFT", True)
 
 def _get_setting_use_single_operation():
-    e = this.FILEOBJ_USE_SINGLE_OPERATION
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_SINGLE_OPERATION", False)
 
 def _get_setting_ram_thresh_ratio():
     e = this.FILEOBJ_RAM_THRESH_RATIO
@@ -510,11 +313,7 @@ def _get_setting_ram_thresh_ratio():
         return x
 
 def _get_setting_use_even_size_window():
-    e = this.FILEOBJ_USE_EVEN_SIZE_WINDOW
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
 def _get_setting_offset_num_width():
     e = this.FILEOBJ_OFFSET_NUM_WIDTH
@@ -561,25 +360,13 @@ def _get_setting_endianness():
         return None
 
 def _get_setting_use_wrapscan():
-    e = this.FILEOBJ_USE_WRAPSCAN
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_WRAPSCAN", True)
 
 def _get_setting_use_ignorecase():
-    e = this.FILEOBJ_USE_IGNORECASE
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_IGNORECASE", False)
 
 def _get_setting_use_siprefix():
-    e = this.FILEOBJ_USE_SIPREFIX
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_SIPREFIX", False)
 
 def _get_setting_width():
     e = this.FILEOBJ_WIDTH
@@ -589,32 +376,16 @@ def _get_setting_width():
         return e.lower()
 
 def _get_setting_use_magic_scan():
-    e = this.FILEOBJ_USE_MAGIC_SCAN
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_MAGIC_SCAN", True)
 
 def _get_setting_use_alloc_retry():
-    e = this.FILEOBJ_USE_ALLOC_RETRY
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_ALLOC_RETRY", True)
 
 def _get_setting_use_alloc_raise():
-    e = this.FILEOBJ_USE_ALLOC_RAISE
-    if e is None:
-        return False
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_ALLOC_RAISE", False)
 
 def _get_setting_use_array_chunk():
-    e = this.FILEOBJ_USE_ARRAY_CHUNK
-    if e is None:
-        return True
-    else:
-        return _test_bool(e)
+    return _test_bool("FILEOBJ_USE_ARRAY_CHUNK", True)
 
 def _get_setting_mmap_thresh():
     e = this.FILEOBJ_MMAP_THRESH
@@ -734,16 +505,45 @@ def _get_setting_ext_cstruct_path():
     return this.FILEOBJ_EXT_CSTRUCT_PATH
 
 def _get_setting_ext_cstruct_base():
-    e = this.FILEOBJ_EXT_CSTRUCT_BASE
-    if e is None:
-        return "cstruct"
-    else:
-        return e
+    return _test_name("FILEOBJ_EXT_CSTRUCT_BASE", "cstruct")
 
 def _get_setting_ext_cstruct_dir():
     return this.FILEOBJ_EXT_CSTRUCT_DIR
 
-def _get_setting_key_config(s):
+def _get_setting_key_tab():
+    return _get_setting_key("FILEOBJ_KEY_TAB")
+
+def _get_setting_key_enter():
+    return _get_setting_key("FILEOBJ_KEY_ENTER")
+
+def _get_setting_key_escape():
+    return _get_setting_key("FILEOBJ_KEY_ESCAPE")
+
+def _get_setting_key_space():
+    return _get_setting_key("FILEOBJ_KEY_SPACE")
+
+def _get_setting_key_down():
+    return _get_setting_key("FILEOBJ_KEY_DOWN")
+
+def _get_setting_key_up():
+    return _get_setting_key("FILEOBJ_KEY_UP")
+
+def _get_setting_key_left():
+    return _get_setting_key("FILEOBJ_KEY_LEFT")
+
+def _get_setting_key_right():
+    return _get_setting_key("FILEOBJ_KEY_RIGHT")
+
+def _get_setting_key_backspace():
+    return _get_setting_key("FILEOBJ_KEY_BACKSPACE")
+
+def _get_setting_key_delete():
+    return _get_setting_key("FILEOBJ_KEY_DELETE")
+
+def _get_setting_key_resize():
+    return _get_setting_key("FILEOBJ_KEY_RESIZE")
+
+def _get_setting_key(s):
     e = getattr(this, s)
     if e is None:
         return None
@@ -764,7 +564,8 @@ def print_env():
         sys.stdout.write("%s=%s\n" % (x, os.getenv(x)))
 
 this = sys.modules[__name__]
+_envs_name = tuple(iter_env_name())
 
-for _ in iter_env_name():
+for _ in _envs_name:
     setattr(this, _, os.getenv(_))
 del _

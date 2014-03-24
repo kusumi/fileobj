@@ -31,6 +31,7 @@ from . import log
 from . import screen
 from . import setting
 from . import util
+from . import version
 
 """
 _panel
@@ -46,8 +47,9 @@ _panel
                 visual.BinaryCanvas
             TextCanvas
                 visual.TextCanvas
-            ExtBinaryCanvas
-            ExtTextCanvas
+            extension.ExtBinaryCanvas
+                visual.ExtBinaryCanvas
+            extension.ExtTextCanvas
         OptionCanvas
 """
 
@@ -157,7 +159,7 @@ class Canvas (_panel):
     def iter_buffer(self):
         yield 0, ''
 
-    def get_form_byte(self, x):
+    def get_form_single(self, x):
         return x
 
     def get_form_line(self, buf):
@@ -343,11 +345,11 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         self.__lstr_fmt = dict([(k, v.substitute(
             len=setting.offset_num_width)) for k, v in d.items()])
 
-    def get_form_byte(self, x):
+    def get_form_single(self, x):
         return "%02X" % (ord(x) & 0xFF)
 
     def get_form_line(self, buf):
-        return ' '.join([self.get_form_byte(x) for x in buf])
+        return ' '.join([self.get_form_single(x) for x in buf])
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
@@ -378,7 +380,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
         c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else '  '
+        s = self.get_form_single(c) if c else '  '
         if low:
             self.printl(y, x, s[0])
             self.printl(y, x + 1, s[1], attr)
@@ -412,11 +414,11 @@ class TextCanvas (DisplayCanvas, text_addon):
             10: "%1d",
             8 : "%1o", }
 
-    def get_form_byte(self, x):
+    def get_form_single(self, x):
         return util.chr2(x)
 
     def get_form_line(self, buf):
-        return ''.join([self.get_form_byte(x) for x in buf])
+        return ''.join([self.get_form_single(x) for x in buf])
 
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
@@ -437,7 +439,7 @@ class TextCanvas (DisplayCanvas, text_addon):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
         c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else ' '
+        s = self.get_form_single(c) if c else ' '
         self.printl(y, x, s, attr)
 
     def fill_posstr(self):
@@ -448,34 +450,17 @@ class TextCanvas (DisplayCanvas, text_addon):
     def __get_column_posstr(self, n):
         return (self.__cstr[setting.offset_num_radix] % n)[-1]
 
-class ExtBinaryCanvas (DisplayCanvas, default_addon):
-    def set_buffer(self, fileops):
-        super(ExtBinaryCanvas, self).set_buffer(fileops)
-        if self.fileops:
-            self.fileops.ioctl(self.bufmap.x)
-
-    def chgat_cursor(self, pos, attr, low):
-        y, x = self.get_coordinate(pos)
-        self.chgat(y, x, 1, attr)
-
-    def alt_chgat_cursor(self, pos, attr, low):
-        """Alternative for Python 2.5"""
-        y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else ' '
-        self.printl(y, x, s, attr)
-
-class ExtTextCanvas (DisplayCanvas, default_addon):
-    def iter_buffer(self):
-        s = ' ' * self.bufmap.x
-        for i in range(self.bufmap.y):
-            yield i, s
-
 class OptionCanvas (Canvas, default_addon):
     def set_buffer(self, fileops):
         super(OptionCanvas, self).set_buffer(fileops)
         if self.fileops:
-            a = self.fileops.get_short_path()
+            a = ''
+            if setting.use_debug:
+                a += "<Python %s> <%s> %s " % \
+                    (util.get_python_version_string(),
+                    version.__version__,
+                    self.fileops.get_fileobj_class())
+            a += self.fileops.get_short_path()
             if not a:
                 a = util.NO_NAME
             if self.fileops.is_readonly():

@@ -57,15 +57,15 @@ def write(tf, l, e, tb):
         log.error(e)
 
 def _write_trace(tf, l):
-    with util.create_file(tf) as fd:
+    with util.create_text_file(tf) as fd:
         for x in l:
             fd.write(util.int_to_bin(x, setting.trace_word_size))
         util.fsync(fd)
         log.debug("Wrote trace to %s" % fd)
 
 def _write_script(sf, tf, e, tb):
-    with util.create_file(sf) as fd:
-        ret = util.run_subprocess("which", "sh")
+    with util.create_text_file(sf) as fd:
+        ret = util.execute("which", "sh")
         if not ret[2]:
             fd.write("#!%s" % ret[0])
         if e:

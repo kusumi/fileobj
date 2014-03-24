@@ -243,11 +243,18 @@ def pop_banner():
 _message = ''
 _cursor = -1
 def set_message(o, cursor=-1):
+    s = str(o)
     if isinstance(o, Exception):
-        this._message = str(o) if str(o) else repr(o)
+        if s:
+            this._message = s
+        else:
+            this._message = repr(o)
         this._cursor = -1
     else:
-        this._message = str(o if o else '')
+        if o is not None:
+            this._message = s
+        else:
+            this._message = ''
         this._cursor = cursor
 
 def get_size_y():

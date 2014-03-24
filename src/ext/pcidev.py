@@ -41,7 +41,7 @@ def get_text(co, fo, args):
     elif n < 0x40 or (n % 4):
         fail("Invalid length: %d" % n)
 
-    cfg = [ord(x) for x in b]
+    cfg = tuple(ord(x) for x in b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
         fail("Invalid vendor id: %s" %
@@ -74,7 +74,7 @@ def get_text(co, fo, args):
     while buf:
         b = buf[:4]
         buf = buf[4:]
-        s = "|%04X| %02X %02X %02X %02X" % (n, b[-1], b[-2], b[-3], b[-4])
+        s = "|%04X| %02X %02X %02X %02X" % (n, b[3], b[2], b[1], b[0])
         if (type == PCI_HDR_DEV and 0x10 <= n < 0x28) or \
             (type == PCI_HDR_PPB and 0x10 <= n < 0x18):
             s += " %s" % __get_bar(n, b)
@@ -87,7 +87,7 @@ def get_text(co, fo, args):
     return l
 
 def __get_bar(n, word):
-    b = fileobj.util.to_string(word)
+    b = ''.join([chr(x) for x in word])
     addr = fileobj.util.le_to_int(b)
     if word[0] & 0x01:
         s = "I/O %04X" % (addr & 0xFFFFFFFC)

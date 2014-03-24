@@ -31,14 +31,14 @@ class _magic (object):
     def get_name(self):
         util.raise_no_impl("name")
 
-    def test_head(self, fo, s=''):
-        if s == '':
+    def test_head(self, fo, s=None):
+        if s is None:
             s = self.get_magic()
             assert isinstance(s, str)
         return self.read(fo, 0, len(s)) == s
 
-    def test_tail(self, fo, s=''):
-        if s == '':
+    def test_tail(self, fo, s=None):
+        if s is None:
             s = self.get_magic()
             assert isinstance(s, str)
         return self.read(fo, fo.get_size() - len(s), len(s)) == s
@@ -69,22 +69,22 @@ class EXEMagic (_magic):
         return "EXE"
 
 class PythonMagic (_magic):
-    """Magic definition is taken from Python-2.7/Python/import.c"""
+    """Magic definition is taken from Python-2.7/Python/import.c and
+Python-3.2.5/Python/import.c"""
     def __init__(self):
-        self.__str = "PYC"
+        self.__name = "PYC"
 
     def test(self, fo):
-        self.__str = "PYC"
         v = self.__get_version(fo)
         if v < 0:
             return False
         else:
             if v >= 1.5:
-                self.__str = "PYC(%s)" % str(v)
+                self.__name = "PYC|%s" % str(v)
             return True
 
     def get_name(self):
-        return self.__str
+        return self.__name
 
     def __get_version(self, fo):
         v = -1
@@ -93,15 +93,15 @@ class PythonMagic (_magic):
             return v
         l = [ord(x) for x in b]
         x = l[0] + (l[1] << 8)
-        if x == 20121:
+        if x in (20121,):
             v = 1.5
-        elif x == 50428:
+        elif x in (50428,):
             v = 1.6
-        elif x == 50823:
+        elif x in (50823,):
             v = 2.0
-        elif x == 60202:
+        elif x in (60202,):
             v = 2.1
-        elif x == 60717:
+        elif x in (60717,):
             v = 2.2
         elif x in (62011, 62021):
             v = 2.3
@@ -113,8 +113,18 @@ class PythonMagic (_magic):
             v = 2.6
         elif x in (62171, 62181, 62191, 62201, 62211):
             v = 2.7
-        elif x > 62000: # all the recent Python have >62000 so
-            v = 0
+        elif x > 62000: # is this good ?
+            v = 2
+        elif x in (3111, 3131):
+            v = 3.0
+        elif x in (3141, 3151):
+            v = 3.1
+        elif x in (3160, 3170, 3180):
+            v = 3.2
+        elif x in (3230,):
+            v = 3.3
+        elif 3000 <= x < 4000: # is this good ?
+            v = 3
         return v
 
 class JavaMagic (_magic):
@@ -143,8 +153,8 @@ class BMPMagic (_magic):
 
 class JPEGMagic (_magic):
     def test(self, fo):
-        return self.test_head(fo, self.get_magic()[0]) and \
-            self.test_tail(fo, self.get_magic()[1])
+        a, b = self.get_magic()
+        return self.test_head(fo, a) and self.test_tail(fo, b)
     def get_magic(self):
         return "\xFF\xD8", "\xFF\xD9"
     def get_name(self):
@@ -152,8 +162,8 @@ class JPEGMagic (_magic):
 
 class GIFMagic (_magic):
     def test(self, fo):
-        return self.test_head(fo, self.get_magic()[0]) or \
-            self.test_head(fo, self.get_magic()[1])
+        a, b = self.get_magic()
+        return self.test_head(fo, a) or self.test_head(fo, b)
     def get_magic(self):
         return "GIF87a", "GIF89a"
     def get_name(self):
@@ -194,9 +204,10 @@ class MSOfficeMagic (_magic):
 class LHAMagic (_magic):
     def test(self, fo):
         b = self.read(fo, 2, 5)
-        return (b[:3] == "-lh") and \
-                (b[3] in "01234567") and \
-                (b[4] == "-")
+        return \
+            (b[:3] == "-lh") and \
+            (b[3] in "01234567") and \
+            (b[4] == "-")
     def get_name(self):
         return "LHA"
 

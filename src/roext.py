@@ -43,6 +43,6 @@ class Fileobj (robuf.Fileobj):
                 extension.raw_to_buffer(self.__raw, width))
 
     def creat(self, f):
-        with util.create_file(f) as fd:
+        with util.create_text_file(f) as fd:
             fd.write(self.__raw)
             util.fsync(fd)

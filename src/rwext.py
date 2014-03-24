@@ -49,9 +49,9 @@ class Fileobj (rwbuf.Fileobj):
         self.__writeto(f)
 
     def __writeto(self, f):
-        if not self.get_undo_size():
-            with util.create_file(f) as fd:
+        if self.get_undo_size():
+            super(Fileobj, self).creat(f)
+        else:
+            with util.create_text_file(f) as fd:
                 fd.write(self.__raw)
                 util.fsync(fd)
-        else:
-            super(Fileobj, self).creat(f)

@@ -28,11 +28,12 @@ from . import env
 
 def iter_setting_name():
     for s in env.iter_env_name():
-        yield s[len("FILEOBJ_"):].lower()
+        yield env.env_to_setting_name(s)
 
 def reset():
-    for e, s in zip(list(env.iter_env_name()), list(iter_setting_name())):
-        setattr(this, s, env.get_setting(e))
+    for s in env.iter_env_name():
+        setattr(this,
+            env.env_to_setting_name(s), env.get_setting(s))
 
 def get_trace_path():
     return _get_path("trace")

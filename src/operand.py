@@ -74,7 +74,7 @@ class Operand (object):
 
     def __add_history(self):
         key = chr(self.__buf[0])
-        s = util.to_string(self.__buf)
+        s = _to_string(self.__buf)
         if s != key:
             if self.__history.get_latest(key) != s:
                 self.__history.append(key, s)
@@ -83,7 +83,7 @@ class Operand (object):
     def __get_older_history(self):
         buf = self.__prev.raw
         assert buf and buf[0] in literal.get_slow_ords()
-        x = util.to_string(buf)
+        x = _to_string(buf)
         s = self.__history.get_older(x[0], x)
         if not s:
             s = self.__history.get_newer(x[0], x)
@@ -95,7 +95,7 @@ class Operand (object):
     def __get_newer_history(self):
         buf = self.__prev.raw
         assert buf and buf[0] in literal.get_slow_ords()
-        x = util.to_string(buf)
+        x = _to_string(buf)
         s = self.__history.get_newer(x[0], x)
         if not s:
             s = x
@@ -141,7 +141,7 @@ class Operand (object):
         if not _is_slow(self.__buf):
             self.__ope = self.__buf
         else:
-            l = util.to_string(self.__buf).split(' ')
+            l = _to_string(self.__buf).split(' ')
             for i, s in enumerate(l):
                 if i == 0:
                     self.__ope = [ord(x) for x in s]
@@ -164,7 +164,7 @@ class Operand (object):
         if not ret:
             msg = None
             if a != _fast:
-                msg = util.to_string(self.__buf)
+                msg = _to_string(self.__buf)
             return None, \
                 None, None, None, None, \
                 msg, self.__cursor
@@ -179,14 +179,14 @@ class Operand (object):
 
         amp = None
         if self.__amp:
-            amp = int(util.to_string(self.__amp))
+            amp = int(_to_string(self.__amp))
             if amp > util.MAX_INT:
                 amp = util.MAX_INT
             elif amp < util.MIN_INT:
                 amp = util.MIN_INT
         ope = ''
         if util.is_graph_sequence(self.__ope):
-            ope = util.to_string(self.__ope)
+            ope = _to_string(self.__ope)
         msg = None
         if _is_slow(self.__buf):
             msg = li.str
@@ -283,7 +283,7 @@ class Operand (object):
         prev_key = self.__prev.key
         if prev_key != kbd.TAB and x == kbd.TAB:
             self.__parse_buffer()
-            self.__prev.ope = util.to_string(self.__ope)
+            self.__prev.ope = _to_string(self.__ope)
             self.__prev.arg = self.__arg[:]
         elif prev_key not in _arrows and x in _arrows:
             self.__parse_buffer()
@@ -374,13 +374,16 @@ class Operand (object):
             self.__set_string(s.rstrip())
             return l[0]
         else:
-            s = util.to_string(self.__buf)
+            s = _to_string(self.__buf)
             return literal.InvalidLiteral(s, None, '')
 
 _arrows = list(kbd.ARROWS)
 _arrows.append(util.ctrl('p'))
 _arrows.append(util.ctrl('n'))
 _null, _fast, _slow = range(3)
+
+def _to_string(l):
+    return ''.join([chr(x) for x in l])
 
 def _is_digit(x):
     return ord('0') <= x <= ord('9')

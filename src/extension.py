@@ -23,10 +23,34 @@
 
 import re
 
+from . import panel
 from . import util
 
 class ExtError (util.GenericError):
     pass
+
+class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
+    def set_buffer(self, fileops):
+        super(ExtBinaryCanvas, self).set_buffer(fileops)
+        if self.fileops:
+            self.fileops.ioctl(self.bufmap.x)
+
+    def chgat_cursor(self, pos, attr, low):
+        y, x = self.get_coordinate(pos)
+        self.chgat(y, x, 1, attr)
+
+    def alt_chgat_cursor(self, pos, attr, low):
+        """Alternative for Python 2.5"""
+        y, x = self.get_coordinate(pos)
+        c = self.fileops.read(pos, 1)
+        s = self.get_form_single(c) if c else ' '
+        self.printl(y, x, s, attr)
+
+class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
+    def iter_buffer(self):
+        s = ' ' * self.bufmap.x
+        for i in range(self.bufmap.y):
+            yield i, s
 
 def fail(s):
     raise ExtError(s)

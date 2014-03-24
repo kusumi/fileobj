@@ -86,6 +86,7 @@ class _console (console.Console):
         self.add_method(literal.s_platform   , methods, "show_platform")
         self.add_method(literal.s_hostname   , methods, "show_hostname")
         self.add_method(literal.s_term       , methods, "show_term")
+        self.add_method(literal.s_lang       , methods, "show_lang")
         self.add_method(literal.s_version    , methods, "show_version")
         self.add_method(literal.s_sector     , methods, "show_sector_size")
         self.add_method(literal.s_args       , methods, "show_args")

@@ -74,8 +74,8 @@ def get_blkdev_info(f):
         b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
         _blkdev_info[f] = b
         log.info("Block device %s (%s, %s, %s)" %
-            (b.name, util.get_byte_string(b.size),
-            util.get_byte_string(b.sector_size), repr(b.label)))
+            (b.name, util.get_size_string(b.size),
+            util.get_size_string(b.sector_size), repr(b.label)))
         return b
 
 def get_buffer_size(f):

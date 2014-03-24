@@ -82,15 +82,11 @@ class Fileobj (fileobj.Fileobj):
         screen.cli()
         return ret
 
-    def __find(self, x, s, ic=True):
-        if ic:
-            s = s.lower()
+    def __find(self, x, s):
         n = util.PAGE_SIZE
         while True:
             b = self.read(x, n)
-            if ic:
-                b = b.lower()
-            pos = b.find(s)
+            pos = util.find_string(b, s)
             if pos >= 0:
                 return x + pos
             elif x + len(b) >= self.get_size():
@@ -101,25 +97,21 @@ class Fileobj (fileobj.Fileobj):
 
     def rsearch(self, x, s, end=-1):
         if setting.use_ignorecase or not _has_rfind:
-            ret = self.__rfind(x, s, setting.use_ignorecase)
+            ret = self.__rfind(x, s)
         else:
-            ret = self.map.rfind(s, 0, x)
+            ret = self.map.rfind(s, 0, x + 1)
         screen.cli()
         return ret
 
-    def __rfind(self, x, s, ic=True):
-        if ic:
-            s = s.lower()
+    def __rfind(self, x, s):
         while True:
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
                 i = 0
                 n = x + 1
-            b = self.read(i, n)
-            if ic:
-                b = b.lower()
-            pos = b.rfind(s)
+            pos = util.rfind_string(
+                self.read(i, n), s)
             if pos >= 0:
                 return i + pos
             elif not i:

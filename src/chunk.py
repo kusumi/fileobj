@@ -24,6 +24,7 @@
 import array
 
 from . import setting
+from . import util
 
 class Chunk (object):
     def __init__(self, offset, buffer, last=False):
@@ -52,10 +53,7 @@ class Chunk (object):
         b = self.read(x, len(self))
         if next_buffer:
             b += next_buffer
-        if setting.use_ignorecase:
-            n = b.lower().find(s.lower())
-        else:
-            n = b.find(s)
+        n = util.find_string(b, s)
         if n >= 0:
             return x + n
         else:
@@ -65,10 +63,7 @@ class Chunk (object):
         b = self.read(self.offset, x + 1 - self.offset)
         if next_buffer:
             b = next_buffer + b
-        if setting.use_ignorecase:
-            n = b.lower().rfind(s.lower())
-        else:
-            n = b.rfind(s)
+        n = util.rfind_string(b, s)
         if n >= 0:
             ret = self.offset + n
             if next_buffer:

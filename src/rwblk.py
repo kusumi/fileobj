@@ -35,9 +35,9 @@ class Fileobj (rwfd.Fileobj):
     def __str__(self):
         l = []
         l.append("device size %s" %
-            util.get_byte_string(self.get_size()))
+            util.get_size_string(self.get_size()))
         l.append("sector size %s" %
-            util.get_byte_string(self.get_sector_size()))
+            util.get_size_string(self.get_sector_size()))
         l.append("label %s" % self.__label)
         return "%s\n\n%s" % (super(Fileobj, self).__str__(), '\n'.join(l))
 
