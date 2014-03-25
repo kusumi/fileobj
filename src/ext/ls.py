@@ -50,5 +50,5 @@ def get_text(co, fo, args):
     sl = [f % title]
     for i, o in enumerate(l):
         sl.append(f % (i + 1, fileobj.extension.get_path(o),
-            str(o.get_size()), o.get_fileobj_class()))
+            str(o.get_size()), o.get_type()))
     return sl

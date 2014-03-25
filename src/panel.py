@@ -459,7 +459,7 @@ class OptionCanvas (Canvas, default_addon):
                 a += "<Python %s> <%s> %s " % \
                     (util.get_python_version_string(),
                     version.__version__,
-                    self.fileops.get_fileobj_class())
+                    self.fileops.get_type())
             a += self.fileops.get_short_path()
             if not a:
                 a = util.NO_NAME

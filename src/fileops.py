@@ -72,7 +72,7 @@ class Fileops (object):
         return self.__ref.get_short_path()
     def get_magic(self):
         return self.__ref.get_magic()
-    def get_fileobj_class(self):
+    def get_type(self):
         return util.get_class(self.__ref)
 
     def get_pos_percentage(self):
@@ -106,9 +106,9 @@ class Fileops (object):
         else:
             self.__pos = pos
 
-    def extend_trail(self):
+    def discard_eof(self):
         self.__trail = self.test_insert() * 1
-    def shrink_trail(self):
+    def restore_eof(self):
         self.__trail = 0
 
     def init_region(self, orig, type):

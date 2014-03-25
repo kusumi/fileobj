@@ -69,8 +69,8 @@ class EXEMagic (_magic):
         return "EXE"
 
 class PythonMagic (_magic):
-    """Magic definition is taken from Python-2.7/Python/import.c and
-Python-3.2.5/Python/import.c"""
+    """Magic definition is taken from
+Python-3.4.0/Lib/importlib/_bootstrap.py"""
     def __init__(self):
         self.__name = "PYC"
 
@@ -121,8 +121,10 @@ Python-3.2.5/Python/import.c"""
             v = 3.1
         elif x in (3160, 3170, 3180):
             v = 3.2
-        elif x in (3230,):
+        elif x in (3190, 3200, 3210, 3220, 3230):
             v = 3.3
+        elif x in (3250, 3260, 3270, 3280, 3290, 3300, 3310):
+            v = 3.4
         elif 3000 <= x < 4000: # is this good ?
             v = 3
         return v

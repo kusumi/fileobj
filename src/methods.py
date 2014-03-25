@@ -1313,10 +1313,14 @@ def __put(self, amp, ope, mov):
     def fn(_):
         buf = self.co.get_yank_buffer() * amp
         pos = self.co.get_pos() + mov
-        if pos > self.co.get_max_pos():
-            pos = self.co.get_max_pos()
-        self.co.insert(pos, buf)
-        go_right(self, mov + len(buf) - 1)
+        try:
+            self.co.discard_eof()
+            if pos > self.co.get_max_pos():
+                pos = self.co.get_max_pos()
+            self.co.insert(pos, buf)
+            go_right(self, mov + len(buf) - 1)
+        finally:
+            self.co.restore_eof()
     fn(0)
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
@@ -1351,12 +1355,14 @@ def range_put(self, amp, ope, args, raw):
     test_delete_raise(self)
     try:
         self.co.discard_workspace()
+        self.co.discard_eof()
         buf = self.co.get_yank_buffer() * get_int(amp)
         und = self.co.get_undo_size()
         range_delete(self, amp, ope, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
+        self.co.restore_eof()
         self.co.restore_workspace()
         self.co.lrepaintf()
 
@@ -1366,12 +1372,14 @@ def block_put(self, amp, ope, args, raw):
     test_delete_raise(self)
     try:
         self.co.discard_workspace()
+        self.co.discard_eof()
         buf = self.co.get_yank_buffer() * get_int(amp)
         und = self.co.get_undo_size()
         block_delete(self, amp, ope, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
+        self.co.restore_eof()
         self.co.restore_workspace()
         self.co.lrepaintf()
 

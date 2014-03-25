@@ -96,10 +96,10 @@ def is_python_version_or_ht(*l):
         return v >= l
 
 def is_python2_version_or_ht(*l):
-    return not is_python3() and is_python_version_or_ht(*l)
+    return is_python2() and is_python_version_or_ht(*l)
 
 def is_python3_version_or_ht(*l):
-    return not is_python2() and is_python_version_or_ht(*l)
+    return is_python3() and is_python_version_or_ht(*l)
 
 def is_python3_supported():
     return version.get_version() >= (0, 7, 0)

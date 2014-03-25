@@ -42,7 +42,7 @@ class Console (console.Console):
     def dispatch(self, arg):
         try:
             self.test()
-            self.co.extend_trail()
+            self.co.discard_eof()
             self.__listen(arg)
             assert not self.co.is_barrier_active()
         except fileobj.FileobjError:
@@ -50,7 +50,7 @@ class Console (console.Console):
             self.co.flash(e)
         finally:
             self.co.cleanup_region()
-            self.co.shrink_trail()
+            self.co.restore_eof()
             self.co.lrepaintf()
             self.set_console(None)
 
@@ -147,7 +147,7 @@ class Console (console.Console):
                 pfn = None
             def fn(i):
                 try:
-                    self.co.extend_trail()
+                    self.co.discard_eof()
                     self.co.add_pos(arg.delta)
                     if pfn:
                         pfn(i)
@@ -155,7 +155,7 @@ class Console (console.Console):
                         self.write_buffer(n, seq)
                     self.co.add_pos(-1)
                 finally:
-                    self.co.shrink_trail()
+                    self.co.restore_eof()
             self.co.set_prev_context(fn)
         elif key == MOTION:
             self.co.set_pos(seq[-1])
