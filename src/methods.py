@@ -253,7 +253,7 @@ def start_read_delayed_input(self, amp, ope, args, raw):
 
 def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
-    self.co.show("")
+    self.co.show('')
     self.ope.clear()
     ret = util.parse_size_string(s, self.co.get_sector_size())
     if ret == 0:

@@ -92,7 +92,7 @@ else:
             i = len(get_prefix())
         else:
             i = 0
-        return __import__(s[i:], globals(), locals(), [""])
+        return __import__(s[i:], globals(), locals(), [''])
 
 try:
     _pkg_name = []

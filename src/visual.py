@@ -181,7 +181,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_NORMAL)
         self.printl(y, x + pos, s[pos:], screen.A_STANDOUT)
 
@@ -198,7 +198,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = pos - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_STANDOUT)
         self.printl(y, x + pos, s[pos:], screen.A_NORMAL)
 
@@ -218,7 +218,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = end - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_NORMAL)
         self.printl(y, x + pos, s[pos:end], screen.A_STANDOUT)
         self.printl(y, x + end, s[end:], screen.A_NORMAL)
@@ -233,7 +233,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s, attr)
 
 class BinaryCanvas (panel.BinaryCanvas, _visual_addon):

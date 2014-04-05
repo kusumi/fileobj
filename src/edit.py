@@ -241,9 +241,9 @@ class BI (_binary, _insert):
             self.co.replace_current(chr(ord(c) | x))
 
     def _do_write_buffer(self, n, seq, pad):
-        s = get_ascii_string(seq) * n
-        self.co.insert_current(s)
-        return len(s)
+        l = get_ascii_seq(seq) * n
+        self.co.insert_current(''.join(l))
+        return len(l)
 
 class BR (_binary, _replace):
     def _do_write(self, x):
@@ -267,9 +267,9 @@ class BR (_binary, _replace):
                 else:
                     s = '\x00'
                 seq[i - 1] = ord(hex(ord(s) & 0x0F)[2:])
-        s = get_ascii_string(seq)
-        self.co.replace_current(s)
-        return len(s)
+        l = get_ascii_seq(seq)
+        self.co.replace_current(''.join(l))
+        return len(l)
 
 class RangeBR (BR):
     def write_buffer(self, n, seq):
@@ -360,11 +360,10 @@ def get_ascii(upper, lower):
     hex_string = chr(upper) + chr(lower)
     return chr(int(hex_string, 16))
 
-def get_ascii_string(seq):
+def get_ascii_seq(seq):
     assert len(seq) % 2 == 0
     r = range(0, len(seq), 2)
-    l = [get_ascii(*seq[i : i + 2]) for i in r]
-    return ''.join(l)
+    return [get_ascii(*seq[i : i + 2]) for i in r]
 
 def get_insert_class():
     return __get_class("%sI")

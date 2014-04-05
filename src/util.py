@@ -101,6 +101,15 @@ def is_python2_version_or_ht(*l):
 def is_python3_version_or_ht(*l):
     return is_python3() and is_python_version_or_ht(*l)
 
+def is_python_version_lt(*l):
+    return not is_python_version_or_ht(*l)
+
+def is_python2_version_lt(*l):
+    return is_python2() and is_python_version_lt(*l)
+
+def is_python3_version_lt(*l):
+    return is_python3() and is_python_version_lt(*l)
+
 def is_python3_supported():
     return version.get_version() >= (0, 7, 0)
 
@@ -225,6 +234,8 @@ try:
     PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
 except Exception:
     PAGE_SIZE = 4 * KiB # pretend 4 KiB
+    if setting.use_debug:
+        raise
 
 _str_size_dict = {
     "KB" : KB,
