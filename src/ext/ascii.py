@@ -22,19 +22,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.ascii
-import fileobj.util
 
 def get_text(co, fo, args):
     n = max([len(x) for x in fileobj.ascii.iter_ascii_symbol()])
-    f = fileobj.util.get_string_format("%-${len}s %3d 0%03o 0x%02X %s", len=n)
-    return [f % (fileobj.ascii.get_symbol(x), x, x, x, __get_bin_string(x))
+    f = "{{0:<{0}}} {{1:3d}} 0{{2:03o}} 0x{{3:02X}} {{4:08b}}".format(n)
+    return [f.format(fileobj.ascii.get_symbol(x), x, x, x, x)
         for x in range(128)]
-
-def __get_bin_string(x):
-    l = []
-    for i in reversed(range(0, 8)):
-        if ((2 ** i) & x):
-            l.append('1')
-        else:
-            l.append('0')
-    return ''.join(l)

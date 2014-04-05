@@ -46,11 +46,11 @@ def init(name, f=None):
         return -1
 
     verbose('=' * 80)
-    verbose("Using Python %s on %s %s" % (
+    verbose("Using Python {0} on {1} {2}".format(
         util.get_python_version_string(),
         util.get_system_string(),
         util.get_release_string()))
-    verbose("Running %s (%s)" % (
+    verbose("Running {0} ({1})".format(
         util.get_program_path(), version.__version__))
 
 def cleanup():

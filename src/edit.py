@@ -26,6 +26,7 @@ import string
 import sys
 
 from . import console
+from . import filebytes
 from . import fileobj
 from . import kbd
 from . import methods
@@ -42,15 +43,14 @@ class Console (console.Console):
     def dispatch(self, arg):
         try:
             self.test()
-            self.co.extend_trail()
+            self.co.discard_eof()
             self.__listen(arg)
-        except fileobj.FileobjError:
-            e = sys.exc_info()[1]
+            assert not self.co.is_barrier_active()
+        except fileobj.FileobjError as e:
             self.co.flash(e)
         finally:
-            assert not self.co.is_barrier_active()
             self.co.cleanup_region()
-            self.co.shrink_trail()
+            self.co.restore_eof()
             self.co.lrepaintf()
             self.set_console(None)
 
@@ -147,7 +147,7 @@ class Console (console.Console):
                 pfn = None
             def fn(i):
                 try:
-                    self.co.extend_trail()
+                    self.co.discard_eof()
                     self.co.add_pos(arg.delta)
                     if pfn:
                         pfn(i)
@@ -155,7 +155,7 @@ class Console (console.Console):
                         self.write_buffer(n, seq)
                     self.co.add_pos(-1)
                 finally:
-                    self.co.shrink_trail()
+                    self.co.restore_eof()
             self.co.set_prev_context(fn)
         elif key == MOTION:
             self.co.set_pos(seq[-1])
@@ -181,7 +181,7 @@ class _binary (Console):
         return x in _hexdigits
 
     def handle_write(self, x):
-        self.write(int(chr(x), 16))
+        self.write(int(chr(x), 16)) # e.g. pass 10 if x is 0x41
         self.co.lrepaintf(self.low)
         return EDIT
 
@@ -235,26 +235,26 @@ class _binary (Console):
 class BI (_binary, _insert):
     def _do_write(self, x):
         if not self.low:
-            self.co.insert_current(chr(x << 4))
+            self.co.insert_current((x << 4,))
         else:
             c = self.co.read_current(1)
-            self.co.replace_current(chr(ord(c) | x))
+            self.co.replace_current((filebytes.ord(c) | x,))
 
     def _do_write_buffer(self, n, seq, pad):
-        s = get_ascii_string(seq) * n
-        self.co.insert_current(s)
-        return len(s)
+        l = get_ascii_seq(seq) * n
+        self.co.insert_current(l)
+        return len(l)
 
 class BR (_binary, _replace):
     def _do_write(self, x):
         c = self.co.read_current(1)
-        xx = ord(c) if c else 0
+        xx = filebytes.ord(c) if c else 0
         if not self.low:
             xx &= 0x0F
-            self.co.replace_current(chr((x << 4) | xx))
+            self.co.replace_current(((x << 4) | xx,))
         else:
             xx &= 0xF0
-            self.co.replace_current(chr(x | xx))
+            self.co.replace_current((x | xx,))
 
     def _do_write_buffer(self, n, seq, pad):
         seq *= n
@@ -263,14 +263,13 @@ class BR (_binary, _replace):
             for i in range(siz, siz * (n + 1), siz):
                 x = self.co.get_pos() + i // 2 - 1
                 if x < self.co.get_size():
-                    s = self.co.read(x, 1)
+                    b = self.co.read(x, 1)
                 else:
-                    s = '\x00'
-                s = "%x" % (ord(s) & 0x0F)
-                seq[i - 1] = ord(s)
-        s = get_ascii_string(seq)
-        self.co.replace_current(s)
-        return len(s)
+                    b = filebytes.ZERO
+                seq[i - 1] = ord(hex(filebytes.ord(b) & 0x0F)[2:])
+        l = get_ascii_seq(seq)
+        self.co.replace_current(l)
+        return len(l)
 
 class RangeBR (BR):
     def write_buffer(self, n, seq):
@@ -328,21 +327,21 @@ class _ascii (Console):
 
 class AI (_ascii, _insert):
     def _do_write(self, x):
-        self.co.insert_current(chr(x))
+        self.co.insert_current((x,))
 
     def _do_write_buffer(self, n, seq):
-        s = util.to_string(seq) * n
-        self.co.insert_current(s)
-        return len(s)
+        l = seq * n
+        self.co.insert_current(l)
+        return len(l)
 
 class AR (_ascii, _replace):
     def _do_write(self, x):
-        self.co.replace_current(chr(x))
+        self.co.replace_current((x,))
 
     def _do_write_buffer(self, n, seq):
-        s = util.to_string(seq) * n
-        self.co.replace_current(s)
-        return len(s)
+        l = seq * n
+        self.co.replace_current(l)
+        return len(l)
 
 class RangeAR (AR):
     def write_buffer(self, n, seq):
@@ -357,31 +356,30 @@ class BlockAR (AR):
         return -1
 
 def get_ascii(upper, lower):
-    # e.g. 52,49 ('4','1') -> 'A'
+    # e.g. 52,49 ('4','1') -> 0x41
     hex_string = chr(upper) + chr(lower)
-    return chr(int(hex_string, 16))
+    return int(hex_string, 16)
 
-def get_ascii_string(seq):
+def get_ascii_seq(seq):
     assert len(seq) % 2 == 0
     r = range(0, len(seq), 2)
-    l = [get_ascii(*seq[i : i + 2]) for i in r]
-    return ''.join(l)
+    return [get_ascii(*seq[i : i + 2]) for i in r]
 
 def get_insert_class():
-    return __get_class("%sI")
+    return __get_class("{0}I")
 
 def get_replace_class():
-    return __get_class("%sR")
+    return __get_class("{0}R")
 
 def get_range_replace_class():
-    return __get_class("Range%sR")
+    return __get_class("Range{0}R")
 
 def get_block_replace_class():
-    return __get_class("Block%sR")
+    return __get_class("Block{0}R")
 
 def __get_class(s):
     return getattr(sys.modules[__name__],
-        s % setting.editmode)
+        s.format(setting.editmode))
 
 def get_input_limit():
     if setting.editmode == 'B':

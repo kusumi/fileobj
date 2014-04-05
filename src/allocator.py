@@ -43,8 +43,9 @@ class Allocator (object):
         else:
             return -1
 
-    def __is_valid_class(self, cls):
-        return cls._enabled
+    def __is_valid_class(self, cls, offset):
+        return cls._enabled and \
+            (cls._partial or not offset)
 
     def __is_ro_class(self, cls):
         return not (cls._insert or cls._replace or cls._delete)
@@ -76,10 +77,11 @@ class Allocator (object):
             return self.rwblk
 
     def alloc(self, f):
+        f = path.get_path(f)
+        f, offset = util.parse_file_path(f)
         o = path.Path(f)
-        f = o.path
         if not f or o.is_noent:
-            return self.__alloc(f, self.rwbuf)
+            return self.__alloc(f, 0, self.rwbuf)
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)
@@ -92,21 +94,21 @@ class Allocator (object):
             cls = self.__get_blk_class(cls)
 
         while cls:
-            if self.__is_valid_class(cls):
+            if self.__is_valid_class(cls, offset):
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
                     if size == -1:
-                        log.error("Failed to read size of %s" % f)
+                        log.error("Failed to read size of {0}".format(f))
                     elif size < setting.mmap_thresh:
                         cls = self.__get_alt_class(cls)
-                return self.__alloc(f, cls)
+                return self.__alloc(f, offset, cls)
             cls = self.__get_alt_class(cls)
 
-    def __alloc(self, f, cls):
+    def __alloc(self, f, offset, cls):
         while cls:
             try:
-                log.info("Using %s for %s" % (cls, repr(f)))
-                ret = cls(f)
+                log.info("Using {0} for {1}".format(cls, repr(f)))
+                ret = cls(f, offset)
                 ret.set_magic()
                 return ret
             except Exception:

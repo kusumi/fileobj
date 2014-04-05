@@ -5,13 +5,15 @@ fileobj
 
 + [http://sourceforge.net/projects/fileobj/](http://sourceforge.net/projects/fileobj/)
 
-+ fileobj is a hex editor with vi like interface. This software is written in Python and works on Python 2.5, 2.6 and 2.7. It works on Linux, NetBSD, OpenBSD, FreeBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, saving buffers, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
++ fileobj is a hex editor with vi like interface. This software is written in Python and works on Python 2.6 or above. It works on Linux, NetBSD, OpenBSD, FreeBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, saving buffers, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
 
 ## Prerequisites
 
-+ Python 2.5, 2.6 or 2.7
++ Python 2.6 or above
 
-+ Python 3.x is not supported
++ Python 3 is supported since v0.7
+
++ Python 2.5 support is dropped in v0.7, use v0.6 for Python 2.5
 
 + Works on Linux and *BSD
 
@@ -23,7 +25,7 @@ fileobj
 
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.6.7
+        v0.7.0
         $ fileobj
 
 ## Uninstall
@@ -33,7 +35,7 @@ fileobj
 + Find site package directory using *--sitepkg* option
 
         $ fileobj --sitepkg
-        /usr/local/lib/python2.7/site-packages/fileobj
+        /usr/local/lib/python3.3/site-packages/fileobj
 
 ## Help
 

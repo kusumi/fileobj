@@ -62,8 +62,7 @@ def init(fg='', bg=''):
         curses.cbreak()
         try:
             curses.curs_set(0) # vt100 fails here but just ignore
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.debug(e)
 
 def cleanup():
@@ -85,13 +84,12 @@ def _init_color(fg, bg):
         curses.init_pair(pair,
             getattr(curses, fg), getattr(curses, bg))
         this.color_attr = curses.color_pair(pair)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
         return -1
 
 def _parse_color_string(fg, bg):
-    d = dict([(s, "COLOR_%s" % s.upper()) \
+    d = dict([(s, "COLOR_{0}".format(s.upper()))
         for s in iter_color_name()])
     white = d.get("white")
     black = d.get("black")
@@ -156,9 +154,9 @@ class _screen (object):
         self.ref = ref
 
     def get_decorated_string(self, y, x, s):
-        ret = "(%2d, %3d) %s" % (y, x, s)
+        ret = "({0:2}, {1:3}) {2}".format(y, x, s)
         if setting.use_debug:
-            return "%s %s" % (repr(self.ref), ret)
+            return "{0} {1}".format(repr(self.ref), ret)
         else:
             return ret
 

@@ -22,8 +22,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fcntl
-import sys
 
+from . import filebytes
 from . import linux
 from . import log
 from . import path
@@ -39,17 +39,15 @@ def get_blkdev_info(fd):
         s = "DIOCGMEDIASIZE"
         size = ioctl(fd, d[s])
         s = "DIOCGIDENT"
-        b = fcntl.ioctl(fd, d[s], ' ' * 256) # DISK_IDENT_SIZE
-        label = b.strip("\x00")
+        b = fcntl.ioctl(fd, d[s], filebytes.SPACE * 256) # DISK_IDENT_SIZE
+        label = b.strip(filebytes.ZERO)
         return size, sector_size, label
-    except Exception:
-        e = sys.exc_info()[1]
-        log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
+    except Exception as e:
+        log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))
         raise
 
 def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, ' ' * 8)
-    b = b.replace(' ', '\x00')
+    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
     return util.host_to_int(b)
 
 def get_total_ram():
@@ -58,11 +56,10 @@ def get_total_ram():
     hw.physmem: 1056395264
     """
     try:
-        s = util.run_subprocess("sysctl", "hw.physmem")[0]
+        s = util.execute("sysctl", "hw.physmem")[0]
         x = s.split()[-1]
         return int(x)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
         return linux.get_total_ram()
 

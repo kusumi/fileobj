@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 import fileobj.extension
 import fileobj.literal
 import fileobj.util
@@ -32,12 +30,11 @@ def get_text(co, fo, args):
         fileobj.literal.get_ext_literals()]
     if not l:
         return "No extension"
-    d = {   "x0" : max([len(x[0]) for x in l]),
-            "x1" : max([len(x[1]) for x in l]),
-            "x2" : max([len(x[2]) for x in l]), }
-    f = fileobj.util.get_string_format(
-        "%2d %-${x0}s %-${x1}s %-${x2}s %s", **d)
-    return [f % (i + 1, x[0], x[1], x[2], x[3]) for i, x in enumerate(l)]
+    f = "{{0:>2}} {{1:<{0}}} {{2:<{1}}} {{3:<{2}}} {{4}}".format(
+        max([len(x[0]) for x in l]),
+        max([len(x[1]) for x in l]),
+        max([len(x[2]) for x in l]),)
+    return [f.format(i + 1, x[0], x[1], x[2], x[3]) for i, x in enumerate(l)]
 
 def __test_module(co, fo, li):
     x = [li.str, repr(li), repr(li.fn), '']
@@ -46,8 +43,7 @@ def __test_module(co, fo, li):
             li.fn(co, fo, [0])
         except fileobj.extension.ExtError:
             pass
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             x[3] = fileobj.util.exc_to_string(e)
     return x
 

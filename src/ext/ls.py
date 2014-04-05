@@ -26,7 +26,6 @@ from __future__ import division
 import fileobj.extension
 import fileobj.roext
 import fileobj.rwext
-import fileobj.util
 
 def get_text(co, fo, args):
     l = list(co.iter_buffer())
@@ -43,12 +42,10 @@ def get_text(co, fo, args):
     while n:
         n //= 10
         x += 1
-    d = {   "num"  : x,
-            "path" : max(l1),
-            "size" : max(l2), }
-    f = fileobj.util.get_string_format("%${num}s %-${path}s %${size}s %s", **d)
-    sl = [f % title]
+
+    f = "{{0:{0}}} {{1:<{1}}} {{2:{2}}} {{3}}".format(x, max(l1), max(l2))
+    sl = [f.format(*title)]
     for i, o in enumerate(l):
-        sl.append(f % (i + 1, fileobj.extension.get_path(o),
-            str(o.get_size()), o.get_fileobj_class()))
+        sl.append(f.format(i + 1, fileobj.extension.get_path(o),
+            o.get_size(), o.get_type()))
     return sl

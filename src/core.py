@@ -34,6 +34,7 @@ from . import history
 from . import kernel
 from . import literal
 from . import log
+from . import package
 from . import screen
 from . import setting
 from . import util
@@ -84,11 +85,11 @@ For more information, run the program and enter :help<ENTER>")
     parser.add_option("--fg",
         default=setting.color_fg,
         metavar="<color>",
-        help="Set foreground color [%s]" % colors)
+        help="Set foreground color [{0}]".format(colors))
     parser.add_option("--bg",
         default=setting.color_bg,
         metavar="<color>",
-        help="Set background color [%s]" % colors)
+        help="Set background color [{0}]".format(colors))
     parser.add_option("--command",
         action="store_true",
         default=False,
@@ -110,7 +111,7 @@ For more information, run the program and enter :help<ENTER>")
         help=optparse.SUPPRESS_HELP)
 
     for s in allocator.iter_module_name():
-        parser.add_option("--%s" % s,
+        parser.add_option("--{0}".format(s),
             action="store_true",
             default=False,
             help=optparse.SUPPRESS_HELP)
@@ -122,7 +123,8 @@ For more information, run the program and enter :help<ENTER>")
         literal.print_literal()
         sys.exit(0)
     if opts.sitepkg:
-        util.print_stdout(util.get_package_dir())
+        for x in package.get_paths():
+            util.print_stdout(x)
         sys.exit(0)
     if opts.env:
         env.print_env()
@@ -149,13 +151,13 @@ For more information, run the program and enter :help<ENTER>")
     for o in parser.option_list:
         if isinstance(o.dest, str):
             a = getattr(opts, o.dest, None)
-            log.debug("Option %s -> %s" % (o.dest, a))
+            log.debug("Option {0} -> {1}".format(o.dest, a))
     if ret == -1:
         log.error("Failed to make user directory")
     log.debug(sys.argv)
-    log.debug("Free ram %s/%s" % (
-        util.get_byte_string(kernel.get_free_ram()),
-        util.get_byte_string(kernel.get_total_ram())))
+    log.debug("Free ram {0}/{1}".format(
+        util.get_size_string(kernel.get_free_ram()),
+        util.get_size_string(kernel.get_total_ram())))
 
     signal.signal(signal.SIGINT, sigint_handler)
     signal.signal(signal.SIGTERM, sigterm_handler)
@@ -169,10 +171,10 @@ For more information, run the program and enter :help<ENTER>")
         if not co.init(args, wspnum, opts.width):
             co.repaint()
             co.dispatch()
-    except Exception:
-        info = sys.exc_info()
-        targs[0] = info[1]
-        targs[1] = util.get_traceback(info[2])
+    except Exception as e:
+        tb = sys.exc_info()[2]
+        targs[0] = e
+        targs[1] = util.get_traceback(tb)
         sys.exit(1)
     finally:
         if co:

@@ -28,7 +28,8 @@ def get_text(co, fo, args):
     while li.ref:
         li = li.ref
     def _(l, o, i, level):
-        l.append("%3d %s%s \"%s\"" % (i, ' ' * 8 * level, repr(o), str(o)))
+        l.append("{0:>3} {1}{2} \"{3}\"".format(
+            i, ' ' * 8 * level, repr(o), o))
         i += 1
         for li in sorted(o.children):
             i = _(l, li, i, level + 1)

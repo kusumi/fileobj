@@ -23,8 +23,8 @@
 
 import os
 import re
-import sys
 
+import fileobj.filebytes
 import fileobj.path
 import fileobj.setting
 import fileobj.util
@@ -52,7 +52,7 @@ class _builtin (_node):
         super(_builtin, self).__init__(fileobj.util.get_class_name(self))
         m = _builtin_type_regex.match(self.type)
         if not m:
-            assert 0, "Invalid type %s" % self.type
+            assert 0, "Invalid type {0}".format(self.type)
         sign, size, byteorder = m.groups()
         self.__sign = sign == "s"
         if byteorder == "le":
@@ -63,12 +63,13 @@ class _builtin (_node):
             self.__to_int = fileobj.util.bin_to_int
 
     def get_lines(self, buf, name, indent):
-        s = "%s%s %s;" % (I(indent), self.type, name)
+        s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
             n = self.__to_int(buf, self.__sign)
-            a = ''.join(["\\x%02X" % ord(x) for x in buf])
+            a = ''.join(["\\x{0:02X}".format(
+                fileobj.filebytes.ord(x)) for x in buf])
             b = ''.join([fileobj.util.chr2(x) for x in buf])
-            s += " %d %s [%s]" % (n, a, b)
+            s += " {0} {1} [{2}]".format(n, a, b)
         return [s]
 
 class u8 (_builtin):
@@ -141,20 +142,20 @@ class _struct (_node):
         self.__member = []
         for type, name in self.__iter_member(defs):
             o = get_node(type)
-            assert o, "%s not defined yet" % type
+            assert o, "{0} not defined yet".format(type)
             self.__member.append(fileobj.util.Namespace(node=o, name=name))
 
     def get_size(self):
-        return sum([o.node.get_size() for o in self.__member])
+        return sum(o.node.get_size() for o in self.__member)
 
     def get_lines(self, buf, name, indent):
-        l = ["%sstruct %s {" % (I(indent), self.type)]
+        l = ["{0}struct {1} {{".format(I(indent), self.type)]
         for o in self.__member:
             n = o.node.get_size()
             l.extend(o.node.get_lines(buf[:n], o.name, indent+1))
             buf = buf[n:]
-        x = " %s" % name
-        l.append("%s}%s;" % (I(indent), x.rstrip()))
+        x = " {0}".format(name)
+        l.append("{0}}}{1};".format(I(indent), x.rstrip()))
         return l
 
     def __iter_member(self, defs):
@@ -163,13 +164,13 @@ class _struct (_node):
             if l:
                 if l[0] == "struct":
                     l = l[1:]
-                assert len(l) == 2, "Invalid syntax: %s" % l
+                assert len(l) == 2, "Invalid syntax: {0}".format(l)
                 type, name = l
                 m = _struct_member_regex.match(name)
                 if m:
                     n = int(m.group(2))
                     for i in range(n):
-                        yield type, "%s[%d]" % (m.group(1), i)
+                        yield type, "{0}[{1}]".format(m.group(1), i)
                 else:
                     yield type, name
 
@@ -217,14 +218,13 @@ def get_text(co, fo, args):
     else:
         f = fileobj.setting.get_ext_cstruct_path()
         if fileobj.path.is_noent(f):
-            return "Need %s with struct definition" % f
+            return "Need {0} with struct definition".format(f)
         if not fileobj.path.is_file(f):
-            return "Can not read %s" % f
+            return "Can not read {0}".format(f)
 
     try:
-        l = open(f).readlines()
-    except Exception:
-        e = sys.exc_info()[1]
+        l = fileobj.util.open_text_file(f).readlines()
+    except Exception as e:
         return str(e)
     l = [x.strip() for x in l if not x.startswith('#')]
     s = ''.join([x for x in l if x])
@@ -246,6 +246,6 @@ def get_text(co, fo, args):
             buf = fo.read(pos, o.get_size())
             l.extend(o.get_lines(buf, '', 0))
         else:
-            l.append("struct %s is not defined in %s" % (x, f))
+            l.append("struct {0} is not defined in {1}".format(x, f))
         l.append('')
     return l

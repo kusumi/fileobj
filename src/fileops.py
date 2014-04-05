@@ -23,6 +23,7 @@
 
 from __future__ import division
 
+from . import filebytes
 from . import setting
 from . import util
 
@@ -72,7 +73,9 @@ class Fileops (object):
         return self.__ref.get_short_path()
     def get_magic(self):
         return self.__ref.get_magic()
-    def get_fileobj_class(self):
+    def get_offset(self):
+        return self.__ref.get_offset()
+    def get_type(self):
         return util.get_class(self.__ref)
 
     def get_pos_percentage(self):
@@ -106,9 +109,9 @@ class Fileops (object):
         else:
             self.__pos = pos
 
-    def extend_trail(self):
+    def discard_eof(self):
         self.__trail = self.test_insert() * 1
-    def shrink_trail(self):
+    def restore_eof(self):
         self.__trail = 0
 
     def init_region(self, orig, type):
@@ -148,27 +151,27 @@ class Fileops (object):
             assert 0 <= x <= self.get_max_pos(), x
             assert n >= 0, x
         if n <= 0:
-            return ''
+            return filebytes.BLANK
         if self.__ref.is_barrier_active():
             return self.__ref.barrier_read(x, n)
         else:
             return self.__ref.read(x, n)
 
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         if setting.use_debug:
             assert 0 <= x <= self.get_max_pos(), x
         if self.__ref.is_barrier_active():
-            self.__ref.barrier_insert(x, s, rec)
+            self.__ref.barrier_insert(x, l, rec)
         else:
-            self.__ref.insert(x, s, rec)
+            self.__ref.insert(x, l, rec)
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         if setting.use_debug:
             assert 0 <= x <= self.get_max_pos(), x
         if self.__ref.is_barrier_active():
-            self.__ref.barrier_replace(x, s, rec)
+            self.__ref.barrier_replace(x, l, rec)
         else:
-            self.__ref.replace(x, s, rec)
+            self.__ref.replace(x, l, rec)
 
     def delete(self, x, n, rec=True):
         if x + n > self.get_size():

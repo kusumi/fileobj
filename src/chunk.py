@@ -23,19 +23,22 @@
 
 import array
 
+from . import filebytes
 from . import setting
+from . import util
 
 class Chunk (object):
-    def __init__(self, offset, buffer, last=False):
+    def __init__(self, offset, buffer, islast=False):
         assert offset >= 0
-        assert isinstance(buffer, str)
+        if isinstance(buffer, str):
+            buffer = util.str_to_bytes(buffer)
         self.offset = offset
         self.buffer = alloc_buffer(buffer)
-        self.last = last
+        self.islast = islast
 
     def __contains__(self, x):
         x -= self.offset
-        if not self.last:
+        if not self.islast:
             return 0 <= x < len(self)
         else:
             return 0 <= x
@@ -44,18 +47,14 @@ class Chunk (object):
         return len(self.buffer)
 
     def __str__(self):
-        return ("%d %d %s" %
-            (self.offset, len(self),
-            "<last>" * self.last)).rstrip()
+        return "{0} {1}{2}".format(
+            self.offset, len(self), " <last>" * self.islast)
 
     def search(self, x, s, next_buffer):
         b = self.read(x, len(self))
         if next_buffer:
             b += next_buffer
-        if setting.use_ignorecase:
-            n = b.lower().find(s.lower())
-        else:
-            n = b.find(s)
+        n = util.find_string(b, s)
         if n >= 0:
             return x + n
         else:
@@ -65,10 +64,7 @@ class Chunk (object):
         b = self.read(self.offset, x + 1 - self.offset)
         if next_buffer:
             b = next_buffer + b
-        if setting.use_ignorecase:
-            n = b.lower().rfind(s.lower())
-        else:
-            n = b.rfind(s)
+        n = util.rfind_string(b, s)
         if n >= 0:
             ret = self.offset + n
             if next_buffer:
@@ -80,34 +76,37 @@ class Chunk (object):
 
     def read(self, x, n):
         x = self.__get_local_offset(x)
-        return ''.join(self.buffer[x : x + n])
+        return filebytes.join(self.buffer[x : x + n])
 
-    def insert(self, x, s):
+    def insert(self, x, l):
         x = self.__get_local_offset(x)
-        self.buffer[x : x] = alloc_buffer(s)
-        return len(s)
+        b = filebytes.input_to_bytes(l)
+        self.buffer[x : x] = alloc_buffer(b)
+        return len(l)
 
-    def replace(self, x, s):
+    def replace(self, x, l):
         x = self.__get_local_offset(x)
         size = len(self)
-        if x + len(s) > size:
-            if self.last:
-                nullsize = x + len(s) - size
-                self.buffer[size:] = alloc_buffer(chr(0) * nullsize)
+        if x + len(l) > size:
+            if self.islast:
+                nullsize = x + len(l) - size
+                self.buffer[size:] = alloc_buffer(
+                    filebytes.ZERO * nullsize)
             else:
-                s = s[:size - x]
-        xx = x + len(s)
-        orig = ''.join(self.buffer[x : xx])
-        self.buffer[x : xx] = alloc_buffer(s)
-        return len(s), orig
+                l = l[:size - x]
+        xx = x + len(l)
+        orig = filebytes.join(self.buffer[x : xx])
+        b = filebytes.input_to_bytes(l)
+        self.buffer[x : xx] = alloc_buffer(b)
+        return len(l), orig
 
     def delete(self, x, n):
         x = self.__get_local_offset(x)
         if x + n > len(self):
             n = len(self) - x
         xx = x + n
-        orig = ''.join(self.buffer[x : xx])
-        self.buffer[x : xx] = alloc_buffer('')
+        orig = filebytes.join(self.buffer[x : xx])
+        self.buffer[x : xx] = alloc_buffer(filebytes.BLANK)
         return n, orig
 
     def __get_local_offset(self, x):
@@ -115,9 +114,9 @@ class Chunk (object):
             assert x in self, (x, len(self))
         return x - self.offset
 
-if setting.use_array_chunk:
-    def alloc_buffer(s):
-        return array.array('c', s)
+if setting.use_array_chunk and util.is_python2():
+    def alloc_buffer(b):
+        return array.array('c', b)
 else:
-    def alloc_buffer(s):
-        return list(s)
+    def alloc_buffer(b):
+        return filebytes.split(b)

@@ -22,15 +22,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-import string
-import sys
 
 from . import ascii
+from . import filebytes
 from . import kernel
 from . import log
 from . import screen
 from . import setting
 from . import util
+from . import version
 
 """
 _panel
@@ -46,8 +46,9 @@ _panel
                 visual.BinaryCanvas
             TextCanvas
                 visual.TextCanvas
-            ExtBinaryCanvas
-            ExtTextCanvas
+            extension.ExtBinaryCanvas
+                visual.ExtBinaryCanvas
+            extension.ExtTextCanvas
         OptionCanvas
 """
 
@@ -157,7 +158,7 @@ class Canvas (_panel):
     def iter_buffer(self):
         yield 0, ''
 
-    def get_form_byte(self, x):
+    def get_form_single(self, x):
         return x
 
     def get_form_line(self, buf):
@@ -186,8 +187,8 @@ class Canvas (_panel):
         super(Canvas, self).resize(siz, pos)
         x = self.get_capacity()
         if setting.use_barrier and setting.barrier_size < x:
-            log.debug("Change default barrier size %d -> %d" %
-                (setting.barrier_size, x))
+            log.debug("Change default barrier size {0} -> {1}".format(
+                setting.barrier_size, x))
             setting.barrier_size = x
 
     def chgat(self, y, x, num, attr=screen.def_attr):
@@ -200,8 +201,7 @@ class Canvas (_panel):
     def printl(self, y, x, s, attr=screen.def_attr):
         try:
             self.scr.addstr(y, x, s, attr | screen.color_attr)
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             if (y < self.get_size_y() - 1) or \
                 (x + len(s) < self.get_size_x() - 1):
                 log.debug((e, (y, x), s))
@@ -210,8 +210,7 @@ class Canvas (_panel):
         try:
             self.scr.move(y, x)
             self.scr.clrtoeol()
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.error(e)
 
     def get_coordinate(self, pos):
@@ -329,25 +328,23 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
     def __init__(self, siz, pos):
         super(BinaryCanvas, self).__init__(siz, pos)
         self.__cstr = {
-            16: "%02X",
-            10: "%02d",
-            8 : "%02o", }
+            16: "{0:02X}",
+            10: "{0:02d}",
+            8 : "{0:02o}", }
         self.__lstr = {
-            16: "|%s| ",
-            10: " %s| ",
-            8 : "<%s> ", }
-        d = {
-            16: string.Template("%0${len}X"),
-            10: string.Template("%${len}d"),
-            8 : string.Template("%0${len}o"), }
-        self.__lstr_fmt = dict([(k, v.substitute(
-            len=setting.offset_num_width)) for k, v in d.items()])
+            16: "|{0}| ",
+            10: " {0}| ",
+            8 : "<{0}> ", }
+        self.__lstr_fmt = {
+            16: "{{0:0{0}X}}".format(setting.offset_num_width),
+            10: "{{0:{0}d}}".format(setting.offset_num_width),
+            8 : "{{0:0{0}o}}".format(setting.offset_num_width), }
 
-    def get_form_byte(self, x):
-        return "%02X" % (ord(x) & 0xFF)
+    def get_form_single(self, x):
+        return "{0:02X}".format(filebytes.ord(x) & 0xFF)
 
     def get_form_line(self, buf):
-        return ' '.join([self.get_form_byte(x) for x in buf])
+        return ' '.join([self.get_form_single(x) for x in buf])
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
@@ -378,7 +375,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
         c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else '  '
+        s = self.get_form_single(c) if c else '  '
         if low:
             self.printl(y, x, s[0])
             self.printl(y, x + 1, s[1], attr)
@@ -397,26 +394,26 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.offset_num_radix] % n
+        return self.__cstr[setting.offset_num_radix].format(n)
 
     def __get_line_posstr(self, n):
-        s = self.__lstr_fmt[setting.offset_num_radix] % n
-        return self.__lstr[setting.offset_num_radix] % \
-            s[-setting.offset_num_width:]
+        return self.__lstr[setting.offset_num_radix].format(
+            self.__lstr_fmt[setting.offset_num_radix].format(
+                n)[-setting.offset_num_width:])
 
 class TextCanvas (DisplayCanvas, text_addon):
     def __init__(self, siz, pos):
         super(TextCanvas, self).__init__(siz, pos)
         self.__cstr = {
-            16: "%1X",
-            10: "%1d",
-            8 : "%1o", }
+            16: "{0:X}",
+            10: "{0:d}",
+            8 : "{0:o}", }
 
-    def get_form_byte(self, x):
+    def get_form_single(self, x):
         return util.chr2(x)
 
     def get_form_line(self, buf):
-        return ''.join([self.get_form_byte(x) for x in buf])
+        return ''.join([self.get_form_single(x) for x in buf])
 
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
@@ -437,7 +434,7 @@ class TextCanvas (DisplayCanvas, text_addon):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
         c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else ' '
+        s = self.get_form_single(c) if c else ' '
         self.printl(y, x, s, attr)
 
     def fill_posstr(self):
@@ -446,38 +443,24 @@ class TextCanvas (DisplayCanvas, text_addon):
         self.printl(0, self.offset.x, s, screen.A_UNDERLINE)
 
     def __get_column_posstr(self, n):
-        return (self.__cstr[setting.offset_num_radix] % n)[-1]
-
-class ExtBinaryCanvas (DisplayCanvas, default_addon):
-    def set_buffer(self, fileops):
-        super(ExtBinaryCanvas, self).set_buffer(fileops)
-        if self.fileops:
-            self.fileops.ioctl(self.bufmap.x)
-
-    def chgat_cursor(self, pos, attr, low):
-        y, x = self.get_coordinate(pos)
-        self.chgat(y, x, 1, attr)
-
-    def alt_chgat_cursor(self, pos, attr, low):
-        """Alternative for Python 2.5"""
-        y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_byte(c) if c else ' '
-        self.printl(y, x, s, attr)
-
-class ExtTextCanvas (DisplayCanvas, default_addon):
-    def iter_buffer(self):
-        s = ' ' * self.bufmap.x
-        for i in range(self.bufmap.y):
-            yield i, s
+        return self.__cstr[setting.offset_num_radix].format(n)[-1]
 
 class OptionCanvas (Canvas, default_addon):
     def set_buffer(self, fileops):
         super(OptionCanvas, self).set_buffer(fileops)
         if self.fileops:
-            a = self.fileops.get_short_path()
+            a = ''
+            if setting.use_debug:
+                a += "<Python {0}> <{1}> {2} ".format(
+                    util.get_python_version_string(),
+                    version.__version__,
+                    self.fileops.get_type())
+            a += self.fileops.get_short_path()
             if not a:
                 a = util.NO_NAME
+            offset = self.fileops.get_offset()
+            if offset:
+                a += " @{0}".format(offset)
             if self.fileops.is_readonly():
                 a += " [RO]"
             b = self.fileops.get_magic()
@@ -500,16 +483,17 @@ class OptionCanvas (Canvas, default_addon):
         yield i, s
 
         i, s = util.iter_next(g)
-        per = "%.1f" % self.fileops.get_pos_percentage()
+        per = "{0:.1f}".format(self.fileops.get_pos_percentage())
         if per.endswith(".0"):
             per = per[:-2]
         pos = self.fileops.get_pos()
-        s += "%d[B] %4s%% %d" % (self.fileops.get_size(), per, pos)
+        s += "{0}[B] {1:>4}% {2}".format(
+            self.fileops.get_size(), per, pos)
         x = self.fileops.read(pos, 1)
         if x:
-            n = ord(x)
-            s += " hex=0x%02X oct=0%03o dec=%3d char=%s" % \
-                (n, n, n, ascii.get_symbol(n))
+            n = filebytes.ord(x)
+            s += " hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(
+                n, n, n, ascii.get_symbol(n))
         yield i, s
 
     def sync_cursor(self):

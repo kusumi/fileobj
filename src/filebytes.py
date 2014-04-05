@@ -21,16 +21,51 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.util
+from . import util
 
-def get_text(co, fo, args):
-    sl = []
-    for k, v in co.get_records().items():
-        l = []
-        for x in v:
-            l.append(chr(x) if fileobj.util.is_graph(x) else x)
-        sl.append("'{0}' {1}".format(k, l))
-    if sl:
-        return sl
+def input_to_bytes(l):
+    return util.str_to_bytes(
+        ''.join([chr(x) for x in l]))
+
+def __ord_2k(b):
+    return builtin.ord(b)
+
+def __ord_3k(b):
+    if isinstance(b, bytes):
+        return b[0]
+    elif isinstance(b, int):
+        return b
     else:
-        return "No record"
+        assert 0, (b, type(b))
+
+def join(l):
+    return BLANK.join(l)
+
+def __split_2k(b):
+    return list(b)
+
+def __split_3k(b):
+    return [b[i : i + 1] for i in range(len(b))]
+
+if util.is_python2():
+    import __builtin__ as builtin
+    TYPE = str
+    ZERO = "\x00"
+    BLANK = ''
+    SPACE = ' '
+    ord = __ord_2k
+    split = __split_2k
+else:
+    import builtins as builtin
+    TYPE = bytes
+    ZERO = b"\x00"
+    BLANK = b''
+    SPACE = b' '
+    ord = __ord_3k
+    split = __split_3k
+
+def ordl(b):
+    return [ord(x) for x in b]
+
+def ordt(b):
+    return tuple(ord(x) for x in b)

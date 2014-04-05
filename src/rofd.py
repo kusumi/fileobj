@@ -23,7 +23,6 @@
 
 import collections
 import os
-import sys
 
 from . import fileobj
 from . import kernel
@@ -37,11 +36,12 @@ class Fileobj (fileobj.Fileobj):
     _replace = False
     _delete  = False
     _enabled = True
+    _partial = True
 
-    def __init__(self, f):
+    def __init__(self, f, offset=0):
         self.fd = None
         self.__size = -1
-        super(Fileobj, self).__init__(f)
+        super(Fileobj, self).__init__(f, offset)
         assert os.path.exists(self.get_path())
         self.__ra_queue = collections.deque()
         self.__ra_stat = collections.defaultdict(int)
@@ -49,26 +49,30 @@ class Fileobj (fileobj.Fileobj):
 
     def __str__(self):
         sl = []
-        sl.append("read align %d" % self.__align)
-        sl.append("read mask %d" % self.__mask)
-        sl.append("read_ahead window %s" % str(self.__ra_window))
+        sl.append("read align {0}".format(self.__align))
+        sl.append("read mask {0}".format(self.__mask))
+        sl.append("read_ahead window {0}".format(str(self.__ra_window)))
         sl.append("\nread_ahead size range")
         for i, o in enumerate(self.__ra_queue):
-            sl.append("#%d %d[B] %d-%d[B]" % (i, o.end - o.beg, o.beg, o.end))
-        sl.append("\nread_ahead stat %d" % sum(self.__ra_stat.values()))
+            sl.append("#{0} {1}[B] {2}-{3}[B]".format(
+                i, o.end - o.beg, o.beg, o.end))
+        sl.append("\nread_ahead stat {0}".format(sum(self.__ra_stat.values())))
         for k in sorted(self.__ra_stat.keys()):
-            sl.append("%d[B] %d" % (k, self.__ra_stat[k]))
-        sl.append("\nread stat %d" % sum(self.__stat.values()))
+            sl.append("{0}[B] {1}".format(k, self.__ra_stat[k]))
+        sl.append("\nread stat {0}".format(sum(self.__stat.values())))
         for k in sorted(self.__stat.keys()):
-            sl.append("%d[B] %d" % (k, self.__stat[k]))
+            sl.append("{0}[B] {1}".format(k, self.__stat[k]))
         return '\n'.join(sl)
 
     def init(self):
         self.set_align(0)
         self.set_window(1, 1)
-        self.open_file('r+')
+        self.init_file('r+')
         self.set_size(
             kernel.get_buffer_size(self.get_path())) # may raise
+
+    def init_file(self, flag):
+        self.fd = util.open_file(self.get_path(), flag)
 
     def cleanup(self):
         if self.fd and not self.fd.closed:
@@ -82,10 +86,8 @@ class Fileobj (fileobj.Fileobj):
 
     def set_size(self, size):
         assert self.__size == -1
-        self.__size = size
-
-    def open_file(self, flag):
-        self.fd = open(self.get_path(), flag)
+        self.__size = size - self.get_offset()
+        assert self.__size > 0
 
     def set_align(self, align):
         if align > 1:
@@ -100,14 +102,11 @@ class Fileobj (fileobj.Fileobj):
         self.__ra_window = beg, end
 
     def search(self, x, s, end=-1):
-        if setting.use_ignorecase:
-            s = s.lower()
+        s = util.str_to_bytes(s)
         n = util.PAGE_SIZE
         while True:
             b = self.read(x, n)
-            if setting.use_ignorecase:
-                b = b.lower()
-            pos = b.find(s)
+            pos = util.find_string(b, s)
             if pos >= 0:
                 return x + pos
             elif x + len(b) >= self.get_size():
@@ -117,18 +116,15 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def rsearch(self, x, s, end=-1):
-        if setting.use_ignorecase:
-            s = s.lower()
+        s = util.str_to_bytes(s)
         while True:
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
                 i = 0
                 n = x + 1
-            b = self.read(i, n)
-            if setting.use_ignorecase:
-                b = b.lower()
-            pos = b.rfind(s)
+            pos = util.rfind_string(
+                self.read(i, n), s)
             if pos >= 0:
                 return i + pos
             elif not i:
@@ -138,6 +134,7 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def read(self, x, n):
+        x += self.get_offset()
         o = None
         for e in self.__ra_queue:
             if x >= e.beg and x + n <= e.end:
@@ -158,8 +155,7 @@ class Fileobj (fileobj.Fileobj):
             try:
                 self.fd.seek(beg)
                 b = self.fd.read(end - beg)
-            except Exception:
-                e = sys.exc_info()[1]
+            except Exception as e:
                 log.error((e, (beg, end)))
                 beg = x
                 end = x + n

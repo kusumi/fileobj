@@ -35,7 +35,7 @@ def read(tf):
     return tuple(iter_trace_word(tf))
 
 def iter_trace_word(tf):
-    buf = open(tf).read()
+    buf = util.open_file(tf).read()
     n = setting.trace_word_size
     if len(buf) % n == 0:
         for i in range(0, len(buf), n):
@@ -52,8 +52,7 @@ def write(tf, l, e, tb):
         if setting.use_trace_symlink:
             _creat_symlink(tf, b)
             _creat_symlink(sf, b + ".sh")
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
 
 def _write_trace(tf, l):
@@ -61,29 +60,29 @@ def _write_trace(tf, l):
         for x in l:
             fd.write(util.int_to_bin(x, setting.trace_word_size))
         util.fsync(fd)
-        log.debug("Wrote trace to %s" % fd)
+        log.debug("Wrote trace to {0}".format(fd))
 
 def _write_script(sf, tf, e, tb):
-    with util.create_file(sf) as fd:
-        ret = util.run_subprocess("which", "sh")
+    with util.create_text_file(sf) as fd:
+        ret = util.execute("which", "sh")
         if not ret[2]:
-            fd.write("#!%s" % ret[0])
+            fd.write("#!{0}".format(ret[0]))
         if e:
-            fd.write("# %s\n" % util.exc_to_string(e))
+            fd.write("# {0}\n".format(util.exc_to_string(e)))
         for s in tb:
-            fd.write("# %s\n" % s)
-        fd.write("%s\n" % _get_cmdline(tf))
+            fd.write("# {0}\n".format(s))
+        fd.write("{0}\n".format(_get_cmdline(tf)))
         util.fsync(fd)
-        log.debug("Wrote text to %s" % fd)
+        log.debug("Wrote text to {0}".format(fd))
 
 def _get_cmdline(tf):
     l = list(env.iter_env_name())
-    ret = ["FILEOBJ_STREAM_PATH=%s" % tf]
+    ret = ["FILEOBJ_STREAM_PATH={0}".format(tf)]
     for k in os.environ:
         if k in l and \
             k != "FILEOBJ_USE_TRACE" and \
             k != "FILEOBJ_STREAM_PATH":
-            ret.append("%s=%s" % (k, os.getenv(k)))
+            ret.append("{0}={1}".format(k, os.getenv(k)))
     ret.extend(sys.argv)
     return ' '.join(ret)
 
@@ -95,4 +94,4 @@ def _creat_symlink(f, basename):
             os.unlink(l)
         os.symlink(f, l)
         if os.path.islink(l):
-            log.debug("Create symlink %s -> %s" % (l, f))
+            log.debug("Create symlink {0} -> {1}".format(l, f))

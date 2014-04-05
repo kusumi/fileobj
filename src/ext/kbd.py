@@ -24,7 +24,6 @@
 import operator
 
 import fileobj.kbd
-import fileobj.util
 
 def get_text(co, fo, args):
     l = []
@@ -32,5 +31,5 @@ def get_text(co, fo, args):
         l.append((s, getattr(fileobj.kbd, s)))
     l = sorted(l, key=operator.itemgetter(1))
     n = max([len(s) for s in fileobj.kbd.iter_kbd_name()])
-    f = fileobj.util.get_string_format("%-${len}s %-3d 0%-3o 0x%-4X", len=n)
-    return [f % (x[0], x[1], x[1], x[1]) for x in l]
+    f = "{{0:<{0}}} {{1:<3d}} 0{{2:<3o}} 0x{{3:<4X}}".format(n)
+    return [f.format(x[0], x[1], x[1], x[1]) for x in l]

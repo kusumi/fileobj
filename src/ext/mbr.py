@@ -24,6 +24,7 @@
 from __future__ import division
 
 import fileobj.extension
+import fileobj.filebytes
 import fileobj.util
 
 _partition_type = {
@@ -39,11 +40,11 @@ _partition_type = {
 def get_text(co, fo, args):
     b = fo.read(args[-1], 512)
     if len(b) != 512:
-        fileobj.extension.fail("Invalid length: %d" % len(b))
+        fileobj.extension.fail("Invalid length: {0}".format(len(b)))
     mag = b[-2:]
-    if mag != "\x55\xAA":
-        fileobj.extension.fail("Invalid magic: %s" % repr(mag))
-    b = [ord(x) for x in b]
+    if mag != b"\x55\xAA":
+        fileobj.extension.fail("Invalid magic: {0}".format(repr(mag)))
+    b = fileobj.filebytes.ordt(b)
     n = 446
     l = []
     while n < 510:
@@ -54,33 +55,33 @@ def get_text(co, fo, args):
 
 def __get_partition(p, offset):
     n = (offset - 446) // 16 + 1
-    l = ["partition %d" % n]
+    l = ["partition {0}".format(n)]
     boot = '*' if p[0] else ''
-    l.append("  %-15s= 0x%02X %s" % ("flag", p[0], boot))
+    l.append("  {0:<15}= 0x{1:02X} {2}".format("flag", p[0], boot))
 
     head = p[1]
     sect = p[2] & 0x3F
     cyli = ((p[2] & 0xC0) << 2) + p[3]
-    l.append("  %-15s= %d" % ("first head", head))
-    l.append("  %-15s= %d" % ("first sector", sect))
-    l.append("  %-15s= %d" % ("first cylinder", cyli))
+    l.append("  {0:<15}= {1}".format("first head", head))
+    l.append("  {0:<15}= {1}".format("first sector", sect))
+    l.append("  {0:<15}= {1}".format("first cylinder", cyli))
 
     t = p[4]
     if t in _partition_type:
         s = _partition_type[t]
     else:
         s = '?'
-    l.append("  %-15s= 0x%02X %s" % ("type", t, s))
+    l.append("  {0:<15}= 0x{1:02X} {2}".format("type", t, s))
 
     head = p[5]
     sect = p[6] & 0x3F
     cyli = ((p[6] & 0xC0) << 2) + p[7]
-    l.append("  %-15s= %d" % ("last head", head))
-    l.append("  %-15s= %d" % ("last sector", sect))
-    l.append("  %-15s= %d" % ("last cylinder", cyli))
+    l.append("  {0:<15}= {1}".format("last head", head))
+    l.append("  {0:<15}= {1}".format("last sector", sect))
+    l.append("  {0:<15}= {1}".format("last cylinder", cyli))
 
-    s = fileobj.util.to_string(p[8:12])
-    l.append("  %-15s= %d" % ("first lba", fileobj.util.le_to_int(s)))
-    s = fileobj.util.to_string(p[12:16])
-    l.append("  %-15s= %d" % ("sectors", fileobj.util.le_to_int(s)))
+    b = fileobj.filebytes.input_to_bytes(p[8:12])
+    l.append("  {0:<15}= {1}".format("first lba", fileobj.util.le_to_int(b)))
+    b = fileobj.filebytes.input_to_bytes(p[12:16])
+    l.append("  {0:<15}= {1}".format("sectors", fileobj.util.le_to_int(b)))
     return l

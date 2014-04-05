@@ -39,8 +39,8 @@ class Fileops (fileops.Fileops):
             l = super(Fileops, self).flush(f)
             if l[0]: # msg
                 util.print_stdout(l[0])
-        except fileobj.FileobjError:
-            _print_exc_info()
+        except fileobj.FileobjError as e:
+            _print_exc_info(e)
 
     def read(self, x, n):
         if n is None:
@@ -79,13 +79,13 @@ class Fileops (fileops.Fileops):
             yield ret
             x += len(ret)
 
-def _print_exc_info():
-    info = sys.exc_info()
+def _print_exc_info(e):
     if not setting.use_debug:
-        util.print_stderr(str(info[1]))
+        util.print_stderr(str(e))
     else:
-        util.print_stderr(info[1])
-        for s in util.get_traceback(info[2]):
+        util.print_stderr(e)
+        tb = sys.exc_info()[2]
+        for s in util.get_traceback(tb):
             util.print_stderr(s)
 
 def alloc(f, name=''):

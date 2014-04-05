@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.filebytes
 import fileobj.util
 
 def get_text(co, fo, args):
@@ -42,21 +43,25 @@ def get_text(co, fo, args):
                 n += 1
             else:
                 if n >= fileobj.setting.ext_strings_thresh:
-                    l.append((pos + i - n, b[i - n:i]))
+                    s = b[i - n:i]
+                    if fileobj.filebytes.TYPE is not str:
+                        s = "{0}".format(s)[2:-1] # cut b' and '
+                    l.append((pos + i - n, s))
                     if len(l) >= fileobj.setting.ext_strings_count:
                         break
                 n = 0
         if len(b) == n:
             l = [(pos, b)]
 
-    sl = ["Range %s-%s" % (fileobj.util.get_byte_string(pos),
-        fileobj.util.get_byte_string(pos + siz))]
-    sl.append("Found %d strings" % len(l))
+    sl = ["Range {0}-{1}".format(
+        fileobj.util.get_size_string(pos),
+        fileobj.util.get_size_string(pos + siz))]
+    sl.append("Found {0} strings".format(len(l)))
 
     if l:
         sl.append('')
-        f = fileobj.util.get_string_format("%${pos}s %s",
-            pos=max([len(str(x[0])) for x in l]))
+        n = max([len(str(x[0])) for x in l])
+        f = "{{0:{0}}} {{1}}".format(n)
         for i, x in enumerate(l):
-            sl.append(f % (x[0], x[1]))
+            sl.append(f.format(x[0], x[1]))
     return sl

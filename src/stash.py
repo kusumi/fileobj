@@ -23,7 +23,6 @@
 
 import os
 import shutil
-import sys
 
 from . import log
 from . import path
@@ -41,8 +40,7 @@ class TemporaryFile (object):
                     if unlink:
                         os.unlink(self.__path)
                     self.__file = fd
-            except Exception:
-                e = sys.exc_info()[1]
+            except Exception as e:
                 log.error(e)
 
     def __del__(self):
@@ -71,9 +69,8 @@ class TemporaryFile (object):
     def __copy(self, src, dst):
         try:
             shutil.copyfile(src, dst)
-            log.debug("Copy %s -> %s" % (src, dst))
+            log.debug("Copy {0} -> {1}".format(src, dst))
             assert os.path.isfile(dst)
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.error(e)
             return -1

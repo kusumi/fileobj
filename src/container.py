@@ -23,11 +23,11 @@
 
 from __future__ import division
 import collections
-import sys
 
 from . import allocator
 from . import console
 from . import extension
+from . import filebytes
 from . import fileops
 from . import kbd
 from . import operand
@@ -71,10 +71,10 @@ class Container (object):
         if not self.__fileobjs:
             self.__fileobjs.append(self.__alloc_buffer(''))
 
-        s = { 16: "%X",
-              10: "%d",
-              8 : "%o", }.get(setting.offset_num_radix) % \
-                max([o.get_size() for o in self.__fileobjs])
+        s = { 16: "{0:X}",
+              10: "{0:d}",
+              8 : "{0:o}", }.get(setting.offset_num_radix).format(
+                max([o.get_size() for o in self.__fileobjs]))
         if len(s) > setting.offset_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):
@@ -176,8 +176,7 @@ class Container (object):
             ret = fn(self, fileops.Fileops(fo), args)
             if isinstance(ret, (list, tuple)):
                 ret = '\n'.join(ret)
-        except extension.ExtError:
-            e = sys.exc_info()[1]
+        except extension.ExtError as e:
             ret = util.exc_to_string(e)
 
         if setting.use_readonly:
@@ -439,15 +438,15 @@ class Container (object):
     def read_current(self, n):
         return self.__cur_workspace.read_current(n)
 
-    def insert(self, x, s, rec=True):
-        self.__cur_workspace.insert(x, s, rec)
-    def insert_current(self, s, rec=True):
-        self.__cur_workspace.insert_current(s, rec)
+    def insert(self, x, l, rec=True):
+        self.__cur_workspace.insert(x, l, rec)
+    def insert_current(self, l, rec=True):
+        self.__cur_workspace.insert_current(l, rec)
 
-    def replace(self, x, s, rec=True):
-        self.__cur_workspace.replace(x, s, rec)
-    def replace_current(self, s, rec=True):
-        self.__cur_workspace.replace_current(s, rec)
+    def replace(self, x, l, rec=True):
+        self.__cur_workspace.replace(x, l, rec)
+    def replace_current(self, l, rec=True):
+        self.__cur_workspace.replace_current(l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_workspace.delete(x, n, rec)
@@ -518,8 +517,7 @@ class Container (object):
                     self.buffer_input(l)
                 else:
                     self.flash("Failed to read from " + f)
-            except Exception:
-                e = sys.exc_info()[1]
+            except Exception as e:
                 self.flash(e)
         elif f:
             self.flash("Can not read from " + f)
@@ -572,7 +570,7 @@ class Container (object):
             self.__records['@'] = self.__records[k] # latest
             self.buffer_input(self.__records[k])
         elif k != '@':
-            self.flash("'%s' not registered" % k)
+            self.flash("'{0}' not registered".format(k))
         elif k == '@':
             self.flash("No previously used register")
 
@@ -603,16 +601,22 @@ class Container (object):
         self.show('')
 
     def init_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer = [buf]
+
     def left_add_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer.insert(0, buf)
+
     def right_add_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer.append(buf)
 
     def get_yank_buffer_size(self):
-        return sum([len(x) for x in self.__yank_buffer])
+        return sum(len(x) for x in self.__yank_buffer)
+
     def get_yank_buffer(self):
-        return ''.join(self.__yank_buffer)
+        return filebytes.join(self.__yank_buffer)
 
     def set_bytes_per_line(self, arg):
         ret = self.__cur_workspace.find_bytes_per_line(arg)

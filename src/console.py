@@ -204,15 +204,13 @@ def resize():
     try:
         this._scr.resize(get_size_y(), get_size_x())
         this._scr.mvwin(get_position_y(), get_position_x())
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
 
 def printl(x, s, attr=screen.def_attr):
     try:
         this._scr.addstr(0, x, s, attr | screen.color_attr)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         if len(s) < screen.get_size_x() - 1:
             log.debug((e, x, s))
 
@@ -220,15 +218,14 @@ def clrl():
     try:
         this._scr.move(0, 0)
         this._scr.clrtoeol()
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
 
 _banner = ['']
 def set_banner(o):
     if o:
         set_message('')
-        this._banner[0] = "-- %s --" % str(o).upper()
+        this._banner[0] = "-- {0} --".format(str(o).upper())
     else:
         this._banner[0] = ''
 
@@ -243,11 +240,18 @@ def pop_banner():
 _message = ''
 _cursor = -1
 def set_message(o, cursor=-1):
+    s = str(o)
     if isinstance(o, Exception):
-        this._message = str(o) if str(o) else repr(o)
+        if s:
+            this._message = s
+        else:
+            this._message = repr(o)
         this._cursor = -1
     else:
-        this._message = str(o if o else '')
+        if o is not None:
+            this._message = s
+        else:
+            this._message = ''
         this._cursor = cursor
 
 def get_size_y():

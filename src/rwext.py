@@ -32,15 +32,16 @@ class Fileobj (rwbuf.Fileobj):
     _replace = True
     _delete  = True
     _enabled = True
+    _partial = False
 
     def __init__(self, raw):
-        super(Fileobj, self).__init__(repr(self))
+        super(Fileobj, self).__init__(repr(self), 0)
         self.__raw = raw
 
     def ioctl(self, width):
         if self.is_empty():
             self.init_chunk(
-                extension.raw_to_buffer(self.__raw, width))
+                extension.get_buffer(self.__raw, width))
 
     def sync(self):
         self.__writeto(self.get_path())
@@ -49,9 +50,9 @@ class Fileobj (rwbuf.Fileobj):
         self.__writeto(f)
 
     def __writeto(self, f):
-        if not self.get_undo_size():
-            with util.create_file(f) as fd:
+        if self.get_undo_size():
+            super(Fileobj, self).creat(f)
+        else:
+            with util.create_text_file(f) as fd:
                 fd.write(self.__raw)
                 util.fsync(fd)
-        else:
-            super(Fileobj, self).creat(f)

@@ -24,6 +24,7 @@
 import copy
 
 from . import edit
+from . import extension
 from . import panel
 from . import screen
 from . import util
@@ -251,7 +252,8 @@ class Workspace (object):
             if cls is def_console_class:
                 o = window.Window(panel.BinaryCanvas, panel.FocusableFrame)
             elif cls is void.ExtConsole:
-                o = window.Window(panel.ExtBinaryCanvas, panel.FocusableFrame)
+                o = window.Window(
+                    extension.ExtBinaryCanvas, panel.FocusableFrame)
             elif cls is visual.Console:
                 o = window.Window(visual.BinaryCanvas, panel.FocusableFrame)
             elif cls is visual.ExtConsole:
@@ -268,7 +270,7 @@ class Workspace (object):
             if cls is def_console_class:
                 o = window.Window(panel.TextCanvas, panel.Frame)
             elif cls is void.ExtConsole:
-                o = window.Window(panel.ExtTextCanvas, panel.Frame)
+                o = window.Window(extension.ExtTextCanvas, panel.Frame)
             elif cls is visual.Console:
                 o = window.Window(visual.TextCanvas, panel.Frame)
             elif cls is visual.ExtConsole:
@@ -302,15 +304,15 @@ class Workspace (object):
     def read_current(self, n):
         return self.__cur_fileops.read(self.get_pos(), n)
 
-    def insert(self, x, s, rec=True):
-        self.__cur_fileops.insert(x, s, rec)
-    def insert_current(self, s, rec=True):
-        self.__cur_fileops.insert(self.get_pos(), s, rec)
+    def insert(self, x, l, rec=True):
+        self.__cur_fileops.insert(x, l, rec)
+    def insert_current(self, l, rec=True):
+        self.__cur_fileops.insert(self.get_pos(), l, rec)
 
-    def replace(self, x, s, rec=True):
-        self.__cur_fileops.replace(x, s, rec)
-    def replace_current(self, s, rec=True):
-        self.__cur_fileops.replace(self.get_pos(), s, rec)
+    def replace(self, x, l, rec=True):
+        self.__cur_fileops.replace(x, l, rec)
+    def replace_current(self, l, rec=True):
+        self.__cur_fileops.replace(self.get_pos(), l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_fileops.delete(x, n, rec)

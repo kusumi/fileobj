@@ -27,6 +27,6 @@ def get_text(co, fo, args):
     d = fileobj.util.get_imported_modules()
     if d:
         g = enumerate(sorted(d.keys()))
-        return ["%2s %s" % (i + 1, d[k]) for i, k in g]
+        return ["{0:>2} {1}".format(i + 1, d[k]) for i, k in g]
     else:
         return "No module"

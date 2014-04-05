@@ -23,8 +23,8 @@
 
 import fcntl
 import re
-import sys
 
+from . import filebytes
 from . import log
 from . import path
 from . import setting
@@ -39,14 +39,12 @@ def get_blkdev_info(fd):
         s = "BLKGETSIZE"
         size = ioctl(fd, d[s]) * 512
         return size, sector_size, ''
-    except Exception:
-        e = sys.exc_info()[1]
-        log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
+    except Exception as e:
+        log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))
         raise
 
 def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, ' ' * 8)
-    b = b.replace(' ', '\x00')
+    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
     return util.host_to_int(b)
 
 def get_total_ram():
@@ -61,12 +59,11 @@ def get_meminfo(s):
         return -1
     try:
         s = util.escape_regex_pattern(s)
-        for l in open(f):
-            m = re.match(r"^%s.*\s+(\d+)" % s, l)
+        for l in util.open_text_file(f):
+            m = re.match(r"^{0}.*\s+(\d+)".format(s), l)
             if m:
                 return int(m.group(1)) * util.KiB
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception as e:
         log.error(e)
     return -1
 

@@ -21,4 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = 'v0.6.7'
+__version__ = 'v0.7.0'
+
+def get_version():
+    l = __version__[1:].split('.')
+    return tuple(int(x) for x in l)

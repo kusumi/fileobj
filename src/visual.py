@@ -25,6 +25,7 @@ import sys
 
 from . import console
 from . import edit
+from . import extension
 from . import kbd
 from . import literal
 from . import methods
@@ -180,7 +181,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_NORMAL)
         self.printl(y, x + pos, s[pos:], screen.A_STANDOUT)
 
@@ -197,7 +198,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = pos - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_STANDOUT)
         self.printl(y, x + pos, s[pos:], screen.A_NORMAL)
 
@@ -217,7 +218,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = end - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s[:pos], screen.A_NORMAL)
         self.printl(y, x + pos, s[pos:end], screen.A_STANDOUT)
         self.printl(y, x + end, s[end:], screen.A_NORMAL)
@@ -232,7 +233,7 @@ class _visual_addon (object):
         s = self.get_form_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
-            s += " " * d
+            s += ' ' * d
         self.printl(y, x, s, attr)
 
 class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
@@ -261,7 +262,7 @@ class TextCanvas (panel.TextCanvas, _visual_addon):
         self.update_visual(False)
         self.refresh()
 
-class ExtBinaryCanvas (panel.ExtBinaryCanvas, _visual_addon):
+class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
     def __init__(self, siz, pos):
         self.init_method()
         super(ExtBinaryCanvas, self).__init__(siz, pos)
@@ -330,6 +331,7 @@ class _console (console.Console):
         self.add_method(literal.s_platform   , this,    "_buffer_input")
         self.add_method(literal.s_hostname   , this,    "_buffer_input")
         self.add_method(literal.s_term       , this,    "_buffer_input")
+        self.add_method(literal.s_lang       , this,    "_buffer_input")
         self.add_method(literal.s_version    , this,    "_buffer_input")
         self.add_method(literal.s_sector     , this,    "_buffer_input")
         self.add_method(literal.s_args       , this,    "_buffer_input")
@@ -387,7 +389,7 @@ class _console (console.Console):
         return kbd.INTERRUPT
 
     def handle_invalid_literal(self, li):
-        self.co.flash("Not a visual command %s" % li.str)
+        self.co.flash("Not a visual command {0}".format(li.str))
         return _exit_visual(self)
 
     def set_banner(self):

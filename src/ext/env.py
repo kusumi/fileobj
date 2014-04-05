@@ -22,16 +22,17 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.env
-import fileobj.util
 
 def get_text(co, fo, args):
     n = max([len(x) for x in fileobj.env.iter_env_name()])
-    f = fileobj.util.get_string_format("%-${len}s", len=n)
+    f = "{{0:<{0}}}".format(n)
     l = []
     for x in fileobj.env.iter_env_name():
         o = getattr(fileobj.env, x, None)
+        s = f.format(x)
         if o is None:
-            l.append((f + " %s") % (x, None))
+            s += " None"
         else:
-            l.append((f + " \"%s\"") % (x, o))
+            s += " \"{0}\"".format(o)
+        l.append(s)
     return l

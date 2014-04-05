@@ -23,7 +23,6 @@
 
 from __future__ import with_statement
 import collections
-import sys
 import time
 
 from . import literal
@@ -117,38 +116,36 @@ class History (object):
         f = self.__path.path
         if not self.__path.is_file:
             if not self.__path.is_noent:
-                log.error("Can not read %s" % f)
+                log.error("Can not read {0}".format(f))
             return
         try:
             prefix = list(self.__data.keys())
-            for s in open(f): # from old to new
+            for s in util.open_text_file(f): # from old to new
                 s = s.rstrip()
                 if not s or s.startswith("#"):
                     continue
                 k, v = _string_to_data(s)
                 if k in prefix and util.is_graph_sequence(v):
                     self.append(k, v)
-        except Exception:
-            e = sys.exc_info()[1]
-            log.error("Failed to read %s, %s" % (f, e))
+        except Exception as e:
+            log.error("Failed to read {0}, {1}".format(f, e))
 
     def __write_history(self):
         f = self.__path.path
         if not self.__path.is_file and not self.__path.is_noent:
-            log.error("Can not write to %s" % f)
+            log.error("Can not write to {0}".format(f))
             return
         try:
             tmp = stash.TemporaryFile(f, unlink=True)
-            with open(f, 'w') as fd:
-                fd.write("# %s\n" % time.ctime())
+            with util.open_text_file(f, 'w') as fd:
+                fd.write("# {0}\n".format(time.ctime()))
                 for k, v in self:
                     for s in reversed(list(v)): # from old to new
                         assert util.is_graph_sequence(s)
                         fd.write(_data_to_string(k, s))
                 util.fsync(fd)
-        except Exception:
-            e = sys.exc_info()[1]
-            log.error("Failed to write to %s, %s" % (f, e))
+        except Exception as e:
+            log.error("Failed to write to {0}, {1}".format(f, e))
             if tmp:
                 tmp.restore()
 
@@ -177,7 +174,7 @@ def _string_to_data(s):
     return s.split(' ', 1)
 
 def _data_to_string(k, v):
-    return "%s %s\n" % (k, v)
+    return "{0} {1}\n".format(k, v)
 
 def print_history(f):
     for k, v in History(f):
@@ -186,4 +183,4 @@ def print_history(f):
                 s = " <NEW>"
             else:
                 s = ''
-            util.print_stdout("%d \"%s\"%s" % (i, v[i], s))
+            util.print_stdout("{0} \"{1}\"{2}".format(i, v[i], s))

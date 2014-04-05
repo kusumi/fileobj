@@ -31,12 +31,12 @@ def get_text(co, fo, args):
         d = o.get_marks()
         for k in sorted(d.keys()):
             pos = d[k]
-            s1 = "%d[B]" % int(pos)
-            s2 = fileobj.util.get_byte_string(pos)
+            s1 = "{0}[B]".format(pos)
+            s2 = fileobj.util.get_size_string(pos)
             if s1 == s2:
-                s = "  '%s' %s" % (k, s1)
+                s = "  '{0}' {1}".format(k, s1)
             else:
-                s = "  '%s' %s (%s)" % (k, s1, s2)
+                s = "  '{0}' {1} ({2})".format(k, s1, s2)
             sl.append(s)
         sl.append('')
     return sl

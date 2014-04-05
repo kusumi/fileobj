@@ -31,15 +31,17 @@ class Fileobj (rofd.Fileobj):
     _replace = False
     _delete  = False
     _enabled = True
+    _partial = True
 
     def __str__(self):
         l = []
-        l.append("device size %s" %
-            util.get_byte_string(self.get_size()))
-        l.append("sector size %s" %
-            util.get_byte_string(self.get_sector_size()))
-        l.append("label %s" % self.__label)
-        return "%s\n\n%s" % (super(Fileobj, self).__str__(), '\n'.join(l))
+        l.append("device size {0}".format(
+            util.get_size_string(self.get_size())))
+        l.append("sector size {0}".format(
+            util.get_size_string(self.get_sector_size())))
+        l.append("label {0}".format(self.__label))
+        return "{0}\n\n{1}".format(
+            super(Fileobj, self).__str__(), '\n'.join(l))
 
     def init(self):
         b = kernel.get_blkdev_info(self.get_path())
@@ -49,11 +51,11 @@ class Fileobj (rofd.Fileobj):
         self.set_size(b.size)
         self.set_align(self.get_sector_size())
         self.set_window(0, 1)
-        self.open_file('r')
+        self.init_file('r')
 
     def get_sector_size(self):
         return self.__sector_size
 
     def creat(self, f):
         raise fileobj.FileobjError(
-            "Can only write to %s" % self.get_path())
+            "Can only write to {0}".format(self.get_path()))

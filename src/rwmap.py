@@ -24,28 +24,27 @@
 import mmap
 import os
 import stat
-import sys
 
+from . import filebytes
 from . import fileobj
 from . import kernel
 from . import log
 from . import romap
+from . import util
 
 class Fileobj (romap.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
     _enabled = kernel.has_mremap()
+    _partial = False
 
-    def __init__(self, f):
-        super(Fileobj, self).__init__(f)
+    def __init__(self, f, offset=0):
+        super(Fileobj, self).__init__(f, offset)
         self.__dirty = False
         self.__sync = False
         self.__dead = False
         self.__stat = os.stat(self.get_path())
-
-    def mmap(self, fileno):
-        return mmap.mmap(fileno, 0)
 
     def cleanup(self):
         try:
@@ -53,23 +52,24 @@ class Fileobj (romap.Fileobj):
                 return
             a = self.__sync
             l = self.__stat
-        except Exception: # error from __init__
-            e = sys.exc_info()[1]
+        except Exception as e: # error from __init__
             log.error(e)
             return
         try:
             self.restore_rollback_log(self)
             self.flush()
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.error(e)
         finally:
             super(Fileobj, self).cleanup()
             if self.__dead:
-                open(self.get_path(), "w").close()
+                util.truncate_file(self.get_path())
             if not a:
                 os.utime(self.get_path(),
                     (l[stat.ST_ATIME], l[stat.ST_MTIME]))
+
+    def mmap(self, fileno):
+        return mmap.mmap(fileno, 0)
 
     def clear_dirty(self):
         self.__dirty = False
@@ -99,15 +99,15 @@ class Fileobj (romap.Fileobj):
         if not self.is_empty():
             return super(Fileobj, self).read(x, n)
         else:
-            return ''
+            return filebytes.BLANK
 
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         size = self.get_size()
-        n = len(s)
+        n = len(l)
         xx = x + n
 
         if rec:
-            buf = s[:]
+            buf = l[:]
             def ufn(ref):
                 ref.delete(x, n, False)
                 return x
@@ -118,17 +118,17 @@ class Fileobj (romap.Fileobj):
 
         self.map.resize(size + n)
         self.map.move(xx, x, size - x)
-        self.map[x:xx] = s
+        self.map[x:xx] = filebytes.input_to_bytes(l)
         self.__dirty = True
         self.__sync = False
         self.__dead = False
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         if self.is_empty():
-            self.insert(x, s, rec)
+            self.insert(x, l, rec)
             return
         size = self.get_size()
-        n = len(s)
+        n = len(l)
         xx = x + n
         resized = False
         if x + n > size:
@@ -136,8 +136,8 @@ class Fileobj (romap.Fileobj):
             resized = True
 
         if rec:
-            ubuf = self.read(x, n)
-            rbuf = s[:]
+            ubuf = filebytes.ordt(self.read(x, n))
+            rbuf = l[:]
             if not resized:
                 def ufn1(ref):
                     ref.replace(x, ubuf, False)
@@ -157,7 +157,7 @@ class Fileobj (romap.Fileobj):
                     return x
                 self.add_undo(ufn2, rfn2)
 
-        self.map[x:xx] = s
+        self.map[x:xx] = filebytes.input_to_bytes(l)
         self.__dirty = True
         self.__sync = False
 
@@ -168,7 +168,7 @@ class Fileobj (romap.Fileobj):
         xx = x + n
 
         if rec:
-            buf = self.read(x, n)
+            buf = filebytes.ordt(self.read(x, n))
             def ufn(ref):
                 ref.insert(x, buf, False)
                 return x

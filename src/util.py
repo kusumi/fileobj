@@ -21,10 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import distutils.sysconfig
+from __future__ import print_function
+import codecs
 import inspect
 import os
-import pkgutil
 import platform
 import re
 import string
@@ -35,18 +35,22 @@ import tempfile
 import traceback
 
 from . import kbd
+from . import package
 from . import setting
+from . import version
 
 if setting.use_debug:
     import pdb
-    from pdb import set_trace
+    from pdb import set_trace as set_bp
+else:
+    def set_bp():
+        return
 
 NO_NAME = "[No Name]"
 
 class GenericError (Exception):
     """Exception -> BaseException -> object in Python 2.5 or >"""
-    def __init__(self, arg):
-        super(GenericError, self).__init__(arg)
+    pass
 
 class Namespace (object):
     def __init__(self, **kwd):
@@ -61,23 +65,55 @@ class Pair (object):
         self.set(y, x)
 
     def __str__(self):
-        return "(%d,%d)" % (self.y, self.x)
+        return "({0},{1})".format(self.y, self.x)
 
     def set(self, y, x):
         self.y = y
         self.x = x
 
+_python_version = tuple(sys.version_info[:3])
 def get_python_version():
-    return tuple(sys.version_info[:3])
+    return _python_version
 
 def get_python_version_string():
     return '.'.join([str(x) for x in get_python_version()])
+
+def is_python2():
+    return get_python_version()[0] == 2
 
 def is_python3():
     return get_python_version()[0] == 3
 
 def is_python_version_or_ht(*l):
-    return get_python_version() >= tuple(x for x in l)
+    v = get_python_version()
+    l = tuple(l)
+    d = len(v) - len(l)
+    if d > 0:
+        l = list(l) + [0 for x in range(d)]
+        return v >= tuple(l)
+    elif d < 0:
+        v = list(v) + [0 for x in range(-d)]
+        return tuple(v) >= l
+    else:
+        return v >= l
+
+def is_python2_version_or_ht(*l):
+    return is_python2() and is_python_version_or_ht(*l)
+
+def is_python3_version_or_ht(*l):
+    return is_python3() and is_python_version_or_ht(*l)
+
+def is_python_version_lt(*l):
+    return not is_python_version_or_ht(*l)
+
+def is_python2_version_lt(*l):
+    return is_python2() and is_python_version_lt(*l)
+
+def is_python3_version_lt(*l):
+    return is_python3() and is_python_version_lt(*l)
+
+def is_python3_supported():
+    return version.get_version() >= (0, 7, 0)
 
 def get_program_path():
     return sys.argv[0]
@@ -85,14 +121,8 @@ def get_program_path():
 def get_program_name():
     return os.path.basename(get_program_path())
 
-def get_site_dir():
-    return distutils.sysconfig.get_python_lib()
-
-def get_package_dir():
-    return os.path.join(get_site_dir(), "fileobj")
-
-_Xregex = re.compile(r"\\X[%s]{1,}$" % string.hexdigits)
-_xregex = re.compile(r"\\x([%s]{1,2})" % string.hexdigits)
+_Xregex = re.compile(r"\\X[{0}]{{1,}}$".format(string.hexdigits))
+_xregex = re.compile(r"\\x([{0}]{{1,2}})".format(string.hexdigits))
 
 # \X1234 -> \x12\x34
 # \X123  -> \x12\x30
@@ -105,7 +135,7 @@ def pack_hex_string(s):
             s += '0'
         l = []
         for i in range(0, len(s), 2):
-            l.append("\\x%s" % s[i : i + 2])
+            l.append("\\x{0}".format(s[i : i + 2]))
         s = ''.join(l)
     pos = 0
     while True:
@@ -120,7 +150,8 @@ def pack_hex_string(s):
                 u = l[0]
             else:
                 u = (l[0] << 4) + l[1]
-            s = s.replace(t, struct.pack(U1F, u), 1)
+            b = struct.pack(U1F, u)
+            s = s.replace(t, bytes_to_str(b), 1)
         else:
             return s
 
@@ -131,12 +162,6 @@ def escape_regex_pattern(s):
     while ")" in l:
         l[l.index(")")] = "\)"
     return ''.join(l)
-
-def to_string(l):
-    return ''.join([chr(x) for x in l])
-
-def get_string_format(tmp, **kwd):
-    return string.Template(tmp).substitute(kwd)
 
 def is_subclass(cls, clsinfo, include_clsinfo=True):
     if not inspect.isclass(cls):
@@ -167,6 +192,18 @@ def ctrl(c):
     """Get str arg and return int"""
     return kbd.ctrl(ord(c))
 
+def find_string(src, s):
+    if setting.use_ignorecase:
+        return src.lower().find(s.lower())
+    else:
+        return src.find(s)
+
+def rfind_string(src, s):
+    if setting.use_ignorecase:
+        return src.lower().rfind(s.lower())
+    else:
+        return src.rfind(s)
+
 def get_system_string():
     """Return os name"""
     ret = platform.system()
@@ -177,7 +214,7 @@ def get_release_string():
     return platform.release()
 
 def raise_no_impl(s):
-    raise NotImplementedError("No %s" % s)
+    raise NotImplementedError("No {0}".format(s))
 
 KB = 1000
 MB = KB * KB
@@ -197,6 +234,8 @@ try:
     PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
 except Exception:
     PAGE_SIZE = 4 * KiB # pretend 4 KiB
+    if setting.use_debug:
+        raise
 
 _str_size_dict = {
     "KB" : KB,
@@ -212,7 +251,7 @@ _str_size_dict = {
     "PIB": PiB,
     "EIB": EiB, }
 
-def parse_byte_string(s, sector_size=-1):
+def parse_size_string(s, sector_size=-1):
     if not s:
         return None
     if s.startswith("+"):
@@ -277,9 +316,9 @@ _bi_str_dict = {
     PiB: "PiB",
     EiB: "EiB", }
 
-def get_byte_string(arg):
+def get_size_string(arg):
     if arg < 0:
-        return "%d[B]" % int(arg)
+        return "{0}[B]".format(int(arg))
     if setting.use_siprefix:
         d = _si_str_dict
     else:
@@ -287,9 +326,9 @@ def get_byte_string(arg):
     for n in reversed(sorted(d.keys())):
         x = 1.0 * arg / n
         if x >= 1:
-            s = "%f" % x
+            s = "{0:f}".format(x)
             s = s.rstrip('0').rstrip('.')
-            return "%s[%s]" % (s, d[n])
+            return "{0}[{1}]".format(s, d[n])
     return "0[B]"
 
 def is_le_cpu():
@@ -327,13 +366,13 @@ def __get_endianness_prefix(s):
         return ''
 
 def __false_assert_unknown_byteorder():
-    assert 0, "unknown byteorder %s" % sys.byteorder
+    assert 0, "unknown byteorder {0}".format(sys.byteorder)
 
 def byte_to_int(b, sign=False):
     if is_le_cpu():
-        return __bin_to_int('', b[0], sign)
+        return __bin_to_int('', b[0:1], sign)
     elif is_be_cpu():
-        return __bin_to_int('', b[-1], sign)
+        return __bin_to_int('', b[-1:], sign)
     else:
         __false_assert_unknown_byteorder()
 
@@ -374,14 +413,14 @@ def __pad_bin(prefix, b, sign):
         if i >= len(b):
             if prefix:
                 if prefix == "<":
-                    return b + __get_padding(i, b, -1, sign)
+                    return b + __get_padding(i, b, len(b) - 1, sign)
                 elif prefix == ">" or prefix == "!":
                     return __get_padding(i, b, 0, sign) + b
                 else:
-                    assert 0, "unknown prefix %s" % prefix
+                    assert 0, "unknown prefix {0}".format(prefix)
             else:
                 if is_le_cpu():
-                    return b + __get_padding(i, b, -1, sign)
+                    return b + __get_padding(i, b, len(b) - 1, sign)
                 elif is_be_cpu():
                     return __get_padding(i, b, 0, sign) + b
                 else:
@@ -389,10 +428,10 @@ def __pad_bin(prefix, b, sign):
     return b
 
 def __get_padding(size, b, high, sign):
-    if sign and (ord(b[high]) & 0x80):
-        pad = "\xFF"
+    if sign and (ord(b[high : high + 1]) & 0x80):
+        pad = b"\xFF"
     else:
-        pad = "\x00"
+        pad = b"\x00"
     return pad * (size - len(b))
 
 def int_to_byte(x):
@@ -450,7 +489,7 @@ def __strip_bin(prefix, b, size):
         elif prefix == ">" or prefix == "!":
             return b[len(b)-size:]
         else:
-            assert 0, "unknown prefix %s" % prefix
+            assert 0, "unknown prefix {0}".format(prefix)
     else:
         if is_le_cpu():
             return b[:size]
@@ -465,11 +504,24 @@ def is_same_file(a, b):
     else:
         return False
 
+def open_file(f, mode='r'):
+    return open(f, mode + 'b')
+
+def open_text_file(f, mode='r'):
+    return open(f, mode)
+
+def truncate_file(f):
+    open(f, 'wb').close()
+
 def create_file(f):
+    return os.fdopen(__create_file(f), 'w+b')
+
+def create_text_file(f):
+    return os.fdopen(__create_file(f), 'w+')
+
+def __create_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
-    mode = 420 # not using octal 0644 for Python 2.5/3.x compatibility
-    fileno = os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
-    return os.fdopen(fileno, 'w+')
+    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o644)
 
 def open_temp_file():
     d = setting.get_userdir_path()
@@ -490,69 +542,85 @@ def fsync(fd):
         fd.flush()
         os.fsync(fd.fileno()) # call fsync(2)
 
-def run_subprocess(*l):
+def parse_file_path(f):
+    """Return tuple of path and offset"""
+    if '@' in f:
+        i = f.rindex('@')
+        if '/' in f:
+            if i > f.rindex('/'):
+                s = f[i + 1:]
+                f = f[:i]
+                offset = parse_size_string(s)
+                if offset is None:
+                    offset = 0
+                return f, offset
+    return f, 0
+
+def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
     out, err = p.communicate()
     if out is None:
-        out = ''
+        out = b''
     if err is None:
-        err = ''
-    return out, err, p.returncode
+        err = b''
+    return bytes_to_str(out), bytes_to_str(err), p.returncode
 
-def __iter_next(g):
+def __iter_next_2k(g):
     return g.next()
-def __iter_next3k(g):
+def __iter_next_3k(g):
     return next(g)
 
-def __get_xrange(*l):
+def __get_xrange_2k(*l):
     return xrange(*l)
-def __get_xrange3k(*l):
+def __get_xrange_3k(*l):
     return range(*l)
 
-if is_python3():
-    MAX_INT = sys.maxsize
-    iter_next = __iter_next3k
-    get_xrange = __get_xrange3k
-else:
+def __str_to_bytes_2k(s):
+    return s
+def __str_to_bytes_3k(s):
+    return codecs.latin_1_encode(s)[0]
+
+def __bytes_to_str_2k(b):
+    return b
+def __bytes_to_str_3k(b):
+    return codecs.latin_1_decode(b)[0]
+
+if is_python2():
     MAX_INT = sys.maxint
-    iter_next = __iter_next
-    get_xrange = __get_xrange
+    iter_next = __iter_next_2k
+    get_xrange = __get_xrange_2k
+    str_to_bytes = __str_to_bytes_2k
+    bytes_to_str = __bytes_to_str_2k
+else:
+    MAX_INT = sys.maxsize
+    iter_next = __iter_next_3k
+    get_xrange = __get_xrange_3k
+    str_to_bytes = __str_to_bytes_3k
+    bytes_to_str = __bytes_to_str_3k
 
 MIN_INT = -MAX_INT - 1
 
-def __iter_site_ext():
-    d = os.path.join(get_package_dir(), "ext")
-    for loader, name, ispkg in pkgutil.iter_modules([d], "ext."): # sorted
-        if not ispkg:
-            yield name
-
-def __iter_site():
-    d = get_package_dir()
-    for loader, name, ispkg in pkgutil.iter_modules([d]): # sorted
-        if not ispkg:
-            yield name
-    for name in __iter_site_ext():
-        yield name
+def iter_site_module():
+    for s in package.iter_module_name():
+        o = import_module(s)
+        if o:
+            yield o
 
 def iter_site_ext_module():
-    for s in __iter_site_ext():
-        o = import_module(s)
-        if o:
+    for o in iter_site_module():
+        if o.__name__.startswith(
+            "{0}ext.".format(package.get_prefix())):
             yield o
 
-def iter_site_module():
-    for s in __iter_site():
-        o = import_module(s)
-        if o:
-            yield o
-
-def iter_dir(obj):
-    for l in obj.__dict__.items():
+def iter_dir_items(obj):
+    k = dir(obj)
+    v = [getattr(obj, x) for x in k]
+    for l in zip(k, v):
         yield l
 
 def iter_dir_values(obj):
-    for k, v in iter_dir(obj):
+    for k, v in iter_dir_items(obj):
         yield v
 
 def add_method(obj, fn, name=None):
@@ -569,12 +637,11 @@ def import_module(s):
     if s in _modules:
         return _modules[s]
     try:
-        x = __import__(s, globals(), locals(), [""])
-        if x:
-            _modules[s] = x
-        return x
-    except Exception:
-        e = sys.exc_info()[1]
+        ret = package.import_module(s)
+        if ret:
+            _modules[s] = ret
+        return ret
+    except Exception as e:
         _exceptions[s] = exc_to_string(e)
         return None
 
@@ -593,10 +660,10 @@ def get_traceback(tb):
     return ret
 
 def print_stdout(o):
-    sys.stdout.write("%s\n" % object_to_string(o))
+    print(object_to_string(o))
 
 def print_stderr(o):
-    sys.stderr.write("%s\n" % object_to_string(o))
+    print(object_to_string(o), file=sys.stderr)
 
 def object_to_string(o):
     if isinstance(o, Exception):
@@ -605,7 +672,7 @@ def object_to_string(o):
         return str(o)
 
 def exc_to_string(e):
-    return "%s: %s" % (get_class_name(e), e)
+    return "{0}: {1}".format(get_class_name(e), e)
 
 def get_class(o):
     return o.__class__

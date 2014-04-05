@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import filebytes
 from . import rofd
 from . import util
 
@@ -29,15 +30,17 @@ class Fileobj (rofd.Fileobj):
     _replace = True
     _delete  = False
     _enabled = True
+    _partial = True
 
-    def __init__(self, f):
-        super(Fileobj, self).__init__(f)
+    def __init__(self, f, offset=0):
+        super(Fileobj, self).__init__(f, offset)
         self.__dirty = False
         self.__diff = {}
 
     def __str__(self):
-        return "%s\n\ndiff size %s" % (super(Fileobj, self).__str__(),
-            util.get_byte_string(len(self.__diff)))
+        return "{0}\n\ndiff size {1}".format(
+            super(Fileobj, self).__str__(),
+            util.get_size_string(len(self.__diff)))
 
     def clear_dirty(self):
         self.__dirty = False
@@ -46,37 +49,38 @@ class Fileobj (rofd.Fileobj):
         return self.__dirty
 
     def sync(self):
+        offset = self.get_offset()
         for x in sorted(self.__diff.keys()):
-            self.fd.seek(x)
+            self.fd.seek(offset + x)
             self.fd.write(self.__diff[x])
         util.fsync(self.fd)
 
     def read(self, x, n):
-        s = super(Fileobj, self).read(x, n)
-        if not s or not self.__diff:
-            return s
-        l = list(s)
+        b = super(Fileobj, self).read(x, n)
+        if not b or not self.__diff:
+            return b
+        l = filebytes.split(b)
         for i in util.get_xrange(x, x + n):
             if i in self.__diff:
                 l[i - x] = self.__diff[i]
-        return ''.join(l)
+        return filebytes.join(l)
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         # don't use buf for both ufn/rfn because ufn lose original buf
-        if x + len(s) > self.get_size():
-            s = s[:self.get_size() - x]
+        if x + len(l) > self.get_size():
+            l = l[:self.get_size() - x]
         if rec:
-            ubuf = self.read(x, len(s))
+            ubuf = filebytes.ordt(self.read(x, len(l)))
             def ufn(ref):
                 ref.replace(x, ubuf, False)
                 return x
 
-        for i, c in enumerate(s):
-            self.__diff[x + i] = c
+        for i, c in enumerate(l):
+            self.__diff[x + i] = filebytes.input_to_bytes((c,))
         self.__dirty = not not self.__diff
 
         if rec:
-            rbuf = s[:]
+            rbuf = l[:]
             def rfn(ref):
                 ref.replace(x, rbuf, False)
                 return x

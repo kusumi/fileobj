@@ -25,6 +25,7 @@ from __future__ import division
 import struct
 
 import fileobj.extension
+import fileobj.filebytes
 import fileobj.util
 from fileobj.extension import fail
 
@@ -37,19 +38,19 @@ def get_text(co, fo, args):
     b = fo.read(args[-1], size + 1)
     n = len(b)
     if n > size:
-        fail("Invalid length: >%d" % size)
+        fail("Invalid length: >{0}".format(size))
     elif n < 0x40 or (n % 4):
-        fail("Invalid length: %d" % n)
+        fail("Invalid length: {0}".format(n))
 
-    cfg = [ord(x) for x in b]
+    cfg = fileobj.filebytes.ordt(b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
-        fail("Invalid vendor id: %s" %
-            repr(struct.pack(fileobj.util.U1F * 2, vend[1], vend[0])))
+        fail("Invalid vendor id: {0}".format(
+            repr(struct.pack(fileobj.util.U1F * 2, vend[1], vend[0]))))
 
     type = cfg[0x0E] & 0x7F
     if type not in (PCI_HDR_DEV, PCI_HDR_PPB, PCI_HDR_PCB):
-        fail("Invalid header type: %d" % type)
+        fail("Invalid header type: {0}".format(type))
 
     cap = ((cfg[0x06] & 0x10) != 0)
     capaddr = []
@@ -63,7 +64,7 @@ def get_text(co, fo, args):
         next = ptr
         while next:
             if next % 4:
-                fail("Invalid cap address: 0x%04X" % next)
+                fail("Invalid cap address: 0x{0:04X}".format(next))
             capaddr.append(next)
             next = cfg[next + 1]
 
@@ -74,12 +75,13 @@ def get_text(co, fo, args):
     while buf:
         b = buf[:4]
         buf = buf[4:]
-        s = "|%04X| %02X %02X %02X %02X" % (n, b[-1], b[-2], b[-3], b[-4])
+        s = "|{0:04X}| {1:02X} {2:02X} {3:02X} {4:02X}".format(
+            n, b[3], b[2], b[1], b[0])
         if (type == PCI_HDR_DEV and 0x10 <= n < 0x28) or \
             (type == PCI_HDR_PPB and 0x10 <= n < 0x18):
-            s += " %s" % __get_bar(n, b)
+            s += " {0}".format(__get_bar(n, b))
         if n in capaddr:
-            s += " CAP%d %d" % (capaddr.index(n), cfg[n])
+            s += " CAP{0} {1}".format(capaddr.index(n), cfg[n])
         l.append(s)
         n += 4
         if n == 0x40:
@@ -87,12 +89,12 @@ def get_text(co, fo, args):
     return l
 
 def __get_bar(n, word):
-    b = fileobj.util.to_string(word)
-    addr = fileobj.util.le_to_int(b)
+    addr = fileobj.util.le_to_int(
+        fileobj.filebytes.input_to_bytes(word))
     if word[0] & 0x01:
-        s = "I/O %04X" % (addr & 0xFFFFFFFC)
+        s = "I/O {0:04X}".format(addr & 0xFFFFFFFC)
     elif word[0] & 0x06:
         s = "MEMORY"
     else:
-        s = "MEMORY %08X" % (addr & 0xFFFFFFF0)
-    return "BAR%d %s" % ((n - 0x10) // 4, s)
+        s = "MEMORY {0:08X}".format(addr & 0xFFFFFFF0)
+    return "BAR{0} {1}".format((n - 0x10) // 4, s)

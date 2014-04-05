@@ -22,15 +22,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.setting
-import fileobj.util
 
 def get_text(co, fo, args):
-    l = [len(x) for x in fileobj.setting.iter_setting_name()]
-    f = fileobj.util.get_string_format("%-${len}s %s", len=max(l))
+    n = max([len(x) for x in fileobj.setting.iter_setting_name()])
+    f = "{{0:<{0}}} {{1}}".format(n)
     sl = []
     for x in fileobj.setting.iter_setting_name():
         if x:
-            sl.append(f % (x, getattr(fileobj.setting, x)))
+            sl.append(f.format(x, getattr(fileobj.setting, x)))
         else:
             sl.append('')
     return sl

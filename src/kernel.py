@@ -64,18 +64,19 @@ def get_blkdev_info(f):
 
     o = get_kernel_module()
     if not o:
-        raise KernelError("Failed to get kernel module for %s" % _system)
+        raise KernelError(
+            "Failed to get kernel module for {0}".format(_system))
     if not o.is_blkdev(f):
-        raise KernelError("%s is not blkdev" % f)
+        raise KernelError("{0} is not blkdev".format(f))
 
     # NetBSD fails with -EBUSY if already opened
-    with open(f) as fd:
+    with util.open_file(f) as fd:
         l = o.get_blkdev_info(fd)
         b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
         _blkdev_info[f] = b
-        log.info("Block device %s (%s, %s, %s)" %
-            (b.name, util.get_byte_string(b.size),
-            util.get_byte_string(b.sector_size), repr(b.label)))
+        log.info("Block device {0} ({1}, {2}, {3})".format(
+            b.name, util.get_size_string(b.size),
+            util.get_size_string(b.sector_size), repr(b.label)))
         return b
 
 def get_buffer_size(f):
@@ -86,7 +87,7 @@ def get_buffer_size(f):
     if ret > 0:
         return ret
     else:
-        return len(open(f).read())
+        return len(util.open_file(f).read())
 
 def get_buffer_size_safe(f):
     # return -1 if exception is raised

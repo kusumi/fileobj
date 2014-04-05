@@ -26,7 +26,7 @@ import fileobj.util
 def get_text(co, fo, args):
     d = fileobj.util.get_import_exceptions()
     if d:
-        f = lambda n, k: "%2s %s, \"%s\"" % (n, k, d[k])
+        f = lambda n, k: "{0:>2} {1}, \"{2}\"".format(n, k, d[k])
         return [f(i + 1, k) for i, k in enumerate(sorted(d.keys()))]
     else:
         return "No exception"

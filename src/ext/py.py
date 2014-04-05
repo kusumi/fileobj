@@ -39,5 +39,5 @@ def get_text(co, fo, args):
     l.append(("executable", sys.executable))
 
     n = max([len(x[0]) for x in l])
-    f = fileobj.util.get_string_format("%-${len}s %s", len=n)
-    return [f % (x[0], x[1]) for x in l]
+    f = "{{0:<{0}}} {{1}}".format(n)
+    return [f.format(*x) for x in l]

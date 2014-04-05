@@ -34,9 +34,9 @@ def get_text(co, fo, args):
     if not l:
         return "No class"
     sl = []
-    for i, cls in enumerate(sorted(l)):
+    for i, cls in enumerate(l):
         x = inspect.getmro(cls)
         if x[-1] != object:
-            return "%s is not derived from %s" % (x[0], object)
-        sl.append("%3s %s" % (i + 1, x))
+            return "{0} is not derived from {1}".format(x[0], object)
+        sl.append("{0:>3} {1}".format(i + 1, x))
     return sl

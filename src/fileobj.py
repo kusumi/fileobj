@@ -23,12 +23,13 @@
 
 from __future__ import with_statement
 import os
-import sys
 
 from . import fileattr
+from . import filebytes
 from . import kernel
 from . import log
 from . import magic
+from . import package
 from . import path
 from . import screen
 from . import setting
@@ -52,19 +53,19 @@ class FileobjError (util.GenericError):
     pass
 
 class Fileobj (object):
-    def __init__(self, f):
+    def __init__(self, f, offset=0):
         try:
             self.__path = path.Path(f)
             self.__attr = fileattr.get(self.get_path())
+            self.__attr.offset = self.__parse_offset(offset)
             self.__clear_barrier()
             self.init()
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.error(e)
             try:
                 self.cleanup()
-            except Exception:
-                log.error(sys.exc_info()[1])
+            except Exception as e2:
+                log.error(e2)
             raise e
 
     def init(self):
@@ -122,6 +123,30 @@ class Fileobj (object):
         return self.__path.short_path
     def get_magic(self):
         return self.__attr.magic
+    def get_offset(self):
+        return self.__attr.offset
+
+    def __parse_offset(self, offset):
+        if offset <= 0:
+            return 0
+        f = self.get_path()
+        size = kernel.get_buffer_size_safe(f)
+        if size == -1:
+            log.error("Failed to read size of {0}".format(f))
+            return 0
+        elif offset >= size:
+            log.error("Too large offset value {0}".format(offset))
+            return 0
+        else:
+            return offset
+
+    def read_header(self):
+        offset = self.get_offset()
+        if offset != 0:
+            with util.open_file(self.get_path()) as fd:
+                return fd.read(offset)
+        else:
+            return filebytes.BLANK
 
     def flush(self, f=None):
         this = self.get_path()
@@ -161,11 +186,11 @@ class Fileobj (object):
             else:
                 assert not os.path.exists(f), f
                 self.creat(f)
-        except Exception:
-            e = sys.exc_info()[1]
-            raise FileobjError("Failed to write: %s" % repr(e))
+        except Exception as e:
+            raise FileobjError("Failed to write: {0}".format(
+                repr(e) if setting.use_debug else e))
         else:
-            msg += "%s %d[B] written" % (f, self.get_size())
+            msg += "{0} {1}[B] written".format(f, self.get_size())
             if creat:
                 fileattr.rename(this, f)
                 return msg, f
@@ -182,11 +207,11 @@ class Fileobj (object):
         with util.create_file(f) as fd:
             pos = 0
             while True:
-                s = self.read(pos, util.PAGE_SIZE)
-                if not s:
+                b = self.read(pos, util.PAGE_SIZE)
+                if not b:
                     break
-                fd.write(s)
-                pos += len(s)
+                fd.write(b)
+                pos += len(b)
             util.fsync(fd)
 
     def search(self, x, s, end=-1):
@@ -198,9 +223,9 @@ class Fileobj (object):
 
     def read(self, x, n):
         self.raise_no_support("read")
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         self.raise_no_support("insert")
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         self.raise_no_support("replace")
     def delete(self, x, n, rec=True):
         self.raise_no_support("delete")
@@ -210,7 +235,7 @@ class Fileobj (object):
             s in ("insert", "replace", "delete"):
             raise FileobjError("Using readonly mode")
         else:
-            raise FileobjError("%s not supported" % s)
+            raise FileobjError("{0} not supported".format(s))
 
     def get_undo_size(self):
         return self.__attr.undo.get_undo_log_size()
@@ -289,11 +314,10 @@ class Fileobj (object):
         try:
             self.__bretval = ret
             self.__boffset = offset
-            self.__bbuffer = list(self.read(self.__boffset, size))
+            self.__bbuffer = self.__read_bbuffer(self.__boffset, size)
             self.__bsize = self.get_barrier_size()
             self.__bdirty = False
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception as e:
             log.error(e)
             self.put_barrier()
             return -1
@@ -333,6 +357,9 @@ class Fileobj (object):
         else:
             return -1, -1, -1
 
+    def __read_bbuffer(self, x, n):
+        return filebytes.ordl(self.read(x, n))
+
     def barrier_read(self, x, n):
         self.__test_barrier(x, n)
         if setting.use_debug:
@@ -340,21 +367,21 @@ class Fileobj (object):
             assert x >= a
             assert x + n <= b + 1
         x -= self.__boffset
-        return ''.join(self.__bbuffer[x : x + n])
+        return filebytes.input_to_bytes(self.__bbuffer[x : x + n])
 
-    def barrier_insert(self, x, s, rec=True):
+    def barrier_insert(self, x, l, rec=True):
         self.__test_barrier(x, 0)
         self.__bdirty = True
         x -= self.__boffset
-        self.__bbuffer[x : x] = s
-        if self.get_barrier_size() == len(s):
+        self.__bbuffer[x : x] = l
+        if self.get_barrier_size() == len(l):
             self.__right_extend_barrier(1)
 
-    def barrier_replace(self, x, s, rec=True):
+    def barrier_replace(self, x, l, rec=True):
         self.__test_barrier(x, 0)
         self.__bdirty = True
         x -= self.__boffset
-        self.__bbuffer[x : x + len(s)] = s
+        self.__bbuffer[x : x + len(l)] = l
 
     def barrier_delete(self, x, n, rec=True):
         self.__test_barrier(x, n)
@@ -376,7 +403,7 @@ class Fileobj (object):
         if pos < 0:
             size += pos
             pos = 0
-        buf = list(self.read(pos, size))
+        buf = self.__read_bbuffer(pos, size)
         assert len(buf) == size
         buf.extend(self.__bbuffer)
         self.__boffset = pos
@@ -389,7 +416,7 @@ class Fileobj (object):
         pos = self.__boffset + self.__bsize
         if pos + size > self.get_size():
             size = self.get_size() - pos
-        buf = list(self.read(pos, size))
+        buf = self.__read_bbuffer(pos, size)
         assert len(buf) == size
         self.__bbuffer.extend(buf)
         self.__bsize += size
@@ -401,7 +428,7 @@ class Fileobj (object):
 
 def get_class(s):
     if s:
-        o = util.import_module(s)
+        o = util.import_module(package.get_prefix() + s)
         if o:
             for cls in util.iter_dir_values(o):
                 if util.is_subclass(cls, Fileobj, False):

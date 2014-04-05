@@ -116,7 +116,8 @@ class RegexLiteral (FastLiteral):
             return False
         if not util.is_graph_sequence(l):
             return False
-        if self.regex.match(util.to_string(l)):
+        s = ''.join([chr(x) for x in l])
+        if self.regex.match(s):
             return True
         else:
             return False
@@ -126,7 +127,8 @@ class RegexLiteral (FastLiteral):
             return False
         if not util.is_graph_sequence(l):
             return False
-        if util.to_string(l).startswith(self.body):
+        s = ''.join([chr(x) for x in l])
+        if s.startswith(self.body):
             return True
         else:
             return False
@@ -292,6 +294,7 @@ s_date        = SlowLiteral(":date", None, "Print date")
 s_platform    = SlowLiteral(":platform", None, "Print platform")
 s_hostname    = SlowLiteral(":hostname", None, "Print hostname")
 s_term        = SlowLiteral(":term", None, "Print terminal type")
+s_lang        = SlowLiteral(":lang", None, "Print locale type")
 s_sector      = SlowLiteral(":sector", None, "Print sector size for block device")
 s_version     = SlowLiteral(":version", None, "Print version")
 s_args        = SlowLiteral(":args", None, "Print buffer list with the current buffer in brackets")
@@ -373,12 +376,12 @@ def find_literal(seq):
 def get_lines(l):
     if not l:
         return []
-    n = max([len(str(o)) for o in l])
-    f = util.get_string_format("%-${n}s %s", n=n)
+    f = "{{0:<{0}}} {{1}}".format(
+        max([len(str(o)) for o in l]))
     ret = []
     for o in l:
         if o.desc:
-            ret.append(f % (o, o.desc))
+            ret.append(f.format(o, o.desc))
     return ret
 
 def print_literal():
@@ -517,7 +520,7 @@ def init():
     this._literals[None] = tuple(sorted(get_literals()))
 
 def cleanup():
-    for s, o in util.iter_dir(this):
+    for s, o in util.iter_dir_items(this):
         if isinstance(o, Literal):
             o.cleanup()
         if isinstance(o, ExtLiteral):

@@ -31,7 +31,7 @@ def clear():
     _attrd.clear()
 
 def get_keys():
-    return list(_attrd.keys())
+    return tuple(_attrd.keys())
 
 def get(f):
     f = path.get_path(f)
@@ -39,7 +39,7 @@ def get(f):
         return _attrd.get(f)
     else:
         return _attrd.setdefault(f,
-            util.Namespace(magic='', marks={}, undo=undo.Undo()))
+            util.Namespace(magic='', offset=0, marks={}, undo=undo.Undo()))
 
 def remove(f):
     f = path.get_path(f)
