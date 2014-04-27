@@ -30,6 +30,7 @@ from . import fileobj
 from . import kernel
 from . import log
 from . import romap
+from . import util
 
 class Fileobj (romap.Fileobj):
     _insert  = True
@@ -66,7 +67,7 @@ class Fileobj (romap.Fileobj):
         finally:
             super(Fileobj, self).cleanup()
             if self.__dead:
-                open(self.get_path(), "w").close()
+                util.truncate_file(self.get_path())
             if not a:
                 os.utime(self.get_path(),
                     (l[stat.ST_ATIME], l[stat.ST_MTIME]))

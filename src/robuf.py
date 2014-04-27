@@ -167,6 +167,8 @@ class Fileobj (fileobj.Fileobj):
         assert 0, pos
 
     def read(self, x, n):
+        if not n:
+            return ''
         buf = []
         for i in range(self.get_chunk_index(x), len(self.cbuf)):
             s = self.cbuf[i].read(x, n)

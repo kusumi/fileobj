@@ -1,4 +1,4 @@
-fileobj
+fileobj (v0.6.11)
 =======
 
 ## About
@@ -11,7 +11,7 @@ fileobj
 
 + Python 2.5, 2.6 or 2.7
 
-+ Python 3.x is not supported
++ Python 3 is not supported in v0.6, use v0.7 for Python 3
 
 + Works on Linux and *BSD
 
@@ -23,7 +23,7 @@ fileobj
 
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.6.10
+        v0.6.11
         $ fileobj
 
 ## Uninstall
@@ -37,11 +37,25 @@ fileobj
 
 ## Help
 
-+ Execute *:help* command
-
-+ or run the program using *--help* option
++ Run the program with *--help* option
 
         $ fileobj --help
+        Usage: fileobj [options] [path1 path2 ...]
+        For more information, run the program and enter :help<ENTER>
+        
+        Options:
+          --version          show program's version number and exit
+          -h, --help         show this help message and exit
+          -R                 Read only
+          -o <num>           Open <num> windows
+          -O                 Open each buffer in different window
+          --width=<width>    Set window width [[0-9]+|max|min|auto]
+          --fg=<color>       Set foreground color
+                             [black|red|green|yellow|blue|magenta|cyan|white]
+          --bg=<color>       Set background color
+                             [black|red|green|yellow|blue|magenta|cyan|white]
+          --command          Print command list
+          --sitepkg          Print site package directory
 
 ## Note
 

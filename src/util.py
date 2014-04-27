@@ -504,6 +504,9 @@ def is_same_file(a, b):
     else:
         return False
 
+def truncate_file(f):
+    open(f, 'w').close()
+
 def create_text_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
     mode = 420 # not using octal 0644 for Python 2.5/3.x compatibility

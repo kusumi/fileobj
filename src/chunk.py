@@ -107,7 +107,7 @@ class Chunk (object):
 
     def __get_local_offset(self, x):
         if setting.use_debug:
-            assert x in self, (x, len(self))
+            assert x in self, (x, len(self), self.offset)
         return x - self.offset
 
 if setting.use_array_chunk:
