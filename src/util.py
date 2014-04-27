@@ -544,6 +544,8 @@ def fsync(fd):
 
 def parse_file_path(f):
     """Return tuple of path and offset"""
+    if not setting.use_file_path_attr:
+        return f, 0
     if '@' in f:
         i = f.rindex('@')
         if '/' in f:

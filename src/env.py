@@ -30,6 +30,7 @@ def iter_env_name():
     yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_CURSES"
+    yield "FILEOBJ_USE_FILE_PATH_ATTR"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_USE_TRACE_SYMLINK"
     yield "FILEOBJ_TRACE_WORD_SIZE"
@@ -159,6 +160,9 @@ def _get_setting_use_debug():
 
 def _get_setting_use_curses():
     return _test_bool("FILEOBJ_USE_CURSES", True)
+
+def _get_setting_use_file_path_attr():
+    return _test_bool("FILEOBJ_USE_FILE_PATH_ATTR", True)
 
 def _get_setting_use_trace():
     return _test_bool("FILEOBJ_USE_TRACE", False)

@@ -36,8 +36,10 @@ _t_file, \
 _t_dir, \
 _t_blkdev, \
 _t_chrdev, \
+_t_fifo, \
+_t_sock, \
 _t_unknown, \
-_t_error = [2 ** x for x in range(9)]
+_t_error = [2 ** x for x in range(11)]
 
 _sep = os.path.sep
 _cwd = os.getcwd()
@@ -75,6 +77,12 @@ class Path (object):
     def is_chrdev(self):
         return _test(self.__type, _t_chrdev)
     @property
+    def is_fifo(self):
+        return _test(self.__type, _t_fifo)
+    @property
+    def is_sock(self):
+        return _test(self.__type, _t_sock)
+    @property
     def is_unknown(self):
         return _test(self.__type, _t_unknown)
     @property
@@ -97,6 +105,10 @@ class Path (object):
             ret.append("blkdev")
         if self.is_chrdev:
             ret.append("chrdev")
+        if self.is_fifo:
+            ret.append("fifo")
+        if self.is_sock:
+            ret.append("sock")
         if self.is_unknown:
             ret.append("unknown")
         if self.is_error:
@@ -172,16 +184,24 @@ def _get_type_real(f):
                     return _t_noperm
             a = util.is_readable(s)
 
-    if os.path.isfile(f):
-        return _t_file
-    elif os.path.isdir(f):
-        return _t_dir
-    elif stat.S_ISBLK(os.stat(f).st_mode):
-        return _t_blkdev
-    elif stat.S_ISCHR(os.stat(f).st_mode):
-        return _t_chrdev
-    else:
+    ret = 0
+    mode = os.stat(f).st_mode
+    if stat.S_ISREG(mode):
+        ret |= _t_file
+    if stat.S_ISDIR(mode):
+        ret |= _t_dir
+    if stat.S_ISBLK(mode):
+        ret |= _t_blkdev
+    if stat.S_ISCHR(mode):
+        ret |= _t_chrdev
+    if stat.S_ISFIFO(mode):
+        ret |= _t_fifo
+    if stat.S_ISSOCK(mode):
+        ret |= _t_sock
+    if not ret:
         return _t_unknown
+    else:
+        return ret
 
 def is_noent(f):
     return _test(get_type(f), _t_noent)
@@ -197,6 +217,10 @@ def is_blkdev(f):
     return _test(get_type(f), _t_blkdev)
 def is_chrdev(f):
     return _test(get_type(f), _t_chrdev)
+def is_fifo(f):
+    return _test(get_type(f), _t_fifo)
+def is_sock(f):
+    return _test(get_type(f), _t_sock)
 def is_unknown(f):
     return _test(get_type(f), _t_unknown)
 def is_error(f):

@@ -28,7 +28,7 @@ def input_to_bytes(l):
         ''.join([chr(x) for x in l]))
 
 def __ord_2k(b):
-    return builtin.ord(b)
+    return builtin_ord(b)
 
 def __ord_3k(b):
     if isinstance(b, bytes):
@@ -63,6 +63,8 @@ else:
     SPACE = b' '
     ord = __ord_3k
     split = __split_3k
+
+builtin_ord = builtin.ord
 
 def ordl(b):
     return [ord(x) for x in b]

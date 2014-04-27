@@ -381,7 +381,7 @@ def get_lines(l):
     ret = []
     for o in l:
         if o.desc:
-            ret.append(f.format(o, o.desc))
+            ret.append(f.format(str(o), o.desc))
     return ret
 
 def print_literal():

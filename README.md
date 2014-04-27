@@ -1,4 +1,4 @@
-fileobj
+fileobj (v0.7.1)
 =======
 
 ## About
@@ -21,11 +21,22 @@ fileobj
 
 + Uninstall previous version if exists
 
-+ Run *setup.py*
++ Run *setup.py* using Python 2
 
+        $ python --version
+        Python 2.6.6
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.7.0
+        v0.7.1
+        $ fileobj
+
++ or run *setup.py* using Python 3
+
+        $ python3 --version
+        Python 3.3.1
+        $ sudo python3 ./setup.py install --force
+        $ fileobj --version
+        v0.7.1
         $ fileobj
 
 ## Uninstall
@@ -39,11 +50,25 @@ fileobj
 
 ## Help
 
-+ Execute *:help* command
-
-+ or run the program using *--help* option
++ Run the program with *--help* option
 
         $ fileobj --help
+        Usage: fileobj [options] [path1 path2 ...]
+        For more information, run the program and enter :help<ENTER>
+        
+        Options:
+          --version          show program's version number and exit
+          -h, --help         show this help message and exit
+          -R                 Read only
+          -o <num>           Open <num> windows
+          -O                 Open each buffer in different window
+          --width=<width>    Set window width [[0-9]+|max|min|auto]
+          --fg=<color>       Set foreground color
+                             [black|red|green|yellow|blue|magenta|cyan|white]
+          --bg=<color>       Set background color
+                             [black|red|green|yellow|blue|magenta|cyan|white]
+          --command          Print command list
+          --sitepkg          Print site package directory
 
 ## Note
 

@@ -70,11 +70,14 @@ class Container (object):
                 self.__fileobjs.append(o)
         if not self.__fileobjs:
             self.__fileobjs.append(self.__alloc_buffer(''))
+            assert self.__fileobjs
 
-        s = { 16: "{0:X}",
-              10: "{0:d}",
-              8 : "{0:o}", }.get(setting.offset_num_radix).format(
-                max([o.get_size() for o in self.__fileobjs]))
+        fmt = {
+            16: "{0:X}",
+            10: "{0:d}",
+            8 : "{0:o}", }.get(setting.offset_num_radix)
+        s = fmt.format(
+            max([o.get_size() for o in self.__fileobjs]))
         if len(s) > setting.offset_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):
