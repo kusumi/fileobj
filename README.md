@@ -1,4 +1,4 @@
-fileobj (v0.6.11)
+fileobj (v0.6.12)
 =======
 
 ## About
@@ -23,7 +23,7 @@ fileobj (v0.6.11)
 
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.6.11
+        v0.6.12
         $ fileobj
 
 ## Uninstall
@@ -59,6 +59,6 @@ fileobj (v0.6.11)
 
 ## Note
 
-+ New directory *~/.fileobj* will be made
++ Generates a new directory *~/.fileobj*
 
 + Some keyboard keys may not work correctly on vt100 terminal

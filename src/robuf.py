@@ -53,12 +53,10 @@ class Fileobj (fileobj.Fileobj):
         return '\n'.join(l)
 
     def init(self):
-        assert not self.cbuf
         f = self.get_path()
-        if os.path.exists(f):
-            self.init_chunk(open(f).read())
-        else:
-            self.init_chunk('')
+        assert not self.cbuf
+        assert os.path.isfile(f), f
+        self.init_chunk(open(f).read())
 
     def is_dirty(self):
         return False

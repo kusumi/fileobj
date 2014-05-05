@@ -75,6 +75,7 @@ def iter_env_name():
     yield "FILEOBJ_USE_MAGIC_SCAN"
     yield "FILEOBJ_USE_ALLOC_RETRY"
     yield "FILEOBJ_USE_ALLOC_RAISE"
+    yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
     yield "FILEOBJ_MMAP_THRESH"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
@@ -148,6 +149,16 @@ def _test_ratio(e):
             return x / 100
     except Exception:
         pass
+
+def _test_gt_zero_or_default(name, default):
+    e = getattr(this, name)
+    if e is None:
+        return default
+    ret = _test_gt_zero(e)
+    if ret is None:
+        return default
+    else:
+        return ret
 
 def _get_setting_use_test():
     return _test_bool("FILEOBJ_USE_TEST", True)
@@ -248,15 +259,7 @@ def _get_setting_use_history():
     return _test_bool("FILEOBJ_USE_HISTORY", True)
 
 def _get_setting_max_history():
-    e = this.FILEOBJ_MAX_HISTORY
-    _ = 100
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_MAX_HISTORY", 100)
 
 def _get_setting_history_path():
     return this.FILEOBJ_HISTORY_PATH
@@ -271,26 +274,10 @@ def _get_setting_use_barrier():
     return _test_bool("FILEOBJ_USE_BARRIER", True)
 
 def _get_setting_barrier_size():
-    e = this.FILEOBJ_BARRIER_SIZE
-    _ = 8192
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_BARRIER_SIZE", 8192)
 
 def _get_setting_barrier_extend():
-    e = this.FILEOBJ_BARRIER_EXTEND
-    _ = 1024
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_BARRIER_EXTEND", 1024)
 
 def _get_setting_use_alt_chgat():
     return _test_bool("FILEOBJ_USE_ALT_CHGAT", False)
@@ -316,15 +303,7 @@ def _get_setting_use_even_size_window():
     return _test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
 def _get_setting_offset_num_width():
-    e = this.FILEOBJ_OFFSET_NUM_WIDTH
-    _ = 8
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_OFFSET_NUM_WIDTH", 8)
 
 def _get_setting_offset_num_radix():
     e = this.FILEOBJ_OFFSET_NUM_RADIX
@@ -384,6 +363,9 @@ def _get_setting_use_alloc_retry():
 def _get_setting_use_alloc_raise():
     return _test_bool("FILEOBJ_USE_ALLOC_RAISE", False)
 
+def _get_setting_use_alloc_noent_rwbuf():
+    return _test_bool("FILEOBJ_USE_ALLOC_NOENT_RWBUF", True)
+
 def _get_setting_use_array_chunk():
     return _test_bool("FILEOBJ_USE_ARRAY_CHUNK", True)
 
@@ -402,18 +384,11 @@ def _get_setting_mmap_thresh():
         return x
 
 def _get_setting_robuf_chunk_size():
-    e = this.FILEOBJ_ROBUF_CHUNK_SIZE
     try:
-        _ = os.sysconf("SC_PAGE_SIZE") // 4
+        default = os.sysconf("SC_PAGE_SIZE") // 4
     except Exception:
-        _ = 1024
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+        default = 1024
+    return _test_gt_zero_or_default("FILEOBJ_ROBUF_CHUNK_SIZE", default)
 
 def _get_setting_robuf_search_thresh_ratio():
     e = this.FILEOBJ_ROBUF_SEARCH_THRESH_RATIO
@@ -423,15 +398,7 @@ def _get_setting_robuf_search_thresh_ratio():
         return _test_ratio(e)
 
 def _get_setting_rwbuf_chunk_balance_interval():
-    e = this.FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL
-    _ = 20
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 20)
 
 def _get_setting_rwbuf_chunk_size_low():
     e = this.FILEOBJ_RWBUF_CHUNK_SIZE_LOW
@@ -458,48 +425,16 @@ def _get_setting_rwbuf_chunk_size_high():
         return x
 
 def _get_setting_rofd_read_queue_size():
-    e = this.FILEOBJ_ROFD_READ_QUEUE_SIZE
-    _ = 1
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_ROFD_READ_QUEUE_SIZE", 1)
 
 def _get_setting_ext_strings_range():
-    e = this.FILEOBJ_EXT_STRINGS_RANGE
-    _ = 1024
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_EXT_STRINGS_RANGE", 1024)
 
 def _get_setting_ext_strings_count():
-    e = this.FILEOBJ_EXT_STRINGS_COUNT
-    _ = 1024
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_EXT_STRINGS_COUNT", 1024)
 
 def _get_setting_ext_strings_thresh():
-    e = this.FILEOBJ_EXT_STRINGS_THRESH
-    _ = 3
-    if e is None:
-        return _
-    x = _test_gt_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return _test_gt_zero_or_default("FILEOBJ_EXT_STRINGS_THRESH", 3)
 
 def _get_setting_ext_cstruct_path():
     return this.FILEOBJ_EXT_CSTRUCT_PATH

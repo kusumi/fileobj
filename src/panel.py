@@ -456,8 +456,8 @@ class OptionCanvas (Canvas, default_addon):
         if self.fileops:
             a = ''
             if setting.use_debug:
-                a += "<Python %s> <%s> %s " % \
-                    (util.get_python_version_string(),
+                a += "<%s> <%s> %s " % \
+                    (util.get_python_executable_string(),
                     version.__version__,
                     self.fileops.get_type())
             a += self.fileops.get_short_path()

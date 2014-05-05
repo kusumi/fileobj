@@ -23,6 +23,7 @@
 
 import curses
 import fcntl
+import shutil
 import struct
 import sys
 import termios
@@ -129,9 +130,12 @@ def get_size_x():
     return this._std_size.x
 
 def update_size():
-    x = fcntl.ioctl(0, termios.TIOCGWINSZ, '0' * 8)
-    l = struct.unpack(util.S2F * 4, x)
-    this._std_size.set(*l[:2])
+    if util.is_python_version_or_ht(3, 3):
+        x, y = shutil.get_terminal_size()
+    else:
+        b = fcntl.ioctl(0, termios.TIOCGWINSZ, '\x00' * 8)
+        y, x = struct.unpack(util.S2F * 4, b)[:2]
+    this._std_size.set(y, x)
 
 def clear_size():
     this._std_size.set(0, 0)

@@ -98,6 +98,10 @@ For more information, run the program and enter :help<ENTER>")
         action="store_true",
         default=False,
         help="Print site package directory")
+    parser.add_option("--executable",
+        action="store_true",
+        default=False,
+        help=optparse.SUPPRESS_HELP)
     parser.add_option("--debug",
         action="store_true",
         default=setting.use_debug,
@@ -125,6 +129,10 @@ For more information, run the program and enter :help<ENTER>")
     if opts.sitepkg:
         for x in package.get_paths():
             util.print_stdout(x)
+        sys.exit(0)
+    if opts.executable:
+        util.print_stdout(
+            util.get_python_executable_string())
         sys.exit(0)
     if opts.env:
         env.print_env()

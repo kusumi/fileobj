@@ -79,7 +79,10 @@ class Allocator (object):
         o = path.Path(f)
         f = o.path
         if not f or o.is_noent:
-            return self.__alloc(f, self.rwbuf)
+            if setting.use_alloc_noent_rwbuf:
+                return self.__alloc(f, self.rwbuf)
+            else:
+                return self.__alloc(f, self.rwmap)
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)

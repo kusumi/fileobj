@@ -178,7 +178,7 @@ class Fileobj (object):
         raise FileobjError("Read only")
 
     def utime(self):
-        os.utime(self.get_path(), None)
+        util.utime(self.get_path())
 
     def creat(self, f):
         with util.create_text_file(f) as fd:
