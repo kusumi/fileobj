@@ -1,4 +1,4 @@
-fileobj (v0.7.1)
+fileobj (v0.7.2)
 =======
 
 ## About
@@ -27,7 +27,7 @@ fileobj (v0.7.1)
         Python 2.6.6
         $ sudo python ./setup.py install --force
         $ fileobj --version
-        v0.7.1
+        v0.7.2
         $ fileobj
 
 + or run *setup.py* using Python 3
@@ -36,7 +36,7 @@ fileobj (v0.7.1)
         Python 3.3.1
         $ sudo python3 ./setup.py install --force
         $ fileobj --version
-        v0.7.1
+        v0.7.2
         $ fileobj
 
 ## Uninstall
@@ -72,6 +72,6 @@ fileobj (v0.7.1)
 
 ## Note
 
-+ New directory *~/.fileobj* will be made
++ Generates a new directory *~/.fileobj*
 
 + Some keyboard keys may not work correctly on vt100 terminal

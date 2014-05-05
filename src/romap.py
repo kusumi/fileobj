@@ -50,7 +50,6 @@ class Fileobj (fileobj.Fileobj):
         self.__set_delta(0, 0)
         self.map = None
         super(Fileobj, self).__init__(f, offset)
-        assert os.path.exists(self.get_path())
 
     def __str__(self):
         l = []
@@ -62,14 +61,18 @@ class Fileobj (fileobj.Fileobj):
 
     def init(self):
         f = self.get_path()
-        if kernel.get_buffer_size_safe(f) <= 0:
+        if kernel.get_file_size(f) <= 0:
             raise fileobj.FileobjError("{0} is empty".format(f))
-        with util.open_file(f, 'r+') as fd:
-            self.map = self.mmap(fd.fileno())
+        self.init_mapping(f)
+        assert os.path.exists(self.get_path())
 
     def cleanup(self):
         if self.map:
             self.map.close() # no exception on second time
+
+    def init_mapping(self, f):
+        with util.open_file(f, 'r+') as fd:
+            self.map = self.mmap(fd.fileno())
 
     def mmap(self, fileno):
         offset = self.get_offset()

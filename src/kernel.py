@@ -83,17 +83,35 @@ def get_buffer_size(f):
     # caller need to catch exception
     if is_blkdev(f):
         return get_blkdev_info(f).size
-    ret = os.stat(f).st_size
+    if not path.is_file(f):
+        return -1
+    ret = get_file_size(f)
     if ret > 0:
         return ret
-    else:
-        return len(util.open_file(f).read())
+
+    with util.open_file(f) as fd: # binary
+        if util.set_non_blocking(fd) == -1:
+            return -1
+        try:
+            ret = fd.read()
+        except IOError: # Python 2.x raises exception
+            return -1
+        if ret is None: # Python 3.x returns None
+            return -1
+        else: # success
+            return len(ret)
 
 def get_buffer_size_safe(f):
     # return -1 if exception is raised
     try:
         return get_buffer_size(f)
     except Exception:
+        return -1
+
+def get_file_size(f):
+    if os.path.isfile(f):
+        return os.stat(f).st_size
+    else:
         return -1
 
 def get_total_ram():

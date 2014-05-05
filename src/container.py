@@ -182,10 +182,7 @@ class Container (object):
         except extension.ExtError as e:
             ret = util.exc_to_string(e)
 
-        if setting.use_readonly:
-            from . import roext as ext
-        else:
-            from . import rwext as ext
+        from . import rwext as ext
         return self.__add_buffer(ext.Fileobj(ret),
             self.__get_console(void.ExtConsole))
 

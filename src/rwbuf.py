@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
+import os
 
 from . import filebytes
 from . import fileobj
@@ -42,6 +43,13 @@ class Fileobj (robuf.Fileobj):
         self.__count = 0
         self.__dirty = False
         super(Fileobj, self).__init__(f, offset)
+
+    def init(self):
+        assert not self.cbuf
+        if os.path.isfile(self.get_path()):
+            super(Fileobj, self).init()
+        else:
+            self.init_chunk(filebytes.BLANK)
 
     def clear_dirty(self):
         self.__dirty = False

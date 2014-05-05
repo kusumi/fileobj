@@ -67,16 +67,20 @@ class Fileobj (fileobj.Fileobj):
     def init(self):
         self.set_align(0)
         self.set_window(1, 1)
-        self.init_file('r+')
+        self.init_file()
         self.set_size(
             kernel.get_buffer_size(self.get_path())) # may raise
-
-    def init_file(self, flag):
-        self.fd = util.open_file(self.get_path(), flag)
 
     def cleanup(self):
         if self.fd and not self.fd.closed:
             self.fd.close()
+
+    def init_file(self):
+        if util.get_class(self)._replace:
+            mode = 'r+'
+        else:
+            mode = 'r'
+        self.fd = util.open_file(self.get_path(), mode)
 
     def is_dirty(self):
         return False

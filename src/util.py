@@ -23,10 +23,12 @@
 
 from __future__ import print_function
 import codecs
+import fcntl
 import inspect
 import os
 import platform
 import re
+import stat
 import string
 import struct
 import subprocess
@@ -77,6 +79,10 @@ def get_python_version():
 
 def get_python_version_string():
     return '.'.join([str(x) for x in get_python_version()])
+
+def get_python_executable_string():
+    major, minor = get_python_version()[:2]
+    return "python{0}.{1}".format(major, minor)
 
 def is_python2():
     return get_python_version()[0] == 2
@@ -532,6 +538,14 @@ def open_temp_file():
     except Exception:
         return tempfile.NamedTemporaryFile()
 
+def set_non_blocking(fd):
+    try:
+        fl = fcntl.fcntl(fd.fileno(), fcntl.F_GETFL)
+        fl |= os.O_NONBLOCK
+        fcntl.fcntl(fd.fileno(), fcntl.F_SETFL, fl)
+    except Exception:
+        return -1
+
 def is_readable(f):
     return os.access(f, os.R_OK)
 def is_writable(f):
@@ -541,6 +555,12 @@ def fsync(fd):
     if fd and not fd.closed:
         fd.flush()
         os.fsync(fd.fileno()) # call fsync(2)
+
+def utime(f, st=None):
+    if st:
+        os.utime(f, (st[stat.ST_ATIME], st[stat.ST_MTIME]))
+    else:
+        os.utime(f, None)
 
 def parse_file_path(f):
     """Return tuple of path and offset"""

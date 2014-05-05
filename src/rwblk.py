@@ -51,7 +51,7 @@ class Fileobj (rwfd.Fileobj):
         self.set_size(b.size)
         self.set_align(self.get_sector_size())
         self.set_window(0, 1)
-        self.init_file('r+')
+        self.init_file()
 
     def get_sector_size(self):
         return self.__sector_size

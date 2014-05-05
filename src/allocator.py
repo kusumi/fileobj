@@ -81,7 +81,10 @@ class Allocator (object):
         f, offset = util.parse_file_path(f)
         o = path.Path(f)
         if not f or o.is_noent:
-            return self.__alloc(f, 0, self.rwbuf)
+            if setting.use_alloc_noent_rwbuf:
+                return self.__alloc(f, 0, self.rwbuf)
+            else:
+                return self.__alloc(f, 0, self.rwmap)
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)
