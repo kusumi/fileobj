@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 import fileobj.extension
 import fileobj.literal
 import fileobj.util
@@ -46,8 +44,7 @@ def __test_module(co, fo, li):
             li.fn(co, fo, [0])
         except fileobj.extension.ExtError:
             pass
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             x[3] = fileobj.util.exc_to_string(e)
     return x
 

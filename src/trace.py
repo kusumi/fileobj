@@ -35,7 +35,7 @@ def read(tf):
     return tuple(iter_trace_word(tf))
 
 def iter_trace_word(tf):
-    buf = open(tf).read()
+    buf = util.open_file(tf).read()
     n = setting.trace_word_size
     if len(buf) % n == 0:
         for i in range(0, len(buf), n):
@@ -52,12 +52,11 @@ def write(tf, l, e, tb):
         if setting.use_trace_symlink:
             _creat_symlink(tf, b)
             _creat_symlink(sf, b + ".sh")
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
 
 def _write_trace(tf, l):
-    with util.create_text_file(tf) as fd:
+    with util.create_file(tf) as fd:
         for x in l:
             fd.write(util.int_to_bin(x, setting.trace_word_size))
         util.fsync(fd)

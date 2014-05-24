@@ -31,18 +31,38 @@ from . import screen
 from . import setting
 from . import util
 
-# no mmap rfind till Python 2.6
-_has_rfind = util.is_python_version_or_ht(2, 6, 0)
+# no mmap offset and rfind till Python 2.6
+_has_mmap_offset = \
+_has_mmap_rfind = util.is_python_version_or_ht(2, 6, 0)
+
+_has_right_mapping_length = \
+    util.is_python2_version_or_ht(2, 7, 0) or \
+    util.is_python3_version_or_ht(3, 1, 0)
+
+"""
+0        aligned          offset                            bufsiz
+|--------+----------------+---------------------------------| file
+         |----------------+----------------------| mmap
+                          |<-------length------->|
+         |<------------real_length-------------->|
+         |<---offset_d--->|
+         |<------------len(mapping)------------->|  _has_right_mapping_length
+         |<----size_d---->|                         _has_right_mapping_length
+|<---------------------len(mapping)------------->| !_has_right_mapping_length
+|<-------------size_d---->|                        !_has_right_mapping_length
+"""
 
 class Fileobj (fileobj.Fileobj):
     _insert  = False
     _replace = False
     _delete  = False
     _enabled = True
+    _partial = _has_mmap_offset
 
-    def __init__(self, f):
+    def __init__(self, f, offset=0, length=0):
+        self.__set_delta(0, 0)
         self.map = None
-        super(Fileobj, self).__init__(f)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def __str__(self):
         l = []
@@ -64,30 +84,69 @@ class Fileobj (fileobj.Fileobj):
             self.map.close() # no exception on second time
 
     def init_mapping(self, f):
-        with open(f, 'r+') as fd:
+        with util.open_file(f, 'r+') as fd:
             self.map = self.mmap(fd.fileno())
 
     def mmap(self, fileno):
-        return mmap.mmap(fileno, 0,
+        offset = self.get_mapping_offset()
+        length = self.get_mapping_length()
+        if offset == 0:
+            return self.__do_mmap(fileno, length)
+        else:
+            assert self.__is_using_mmap_offset(offset)
+            return self.__do_mmap_at(fileno, offset, length)
+
+    def __is_using_mmap_offset(self, offset):
+        return util.get_class(self)._partial and offset > 0
+
+    def __do_mmap(self, fileno, length):
+        return mmap.mmap(fileno, length,
             mmap.MAP_SHARED, mmap.PROT_READ)
+
+    def __do_mmap_at(self, fileno, offset, length):
+        mask = ~(util.PAGE_SIZE - 1)
+        start = offset & mask
+        delta = offset - start
+        assert start % mmap.ALLOCATIONGRANULARITY == 0, start
+        self.__set_delta(delta, offset)
+        if length:
+            length += delta
+        return mmap.mmap(fileno, length,
+            mmap.MAP_SHARED, mmap.PROT_READ, offset=start)
+
+    def __set_delta(self, delta, offset):
+        self.__offset_delta = delta
+        if self.__is_using_mmap_offset(offset):
+            if _has_right_mapping_length:
+                self.__size_delta = self.__offset_delta
+            else:
+                self.__size_delta = offset
+        else:
+            self.__size_delta = 0
 
     def is_dirty(self):
         return False
 
     def get_size(self):
-        return len(self.map)
+        return len(self.map) - self.__size_delta
 
     def search(self, x, s, end=-1):
+        s = util.str_to_bytes(s)
         if setting.use_ignorecase:
-            ret = self.__find(x, s)
+            ret = self.__find(x, s, end)
         else:
-            ret = self.map.find(s, x)
+            d = self.__offset_delta
+            ret = self.map.find(s, x + d)
+            if ret >= 0:
+                ret -= d
         screen.cli()
         return ret
 
-    def __find(self, x, s):
+    def __find(self, x, s, end):
         n = util.PAGE_SIZE
         while True:
+            if end != -1 and x >= end:
+                return -1
             b = self.read(x, n)
             pos = util.find_string(b, s)
             if pos >= 0:
@@ -99,15 +158,21 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def rsearch(self, x, s, end=-1):
-        if setting.use_ignorecase or not _has_rfind:
-            ret = self.__rfind(x, s)
+        s = util.str_to_bytes(s)
+        if setting.use_ignorecase or not _has_mmap_rfind:
+            ret = self.__rfind(x, s, end)
         else:
-            ret = self.map.rfind(s, 0, x + 1)
+            d = self.__offset_delta
+            ret = self.map.rfind(s, 0, x + d + 1)
+            if ret >= 0:
+                ret -= d
         screen.cli()
         return ret
 
-    def __rfind(self, x, s):
+    def __rfind(self, x, s, end):
         while True:
+            if end != -1 and x <= end:
+                return -1
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
@@ -124,4 +189,5 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def read(self, x, n):
+        x += self.__offset_delta
         return self.map[x : x + n]

@@ -23,7 +23,6 @@
 
 from __future__ import division
 import collections
-import sys
 
 from . import allocator
 from . import console
@@ -75,7 +74,8 @@ class Container (object):
         fmt = {
             16: "%X",
             10: "%d",
-            8 : "%o", }.get(setting.offset_num_radix)
+            8 : "%o",
+        }.get(setting.offset_num_radix)
         s = fmt % \
             max([o.get_size() for o in self.__fileobjs])
         if len(s) > setting.offset_num_width:
@@ -108,7 +108,7 @@ class Container (object):
         self.__load_stream()
         while True:
             if self.__cur_workspace.dispatch() == -1:
-                return
+                break
 
     def getch(self):
         if len(self.__stream):
@@ -179,8 +179,7 @@ class Container (object):
             ret = fn(self, fileops.Fileops(fo), args)
             if isinstance(ret, (list, tuple)):
                 ret = '\n'.join(ret)
-        except extension.ExtError:
-            e = sys.exc_info()[1]
+        except extension.ExtError, e:
             ret = util.exc_to_string(e)
 
         from . import rwext as ext
@@ -518,8 +517,7 @@ class Container (object):
                     self.buffer_input(l)
                 else:
                     self.flash("Failed to read from " + f)
-            except Exception:
-                e = sys.exc_info()[1]
+            except Exception, e:
                 self.flash(e)
         elif f:
             self.flash("Can not read from " + f)
@@ -604,13 +602,16 @@ class Container (object):
 
     def init_yank_buffer(self, buf):
         self.__yank_buffer = [buf]
+
     def left_add_yank_buffer(self, buf):
         self.__yank_buffer.insert(0, buf)
+
     def right_add_yank_buffer(self, buf):
         self.__yank_buffer.append(buf)
 
     def get_yank_buffer_size(self):
         return sum(len(x) for x in self.__yank_buffer)
+
     def get_yank_buffer(self):
         return ''.join(self.__yank_buffer)
 

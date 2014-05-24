@@ -31,16 +31,13 @@ from . import setting
 from . import util
 
 class Fileops (fileops.Fileops):
-    def __del__(self):
-        self.cleanup()
-
     def flush(self, f=None):
         try:
             l = super(Fileops, self).flush(f)
             if l[0]: # msg
                 util.print_stdout(l[0])
-        except fileobj.FileobjError:
-            _print_exc_info()
+        except fileobj.FileobjError, e:
+            _print_exc_info(e)
 
     def read(self, x, n):
         if n is None:
@@ -53,7 +50,10 @@ class Fileops (fileops.Fileops):
         return super(Fileops, self).delete(x, n, rec)
 
     def append(self, s, rec=True):
-        return self.insert(self.get_max_pos() + 1, s, rec)
+        self.discard_eof()
+        ret = self.insert(self.get_size(), s, rec)
+        self.restore_eof()
+        return ret
 
     def iter_search(self, x, word, end=-1):
         while True:
@@ -62,6 +62,8 @@ class Fileops (fileops.Fileops):
                 break
             yield ret
             x = ret + 1
+            if x > self.get_max_pos():
+                break
 
     def iter_rsearch(self, x, word, end=-1):
         while True:
@@ -70,6 +72,8 @@ class Fileops (fileops.Fileops):
                 break
             yield ret
             x = ret - 1
+            if x < 0:
+                break
 
     def iter_read(self, x, n):
         while True:
@@ -78,14 +82,16 @@ class Fileops (fileops.Fileops):
                 break
             yield ret
             x += len(ret)
+            if x > self.get_max_pos():
+                break
 
-def _print_exc_info():
-    info = sys.exc_info()
+def _print_exc_info(e):
     if not setting.use_debug:
-        util.print_stderr(str(info[1]))
+        util.print_stderr(str(e))
     else:
-        util.print_stderr(info[1])
-        for s in util.get_traceback(info[2]):
+        util.print_stderr(e)
+        tb = sys.exc_info()[2]
+        for s in util.get_traceback(tb):
             util.print_stderr(s)
 
 def alloc(f, name=''):

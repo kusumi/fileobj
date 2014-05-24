@@ -23,7 +23,6 @@
 
 import os
 import re
-import sys
 
 import fileobj.path
 import fileobj.setting
@@ -222,9 +221,8 @@ def get_text(co, fo, args):
             return "Can not read %s" % f
 
     try:
-        l = open(f).readlines()
-    except Exception:
-        e = sys.exc_info()[1]
+        l = fileobj.util.open_text_file(f).readlines()
+    except Exception, e:
         return str(e)
     l = [x.strip() for x in l if not x.startswith('#')]
     s = ''.join([x for x in l if x])

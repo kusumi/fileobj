@@ -41,7 +41,7 @@ from . import version
 
 if setting.use_debug:
     import pdb
-    from pdb import set_trace as set_bp
+    set_bp = pdb.set_trace
 else:
     def set_bp():
         return
@@ -154,7 +154,8 @@ def pack_hex_string(s):
                 u = l[0]
             else:
                 u = (l[0] << 4) + l[1]
-            s = s.replace(t, struct.pack(U1F, u), 1)
+            b = struct.pack(U1F, u)
+            s = s.replace(t, bytes_to_str(b), 1)
         else:
             return s
 
@@ -223,18 +224,18 @@ def raise_no_impl(s):
     raise NotImplementedError("No %s" % s)
 
 KB = 1000
-MB = KB * KB
-GB = MB * KB
-TB = GB * KB
-PB = TB * KB
-EB = PB * KB
+MB = KB * 1000
+GB = MB * 1000
+TB = GB * 1000
+PB = TB * 1000
+EB = PB * 1000
 
-KiB = 1024
-MiB = KiB * KiB
-GiB = MiB * KiB
-TiB = GiB * KiB
-PiB = TiB * KiB
-EiB = PiB * KiB
+KiB = 1 << 10
+MiB = KiB << 10
+GiB = MiB << 10
+TiB = GiB << 10
+PiB = TiB << 10
+EiB = PiB << 10
 
 try:
     PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
@@ -376,9 +377,9 @@ def __false_assert_unknown_byteorder():
 
 def byte_to_int(b, sign=False):
     if is_le_cpu():
-        return __bin_to_int('', b[0], sign)
+        return __bin_to_int('', b[0:1], sign)
     elif is_be_cpu():
-        return __bin_to_int('', b[-1], sign)
+        return __bin_to_int('', b[-1:], sign)
     else:
         __false_assert_unknown_byteorder()
 
@@ -419,14 +420,14 @@ def __pad_bin(prefix, b, sign):
         if i >= len(b):
             if prefix:
                 if prefix == "<":
-                    return b + __get_padding(i, b, -1, sign)
+                    return b + __get_padding(i, b, len(b) - 1, sign)
                 elif prefix == ">" or prefix == "!":
                     return __get_padding(i, b, 0, sign) + b
                 else:
                     assert 0, "unknown prefix %s" % prefix
             else:
                 if is_le_cpu():
-                    return b + __get_padding(i, b, -1, sign)
+                    return b + __get_padding(i, b, len(b) - 1, sign)
                 elif is_be_cpu():
                     return __get_padding(i, b, 0, sign) + b
                 else:
@@ -434,10 +435,10 @@ def __pad_bin(prefix, b, sign):
     return b
 
 def __get_padding(size, b, high, sign):
-    if sign and (ord(b[high]) & 0x80):
-        pad = "\xFF"
+    if sign and (ord(b[high : high + 1]) & 0x80):
+        pad = _("\xFF")
     else:
-        pad = "\x00"
+        pad = _("\x00")
     return pad * (size - len(b))
 
 def int_to_byte(x):
@@ -510,14 +511,24 @@ def is_same_file(a, b):
     else:
         return False
 
+def open_file(f, mode='r'):
+    return open(f, mode + 'b')
+
+def open_text_file(f, mode='r'):
+    return open(f, mode)
+
 def truncate_file(f):
-    open(f, 'w').close()
+    open(f, 'wb').close()
+
+def create_file(f):
+    return os.fdopen(__create_file(f), 'w+b')
 
 def create_text_file(f):
+    return os.fdopen(__create_file(f), 'w+')
+
+def __create_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
-    mode = 420 # not using octal 0644 for Python 2.5/3.x compatibility
-    fileno = os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
-    return os.fdopen(fileno, 'w+')
+    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 def open_temp_file():
     d = setting.get_userdir_path()
@@ -552,15 +563,59 @@ def utime(f, st=None):
     else:
         os.utime(f, None)
 
+def parse_file_path(f):
+    """Return tuple of path and offset"""
+    if not setting.use_file_path_attr:
+        return f, 0, 0
+    if '@' in f:
+        i = f.rindex('@')
+        if '/' in f:
+            if i > f.rindex('/'):
+                s = f[i + 1:]
+                f = f[:i]
+                if '-' in s:
+                    j = s.find('-')
+                    a = s[:j]
+                    b = s[j + 1:]
+                    offset = __get_path_attribute(a)
+                    endpos = __get_path_attribute(b)
+                    if endpos > offset:
+                        length = endpos - offset
+                    else:
+                        length = 0
+                elif ':' in s:
+                    j = s.find(':')
+                    a = s[:j]
+                    b = s[j + 1:]
+                    offset = __get_path_attribute(a)
+                    length = __get_path_attribute(b)
+                else:
+                    a = s
+                    b = ''
+                    offset = __get_path_attribute(a)
+                    length = __get_path_attribute(b)
+                return f, offset, length
+    return f, 0, 0
+
+def __get_path_attribute(s, default=0):
+    if s:
+        ret = parse_size_string(s)
+    else:
+        ret = None
+    if ret is None:
+        return default
+    else:
+        return ret
+
 def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
     out, err = p.communicate()
     if out is None:
-        out = ''
+        out = _('')
     if err is None:
-        err = ''
-    return out, err, p.returncode
+        err = _('')
+    return bytes_to_str(out), bytes_to_str(err), p.returncode
 
 def __iter_next_2k(g):
     return g.next()
@@ -572,16 +627,32 @@ def __get_xrange_2k(*l):
 def __get_xrange_3k(*l):
     return range(*l)
 
+def __str_to_bytes_2k(s):
+    return s
+def __str_to_bytes_3k(s):
+    return codecs.latin_1_encode(s)[0]
+
+def __bytes_to_str_2k(b):
+    return b
+def __bytes_to_str_3k(b):
+    return codecs.latin_1_decode(b)[0]
+
 if is_python2():
     MAX_INT = sys.maxint
     iter_next = __iter_next_2k
     get_xrange = __get_xrange_2k
+    str_to_bytes = __str_to_bytes_2k
+    bytes_to_str = __bytes_to_str_2k
 else:
+    import codecs
     MAX_INT = sys.maxsize
     iter_next = __iter_next_3k
     get_xrange = __get_xrange_3k
+    str_to_bytes = __str_to_bytes_3k
+    bytes_to_str = __bytes_to_str_3k
 
 MIN_INT = -MAX_INT - 1
+_ = str_to_bytes
 
 def iter_site_module():
     for s in package.iter_module_name():
@@ -596,7 +667,9 @@ def iter_site_ext_module():
             yield o
 
 def iter_dir_items(obj):
-    for l in obj.__dict__.items():
+    k = dir(obj)
+    v = [getattr(obj, x) for x in k]
+    for l in zip(k, v):
         yield l
 
 def iter_dir_values(obj):
@@ -621,8 +694,7 @@ def import_module(s):
         if ret:
             _modules[s] = ret
         return ret
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         _exceptions[s] = exc_to_string(e)
         return None
 

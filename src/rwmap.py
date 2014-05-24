@@ -24,7 +24,6 @@
 import mmap
 import os
 import shutil
-import sys
 
 from . import fileobj
 from . import kernel
@@ -37,14 +36,15 @@ class Fileobj (romap.Fileobj):
     _replace = True
     _delete  = True
     _enabled = kernel.has_mremap()
+    _partial = False
 
-    def __init__(self, f):
+    def __init__(self, f, offset=0, length=0):
         self.__dirty = False
         self.__sync = False
         self.__dead = False
         self.__stat = None
         self.__anon = None
-        super(Fileobj, self).__init__(f)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
         f = self.get_path()
@@ -62,8 +62,7 @@ class Fileobj (romap.Fileobj):
                 return
             uptodate = self.__sync
             laststat = self.__stat
-        except Exception: # error from __init__
-            e = sys.exc_info()[1]
+        except Exception, e: # error from __init__
             log.error(e)
             return
         try:
@@ -72,8 +71,7 @@ class Fileobj (romap.Fileobj):
                 self.__cleanup_anon()
             else:
                 self.flush()
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.error(e)
         finally:
             super(Fileobj, self).cleanup()

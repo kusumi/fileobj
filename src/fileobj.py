@@ -23,7 +23,6 @@
 
 from __future__ import with_statement
 import os
-import sys
 
 from . import fileattr
 from . import kernel
@@ -53,19 +52,20 @@ class FileobjError (util.GenericError):
     pass
 
 class Fileobj (object):
-    def __init__(self, f):
+    def __init__(self, f, offset, length):
         try:
             self.__path = path.Path(f)
             self.__attr = fileattr.get(self.get_path())
+            self.__attr.offset, self.__attr.length = \
+                self.__parse_mapping_attributes(offset, length)
             self.__clear_barrier()
             self.init()
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.error(e)
             try:
                 self.cleanup()
-            except Exception:
-                log.error(sys.exc_info()[1])
+            except Exception, e2:
+                log.error(e2)
             raise e
 
     def init(self):
@@ -123,6 +123,32 @@ class Fileobj (object):
         return self.__path.short_path
     def get_magic(self):
         return self.__attr.magic
+    def get_mapping_offset(self):
+        return self.__attr.offset
+    def get_mapping_length(self):
+        return self.__attr.length
+
+    def __parse_mapping_attributes(self, offset, length):
+        f = self.get_path()
+        bufsiz = kernel.get_buffer_size_safe(f)
+        if bufsiz == -1:
+            log.error("Failed to read size of %s" % f)
+            return 0, 0
+
+        if offset <= 0:
+            _offset = 0
+        elif offset >= bufsiz:
+            _offset = 0
+        else:
+            _offset = offset
+
+        if length <= 0:
+            _length = 0
+        elif _offset + length > bufsiz:
+            _length = bufsiz - _offset
+        else:
+            _length = length
+        return _offset, _length
 
     def flush(self, f=None):
         this = self.get_path()
@@ -162,10 +188,9 @@ class Fileobj (object):
             else:
                 assert not os.path.exists(f), f
                 self.creat(f)
-        except Exception:
-            e = sys.exc_info()[1]
-            raise FileobjError("Failed to write: %s" % \
-                (repr(e) if setting.use_debug else e))
+        except Exception, e:
+            raise FileobjError("Failed to write: %s" % (
+                repr(e) if setting.use_debug else e))
         else:
             msg += "%s %d[B] written" % (f, self.get_size())
             if creat:
@@ -181,14 +206,14 @@ class Fileobj (object):
         util.utime(self.get_path())
 
     def creat(self, f):
-        with util.create_text_file(f) as fd:
+        with util.create_file(f) as fd:
             pos = 0
             while True:
-                s = self.read(pos, util.PAGE_SIZE)
-                if not s:
+                b = self.read(pos, util.PAGE_SIZE)
+                if not b:
                     break
-                fd.write(s)
-                pos += len(s)
+                fd.write(b)
+                pos += len(b)
             util.fsync(fd)
 
     def search(self, x, s, end=-1):
@@ -214,18 +239,23 @@ class Fileobj (object):
         else:
             raise FileobjError("%s not supported" % s)
 
+    def has_undo(self):
+        return self.get_undo_size() > 0
+    def has_redo(self):
+        return self.get_redo_size() > 0
+
     def get_undo_size(self):
-        return self.__attr.undo.get_undo_log_size()
+        return self.__attr.undo.get_undo_size()
     def get_redo_size(self):
-        return self.__attr.undo.get_redo_log_size()
+        return self.__attr.undo.get_redo_size()
+    def get_rollback_log_size(self):
+        return self.__attr.undo.get_rollback_log_size()
 
     def add_undo(self, ufn, rfn):
         self.__attr.undo.add_undo(ufn, rfn)
+
     def merge_undo(self, n):
         self.__attr.undo.merge_undo(n)
-
-    def get_rollback_log_size(self):
-        return self.__attr.undo.get_rollback_log_size()
 
     def restore_rollback_log(self, ref):
         self.__attr.undo.restore_rollback_log(ref)
@@ -291,11 +321,10 @@ class Fileobj (object):
         try:
             self.__bretval = ret
             self.__boffset = offset
-            self.__bbuffer = list(self.read(self.__boffset, size))
+            self.__bbuffer = self.__read_bbuffer(self.__boffset, size)
             self.__bsize = self.get_barrier_size()
             self.__bdirty = False
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.error(e)
             self.put_barrier()
             return -1
@@ -334,6 +363,9 @@ class Fileobj (object):
                 self.get_barrier_delta()
         else:
             return -1, -1, -1
+
+    def __read_bbuffer(self, x, n):
+        return list(self.read(x, n))
 
     def barrier_read(self, x, n):
         self.__test_barrier(x, n)
@@ -378,7 +410,7 @@ class Fileobj (object):
         if pos < 0:
             size += pos
             pos = 0
-        buf = list(self.read(pos, size))
+        buf = self.__read_bbuffer(pos, size)
         assert len(buf) == size
         buf.extend(self.__bbuffer)
         self.__boffset = pos
@@ -391,7 +423,7 @@ class Fileobj (object):
         pos = self.__boffset + self.__bsize
         if pos + size > self.get_size():
             size = self.get_size() - pos
-        buf = list(self.read(pos, size))
+        buf = self.__read_bbuffer(pos, size)
         assert len(buf) == size
         self.__bbuffer.extend(buf)
         self.__bsize += size

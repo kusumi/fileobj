@@ -23,7 +23,6 @@
 
 import fcntl
 import re
-import sys
 
 from . import log
 from . import path
@@ -39,8 +38,7 @@ def get_blkdev_info(fd):
         s = "BLKGETSIZE"
         size = ioctl(fd, d[s]) * 512
         return size, sector_size, ''
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
         raise
 
@@ -60,12 +58,11 @@ def get_meminfo(s):
         return -1
     try:
         s = util.escape_regex_pattern(s)
-        for l in open(f):
+        for l in util.open_text_file(f):
             m = re.match(r"^%s.*\s+(\d+)" % s, l)
             if m:
                 return int(m.group(1)) * util.KiB
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
     return -1
 

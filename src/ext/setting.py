@@ -25,8 +25,8 @@ import fileobj.setting
 import fileobj.util
 
 def get_text(co, fo, args):
-    l = [len(x) for x in fileobj.setting.iter_setting_name()]
-    f = fileobj.util.get_string_format("%-${len}s %s", len=max(l))
+    n = max([len(x) for x in fileobj.setting.iter_setting_name()])
+    f = fileobj.util.get_string_format("%-${len}s %s", len=n)
     sl = []
     for x in fileobj.setting.iter_setting_name():
         if x:

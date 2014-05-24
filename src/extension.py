@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
+
 import re
 
 from . import panel
@@ -29,11 +31,48 @@ from . import util
 class ExtError (util.GenericError):
     pass
 
+class methods (object):
+    def init_raw(self, raw):
+        self.raw = raw
+
+    def fill_chunk(self, width):
+        if self.is_empty():
+            self.init_chunk(self.__get(width))
+
+    def write_raw(self, f):
+        with util.create_text_file(f) as fd:
+            fd.write(self.raw)
+            util.fsync(fd)
+
+    def __get(self, width):
+        if not width:
+            return ''
+        l = []
+        for b in self.raw.split('\n'):
+            if b:
+                b = b.replace('\t', '    ')
+                s = b[:width]
+                while s:
+                    if len(s) < width:
+                        s += ' ' * (width - len(s))
+                    l.append(s)
+                    b = b[width:]
+                    s = b[:width]
+            else:
+                l.append(' ' * width)
+        return ''.join(l).rstrip()
+
 class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
     def set_buffer(self, fileops):
         super(ExtBinaryCanvas, self).set_buffer(fileops)
         if self.fileops:
             self.fileops.ioctl(self.bufmap.x)
+
+    def get_form_single(self, x):
+        return util.bytes_to_str(x)
+
+    def get_form_line(self, buf):
+        return util.bytes_to_str(buf)
 
     def chgat_cursor(self, pos, attr, low):
         y, x = self.get_coordinate(pos)
@@ -54,22 +93,6 @@ class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
 
 def fail(s):
     raise ExtError(s)
-
-def raw_to_buffer(raw, width):
-    l = []
-    for b in raw.split('\n'):
-        if not b:
-            l.append(' ' * width)
-        else:
-            b = b.replace('\t', '    ')
-            s = b[:width]
-            while s:
-                if len(s) < width:
-                    s += ' ' * (width - len(s))
-                l.append(s)
-                b = b[width:]
-                s = b[:width]
-    return ''.join(l).rstrip()
 
 def get_path(o):
     f = o.get_path()

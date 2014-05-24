@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
+from __future__ import with_statement
 import os
 
 from . import chunk
@@ -36,12 +37,13 @@ class Fileobj (fileobj.Fileobj):
     _replace = False
     _delete  = False
     _enabled = True
+    _partial = True
 
-    def __init__(self, f):
+    def __init__(self, f, offset=0, length=0):
         self.cbuf = []
         self.__thresh = 0
         self.set_size(0)
-        super(Fileobj, self).__init__(f)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def __str__(self):
         l = []
@@ -56,7 +58,13 @@ class Fileobj (fileobj.Fileobj):
         f = self.get_path()
         assert not self.cbuf
         assert os.path.isfile(f), f
-        self.init_chunk(open(f).read())
+        with util.open_file(f) as fd:
+            fd.seek(self.get_mapping_offset())
+            length = self.get_mapping_length()
+            if length:
+                self.init_chunk(fd.read(length))
+            else:
+                self.init_chunk(fd.read())
 
     def is_dirty(self):
         return False
@@ -80,8 +88,8 @@ class Fileobj (fileobj.Fileobj):
                 r = 0.5
         self.__thresh = int(self.get_size() * r)
         if self.__thresh:
-            log.debug("%s has search thresh at %d[B]/%d[B]" %
-                (self.get_short_path(), self.__thresh, self.get_size()))
+            log.debug("%s has search thresh at %d[B]/%d[B]" % (
+                self.get_short_path(), self.__thresh, self.get_size()))
 
     def alloc_chunk(self, offset, buf):
         return chunk.Chunk(offset, buf)
@@ -89,18 +97,20 @@ class Fileobj (fileobj.Fileobj):
     def init_chunk(self, b):
         self.cbuf = []
         for i in range(0, len(b), setting.robuf_chunk_size):
-            s = b[i : i + setting.robuf_chunk_size]
-            self.cbuf.append(self.alloc_chunk(i, s))
+            bb = b[i : i + setting.robuf_chunk_size]
+            self.cbuf.append(self.alloc_chunk(i, bb))
         self.set_size(len(b))
         self.mark_chunk()
         self.set_search_thresh()
 
     def mark_chunk(self):
         if not self.cbuf:
-            self.cbuf.append(self.alloc_chunk(0, ''))
-        self.cbuf[-1].last = True
+            self.cbuf.append(
+                self.alloc_chunk(0, ''))
+        self.cbuf[-1].islast = True
 
     def search(self, x, s, end=-1):
+        s = util.str_to_bytes(s)
         for o in self.cbuf:
             if end != -1 and x >= end:
                 break
@@ -121,6 +131,7 @@ class Fileobj (fileobj.Fileobj):
         return -1
 
     def rsearch(self, x, s, end=-1):
+        s = util.str_to_bytes(s)
         for o in reversed(self.cbuf):
             if end != -1 and x <= end:
                 break
@@ -169,11 +180,11 @@ class Fileobj (fileobj.Fileobj):
             return ''
         buf = []
         for i in range(self.get_chunk_index(x), len(self.cbuf)):
-            s = self.cbuf[i].read(x, n)
-            if s:
-                buf.append(s)
-                x += len(s)
-                n -= len(s)
+            b = self.cbuf[i].read(x, n)
+            if b:
+                buf.append(b)
+                x += len(b)
+                n -= len(b)
                 if n <= 0:
                     break # doesn't always come here
         return ''.join(buf)

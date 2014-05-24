@@ -27,16 +27,17 @@ from . import setting
 from . import util
 
 class Chunk (object):
-    def __init__(self, offset, buffer, last=False):
+    def __init__(self, offset, buffer, islast=False):
         assert offset >= 0
-        assert isinstance(buffer, str)
+        if isinstance(buffer, str):
+            buffer = util.str_to_bytes(buffer)
         self.offset = offset
         self.buffer = alloc_buffer(buffer)
-        self.last = last
+        self.islast = islast
 
     def __contains__(self, x):
         x -= self.offset
-        if not self.last:
+        if not self.islast:
             return 0 <= x < len(self)
         else:
             return 0 <= x
@@ -45,9 +46,8 @@ class Chunk (object):
         return len(self.buffer)
 
     def __str__(self):
-        return ("%d %d %s" %
-            (self.offset, len(self),
-            "<last>" * self.last)).rstrip()
+        return ("%d %d%s" % (
+            self.offset, len(self), " <last>" * self.islast))
 
     def search(self, x, s, next_buffer):
         b = self.read(x, len(self))
@@ -86,9 +86,10 @@ class Chunk (object):
         x = self.__get_local_offset(x)
         size = len(self)
         if x + len(s) > size:
-            if self.last:
+            if self.islast:
                 nullsize = x + len(s) - size
-                self.buffer[size:] = alloc_buffer(chr(0) * nullsize)
+                self.buffer[size:] = alloc_buffer(
+                    chr(0) * nullsize)
             else:
                 s = s[:size - x]
         xx = x + len(s)
@@ -111,8 +112,8 @@ class Chunk (object):
         return x - self.offset
 
 if setting.use_array_chunk:
-    def alloc_buffer(s):
-        return array.array('c', s)
+    def alloc_buffer(b):
+        return array.array('c', b)
 else:
-    def alloc_buffer(s):
-        return list(s)
+    def alloc_buffer(b):
+        return list(b)

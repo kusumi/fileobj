@@ -24,9 +24,9 @@
 from __future__ import division
 import os
 import platform
-import sys
 import time
 
+from . import allocator
 from . import fileobj
 from . import kernel
 from . import literal
@@ -47,8 +47,7 @@ def _rollback(fn):
         try:
             und = self.co.get_undo_size()
             return fn(self, amp, ope, args, raw)
-        except fileobj.FileobjError:
-            e = sys.exc_info()[1]
+        except fileobj.FileobjError, e:
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
             self.co.flash(e)
@@ -62,6 +61,9 @@ def __use_single_operation(self, x):
     else:
         ram = kernel.get_free_ram()
         return ram != -1 and x > int(ram * setting.ram_thresh_ratio)
+
+def __read_int(self, pos):
+    return ord(self.co.read(pos, 1))
 
 def test_insert_raise(self):
     __test_permission_raise(self, "insert")
@@ -173,13 +175,15 @@ def go_to(self, amp=None, ope=None, args=None, raw=None):
     if self.co.go_to(pos) == -1:
         self.co.lrepaintf()
 
-def __is_zero(x):
-    return x == '\x00'
-def __is_non_zero(x):
-    return x != '\x00'
+def __is_graph(b):
+    return util.is_graph(util.bytes_to_str(b))
+def __is_zero(b):
+    return b == '\x00'
+def __is_non_zero(b):
+    return b != '\x00'
 
 def go_next_char(self, amp, ope, args, raw):
-    __go_next_matched(self, get_int(amp), util.is_graph)
+    __go_next_matched(self, get_int(amp), __is_graph)
 
 def go_next_zero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_zero)
@@ -188,7 +192,7 @@ def go_next_nonzero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_non_zero)
 
 def go_prev_char(self, amp, ope, args, raw):
-    __go_prev_matched(self, get_int(amp), util.is_graph)
+    __go_prev_matched(self, get_int(amp), __is_graph)
 
 def go_prev_zero(self, amp, ope, args, raw):
     __go_prev_matched(self, get_int(amp), __is_zero)
@@ -464,8 +468,8 @@ def show_date(self, amp, ope, args, raw):
     self.co.show(time.ctime())
 
 def show_platform(self, amp, ope, args, raw):
-    self.co.show("%s %s" %
-        (util.get_system_string(), util.get_release_string()))
+    self.co.show("%s %s" % (
+        util.get_system_string(), util.get_release_string()))
 
 def show_hostname(self, amp, ope, args, raw):
     self.co.show(platform.node())
@@ -535,18 +539,18 @@ def __do_replace_number(self, amp, ope, siz):
         if siz > 8:
             self.co.flash("Only <= 8 bytes allowed")
             return
-        s = self.co.read_current(siz)
-        if not s:
+        b = self.co.read_current(siz)
+        if not b:
             self.co.flash("Empty buffer")
             return
-        x = util.bin_to_int(s) + amp
+        x = util.bin_to_int(b) + amp
         if x < 0:
-            x += 2 ** (len(s) * 8)
-        s = util.int_to_bin(x, len(s))
-        if s is None:
+            x += 2 ** (len(b) * 8)
+        b = util.int_to_bin(x, len(b))
+        if b is None:
             raise fileobj.FileobjError("Failed to convert")
-        self.co.replace_current(s)
-        self.co.show(util.bin_to_int(s))
+        self.co.replace_current(b)
+        self.co.show(util.bin_to_int(b))
     fn(0)
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
@@ -613,7 +617,9 @@ def __search(self, pos, s, is_forward):
         self.co.flash("Search %s failed" % repr(word))
     elif ret == -2:
         self.co.flash("Search %s interrupted" % repr(word))
-    elif ret >= 0 and ret != self.co.get_pos():
+    elif ret < 0:
+        self.co.flash("Search error %d" % ret)
+    elif ret != self.co.get_pos():
         go_to(self, ret)
 
 @_rollback
@@ -667,9 +673,9 @@ def block_delete(self, amp, ope, args, raw):
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
-        buf = ''
+        buf = []
         for i in util.get_xrange(cnt):
-            buf += self.co.read(pos, siz)
+            buf.append(self.co.read(pos, siz))
             self.co.delete(pos, siz)
             pos += (mapx - siz)
             if pos > self.co.get_max_pos():
@@ -678,6 +684,7 @@ def block_delete(self, amp, ope, args, raw):
                 self.co.flash("Delete interrupted (%d/%d)" % (i, cnt))
                 self.co.rollback_restore_until(und)
                 return
+        buf = ''.join(buf)
         if not _:
             self.co.init_yank_buffer(buf)
         else:
@@ -710,15 +717,15 @@ def toggle(self, amp, ope, args, raw):
 
 def __single_toggle(self, pos, amp):
     for x in util.get_xrange(amp):
-        c = self.co.read(pos, 1)
-        if not c:
+        b = self.co.read(pos, 1)
+        if not b:
             return x
-        # no c.isalpha() test here as skipping will have trouble on undo/redo
-        if c.islower():
-            c = c.upper()
+        # no b.isalpha() test here as skipping will have trouble on undo/redo
+        if b.islower():
+            b = b.upper()
         else:
-            c = c.lower()
-        self.co.replace(pos, c)
+            b = b.lower()
+        self.co.replace(pos, b)
         pos += 1
         if screen.test_signal():
             self.co.flash("Toggle interrupted (%d/%d)" % (x, amp))
@@ -727,12 +734,12 @@ def __single_toggle(self, pos, amp):
 
 def __buffered_toggle(self, pos, amp):
     l = list(self.co.read(pos, amp))
-    for i, c in enumerate(l):
-        if c.isalpha():
-            if c.islower():
-                l[i] = c.upper()
+    for i, b in enumerate(l):
+        if b.isalpha():
+            if b.islower():
+                l[i] = b.upper()
             else:
-                l[i] = c.lower()
+                l[i] = b.lower()
         if screen.test_signal():
             self.co.flash("Toggle interrupted")
             return 0
@@ -842,15 +849,16 @@ def __single_rotate_right(self, shift, beg, end):
     pos = beg
     car_shift = 8 - shift
     if setting.use_circular_bit_shift:
-        car = ord(self.co.read(end, 1)) << car_shift
+        car = __read_int(self, end) << car_shift
     while pos <= end:
-        x = self.co.read(pos, 1)
-        u = (car & 0xFF) | (ord(x) >> shift)
+        x = __read_int(self, pos)
+        u = (car & 0xFF) | (x >> shift)
         self.co.replace(pos, util.int_to_byte(u))
-        car = ord(x) << car_shift
+        car = x << car_shift
         pos += 1
         if screen.test_signal():
-            self.co.flash("Rotate right interrupted (%d/%d)" % (pos, end))
+            self.co.flash(
+                "Rotate right interrupted (%d/%d)" % (pos, end))
             return -1
     return end - beg + 1
 
@@ -874,14 +882,14 @@ def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
         pos = beg
         car_shift = 8 - shift
         while pos <= end:
-            x = buf[pos - beg]
-            u = (car & 0xFF) | (ord(x) >> shift)
+            x = ord(buf[pos - beg])
+            u = (car & 0xFF) | (x >> shift)
             buf[pos - beg] = util.int_to_byte(u)
-            car = ord(x) << car_shift
+            car = x << car_shift
             pos += 1
             if screen.test_signal():
-                self.co.flash("Rotate right interrupted (%d/%d,%d)" %
-                    (pos, end, len(buf)))
+                self.co.flash("Rotate right interrupted (%d/%d,%d)" % (
+                    pos, end, len(buf)))
                 return 0, None
     self.co.replace(beg, ''.join(buf))
     return 1, car
@@ -914,7 +922,7 @@ def block_rotate_right(self, amp, ope, args, raw):
         car = 0
         car_shift = 8 - shift
         if setting.use_circular_bit_shift:
-            car = ord(self.co.read(pos_end, 1)) << car_shift
+            car = __read_int(self, pos_end) << car_shift
         for i in util.get_xrange(cnt):
             buf = list(self.co.read(pos, siz))
             assert len(buf) == siz
@@ -967,12 +975,12 @@ def __single_rotate_left(self, shift, beg, end):
     pos = beg
     car_shift = 8 - shift
     if setting.use_circular_bit_shift:
-        car = ord(self.co.read(end, 1)) >> car_shift
+        car = __read_int(self, end) >> car_shift
     while pos >= end:
-        x = self.co.read(pos, 1)
-        u = ((ord(x) << shift) & 0xFF) | car
+        x = __read_int(self, pos)
+        u = ((x << shift) & 0xFF) | car
         self.co.replace(pos, util.int_to_byte(u))
-        car = ord(x) >> car_shift
+        car = x >> car_shift
         pos -= 1
         if screen.test_signal():
             self.co.flash("Rotate left interrupted (%d/%d)" % (pos, end))
@@ -999,14 +1007,14 @@ def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
         pos = beg
         car_shift = 8 - shift
         while pos >= end:
-            x = buf[pos - end]
-            u = ((ord(x) << shift) & 0xFF) | car
+            x = ord(buf[pos - end])
+            u = ((x << shift) & 0xFF) | car
             buf[pos - end] = util.int_to_byte(u)
-            car = ord(x) >> car_shift
+            car = x >> car_shift
             pos -= 1
             if screen.test_signal():
-                self.co.flash("Rotate left interrupted (%d/%d,%d)" %
-                    (pos, end, len(buf)))
+                self.co.flash("Rotate left interrupted (%d/%d,%d)" % (
+                    pos, end, len(buf)))
                 return 0, None
     self.co.replace(end, ''.join(buf))
     return 1, car
@@ -1039,7 +1047,7 @@ def block_rotate_left(self, amp, ope, args, raw):
         car = 0
         car_shift = 8 - shift
         if setting.use_circular_bit_shift:
-            car = ord(self.co.read(pos_end, 1)) >> car_shift
+            car = __read_int(self, pos_end) >> car_shift
         for i in util.get_xrange(cnt):
             buf = list(self.co.read(pos - siz + 1, siz))
             assert len(buf) == siz
@@ -1172,9 +1180,9 @@ def __get_xor_ops(mask):
     return lambda c: chr(ord(c) ^ mask)
 
 _bit_ops = {
-    literal.bit_and.body: __get_and_ops,
-    literal.bit_or.body : __get_or_ops,
-    literal.bit_xor.body: __get_xor_ops, }
+    literal.bit_and.key: __get_and_ops,
+    literal.bit_or.key : __get_or_ops,
+    literal.bit_xor.key: __get_xor_ops, }
 
 @_rollback
 def logical_bit_operation(self, amp, ope, arg, raw):
@@ -1202,23 +1210,24 @@ def logical_bit_operation(self, amp, ope, arg, raw):
 
 def __single_logical_bit_operation(self, pos, amp, fn):
     for x in util.get_xrange(amp):
-        c = self.co.read(pos, 1)
-        if not c:
+        b = self.co.read(pos, 1)
+        if not b:
             return x
-        self.co.replace(pos, fn(c))
+        self.co.replace(pos, fn(b))
         pos += 1
         if pos > self.co.get_max_pos():
             break
         if screen.test_signal():
-            self.co.flash("Single logical bit operation interrupted (%d/%d)" %
-                (x, amp))
+            self.co.flash(
+                "Single logical bit operation interrupted (%d/%d)" % (
+                x, amp))
             return -1
     return amp
 
 def __buffered_logical_bit_operation(self, pos, amp, fn):
     l = []
-    for c in self.co.read(pos, amp):
-        l.append(fn(c))
+    for b in self.co.read(pos, amp):
+        l.append(fn(b))
         if screen.test_signal():
             self.co.flash("Buffered logical bit operation interrupted")
             return 0
@@ -1258,14 +1267,13 @@ def block_logical_bit_operation(self, amp, ope, args, raw):
 
 def yank(self, amp, ope, args, raw):
     try:
-        s = self.co.read(self.co.get_pos(), get_int(amp))
-    except Exception:
-        e = sys.exc_info()[1]
+        b = self.co.read(self.co.get_pos(), get_int(amp))
+    except Exception, e:
         self.co.flash(e)
     else:
-        self.co.init_yank_buffer(s)
-        s = util.get_size_string(self.co.get_yank_buffer_size())
-        self.co.show("%s yanked" % s)
+        self.co.init_yank_buffer(b)
+        self.co.show("%s yanked" %
+            util.get_size_string(self.co.get_yank_buffer_size()))
 
 def yank_till_end(self, amp, ope, args, raw):
     x = self.co.get_size() - self.co.get_pos()
@@ -1289,13 +1297,12 @@ def block_yank(self, amp, ope, args, raw):
             if screen.test_signal():
                 self.co.flash("Yank interrupted (%d/%d)" % (i, cnt))
                 return # return without else
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(''.join(l))
-        s = util.get_size_string(self.co.get_yank_buffer_size())
-        self.co.show("%s yanked" % s)
+        self.co.show("%s yanked" %
+            util.get_size_string(self.co.get_yank_buffer_size()))
 
 @_rollback
 def put(self, amp, ope, args, raw):
@@ -1389,9 +1396,9 @@ def open_buffer(self, amp, ope, args, raw):
     elif not args:
         self.co.show(self.co.get_path())
     else:
-        o = path.Path(args[0])
-        f = o.path
-        ret = path.get_path_failure_message(o)
+        ff = path.get_path(args[0])
+        f, offset, length = util.parse_file_path(ff)
+        ret = path.get_path_failure_message(path.Path(f))
         if ret:
             self.co.flash(ret)
         elif self.co.has_buffer(f):
@@ -1399,7 +1406,7 @@ def open_buffer(self, amp, ope, args, raw):
             self.co.lrepaintf()
             show_current(self, amp, ope, args, raw)
         else:
-            self.co.add_buffer(f)
+            self.co.add_buffer(ff)
             self.co.lrepaintf()
             return RETURN
 
@@ -1419,7 +1426,8 @@ def close_buffer(self, amp, ope, args, raw):
         else:
             f = self.co.get_path()
         if not self.co.has_buffer(f):
-            self.co.flash("No matching buffer for %s" % path.get_short_path(f))
+            self.co.flash("No matching buffer for %s" %
+                path.get_short_path(f))
         elif self.co.has_buffer(f, lambda o: o.is_dirty()):
             self.co.flash("No write since last change: %s" % f)
         else:
@@ -1448,11 +1456,13 @@ def __save_buffer(self, args, force):
         if new and os.path.isfile(new):
             __rename_buffer(self, new)
         self.co.lrepaintf()
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         self.co.flash(e)
         if overwrite and tmp:
             tmp.restore()
+    finally:
+        if tmp:
+            tmp.cleanup()
 
 def __rename_buffer(self, f):
     pos = self.co.get_pos()
@@ -1502,13 +1512,13 @@ def block_force_save_buffer(self, amp, ope, args, raw):
 
 def __block_read(self):
     beg, end, mapx, siz, cnt = __get_block(self)
-    ret = []
+    l = []
     for i in util.get_xrange(cnt):
-        ret.append(self.co.read(beg + mapx * i, siz))
+        l.append(self.co.read(beg + mapx * i, siz))
         if screen.test_signal():
             self.co.flash("Read interrupted (%d/%d)" % (i, cnt))
             return None
-    return ''.join(ret)
+    return ''.join(l)
 
 def __save_partial(self, args, fn, force):
     f, overwrite = __get_save_partial_path(self, args, force)
@@ -1522,18 +1532,20 @@ def __save_partial(self, args, fn, force):
             tmp = stash.TemporaryFile(f, unlink=True)
         else:
             tmp = None
-        from . import rwbuf
-        o = rwbuf.Fileobj(f)
+        assert not os.path.exists(f)
+        o = allocator.alloc(f)
         o.insert(0, buf)
         msg, new = o.flush()
         if msg:
             self.co.show(msg)
         assert new, new
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         self.co.flash(e)
         if overwrite and tmp:
             tmp.restore()
+    finally:
+        if tmp:
+            tmp.cleanup()
 
 def __get_save_partial_path(self, args, force):
     if len(args) > 1:

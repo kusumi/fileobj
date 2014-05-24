@@ -21,39 +21,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import fileobj
-from . import kernel
+from . import block
 from . import rofd
-from . import util
 
-class Fileobj (rofd.Fileobj):
+class Fileobj (rofd.Fileobj, block.methods):
     _insert  = False
     _replace = False
     _delete  = False
     _enabled = True
+    _partial = True
 
     def __str__(self):
-        l = []
-        l.append("device size %s" %
-            util.get_size_string(self.get_size()))
-        l.append("sector size %s" %
-            util.get_size_string(self.get_sector_size()))
-        l.append("label %s" % self.__label)
-        return "%s\n\n%s" % (super(Fileobj, self).__str__(), '\n'.join(l))
+        return "%s\n\n%s" % (
+            super(Fileobj, self).__str__(), self.to_string())
 
     def init(self):
-        b = kernel.get_blkdev_info(self.get_path())
-        assert b.sector_size % 512 == 0, b.sector_size
-        self.__sector_size = b.sector_size
-        self.__label = b.label
-        self.set_size(b.size)
-        self.set_align(self.get_sector_size())
-        self.set_window(0, 1)
-        self.init_file()
+        self.init_blk()
 
     def get_sector_size(self):
-        return self.__sector_size
+        return self.get_blk_sector_size()
 
     def creat(self, f):
-        raise fileobj.FileobjError(
-            "Can only write to %s" % self.get_path())
+        self.creat_blk()

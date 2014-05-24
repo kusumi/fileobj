@@ -204,15 +204,13 @@ def resize():
     try:
         this._scr.resize(get_size_y(), get_size_x())
         this._scr.mvwin(get_position_y(), get_position_x())
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
 
 def printl(x, s, attr=screen.def_attr):
     try:
         this._scr.addstr(0, x, s, attr | screen.color_attr)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         if len(s) < screen.get_size_x() - 1:
             log.debug((e, x, s))
 
@@ -220,8 +218,7 @@ def clrl():
     try:
         this._scr.move(0, 0)
         this._scr.clrtoeol()
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
 
 _banner = ['']

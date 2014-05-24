@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fcntl
-import sys
 
 from . import linux
 from . import log
@@ -42,8 +41,7 @@ def get_blkdev_info(fd):
         b = fcntl.ioctl(fd, d[s], ' ' * 256) # DISK_IDENT_SIZE
         label = b.strip('\x00')
         return size, sector_size, label
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
         raise
 
@@ -60,8 +58,7 @@ def get_total_ram():
         s = util.execute("sysctl", "hw.physmem")[0]
         x = s.split()[-1]
         return int(x)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
         return linux.get_total_ram()
 

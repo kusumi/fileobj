@@ -45,8 +45,7 @@ class Console (console.Console):
             self.co.discard_eof()
             self.__listen(arg)
             assert not self.co.is_barrier_active()
-        except fileobj.FileobjError:
-            e = sys.exc_info()[1]
+        except fileobj.FileobjError, e:
             self.co.flash(e)
         finally:
             self.co.cleanup_region()
@@ -263,10 +262,10 @@ class BR (_binary, _replace):
             for i in range(siz, siz * (n + 1), siz):
                 x = self.co.get_pos() + i // 2 - 1
                 if x < self.co.get_size():
-                    s = self.co.read(x, 1)
+                    b = self.co.read(x, 1)
                 else:
-                    s = '\x00'
-                seq[i - 1] = ord(hex(ord(s) & 0x0F)[2:])
+                    b = '\x00'
+                seq[i - 1] = ord(hex(ord(b) & 0x0F)[2:])
         l = get_ascii_seq(seq)
         self.co.replace_current(''.join(l))
         return len(l)

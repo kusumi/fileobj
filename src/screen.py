@@ -63,8 +63,7 @@ def init(fg='', bg=''):
         curses.cbreak()
         try:
             curses.curs_set(0) # vt100 fails here but just ignore
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.debug(e)
 
 def cleanup():
@@ -86,8 +85,7 @@ def _init_color(fg, bg):
         curses.init_pair(pair,
             getattr(curses, fg), getattr(curses, bg))
         this.color_attr = curses.color_pair(pair)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
         return -1
 

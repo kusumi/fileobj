@@ -44,7 +44,8 @@ def get_text(co, fo, args):
     while b:
         if len(b) <= 2:
             fileobj.extension.fail("Invalid descriptor: %s" % btoh(b))
-        bLength, bDescriptorType = [ord(x) for x in b[0:2]]
+        bLength = ord(b[0])
+        bDescriptorType = ord(b[1])
         if bLength <= 0:
             fileobj.extension.fail("Invalid bLength: %d" % bLength)
         d = b[:bLength]
@@ -54,7 +55,8 @@ def get_text(co, fo, args):
         b = b[bLength:]
     l = []
     for b in desc:
-        bLength, bDescriptorType = ord(b[0]), ord(b[1])
+        bLength = ord(b[0])
+        bDescriptorType = ord(b[1])
         if bDescriptorType == USB_DT_DEVICE:
             l.extend(__get_device_descriptor(b))
         elif bDescriptorType == USB_DT_CONFIG:

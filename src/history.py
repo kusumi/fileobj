@@ -23,7 +23,6 @@
 
 from __future__ import with_statement
 import collections
-import sys
 import time
 
 from . import literal
@@ -48,10 +47,8 @@ class _data (object):
     def __getitem__(self, n):
         if not self.__queue:
             return None
-        elif n < 0:
-            return self.__queue[0]
-        elif n > len(self) - 1:
-            return self.__queue[-1]
+        elif n < 0 or n > len(self) - 1:
+            return None
         else:
             return self.__queue[n]
 
@@ -101,6 +98,7 @@ class History (object):
             f = setting.get_history_path()
         if not prefix:
             prefix = literal.get_slow_strings()
+        assert "#" not in prefix
         self.__path = path.Path(f)
         self.__data = dict([(k, _data(k)) for k in prefix])
         if setting.use_history:
@@ -121,15 +119,14 @@ class History (object):
             return
         try:
             prefix = list(self.__data.keys())
-            for s in open(f): # from old to new
+            for s in util.open_text_file(f): # from old to new
                 s = s.rstrip()
                 if not s or s.startswith("#"):
                     continue
                 k, v = _string_to_data(s)
                 if k in prefix and util.is_graph_sequence(v):
                     self.append(k, v)
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.error("Failed to read %s, %s" % (f, e))
 
     def __write_history(self):
@@ -139,18 +136,20 @@ class History (object):
             return
         try:
             tmp = stash.TemporaryFile(f, unlink=True)
-            with open(f, 'w') as fd:
+            with util.open_text_file(f, 'w') as fd:
                 fd.write("# %s\n" % time.ctime())
                 for k, v in self:
                     for s in reversed(list(v)): # from old to new
                         assert util.is_graph_sequence(s)
                         fd.write(_data_to_string(k, s))
                 util.fsync(fd)
-        except Exception:
-            e = sys.exc_info()[1]
+        except Exception, e:
             log.error("Failed to write to %s, %s" % (f, e))
             if tmp:
                 tmp.restore()
+        finally:
+            if tmp:
+                tmp.cleanup()
 
     def reset_cursor(self, k):
         self.__data[k].reset_cursor()

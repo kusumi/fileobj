@@ -49,14 +49,15 @@ def get_text(co, fo, args):
         if len(b) == n:
             l = [(pos, b)]
 
-    sl = ["Range %s-%s" % (fileobj.util.get_size_string(pos),
+    sl = ["Range %s-%s" % (
+        fileobj.util.get_size_string(pos),
         fileobj.util.get_size_string(pos + siz))]
     sl.append("Found %d strings" % len(l))
 
     if l:
         sl.append('')
-        f = fileobj.util.get_string_format("%${pos}s %s",
-            pos=max([len(str(x[0])) for x in l]))
+        n = max([len(str(x[0])) for x in l])
+        f = fileobj.util.get_string_format("%${pos}s %s", pos=n)
         for i, x in enumerate(l):
             sl.append(f % (x[0], x[1]))
     return sl

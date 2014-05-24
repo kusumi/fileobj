@@ -38,8 +38,9 @@ def get(f):
     if f in _attrd:
         return _attrd.get(f)
     else:
-        return _attrd.setdefault(f,
-            util.Namespace(magic='', marks={}, undo=undo.Undo()))
+        attr = util.Namespace(
+            magic='', marks={}, undo=undo.Undo())
+        return _attrd.setdefault(f, attr)
 
 def remove(f):
     f = path.get_path(f)

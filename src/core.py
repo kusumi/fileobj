@@ -179,11 +179,12 @@ For more information, run the program and enter :help<ENTER>")
         if not co.init(args, wspnum, opts.width):
             co.repaint()
             co.dispatch()
-    except Exception:
-        info = sys.exc_info()
-        targs[0] = info[1]
-        targs[1] = util.get_traceback(info[2])
-        sys.exit(1)
+    except Exception, e:
+        tb = sys.exc_info()[2]
+        targs[0] = e
+        targs[1] = util.get_traceback(tb)
     finally:
         if co:
             co.cleanup()
+    if targs[0]:
+        sys.exit(1)

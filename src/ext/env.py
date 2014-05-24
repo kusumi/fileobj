@@ -30,8 +30,10 @@ def get_text(co, fo, args):
     l = []
     for x in fileobj.env.iter_env_name():
         o = getattr(fileobj.env, x, None)
+        s = f % x
         if o is None:
-            l.append((f + " %s") % (x, None))
+            s += " None"
         else:
-            l.append((f + " \"%s\"") % (x, o))
+            s += " \"%s\"" % o
+        l.append(s)
     return l

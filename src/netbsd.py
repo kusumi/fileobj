@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fcntl
-import sys
 
 from . import linux
 from . import log
@@ -32,7 +31,8 @@ from . import util
 def get_blkdev_info(fd):
     try:
         DIOCGDINFO = 0x41946465
-        b = fcntl.ioctl(fd, DIOCGDINFO, ' ' * 1000) # struct disklabel
+        b = fcntl.ioctl(fd, DIOCGDINFO,
+            ' ' * 1000) # struct disklabel
         d_typename   = b[8:24]
         d_secsize    = util.host_to_int(b[40:44])
         d_nsectors   = util.host_to_int(b[44:48])
@@ -43,8 +43,7 @@ def get_blkdev_info(fd):
         if d_secperunit > x:
             x = d_secperunit
         return x * d_secsize, d_secsize, d_typename
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error("ioctl(%s, DIOCGDINFO) failed, %s" % (fd.name, e))
         raise
 
@@ -57,8 +56,7 @@ def get_total_ram():
         s = util.execute("sysctl", "hw.physmem")[0]
         x = s.split()[-1]
         return int(x)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
         return linux.get_total_ram()
 

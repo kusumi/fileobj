@@ -29,6 +29,7 @@ def iter_env_name():
     yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_CURSES"
+    yield "FILEOBJ_USE_FILE_PATH_ATTR"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_USE_TRACE_SYMLINK"
     yield "FILEOBJ_TRACE_WORD_SIZE"
@@ -104,7 +105,8 @@ def iter_env_name():
 
 def get_setting(s):
     if s in _envs_name:
-        fn = getattr(this, "_get_setting_%s" % env_to_setting_name(s))
+        fn = getattr(this, "_get_setting_%s" %
+            env_to_setting_name(s))
         return fn()
     else:
         assert 0, "Invalid env: %s" % s
@@ -168,6 +170,9 @@ def _get_setting_use_debug():
 
 def _get_setting_use_curses():
     return _test_bool("FILEOBJ_USE_CURSES", True)
+
+def _get_setting_use_file_path_attr():
+    return _test_bool("FILEOBJ_USE_FILE_PATH_ATTR", True)
 
 def _get_setting_use_trace():
     return _test_bool("FILEOBJ_USE_TRACE", False)
@@ -385,9 +390,9 @@ def _get_setting_mmap_thresh():
 
 def _get_setting_robuf_chunk_size():
     try:
-        default = os.sysconf("SC_PAGE_SIZE") // 4
+        default = os.sysconf("SC_PAGE_SIZE")
     except Exception:
-        default = 1024
+        default = 4096
     return _test_gt_zero_or_default("FILEOBJ_ROBUF_CHUNK_SIZE", default)
 
 def _get_setting_robuf_search_thresh_ratio():
@@ -415,7 +420,7 @@ def _get_setting_rwbuf_chunk_size_low():
 def _get_setting_rwbuf_chunk_size_high():
     e = this.FILEOBJ_RWBUF_CHUNK_SIZE_HIGH
     chunk_size = _get_setting_robuf_chunk_size()
-    _ = chunk_size * 2
+    _ = chunk_size * 5
     if e is None:
         return _
     x = _test_gt_zero(e)

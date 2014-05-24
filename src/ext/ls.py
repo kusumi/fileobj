@@ -24,8 +24,6 @@
 from __future__ import division
 
 import fileobj.extension
-import fileobj.roext
-import fileobj.rwext
 import fileobj.util
 
 def get_text(co, fo, args):

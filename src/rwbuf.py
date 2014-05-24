@@ -36,11 +36,12 @@ class Fileobj (robuf.Fileobj):
     _replace = True
     _delete  = True
     _enabled = True
+    _partial = True
 
-    def __init__(self, f):
+    def __init__(self, f, offset=0, length=0):
         self.__count = 0
         self.__dirty = False
-        super(Fileobj, self).__init__(f)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
         assert not self.cbuf
@@ -56,16 +57,40 @@ class Fileobj (robuf.Fileobj):
         return self.__dirty
 
     def sync(self):
+        hdr = self.__read_unmapped_header()
+        trr = self.__read_unmapped_trailer()
         try:
             f = self.get_path()
             tmp = stash.TemporaryFile(f, unlink=True)
-            with open(f, 'w') as fd:
+            with util.open_file(f, 'w') as fd:
+                if hdr:
+                    fd.write(hdr)
                 fd.write(self.read(0, self.get_size()))
+                if trr:
+                    fd.write(trr)
                 util.fsync(fd)
         except Exception:
             if tmp:
                 tmp.restore()
             raise
+        finally:
+            if tmp:
+                tmp.cleanup()
+
+    def __read_unmapped_header(self):
+        offset = self.get_mapping_offset()
+        if not offset:
+            return ''
+        with util.open_file(self.get_path()) as fd:
+            return fd.read(offset)
+
+    def __read_unmapped_trailer(self):
+        length = self.get_mapping_length()
+        if not length:
+            return ''
+        with util.open_file(self.get_path()) as fd:
+            fd.seek(self.get_mapping_offset() + length)
+            return fd.read()
 
     def __sync_size(self, o, delta):
         for i in range(self.cbuf.index(o) + 1, len(self.cbuf)):
@@ -94,8 +119,8 @@ class Fileobj (robuf.Fileobj):
                     break
         if setting.use_debug:
             l = [len(o) for o in self.cbuf]
-            log.debug("%d chunks exist min=%d[B] max=%d[B]" %
-                (len(l), min(l), max(l)))
+            log.debug("%d chunks exist min=%d[B] max=%d[B]" % (
+                len(l), min(l), max(l)))
         self.set_search_thresh()
 
     def __merge_chunk(self, beg, merge_thresh):
@@ -108,11 +133,12 @@ class Fileobj (robuf.Fileobj):
             if size >= merge_thresh:
                 ll = l[:l.index(o) + 1]
                 if len(ll) > 1:
-                    s = ''.join([o.read(o.offset, len(o)) for o in ll])
-                    new = self.alloc_chunk(beg.offset, s)
+                    b = ''.join(
+                        [o.read(o.offset, len(o)) for o in ll])
+                    new = self.alloc_chunk(beg.offset, b)
                     self.cbuf.insert(self.cbuf.index(beg), new)
-                    log.debug("Merge %d chunks -> #%d/%d (%d,%d)" %
-                        (len(ll), self.cbuf.index(new), len(self.cbuf),
+                    log.debug("Merge %d chunks -> #%d/%d (%d,%d)" % (
+                        len(ll), self.cbuf.index(new), len(self.cbuf),
                         new.offset, len(new)))
                     for o in ll:
                         self.cbuf.remove(o)
@@ -126,14 +152,14 @@ class Fileobj (robuf.Fileobj):
         size = len(beg)
         i = 0
         while size > 0:
-            s = beg.read(offset, split_thresh)
-            o = self.alloc_chunk(offset, s)
+            b = beg.read(offset, split_thresh)
+            o = self.alloc_chunk(offset, b)
             self.cbuf.insert(self.cbuf.index(beg) + 1 + i, o)
-            offset += len(s)
-            size -= len(s)
+            offset += len(b)
+            size -= len(b)
             i += 1
-        log.debug("Split into %d chunks <- #%d/%d (%d,%d)" %
-            (i, self.cbuf.index(beg), len(self.cbuf) - i,
+        log.debug("Split into %d chunks <- #%d/%d (%d,%d)" % (
+            i, self.cbuf.index(beg), len(self.cbuf) - i,
             beg.offset, len(beg)))
         self.cbuf.remove(beg)
         self.mark_chunk()

@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 from . import log
 from . import netbsd
 from . import path
@@ -40,8 +38,7 @@ def get_total_ram():
         s = util.execute("sysctl", "hw.physmem")[0]
         x = s.split("=")[-1]
         return int(x)
-    except Exception:
-        e = sys.exc_info()[1]
+    except Exception, e:
         log.error(e)
         return -1
 

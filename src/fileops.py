@@ -72,6 +72,10 @@ class Fileops (object):
         return self.__ref.get_short_path()
     def get_magic(self):
         return self.__ref.get_magic()
+    def get_mapping_offset(self):
+        return self.__ref.get_mapping_offset()
+    def get_mapping_length(self):
+        return self.__ref.get_mapping_length()
     def get_type(self):
         return util.get_class(self.__ref)
 
@@ -183,6 +187,24 @@ class Fileops (object):
         else:
             self.__ref.delete(x, n, rec)
 
+    def has_undo(self):
+        return self.__ref.has_undo()
+    def has_redo(self):
+        return self.__ref.has_redo()
+
+    def get_undo_size(self):
+        return self.__ref.get_undo_size()
+    def get_redo_size(self):
+        return self.__ref.get_redo_size()
+    def get_rollback_log_size(self):
+        return self.__ref.get_rollback_log_size()
+
+    def merge_undo(self, n):
+        self.__ref.merge_undo(n)
+    def merge_undo_until(self, to):
+        """Merge until # of remaining undos is arg to"""
+        self.merge_undo(self.get_undo_size() - to)
+
     def undo(self, n=1):
         return self.__ref.undo(n)
     def redo(self, n=1):
@@ -198,12 +220,6 @@ class Fileops (object):
         ret = self.rollback_until(to)
         if ret >= 0:
             self.set_pos(ret)
-
-    def merge_undo(self, n):
-        self.__ref.merge_undo(n)
-    def merge_undo_until(self, to):
-        """Merge until # of remaining undos is arg to"""
-        self.merge_undo(self.get_undo_size() - to)
 
     def get_barrier(self, bsiz):
         if bsiz < 0:

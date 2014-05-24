@@ -24,7 +24,6 @@
 from __future__ import division
 import struct
 
-import fileobj.extension
 import fileobj.util
 from fileobj.extension import fail
 
@@ -74,7 +73,8 @@ def get_text(co, fo, args):
     while buf:
         b = buf[:4]
         buf = buf[4:]
-        s = "|%04X| %02X %02X %02X %02X" % (n, b[3], b[2], b[1], b[0])
+        s = "|%04X| %02X %02X %02X %02X" % (
+            n, b[3], b[2], b[1], b[0])
         if (type == PCI_HDR_DEV and 0x10 <= n < 0x28) or \
             (type == PCI_HDR_PPB and 0x10 <= n < 0x18):
             s += " %s" % __get_bar(n, b)
@@ -87,8 +87,8 @@ def get_text(co, fo, args):
     return l
 
 def __get_bar(n, word):
-    b = ''.join([chr(x) for x in word])
-    addr = fileobj.util.le_to_int(b)
+    addr = fileobj.util.le_to_int(
+        ''.join([chr(x) for x in word]))
     if word[0] & 0x01:
         s = "I/O %04X" % (addr & 0xFFFFFFFC)
     elif word[0] & 0x06:

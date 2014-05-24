@@ -29,14 +29,16 @@ class Fileobj (rofd.Fileobj):
     _replace = True
     _delete  = False
     _enabled = True
+    _partial = True
 
-    def __init__(self, f):
-        super(Fileobj, self).__init__(f)
+    def __init__(self, f, offset=0, length=0):
+        super(Fileobj, self).__init__(f, offset, length)
         self.__dirty = False
         self.__diff = {}
 
     def __str__(self):
-        return "%s\n\ndiff size %s" % (super(Fileobj, self).__str__(),
+        return "%s\n\ndiff size %s" % (
+            super(Fileobj, self).__str__(),
             util.get_size_string(len(self.__diff)))
 
     def clear_dirty(self):
@@ -46,16 +48,17 @@ class Fileobj (rofd.Fileobj):
         return self.__dirty
 
     def sync(self):
+        offset = self.get_mapping_offset()
         for x in sorted(self.__diff.keys()):
-            self.fd.seek(x)
+            self.fd.seek(offset + x)
             self.fd.write(self.__diff[x])
         util.fsync(self.fd)
 
     def read(self, x, n):
-        s = super(Fileobj, self).read(x, n)
-        if not s or not self.__diff:
-            return s
-        l = list(s)
+        b = super(Fileobj, self).read(x, n)
+        if not b or not self.__diff:
+            return b
+        l = list(b)
         for i in util.get_xrange(x, x + n):
             if i in self.__diff:
                 l[i - x] = self.__diff[i]
