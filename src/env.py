@@ -391,9 +391,9 @@ def _get_setting_mmap_thresh():
 
 def _get_setting_robuf_chunk_size():
     try:
-        default = os.sysconf("SC_PAGE_SIZE") // 4
+        default = os.sysconf("SC_PAGE_SIZE")
     except Exception:
-        default = 1024
+        default = 4096
     return _test_gt_zero_or_default("FILEOBJ_ROBUF_CHUNK_SIZE", default)
 
 def _get_setting_robuf_search_thresh_ratio():
@@ -421,7 +421,7 @@ def _get_setting_rwbuf_chunk_size_low():
 def _get_setting_rwbuf_chunk_size_high():
     e = this.FILEOBJ_RWBUF_CHUNK_SIZE_HIGH
     chunk_size = _get_setting_robuf_chunk_size()
-    _ = chunk_size * 2
+    _ = chunk_size * 5
     if e is None:
         return _
     x = _test_gt_zero(e)

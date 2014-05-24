@@ -23,6 +23,8 @@
 
 from . import util
 
+_ = util.str_to_bytes
+
 def input_to_bytes(l):
     return util.str_to_bytes(
         ''.join([chr(x) for x in l]))
@@ -58,9 +60,9 @@ if util.is_python2():
 else:
     import builtins as builtin
     TYPE = bytes
-    ZERO = b"\x00"
-    BLANK = b''
-    SPACE = b' '
+    ZERO = _("\x00")
+    BLANK = _('')
+    SPACE = _(' ')
     ord = __ord_3k
     split = __split_3k
 

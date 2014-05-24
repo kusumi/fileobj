@@ -21,13 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import with_statement
-
 from . import extension
 from . import robuf
-from . import util
 
-class Fileobj (robuf.Fileobj):
+class Fileobj (robuf.Fileobj, extension.methods):
     _insert  = False
     _replace = False
     _delete  = False
@@ -35,15 +32,11 @@ class Fileobj (robuf.Fileobj):
     _partial = False
 
     def __init__(self, raw):
-        super(Fileobj, self).__init__(repr(self), 0)
-        self.__raw = raw
+        super(Fileobj, self).__init__(repr(self), 0, 0)
+        self.init_raw(raw)
 
     def ioctl(self, width):
-        if self.is_empty():
-            self.init_chunk(
-                extension.get_buffer(self.__raw, width))
+        self.fill_chunk(width)
 
     def creat(self, f):
-        with util.create_text_file(f) as fd:
-            fd.write(self.__raw)
-            util.fsync(fd)
+        self.write_raw(f)

@@ -105,10 +105,11 @@ class FastLiteral (Literal):
     pass
 
 class RegexLiteral (FastLiteral):
-    def __init__(self, size, body, regex, desc):
-        super(RegexLiteral, self).__init__(regex, None, desc)
+    def __init__(self, size, str, regex, desc):
+        super(RegexLiteral, self).__init__(str, None, desc)
+        assert len(str) > 1
         self.size = size
-        self.body = body
+        self.key = self.str[0]
         self.regex = re.compile(regex)
 
     def match(self, l):
@@ -128,14 +129,14 @@ class RegexLiteral (FastLiteral):
         if not util.is_graph_sequence(l):
             return False
         s = ''.join([chr(x) for x in l])
-        if s.startswith(self.body):
+        if s.startswith(self.key):
             return True
         else:
             return False
 
 class StateLiteral (RegexLiteral):
-    def __init__(self, size, body, regex, pair, desc):
-        super(StateLiteral, self).__init__(size, body, regex, desc)
+    def __init__(self, size, str, regex, pair, desc):
+        super(StateLiteral, self).__init__(size, str, regex, desc)
         self.pair = pair
         self.state = True
 
@@ -206,7 +207,7 @@ parens_beg    = FastLiteral("(", None, "Go to the previous zero (\\x00)")
 bracket1_end  = FastLiteral("}", None, "Go to the next non zero character")
 bracket1_beg  = FastLiteral("{", None, "Go to the previous non zero character")
 bracket2_end  = FastLiteral("]", None, "End reading [count]. e.g. '[-0x10KiB]l' '[-020KiB]l' '[-0b10000KiB]l' are all -16384l")
-bracket2_beg  = FastLiteral("[", None, "Get reading [count]. e.g. '[0x10]x' '[020]x' '[0b10000]x' are all 16x")
+bracket2_beg  = FastLiteral("[", None, "Start reading [count]. e.g. '[0x10]x' '[020]x' '[0b10000]x' are all 16x")
 go            = FastLiteral("go", None, "Go to [count] byte in the buffer where default is start of the buffer")
 ctrlb         = FastLiteral("<CTRL>b", (util.ctrl('b'),), "Scroll window [count] pages backward in the buffer")
 ctrlu         = FastLiteral("<CTRL>u", (util.ctrl('u'),), "Scroll window [count] half pages backward in the buffer")
@@ -269,15 +270,15 @@ ctrlv         = FastLiteral("<CTRL>v", (util.ctrl('v'),), "Start/End block visua
 escape        = FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode")
 resize        = FastLiteral('<RESIZE>', (kbd.RESIZE,), '')
 
-m_reg         = RegexLiteral(2, "m", r"m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers")
-backtick_reg  = RegexLiteral(2, "`", r"`[0-9a-zA-Z]", "Go to marked position")
+m_reg         = RegexLiteral(2, "m[0-9a-zA-Z]", r"^m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers")
+backtick_reg  = RegexLiteral(2, "`[0-9a-zA-Z]", r"^`[0-9a-zA-Z]", "Go to marked position")
 q             = FastLiteral("q", None, "Stop recording")
-q_reg         = StateLiteral(2, "q", r"q[0-9a-zA-Z]", q, "Record typed characters into register")
-atsign_reg    = RegexLiteral(2, "@", r"@[0-9a-zA-Z]", "Execute the contents of register [count] times")
+q_reg         = StateLiteral(2, "q[0-9a-zA-Z]", r"^q[0-9a-zA-Z]", q, "Record typed characters into register")
+atsign_reg    = RegexLiteral(2, "@[0-9a-zA-Z]", r"^@[0-9a-zA-Z]", "Execute the contents of register [count] times")
 atsign_at     = FastLiteral("@@", None, "Execute the previous @ command [count] times")
-bit_and       = RegexLiteral(3, "&", r"&[0-9a-fA-F]{2}", "Write logical and")
-bit_or        = RegexLiteral(3, "|", r"\|[0-9a-fA-F]{2}", "Write logical or")
-bit_xor       = RegexLiteral(3, "^", r"\^[0-9a-fA-F]{2}", "Write logical xor")
+bit_and       = RegexLiteral(3, "&[0-9a-fA-F]{2}", r"^&[0-9a-fA-F]{2}", "Replace [count] bytes with logical and-ed bytes")
+bit_or        = RegexLiteral(3, "|[0-9a-fA-F]{2}", r"^\|[0-9a-fA-F]{2}", "Replace [count] bytes with logical or-ed bytes")
+bit_xor       = RegexLiteral(3, "^[0-9a-fA-F]{2}", r"^\^[0-9a-fA-F]{2}", "Replace [count] bytes with logical xor-ed bytes")
 
 s_e           = SlowLiteral(":e", None, "Open a buffer")
 s_bdelete     = SlowLiteral(":bdelete", None, "Close a buffer")
@@ -376,8 +377,8 @@ def find_literal(seq):
 def get_lines(l):
     if not l:
         return []
-    f = "{{0:<{0}}} {{1}}".format(
-        max([len(str(o)) for o in l]))
+    n = max([len(str(o)) for o in l])
+    f = "{{0:<{0}}} {{1}}".format(n)
     ret = []
     for o in l:
         if o.desc:

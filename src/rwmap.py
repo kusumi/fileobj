@@ -39,13 +39,13 @@ class Fileobj (romap.Fileobj):
     _enabled = kernel.has_mremap()
     _partial = False
 
-    def __init__(self, f, offset=0):
+    def __init__(self, f, offset=0, length=0):
         self.__dirty = False
         self.__sync = False
         self.__dead = False
         self.__stat = None
         self.__anon = None
-        super(Fileobj, self).__init__(f, offset)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
         f = self.get_path()

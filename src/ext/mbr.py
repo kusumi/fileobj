@@ -27,6 +27,8 @@ import fileobj.extension
 import fileobj.filebytes
 import fileobj.util
 
+_ = fileobj.util.str_to_bytes
+
 _partition_type = {
     0x00 : '',
     0x82 : "Linux swap",
@@ -42,7 +44,7 @@ def get_text(co, fo, args):
     if len(b) != 512:
         fileobj.extension.fail("Invalid length: {0}".format(len(b)))
     mag = b[-2:]
-    if mag != b"\x55\xAA":
+    if mag != _("\x55\xAA"):
         fileobj.extension.fail("Invalid magic: {0}".format(repr(mag)))
     b = fileobj.filebytes.ordt(b)
     n = 446

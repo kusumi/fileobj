@@ -75,7 +75,8 @@ class Container (object):
         fmt = {
             16: "{0:X}",
             10: "{0:d}",
-            8 : "{0:o}", }.get(setting.offset_num_radix)
+            8 : "{0:o}",
+        }.get(setting.offset_num_radix)
         s = fmt.format(
             max([o.get_size() for o in self.__fileobjs]))
         if len(s) > setting.offset_num_width:
@@ -108,7 +109,7 @@ class Container (object):
         self.__load_stream()
         while True:
             if self.__cur_workspace.dispatch() == -1:
-                return
+                break
 
     def getch(self):
         if len(self.__stream):

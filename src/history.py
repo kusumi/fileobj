@@ -47,10 +47,8 @@ class _data (object):
     def __getitem__(self, n):
         if not self.__queue:
             return None
-        elif n < 0:
-            return self.__queue[0]
-        elif n > len(self) - 1:
-            return self.__queue[-1]
+        elif n < 0 or n > len(self) - 1:
+            return None
         else:
             return self.__queue[n]
 
@@ -100,6 +98,7 @@ class History (object):
             f = setting.get_history_path()
         if not prefix:
             prefix = literal.get_slow_strings()
+        assert "#" not in prefix
         self.__path = path.Path(f)
         self.__data = dict([(k, _data(k)) for k in prefix])
         if setting.use_history:
@@ -148,6 +147,9 @@ class History (object):
             log.error("Failed to write to {0}, {1}".format(f, e))
             if tmp:
                 tmp.restore()
+        finally:
+            if tmp:
+                tmp.cleanup()
 
     def reset_cursor(self, k):
         self.__data[k].reset_cursor()

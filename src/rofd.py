@@ -38,14 +38,16 @@ class Fileobj (fileobj.Fileobj):
     _enabled = True
     _partial = True
 
-    def __init__(self, f, offset=0):
+    def __init__(self, f, offset=0, length=0):
         self.fd = None
         self.__size = -1
-        super(Fileobj, self).__init__(f, offset)
-        assert os.path.exists(self.get_path())
+        self.__align = 0
+        self.__mask = 0
+        self.__ra_window = None
         self.__ra_queue = collections.deque()
-        self.__ra_stat = collections.defaultdict(int)
-        self.__stat = collections.defaultdict(int)
+        self.__ra_count = collections.defaultdict(int)
+        self.__count = collections.defaultdict(int)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def __str__(self):
         sl = []
@@ -56,30 +58,35 @@ class Fileobj (fileobj.Fileobj):
         for i, o in enumerate(self.__ra_queue):
             sl.append("#{0} {1}[B] {2}-{3}[B]".format(
                 i, o.end - o.beg, o.beg, o.end))
-        sl.append("\nread_ahead stat {0}".format(sum(self.__ra_stat.values())))
-        for k in sorted(self.__ra_stat.keys()):
-            sl.append("{0}[B] {1}".format(k, self.__ra_stat[k]))
-        sl.append("\nread stat {0}".format(sum(self.__stat.values())))
-        for k in sorted(self.__stat.keys()):
-            sl.append("{0}[B] {1}".format(k, self.__stat[k]))
+        sl.append("\nread_ahead count {0}".format(
+            sum(self.__ra_count.values())))
+        for k in sorted(self.__ra_count.keys()):
+            sl.append("{0}[B] {1}".format(k, self.__ra_count[k]))
+        sl.append("\nread count {0}".format(sum(self.__count.values())))
+        for k in sorted(self.__count.keys()):
+            sl.append("{0}[B] {1}".format(k, self.__count[k]))
         return '\n'.join(sl)
 
     def init(self):
+        f = self.get_path()
+        size = kernel.get_buffer_size(f)
+        if size <= 0:
+            raise fileobj.FileobjError("{0} is empty".format(f))
+        self.set_size(size)
         self.set_align(0)
         self.set_window(1, 1)
         self.init_file()
-        self.set_size(
-            kernel.get_buffer_size(self.get_path())) # may raise
+        assert os.path.exists(self.get_path())
 
     def cleanup(self):
         if self.fd and not self.fd.closed:
             self.fd.close()
 
     def init_file(self):
-        if util.get_class(self)._replace:
-            mode = 'r+'
-        else:
+        if self.is_readonly():
             mode = 'r'
+        else:
+            mode = 'r+'
         self.fd = util.open_file(self.get_path(), mode)
 
     def is_dirty(self):
@@ -90,7 +97,11 @@ class Fileobj (fileobj.Fileobj):
 
     def set_size(self, size):
         assert self.__size == -1
-        self.__size = size - self.get_offset()
+        length = self.get_mapping_length()
+        if length:
+            self.__size = length
+        else:
+            self.__size = size - self.get_mapping_offset()
         assert self.__size > 0
 
     def set_align(self, align):
@@ -109,6 +120,8 @@ class Fileobj (fileobj.Fileobj):
         s = util.str_to_bytes(s)
         n = util.PAGE_SIZE
         while True:
+            if end != -1 and x >= end:
+                return -1
             b = self.read(x, n)
             pos = util.find_string(b, s)
             if pos >= 0:
@@ -122,6 +135,8 @@ class Fileobj (fileobj.Fileobj):
     def rsearch(self, x, s, end=-1):
         s = util.str_to_bytes(s)
         while True:
+            if end != -1 and x <= end:
+                return -1
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
@@ -138,7 +153,7 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def read(self, x, n):
-        x += self.get_offset()
+        x += self.get_mapping_offset()
         o = None
         for e in self.__ra_queue:
             if x >= e.beg and x + n <= e.end:
@@ -167,11 +182,11 @@ class Fileobj (fileobj.Fileobj):
                 b = self.fd.read(end - beg)
 
             o = util.Namespace(beg=beg, end=beg + len(b), buf=b)
-            self.__ra_stat[end - beg] += 1
+            self.__ra_count[end - beg] += 1
             self.__ra_queue.appendleft(o)
             if len(self.__ra_queue) > setting.rofd_read_queue_size:
                 self.__ra_queue.pop()
 
-        self.__stat[n] += 1
+        self.__count[n] += 1
         x -= o.beg
         return o.buf[x : x + n]

@@ -24,7 +24,6 @@
 from __future__ import division
 import struct
 
-import fileobj.extension
 import fileobj.filebytes
 import fileobj.util
 from fileobj.extension import fail

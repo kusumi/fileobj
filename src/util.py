@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
-import codecs
 import fcntl
 import inspect
 import os
@@ -43,7 +42,7 @@ from . import version
 
 if setting.use_debug:
     import pdb
-    from pdb import set_trace as set_bp
+    set_bp = pdb.set_trace
 else:
     def set_bp():
         return
@@ -223,18 +222,18 @@ def raise_no_impl(s):
     raise NotImplementedError("No {0}".format(s))
 
 KB = 1000
-MB = KB * KB
-GB = MB * KB
-TB = GB * KB
-PB = TB * KB
-EB = PB * KB
+MB = KB * 1000
+GB = MB * 1000
+TB = GB * 1000
+PB = TB * 1000
+EB = PB * 1000
 
-KiB = 1024
-MiB = KiB * KiB
-GiB = MiB * KiB
-TiB = GiB * KiB
-PiB = TiB * KiB
-EiB = PiB * KiB
+KiB = 1 << 10
+MiB = KiB << 10
+GiB = MiB << 10
+TiB = GiB << 10
+PiB = TiB << 10
+EiB = PiB << 10
 
 try:
     PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
@@ -435,9 +434,9 @@ def __pad_bin(prefix, b, sign):
 
 def __get_padding(size, b, high, sign):
     if sign and (ord(b[high : high + 1]) & 0x80):
-        pad = b"\xFF"
+        pad = _("\xFF")
     else:
-        pad = b"\x00"
+        pad = _("\x00")
     return pad * (size - len(b))
 
 def int_to_byte(x):
@@ -527,7 +526,7 @@ def create_text_file(f):
 
 def __create_file(f):
     """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
-    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o644)
+    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 def open_temp_file():
     d = setting.get_userdir_path()
@@ -565,27 +564,55 @@ def utime(f, st=None):
 def parse_file_path(f):
     """Return tuple of path and offset"""
     if not setting.use_file_path_attr:
-        return f, 0
+        return f, 0, 0
     if '@' in f:
         i = f.rindex('@')
         if '/' in f:
             if i > f.rindex('/'):
                 s = f[i + 1:]
                 f = f[:i]
-                offset = parse_size_string(s)
-                if offset is None:
-                    offset = 0
-                return f, offset
-    return f, 0
+                if '-' in s:
+                    j = s.find('-')
+                    a = s[:j]
+                    b = s[j + 1:]
+                    offset = __get_path_attribute(a)
+                    endpos = __get_path_attribute(b)
+                    if endpos > offset:
+                        length = endpos - offset
+                    else:
+                        length = 0
+                elif ':' in s:
+                    j = s.find(':')
+                    a = s[:j]
+                    b = s[j + 1:]
+                    offset = __get_path_attribute(a)
+                    length = __get_path_attribute(b)
+                else:
+                    a = s
+                    b = ''
+                    offset = __get_path_attribute(a)
+                    length = __get_path_attribute(b)
+                return f, offset, length
+    return f, 0, 0
+
+def __get_path_attribute(s, default=0):
+    if s:
+        ret = parse_size_string(s)
+    else:
+        ret = None
+    if ret is None:
+        return default
+    else:
+        return ret
 
 def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
     out, err = p.communicate()
     if out is None:
-        out = b''
+        out = _('')
     if err is None:
-        err = b''
+        err = _('')
     return bytes_to_str(out), bytes_to_str(err), p.returncode
 
 def __iter_next_2k(g):
@@ -615,6 +642,7 @@ if is_python2():
     str_to_bytes = __str_to_bytes_2k
     bytes_to_str = __bytes_to_str_2k
 else:
+    import codecs
     MAX_INT = sys.maxsize
     iter_next = __iter_next_3k
     get_xrange = __get_xrange_3k
@@ -622,6 +650,7 @@ else:
     bytes_to_str = __bytes_to_str_3k
 
 MIN_INT = -MAX_INT - 1
+_ = str_to_bytes
 
 def iter_site_module():
     for s in package.iter_module_name():

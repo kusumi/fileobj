@@ -43,9 +43,14 @@ class Allocator (object):
         else:
             return -1
 
-    def __is_valid_class(self, cls, offset):
-        return cls._enabled and \
-            (cls._partial or not offset)
+    def __is_valid_class(self, cls, offset, length):
+        if not cls._enabled:
+            return False
+        if offset and not cls._partial:
+            return False
+        if length and not cls._partial:
+            return False
+        return True
 
     def __is_ro_class(self, cls):
         return not (cls._insert or cls._replace or cls._delete)
@@ -78,13 +83,13 @@ class Allocator (object):
 
     def alloc(self, f):
         f = path.get_path(f)
-        f, offset = util.parse_file_path(f)
+        f, offset, length = util.parse_file_path(f)
         o = path.Path(f)
         if not f or o.is_noent:
             if setting.use_alloc_noent_rwbuf:
-                return self.__alloc(f, 0, self.rwbuf)
+                return self.__alloc(f, 0, 0, self.rwbuf)
             else:
-                return self.__alloc(f, 0, self.rwmap)
+                return self.__alloc(f, 0, 0, self.rwmap)
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)
@@ -97,21 +102,21 @@ class Allocator (object):
             cls = self.__get_blk_class(cls)
 
         while cls:
-            if self.__is_valid_class(cls, offset):
+            if self.__is_valid_class(cls, offset, length):
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
                     if size == -1:
                         log.error("Failed to read size of {0}".format(f))
                     elif size < setting.mmap_thresh:
                         cls = self.__get_alt_class(cls)
-                return self.__alloc(f, offset, cls)
+                return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
 
-    def __alloc(self, f, offset, cls):
+    def __alloc(self, f, offset, length, cls):
         while cls:
             try:
                 log.info("Using {0} for {1}".format(cls, repr(f)))
-                ret = cls(f, offset)
+                ret = cls(f, offset, length)
                 ret.set_magic()
                 return ret
             except Exception:

@@ -21,54 +21,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import shutil
-
-from . import log
-from . import path
+from . import fileobj
+from . import kernel
 from . import util
 
-class TemporaryFile (object):
-    def __init__(self, f, unlink=False):
-        o = path.Path(f)
-        self.__path = o.path
-        self.__file = None
-        if o.is_file:
-            try:
-                fd = util.open_temp_file()
-                if self.__copy(self.__path, fd.name) != -1:
-                    if unlink:
-                        os.unlink(self.__path)
-                    self.__file = fd
-            except Exception as e:
-                log.error(e)
+class methods (object):
+    def to_string(self):
+        l = []
+        l.append("device size {0}".format(
+            util.get_size_string(self.get_size())))
+        l.append("sector size {0}".format(
+            util.get_size_string(self.get_sector_size())))
+        l.append("label {0}".format(self.blk_label))
+        return '\n'.join(l)
 
-    @property
-    def name(self):
-        if self.__file:
-            return self.__file.name
-        else:
-            return ''
+    def init_blk(self):
+        b = kernel.get_blkdev_info(self.get_path())
+        assert b.sector_size % 512 == 0, b.sector_size
+        self.blk_sector_size = b.sector_size
+        self.blk_label = b.label
+        self.set_size(b.size)
+        self.set_align(self.get_sector_size())
+        self.set_window(0, 1)
+        self.init_file()
 
-    def cleanup(self):
-        if self.__file:
-            self.__file = None
-        else:
-            return -1
+    def get_blk_sector_size(self):
+        return self.blk_sector_size
 
-    def restore(self):
-        if self.__file:
-            self.__copy(self.__file.name, self.__path)
-            self.cleanup()
-        else:
-            return -1
-
-    def __copy(self, src, dst):
-        try:
-            assert not os.path.isdir(dst)
-            shutil.copy2(src, dst)
-            log.debug("Copy {0} -> {1}".format(src, dst))
-            assert os.path.isfile(dst)
-        except Exception as e:
-            log.error(e)
-            return -1
+    def creat_blk(self):
+        raise fileobj.FileobjError(
+            "Can only write to {0}".format(self.get_path()))

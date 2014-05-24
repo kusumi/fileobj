@@ -183,7 +183,8 @@ For more information, run the program and enter :help<ENTER>")
         tb = sys.exc_info()[2]
         targs[0] = e
         targs[1] = util.get_traceback(tb)
-        sys.exit(1)
     finally:
         if co:
             co.cleanup()
+    if targs[0]:
+        sys.exit(1)

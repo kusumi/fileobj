@@ -95,6 +95,9 @@ class Workspace (object):
             return self.__cur_console.dispatch(arg)
         self.dispatch = dispatch
 
+    def dispatch(self):
+        return -1
+
     def discard_window(self):
         self.__windows = self.__get_virtual_window(
             util.get_class(self.__cur_console)),

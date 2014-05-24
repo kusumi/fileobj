@@ -40,11 +40,11 @@ class Fileobj (fileobj.Fileobj):
     _enabled = True
     _partial = True
 
-    def __init__(self, f, offset=0):
+    def __init__(self, f, offset=0, length=0):
         self.cbuf = []
         self.__thresh = 0
         self.set_size(0)
-        super(Fileobj, self).__init__(f, offset)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def __str__(self):
         l = []
@@ -60,8 +60,12 @@ class Fileobj (fileobj.Fileobj):
         assert not self.cbuf
         assert os.path.isfile(f), f
         with util.open_file(f) as fd:
-            fd.seek(self.get_offset())
-            self.init_chunk(fd.read())
+            fd.seek(self.get_mapping_offset())
+            length = self.get_mapping_length()
+            if length:
+                self.init_chunk(fd.read(length))
+            else:
+                self.init_chunk(fd.read())
 
     def is_dirty(self):
         return False
@@ -102,7 +106,8 @@ class Fileobj (fileobj.Fileobj):
 
     def mark_chunk(self):
         if not self.cbuf:
-            self.cbuf.append(self.alloc_chunk(0, filebytes.BLANK))
+            self.cbuf.append(
+                self.alloc_chunk(0, filebytes.BLANK))
         self.cbuf[-1].islast = True
 
     def search(self, x, s, end=-1):

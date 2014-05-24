@@ -32,8 +32,8 @@ class Fileobj (rofd.Fileobj):
     _enabled = True
     _partial = True
 
-    def __init__(self, f, offset=0):
-        super(Fileobj, self).__init__(f, offset)
+    def __init__(self, f, offset=0, length=0):
+        super(Fileobj, self).__init__(f, offset, length)
         self.__dirty = False
         self.__diff = {}
 
@@ -49,7 +49,7 @@ class Fileobj (rofd.Fileobj):
         return self.__dirty
 
     def sync(self):
-        offset = self.get_offset()
+        offset = self.get_mapping_offset()
         for x in sorted(self.__diff.keys()):
             self.fd.seek(offset + x)
             self.fd.write(self.__diff[x])

@@ -39,10 +39,10 @@ class Fileobj (robuf.Fileobj):
     _enabled = True
     _partial = True
 
-    def __init__(self, f, offset=0):
+    def __init__(self, f, offset=0, length=0):
         self.__count = 0
         self.__dirty = False
-        super(Fileobj, self).__init__(f, offset)
+        super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
         assert not self.cbuf
@@ -58,7 +58,8 @@ class Fileobj (robuf.Fileobj):
         return self.__dirty
 
     def sync(self):
-        hdr = self.read_header()
+        hdr = self.__read_unmapped_header()
+        trr = self.__read_unmapped_trailer()
         try:
             f = self.get_path()
             tmp = stash.TemporaryFile(f, unlink=True)
@@ -66,11 +67,31 @@ class Fileobj (robuf.Fileobj):
                 if hdr:
                     fd.write(hdr)
                 fd.write(self.read(0, self.get_size()))
+                if trr:
+                    fd.write(trr)
                 util.fsync(fd)
         except Exception:
             if tmp:
                 tmp.restore()
             raise
+        finally:
+            if tmp:
+                tmp.cleanup()
+
+    def __read_unmapped_header(self):
+        offset = self.get_mapping_offset()
+        if not offset:
+            return filebytes.BLANK
+        with util.open_file(self.get_path()) as fd:
+            return fd.read(offset)
+
+    def __read_unmapped_trailer(self):
+        length = self.get_mapping_length()
+        if not length:
+            return filebytes.BLANK
+        with util.open_file(self.get_path()) as fd:
+            fd.seek(self.get_mapping_offset() + length)
+            return fd.read()
 
     def __sync_size(self, o, delta):
         for i in range(self.cbuf.index(o) + 1, len(self.cbuf)):

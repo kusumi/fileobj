@@ -36,7 +36,7 @@ class Undo (object):
     def add_undo(self, ufn, rfn):
         if self.__cursor < self.__base:
             self.__base = -1
-        for x in util.get_xrange(self.get_redo_log_size()):
+        for x in util.get_xrange(self.get_redo_size()):
             self.__undoredo.pop()
         self.__undoredo.append((ufn, rfn))
         self.__rollback.append((ufn, -1))
@@ -91,11 +91,11 @@ class Undo (object):
         else:
             return -1, False
 
-    def get_undo_log_size(self):
+    def get_undo_size(self):
         return self.__cursor
 
-    def get_redo_log_size(self):
-        return len(self) - self.get_undo_log_size()
+    def get_redo_size(self):
+        return len(self) - self.get_undo_size()
 
     def get_rollback_log_size(self):
         return len(self.__rollback)

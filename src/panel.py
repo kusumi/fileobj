@@ -335,10 +335,11 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             16: "|{0}| ",
             10: " {0}| ",
             8 : "<{0}> ", }
+        n = setting.offset_num_width
         self.__lstr_fmt = {
-            16: "{{0:0{0}X}}".format(setting.offset_num_width),
-            10: "{{0:{0}d}}".format(setting.offset_num_width),
-            8 : "{{0:0{0}o}}".format(setting.offset_num_width), }
+            16: "{{0:0{0}X}}".format(n),
+            10: "{{0:{0}d}}".format(n),
+            8 : "{{0:0{0}o}}".format(n), }
 
     def get_form_single(self, x):
         return "{0:02X}".format(filebytes.ord(x) & 0xFF)
@@ -458,9 +459,14 @@ class OptionCanvas (Canvas, default_addon):
             a += self.fileops.get_short_path()
             if not a:
                 a = util.NO_NAME
-            offset = self.fileops.get_offset()
+            offset = self.fileops.get_mapping_offset()
+            length = self.fileops.get_mapping_length()
             if offset:
                 a += " @{0}".format(offset)
+            if length:
+                if not offset:
+                    a += " @0"
+                a += ":{0}".format(length)
             if self.fileops.is_readonly():
                 a += " [RO]"
             b = self.fileops.get_magic()

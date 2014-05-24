@@ -21,8 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = 'v0.7.2'
+MAJOR = 0
+MINOR = 7
+RELEASE = 3
 
 def get_version():
-    l = __version__[1:].split('.')
-    return tuple(int(x) for x in l)
+    return MAJOR, MINOR, RELEASE
+
+def get_version_string():
+    return "v{0}.{1}.{2}".format(*get_version())
+
+__version__ = get_version_string()

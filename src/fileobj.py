@@ -53,11 +53,12 @@ class FileobjError (util.GenericError):
     pass
 
 class Fileobj (object):
-    def __init__(self, f, offset=0):
+    def __init__(self, f, offset, length):
         try:
             self.__path = path.Path(f)
             self.__attr = fileattr.get(self.get_path())
-            self.__attr.offset = self.__parse_offset(offset)
+            self.__attr.offset, self.__attr.length = \
+                self.__parse_mapping_attributes(offset, length)
             self.__clear_barrier()
             self.init()
         except Exception as e:
@@ -123,30 +124,32 @@ class Fileobj (object):
         return self.__path.short_path
     def get_magic(self):
         return self.__attr.magic
-    def get_offset(self):
+    def get_mapping_offset(self):
         return self.__attr.offset
+    def get_mapping_length(self):
+        return self.__attr.length
 
-    def __parse_offset(self, offset):
-        if offset <= 0:
-            return 0
+    def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
-        size = kernel.get_buffer_size_safe(f)
-        if size == -1:
+        bufsiz = kernel.get_buffer_size_safe(f)
+        if bufsiz == -1:
             log.error("Failed to read size of {0}".format(f))
-            return 0
-        elif offset >= size:
-            log.error("Too large offset value {0}".format(offset))
-            return 0
-        else:
-            return offset
+            return 0, 0
 
-    def read_header(self):
-        offset = self.get_offset()
-        if offset != 0:
-            with util.open_file(self.get_path()) as fd:
-                return fd.read(offset)
+        if offset <= 0:
+            _offset = 0
+        elif offset >= bufsiz:
+            _offset = 0
         else:
-            return filebytes.BLANK
+            _offset = offset
+
+        if length <= 0:
+            _length = 0
+        elif _offset + length > bufsiz:
+            _length = bufsiz - _offset
+        else:
+            _length = length
+        return _offset, _length
 
     def flush(self, f=None):
         this = self.get_path()
@@ -237,18 +240,23 @@ class Fileobj (object):
         else:
             raise FileobjError("{0} not supported".format(s))
 
+    def has_undo(self):
+        return self.get_undo_size() > 0
+    def has_redo(self):
+        return self.get_redo_size() > 0
+
     def get_undo_size(self):
-        return self.__attr.undo.get_undo_log_size()
+        return self.__attr.undo.get_undo_size()
     def get_redo_size(self):
-        return self.__attr.undo.get_redo_log_size()
+        return self.__attr.undo.get_redo_size()
+    def get_rollback_log_size(self):
+        return self.__attr.undo.get_rollback_log_size()
 
     def add_undo(self, ufn, rfn):
         self.__attr.undo.add_undo(ufn, rfn)
+
     def merge_undo(self, n):
         self.__attr.undo.merge_undo(n)
-
-    def get_rollback_log_size(self):
-        return self.__attr.undo.get_rollback_log_size()
 
     def restore_rollback_log(self, ref):
         self.__attr.undo.restore_rollback_log(ref)

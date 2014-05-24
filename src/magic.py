@@ -24,6 +24,8 @@
 from . import filebytes
 from . import util
 
+_ = util.str_to_bytes
+
 class _magic (object):
     def test(self, fo):
         util.raise_no_impl("test")
@@ -57,7 +59,7 @@ class ELFMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\x7fELF"
+        return _("\x7fELF")
     def get_name(self):
         return "ELF"
 
@@ -65,7 +67,7 @@ class EXEMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"MZ"
+        return _("MZ")
     def get_name(self):
         return "EXE"
 
@@ -90,7 +92,7 @@ Python-3.4.0/Lib/importlib/_bootstrap.py"""
     def __get_version(self, fo):
         v = -1
         b = self.read(fo, 0, 4)
-        if b[2:4] != b"\r\n":
+        if b[2:4] != _("\r\n"):
             return v
         l = filebytes.ordt(b)
         x = l[0] + (l[1] << 8)
@@ -134,7 +136,7 @@ class JavaMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\xCA\xFE\xBA\xBE"
+        return _("\xCA\xFE\xBA\xBE")
     def get_name(self):
         return "CLASS"
 
@@ -142,7 +144,7 @@ class RPMMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\xED\xAB\xEE\xDB"
+        return _("\xED\xAB\xEE\xDB")
     def get_name(self):
         return "RPM"
 
@@ -150,7 +152,7 @@ class BMPMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"BM"
+        return _("BM")
     def get_name(self):
         return "BMP"
 
@@ -159,7 +161,7 @@ class JPEGMagic (_magic):
         a, b = self.get_magic()
         return self.test_head(fo, a) and self.test_tail(fo, b)
     def get_magic(self):
-        return b"\xFF\xD8", b"\xFF\xD9"
+        return _("\xFF\xD8"), _("\xFF\xD9")
     def get_name(self):
         return "JPEG"
 
@@ -168,7 +170,7 @@ class GIFMagic (_magic):
         a, b = self.get_magic()
         return self.test_head(fo, a) or self.test_head(fo, b)
     def get_magic(self):
-        return b"GIF87a", b"GIF89a"
+        return _("GIF87a"), _("GIF89a")
     def get_name(self):
         return "GIF"
 
@@ -176,7 +178,7 @@ class PNGMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\x89PNG"
+        return _("\x89PNG")
     def get_name(self):
         return "PNG"
 
@@ -184,7 +186,7 @@ class PDFMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"%PDF"
+        return _("%PDF")
     def get_name(self):
         return "PDF"
 
@@ -192,7 +194,7 @@ class PSMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"%!"
+        return _("%!")
     def get_name(self):
         return "PS"
 
@@ -200,7 +202,7 @@ class MSOfficeMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\xD0\xCF\x11\xE0"
+        return _("\xD0\xCF\x11\xE0")
     def get_name(self):
         return "MSOffice"
 
@@ -208,9 +210,9 @@ class LHAMagic (_magic):
     def test(self, fo):
         b = self.read(fo, 2, 5)
         return \
-            (b[:3] == b"-lh") and \
-            (b[3:4] in b"01234567") and \
-            (b[4:5] == b"-")
+            (b[:3] == _("-lh")) and \
+            (b[3:4] in _("01234567")) and \
+            (b[4:5] == _("-"))
     def get_name(self):
         return "LHA"
 
@@ -218,7 +220,7 @@ class ZIPMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"PK"
+        return _("PK")
     def get_name(self):
         return "ZIP"
 
@@ -226,7 +228,7 @@ class GZIPMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"\x1F\x8B"
+        return _("\x1F\x8B")
     def get_name(self):
         return "GZIP"
 
@@ -234,7 +236,7 @@ class BZIPMagic (_magic):
     def test(self, fo):
         return self.test_head(fo)
     def get_magic(self):
-        return b"BZh"
+        return _("BZh")
     def get_name(self):
         return "BZIP"
 
@@ -249,7 +251,7 @@ class ISO9660Magic (_blk_magic):
                 return True
         return False
     def get_magic(self):
-        return b"CD001"
+        return _("CD001")
     def get_name(self):
         return "ISO9660"
 
@@ -257,7 +259,7 @@ class MBRMagic (_blk_magic):
     def test(self, fo):
         return self.read(fo, 510, 2) == self.get_magic()
     def get_magic(self):
-        return b"\x55\xAA"
+        return _("\x55\xAA")
     def get_name(self):
         return "MBR"
 

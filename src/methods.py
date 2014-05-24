@@ -26,6 +26,7 @@ import os
 import platform
 import time
 
+from . import allocator
 from . import filebytes
 from . import fileobj
 from . import kernel
@@ -175,13 +176,15 @@ def go_to(self, amp=None, ope=None, args=None, raw=None):
     if self.co.go_to(pos) == -1:
         self.co.lrepaintf()
 
-def __is_zero(x):
-    return x == filebytes.ZERO
-def __is_non_zero(x):
-    return x != filebytes.ZERO
+def __is_graph(b):
+    return util.is_graph(util.bytes_to_str(b))
+def __is_zero(b):
+    return b == filebytes.ZERO
+def __is_non_zero(b):
+    return b != filebytes.ZERO
 
 def go_next_char(self, amp, ope, args, raw):
-    __go_next_matched(self, get_int(amp), util.is_graph)
+    __go_next_matched(self, get_int(amp), __is_graph)
 
 def go_next_zero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_zero)
@@ -190,7 +193,7 @@ def go_next_nonzero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_non_zero)
 
 def go_prev_char(self, amp, ope, args, raw):
-    __go_prev_matched(self, get_int(amp), util.is_graph)
+    __go_prev_matched(self, get_int(amp), __is_graph)
 
 def go_prev_zero(self, amp, ope, args, raw):
     __go_prev_matched(self, get_int(amp), __is_zero)
@@ -1176,9 +1179,9 @@ def __get_xor_ops(mask):
     return lambda c: filebytes.ord(c) ^ mask
 
 _bit_ops = {
-    literal.bit_and.body: __get_and_ops,
-    literal.bit_or.body : __get_or_ops,
-    literal.bit_xor.body: __get_xor_ops, }
+    literal.bit_and.key: __get_and_ops,
+    literal.bit_or.key : __get_or_ops,
+    literal.bit_xor.key: __get_xor_ops, }
 
 @_rollback
 def logical_bit_operation(self, amp, ope, arg, raw):
@@ -1214,8 +1217,9 @@ def __single_logical_bit_operation(self, pos, amp, fn):
         if pos > self.co.get_max_pos():
             break
         if screen.test_signal():
-            self.co.flash("Single logical bit operation interrupted" \
-                " ({0}/{1})".format(x, amp))
+            self.co.flash(
+                "Single logical bit operation interrupted ({0}/{1})".format(
+                x, amp))
             return -1
     return amp
 
@@ -1392,7 +1396,7 @@ def open_buffer(self, amp, ope, args, raw):
         self.co.show(self.co.get_path())
     else:
         ff = path.get_path(args[0])
-        f, offset = util.parse_file_path(ff)
+        f, offset, length = util.parse_file_path(ff)
         ret = path.get_path_failure_message(path.Path(f))
         if ret:
             self.co.flash(ret)
@@ -1455,6 +1459,9 @@ def __save_buffer(self, args, force):
         self.co.flash(e)
         if overwrite and tmp:
             tmp.restore()
+    finally:
+        if tmp:
+            tmp.cleanup()
 
 def __rename_buffer(self, f):
     pos = self.co.get_pos()
@@ -1524,8 +1531,8 @@ def __save_partial(self, args, fn, force):
             tmp = stash.TemporaryFile(f, unlink=True)
         else:
             tmp = None
-        from . import rwbuf
-        o = rwbuf.Fileobj(f)
+        assert not os.path.exists(f)
+        o = allocator.alloc(f)
         o.insert(0, buf)
         msg, new = o.flush()
         if msg:
@@ -1535,6 +1542,9 @@ def __save_partial(self, args, fn, force):
         self.co.flash(e)
         if overwrite and tmp:
             tmp.restore()
+    finally:
+        if tmp:
+            tmp.cleanup()
 
 def __get_save_partial_path(self, args, force):
     if len(args) > 1:
