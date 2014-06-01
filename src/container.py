@@ -27,6 +27,7 @@ import collections
 from . import allocator
 from . import console
 from . import extension
+from . import filebytes
 from . import fileops
 from . import kbd
 from . import operand
@@ -69,7 +70,7 @@ class Container (object):
                 self.__fileobjs.append(o)
         if not self.__fileobjs:
             self.__fileobjs.append(self.__alloc_buffer(''))
-            assert self.__fileobjs
+        assert self.__fileobjs[0] is not None
 
         fmt = {
             16: "%X",
@@ -438,15 +439,15 @@ class Container (object):
     def read_current(self, n):
         return self.__cur_workspace.read_current(n)
 
-    def insert(self, x, s, rec=True):
-        self.__cur_workspace.insert(x, s, rec)
-    def insert_current(self, s, rec=True):
-        self.__cur_workspace.insert_current(s, rec)
+    def insert(self, x, l, rec=True):
+        self.__cur_workspace.insert(x, l, rec)
+    def insert_current(self, l, rec=True):
+        self.__cur_workspace.insert_current(l, rec)
 
-    def replace(self, x, s, rec=True):
-        self.__cur_workspace.replace(x, s, rec)
-    def replace_current(self, s, rec=True):
-        self.__cur_workspace.replace_current(s, rec)
+    def replace(self, x, l, rec=True):
+        self.__cur_workspace.replace(x, l, rec)
+    def replace_current(self, l, rec=True):
+        self.__cur_workspace.replace_current(l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_workspace.delete(x, n, rec)
@@ -580,13 +581,13 @@ class Container (object):
         self.add_delayed_input(x)
 
     def end_read_delayed_input(self):
-        l = [util.chr2(n) for n in self.__delayed_input[1:-1]]
+        l = [util.to_chr_repr(n) for n in self.__delayed_input[1:-1]]
         self.clear_delayed_input()
         return ''.join(l)
 
     def add_delayed_input(self, x):
         self.__delayed_input.append(x)
-        l = [util.chr2(n) for n in self.__delayed_input]
+        l = [util.to_chr_repr(n) for n in self.__delayed_input]
         self.show(''.join(l))
         if x == self.__delayed_input_term:
             return self.__delayed_input_term
@@ -601,19 +602,22 @@ class Container (object):
         self.show('')
 
     def init_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer = [buf]
 
     def left_add_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer.insert(0, buf)
 
     def right_add_yank_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
         self.__yank_buffer.append(buf)
 
     def get_yank_buffer_size(self):
         return sum(len(x) for x in self.__yank_buffer)
 
     def get_yank_buffer(self):
-        return ''.join(self.__yank_buffer)
+        return filebytes.join(self.__yank_buffer)
 
     def set_bytes_per_line(self, arg):
         ret = self.__cur_workspace.find_bytes_per_line(arg)

@@ -25,6 +25,7 @@ import mmap
 import os
 import shutil
 
+from . import filebytes
 from . import fileobj
 from . import kernel
 from . import log
@@ -57,14 +58,10 @@ class Fileobj (romap.Fileobj):
         self.__sync_stat(f)
 
     def cleanup(self):
-        try:
-            if not self.map: # if closed if test raises exception
-                return
-            uptodate = self.__sync
-            laststat = self.__stat
-        except Exception, e: # error from __init__
-            log.error(e)
+        if not self.map: # if closed if test raises exception
             return
+        uptodate = self.__sync
+        laststat = self.__stat
         try:
             self.restore_rollback_log(self)
             if self.__anon:
@@ -87,7 +84,7 @@ class Fileobj (romap.Fileobj):
         if self.__anon:
             return -1
         self.__anon = util.open_temp_file()
-        self.__anon.write('\x00')
+        self.__anon.write(filebytes.ZERO)
         self.__anon.seek(0)
         self.__dead = True
         log.debug("Create backing file %s for %s" % (
@@ -161,15 +158,15 @@ class Fileobj (romap.Fileobj):
         if not self.is_empty():
             return super(Fileobj, self).read(x, n)
         else:
-            return ''
+            return filebytes.BLANK
 
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         size = self.get_size()
-        n = len(s)
+        n = len(l)
         xx = x + n
 
         if rec:
-            buf = s[:]
+            buf = l[:]
             def ufn(ref):
                 ref.delete(x, n, False)
                 return x
@@ -180,17 +177,17 @@ class Fileobj (romap.Fileobj):
 
         self.map.resize(size + n)
         self.map.move(xx, x, size - x)
-        self.map[x:xx] = s
+        self.map[x:xx] = filebytes.input_to_bytes(l)
         self.__dirty = True
         self.__sync = False
         self.__dead = False
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         if self.is_empty():
-            self.insert(x, s, rec)
+            self.insert(x, l, rec)
             return
         size = self.get_size()
-        n = len(s)
+        n = len(l)
         xx = x + n
         resized = False
         if x + n > size:
@@ -198,8 +195,8 @@ class Fileobj (romap.Fileobj):
             resized = True
 
         if rec:
-            ubuf = self.read(x, n)
-            rbuf = s[:]
+            ubuf = filebytes.ords(self.read(x, n))
+            rbuf = l[:]
             if not resized:
                 def ufn1(ref):
                     ref.replace(x, ubuf, False)
@@ -219,7 +216,7 @@ class Fileobj (romap.Fileobj):
                     return x
                 self.add_undo(ufn2, rfn2)
 
-        self.map[x:xx] = s
+        self.map[x:xx] = filebytes.input_to_bytes(l)
         self.__dirty = True
         self.__sync = False
 
@@ -230,7 +227,7 @@ class Fileobj (romap.Fileobj):
         xx = x + n
 
         if rec:
-            buf = self.read(x, n)
+            buf = filebytes.ords(self.read(x, n))
             def ufn(ref):
                 ref.insert(x, buf, False)
                 return x

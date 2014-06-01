@@ -24,6 +24,7 @@
 import fcntl
 import re
 
+from . import filebytes
 from . import log
 from . import path
 from . import setting
@@ -43,7 +44,7 @@ def get_blkdev_info(fd):
         raise
 
 def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, '\x00' * 8)
+    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
     return util.host_to_int(b)
 
 def get_total_ram():

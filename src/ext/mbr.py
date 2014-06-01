@@ -24,6 +24,7 @@
 from __future__ import division
 
 import fileobj.extension
+import fileobj.filebytes
 import fileobj.util
 
 _ = fileobj.util.str_to_bytes
@@ -45,7 +46,7 @@ def get_text(co, fo, args):
     mag = b[-2:]
     if mag != _("\x55\xAA"):
         fileobj.extension.fail("Invalid magic: %s" % repr(mag))
-    b = [ord(x) for x in b]
+    b = fileobj.filebytes.ords(b)
     n = 446
     l = []
     while n < 510:
@@ -81,8 +82,8 @@ def __get_partition(p, offset):
     l.append("  %-15s= %d" % ("last sector", sect))
     l.append("  %-15s= %d" % ("last cylinder", cyli))
 
-    s = ''.join([chr(x) for x in p[8:12]])
-    l.append("  %-15s= %d" % ("first lba", fileobj.util.le_to_int(s)))
-    s = ''.join([chr(x) for x in p[12:16]])
-    l.append("  %-15s= %d" % ("sectors", fileobj.util.le_to_int(s)))
+    b = fileobj.filebytes.input_to_bytes(p[8:12])
+    l.append("  %-15s= %d" % ("first lba", fileobj.util.le_to_int(b)))
+    b = fileobj.filebytes.input_to_bytes(p[12:16])
+    l.append("  %-15s= %d" % ("sectors", fileobj.util.le_to_int(b)))
     return l

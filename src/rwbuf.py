@@ -24,6 +24,7 @@
 from __future__ import with_statement
 import os
 
+from . import filebytes
 from . import fileobj
 from . import log
 from . import robuf
@@ -48,7 +49,7 @@ class Fileobj (robuf.Fileobj):
         if os.path.isfile(self.get_path()):
             super(Fileobj, self).init()
         else:
-            self.init_chunk('')
+            self.init_chunk(filebytes.BLANK)
 
     def clear_dirty(self):
         self.__dirty = False
@@ -80,14 +81,14 @@ class Fileobj (robuf.Fileobj):
     def __read_unmapped_header(self):
         offset = self.get_mapping_offset()
         if not offset:
-            return ''
+            return filebytes.BLANK
         with util.open_file(self.get_path()) as fd:
             return fd.read(offset)
 
     def __read_unmapped_trailer(self):
         length = self.get_mapping_length()
         if not length:
-            return ''
+            return filebytes.BLANK
         with util.open_file(self.get_path()) as fd:
             fd.seek(self.get_mapping_offset() + length)
             return fd.read()
@@ -133,7 +134,7 @@ class Fileobj (robuf.Fileobj):
             if size >= merge_thresh:
                 ll = l[:l.index(o) + 1]
                 if len(ll) > 1:
-                    b = ''.join(
+                    b = filebytes.join(
                         [o.read(o.offset, len(o)) for o in ll])
                     new = self.alloc_chunk(beg.offset, b)
                     self.cbuf.insert(self.cbuf.index(beg), new)
@@ -164,15 +165,15 @@ class Fileobj (robuf.Fileobj):
         self.cbuf.remove(beg)
         self.mark_chunk()
 
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         o = self.cbuf[self.get_chunk_index(x)]
-        n = o.insert(x, s)
+        n = o.insert(x, l)
         self.__sync_size(o, n)
         self.__dirty = True
-        if self.__test_balance(len(s)):
+        if self.__test_balance(len(l)):
             self.__balance_chunk()
         if rec:
-            buf = s[:n]
+            buf = l[:n]
             def ufn(ref):
                 ref.delete(x, n, False)
                 return x
@@ -181,30 +182,30 @@ class Fileobj (robuf.Fileobj):
                 return x
             self.add_undo(ufn, rfn)
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         if self.is_empty():
-            self.insert(x, s, rec)
+            self.insert(x, l, rec)
             return
-        xx, ss = x, s
+        xx, ll = x, l[:]
         buf = []
         oldsize = self.get_size()
         endsize = len(self.cbuf[-1])
         for i in range(self.get_chunk_index(x), len(self.cbuf)):
-            ret, orig = self.cbuf[i].replace(x, s)
+            ret, orig = self.cbuf[i].replace(x, l)
             if rec:
-                buf.append(orig)
-            s = s[ret:]
+                buf.extend(orig) # str or int
+            l = l[ret:]
             x += ret
-            if not s:
+            if not l:
                 delta = len(self.cbuf[-1]) - endsize
                 if delta:
                     self.__sync_size(self.cbuf[-1], delta)
                 self.__dirty = True
-                if self.__test_balance(len(ss)):
+                if self.__test_balance(len(ll)):
                     self.__balance_chunk()
                 if rec:
-                    ubuf = ''.join(buf)
-                    rbuf = ss[:len(ubuf)]
+                    ubuf = _seq_to_ords(buf)
+                    rbuf = ll[:len(ubuf)]
                     newsize = self.get_size()
                     if newsize == oldsize:
                         def ufn1(ref):
@@ -218,7 +219,7 @@ class Fileobj (robuf.Fileobj):
                         assert newsize > oldsize
                         def ufn2(ref): # shrink
                             ref.replace(xx, ubuf, False)
-                            ref.delete(oldsize, xx + len(ss) - oldsize, False)
+                            ref.delete(oldsize, xx + len(ll) - oldsize, False)
                             return xx
                         def rfn2(ref): # expand
                             ref.replace(xx, rbuf, False)
@@ -236,7 +237,7 @@ class Fileobj (robuf.Fileobj):
             o = self.cbuf[i]
             ret, orig = o.delete(x, n)
             if rec:
-                buf.append(orig)
+                buf.extend(orig) # str or int
             if not len(o):
                 dead.append(o)
             n -= ret
@@ -258,7 +259,7 @@ class Fileobj (robuf.Fileobj):
         if self.__test_balance(nn):
             self.__balance_chunk()
         if rec:
-            buf = ''.join(buf)
+            buf = _seq_to_ords(buf)
             def ufn(ref):
                 ref.insert(xx, buf, False)
                 return xx
@@ -266,3 +267,10 @@ class Fileobj (robuf.Fileobj):
                 ref.delete(xx, nn, False)
                 return xx
             self.add_undo(ufn, rfn)
+
+# adaptive version of filebytes.seq_to_ords()
+def _seq_to_ords(l):
+    if isinstance(l[0], filebytes.TYPE):
+        return filebytes.seq_to_ords(l)
+    else:
+        return tuple(l)

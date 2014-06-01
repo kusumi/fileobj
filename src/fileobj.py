@@ -25,6 +25,7 @@ from __future__ import with_statement
 import os
 
 from . import fileattr
+from . import filebytes
 from . import kernel
 from . import log
 from . import magic
@@ -53,20 +54,12 @@ class FileobjError (util.GenericError):
 
 class Fileobj (object):
     def __init__(self, f, offset, length):
-        try:
-            self.__path = path.Path(f)
-            self.__attr = fileattr.get(self.get_path())
-            self.__attr.offset, self.__attr.length = \
-                self.__parse_mapping_attributes(offset, length)
-            self.__clear_barrier()
-            self.init()
-        except Exception, e:
-            log.error(e)
-            try:
-                self.cleanup()
-            except Exception, e2:
-                log.error(e2)
-            raise e
+        self.__path = path.Path(f)
+        self.__attr = fileattr.get(self.get_path())
+        self.__attr.offset, self.__attr.length = \
+            self.__parse_mapping_attributes(offset, length)
+        self.__clear_barrier()
+        self.init()
 
     def init(self):
         return
@@ -130,6 +123,8 @@ class Fileobj (object):
 
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
+        if not os.path.exists(f):
+            return 0, 0
         bufsiz = kernel.get_buffer_size_safe(f)
         if bufsiz == -1:
             log.error("Failed to read size of %s" % f)
@@ -225,9 +220,9 @@ class Fileobj (object):
 
     def read(self, x, n):
         self.raise_no_support("read")
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         self.raise_no_support("insert")
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         self.raise_no_support("replace")
     def delete(self, x, n, rec=True):
         self.raise_no_support("delete")
@@ -365,7 +360,7 @@ class Fileobj (object):
             return -1, -1, -1
 
     def __read_bbuffer(self, x, n):
-        return list(self.read(x, n))
+        return filebytes.ords(self.read(x, n), list)
 
     def barrier_read(self, x, n):
         self.__test_barrier(x, n)
@@ -374,21 +369,21 @@ class Fileobj (object):
             assert x >= a
             assert x + n <= b + 1
         x -= self.__boffset
-        return ''.join(self.__bbuffer[x : x + n])
+        return filebytes.input_to_bytes(self.__bbuffer[x : x + n])
 
-    def barrier_insert(self, x, s, rec=True):
+    def barrier_insert(self, x, l, rec=True):
         self.__test_barrier(x, 0)
         self.__bdirty = True
         x -= self.__boffset
-        self.__bbuffer[x : x] = s
-        if self.get_barrier_size() == len(s):
+        self.__bbuffer[x : x] = l
+        if self.get_barrier_size() == len(l):
             self.__right_extend_barrier(1)
 
-    def barrier_replace(self, x, s, rec=True):
+    def barrier_replace(self, x, l, rec=True):
         self.__test_barrier(x, 0)
         self.__bdirty = True
         x -= self.__boffset
-        self.__bbuffer[x : x + len(s)] = s
+        self.__bbuffer[x : x + len(l)] = l
 
     def barrier_delete(self, x, n, rec=True):
         self.__test_barrier(x, n)

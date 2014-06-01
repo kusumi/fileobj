@@ -24,6 +24,7 @@
 import os
 import re
 
+import fileobj.filebytes
 import fileobj.path
 import fileobj.setting
 import fileobj.util
@@ -65,8 +66,9 @@ class _builtin (_node):
         s = "%s%s %s;" % (I(indent), self.type, name)
         if len(buf) == self.get_size():
             n = self.__to_int(buf, self.__sign)
-            a = ''.join(["\\x%02X" % ord(x) for x in buf])
-            b = ''.join([fileobj.util.chr2(x) for x in buf])
+            a = ''.join(["\\x%02X" % x
+                for x in fileobj.filebytes.ords(buf)])
+            b = ''.join([fileobj.util.to_chr_repr(x) for x in buf])
             s += " %d %s [%s]" % (n, a, b)
         return [s]
 

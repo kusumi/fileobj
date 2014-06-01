@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.extension
+import fileobj.filebytes
 import fileobj.util
 from fileobj.util import get_size_string, byte_to_int, le_to_int
 
@@ -44,8 +45,8 @@ def get_text(co, fo, args):
     while b:
         if len(b) <= 2:
             fileobj.extension.fail("Invalid descriptor: %s" % btoh(b))
-        bLength = ord(b[0])
-        bDescriptorType = ord(b[1])
+        bLength = fileobj.filebytes.ord(b[0:1])
+        bDescriptorType = fileobj.filebytes.ord(b[1:2])
         if bLength <= 0:
             fileobj.extension.fail("Invalid bLength: %d" % bLength)
         d = b[:bLength]
@@ -55,8 +56,8 @@ def get_text(co, fo, args):
         b = b[bLength:]
     l = []
     for b in desc:
-        bLength = ord(b[0])
-        bDescriptorType = ord(b[1])
+        bLength = fileobj.filebytes.ord(b[0:1])
+        bDescriptorType = fileobj.filebytes.ord(b[1:2])
         if bDescriptorType == USB_DT_DEVICE:
             l.extend(__get_device_descriptor(b))
         elif bDescriptorType == USB_DT_CONFIG:
@@ -74,8 +75,9 @@ def get_text(co, fo, args):
         l.append('')
     return l
 
-def btoh(l):
-    return ''.join(["\\x%02X" % ord(x) for x in l])
+def btoh(b):
+    return ''.join(["\\x%02X" % x
+        for x in fileobj.filebytes.ords(b)])
 
 def __get_device_descriptor(b):
     assert len(b) == 18, "Invalid device descriptor: %s" % btoh(b)

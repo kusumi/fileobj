@@ -23,6 +23,7 @@
 
 import array
 
+from . import filebytes
 from . import setting
 from . import util
 
@@ -75,35 +76,37 @@ class Chunk (object):
 
     def read(self, x, n):
         x = self.__get_local_offset(x)
-        return ''.join(self.buffer[x : x + n])
+        return filebytes.join(self.buffer[x : x + n])
 
-    def insert(self, x, s):
+    def insert(self, x, l):
         x = self.__get_local_offset(x)
-        self.buffer[x : x] = alloc_buffer(s)
-        return len(s)
+        b = filebytes.input_to_bytes(l)
+        self.buffer[x : x] = alloc_buffer(b)
+        return len(l)
 
-    def replace(self, x, s):
+    def replace(self, x, l):
         x = self.__get_local_offset(x)
         size = len(self)
-        if x + len(s) > size:
+        if x + len(l) > size:
             if self.islast:
-                nullsize = x + len(s) - size
+                nullsize = x + len(l) - size
                 self.buffer[size:] = alloc_buffer(
-                    chr(0) * nullsize)
+                    filebytes.ZERO * nullsize)
             else:
-                s = s[:size - x]
-        xx = x + len(s)
-        orig = ''.join(self.buffer[x : xx])
-        self.buffer[x : xx] = alloc_buffer(s)
-        return len(s), orig
+                l = l[:size - x]
+        xx = x + len(l)
+        orig = filebytes.join(self.buffer[x : xx])
+        b = filebytes.input_to_bytes(l)
+        self.buffer[x : xx] = alloc_buffer(b)
+        return len(l), orig
 
     def delete(self, x, n):
         x = self.__get_local_offset(x)
         if x + n > len(self):
             n = len(self) - x
         xx = x + n
-        orig = ''.join(self.buffer[x : xx])
-        self.buffer[x : xx] = alloc_buffer('')
+        orig = filebytes.join(self.buffer[x : xx])
+        self.buffer[x : xx] = alloc_buffer(filebytes.BLANK)
         return n, orig
 
     def __get_local_offset(self, x):
@@ -116,4 +119,4 @@ if setting.use_array_chunk:
         return array.array('c', b)
 else:
     def alloc_buffer(b):
-        return list(b)
+        return filebytes.split(b)

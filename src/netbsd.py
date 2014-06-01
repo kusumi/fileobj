@@ -23,6 +23,7 @@
 
 import fcntl
 
+from . import filebytes
 from . import linux
 from . import log
 from . import path
@@ -32,7 +33,7 @@ def get_blkdev_info(fd):
     try:
         DIOCGDINFO = 0x41946465
         b = fcntl.ioctl(fd, DIOCGDINFO,
-            ' ' * 1000) # struct disklabel
+            filebytes.SPACE * 1000) # struct disklabel
         d_typename   = b[8:24]
         d_secsize    = util.host_to_int(b[40:44])
         d_nsectors   = util.host_to_int(b[44:48])

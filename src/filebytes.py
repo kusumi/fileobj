@@ -21,53 +21,70 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fcntl
-
-from . import filebytes
-from . import linux
-from . import log
-from . import path
 from . import util
 
-def get_blkdev_info(fd):
-    try:
-        d = {   "DIOCGSECTORSIZE" : 0x40046480,
-                "DIOCGMEDIASIZE"  : 0x40086481,
-                "DIOCGIDENT"      : 0x41006489, }
-        s = "DIOCGSECTORSIZE"
-        sector_size = ioctl(fd, d[s])
-        s = "DIOCGMEDIASIZE"
-        size = ioctl(fd, d[s])
-        s = "DIOCGIDENT"
-        b = fcntl.ioctl(fd, d[s], filebytes.SPACE * 256) # DISK_IDENT_SIZE
-        label = b.strip(filebytes.ZERO)
-        return size, sector_size, label
-    except Exception, e:
-        log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
-        raise
+_ = util.str_to_bytes
 
-def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
-    return util.host_to_int(b)
+def input_to_bytes(l):
+    return util.str_to_bytes(
+        ''.join([chr(x) for x in l]))
 
-def get_total_ram():
-    """
-    [root@freebsd ~]# sysctl hw.physmem
-    hw.physmem: 1056395264
-    """
-    try:
-        s = util.execute("sysctl", "hw.physmem")[0]
-        x = s.split()[-1]
-        return int(x)
-    except Exception, e:
-        log.error(e)
-        return linux.get_total_ram()
+def __ord_2k(b):
+    return builtin_ord(b)
 
-def get_free_ram():
-    return linux.get_free_ram()
+def __ord_3k(b):
+    return b[0]
 
-def is_blkdev(f):
-    return path.is_blkdev(f) or path.is_chrdev(f)
+def join(l):
+    return BLANK.join(l)
 
-def has_mremap():
-    return False
+def __split_2k(b):
+    return list(b)
+
+def __split_3k(b):
+    return [b[i : i + 1] for i in range(len(b))]
+
+def __iter_2k(b):
+    for x in b:
+        yield x
+
+def __iter_3k(b):
+    for i in range(len(b)):
+        yield b[i : i + 1]
+
+def __riter_2k(b):
+    for x in reversed(b):
+        yield x
+
+def __riter_3k(b):
+    for i in reversed(range(len(b))):
+        yield b[i : i + 1]
+
+if util.is_python2():
+    import __builtin__ as builtin
+    TYPE = str
+    ZERO = "\x00"
+    BLANK = ''
+    SPACE = ' '
+    ord = __ord_2k
+    split = __split_2k
+    iter = __iter_2k
+    riter = __riter_2k
+else:
+    import builtins as builtin
+    TYPE = None
+    ZERO = _("\x00")
+    BLANK = _('')
+    SPACE = _(' ')
+    ord = __ord_3k
+    split = __split_3k
+    iter = __iter_3k
+    riter = __riter_3k
+
+builtin_ord = builtin.ord
+
+def ords(b, cls=tuple):
+    return cls(ord(x) for x in iter(b))
+
+def seq_to_ords(l, cls=tuple):
+    return cls(ord(x) for x in l)

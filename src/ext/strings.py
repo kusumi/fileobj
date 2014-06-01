@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.filebytes
 import fileobj.util
 
 def get_text(co, fo, args):
@@ -42,7 +43,11 @@ def get_text(co, fo, args):
                 n += 1
             else:
                 if n >= fileobj.setting.ext_strings_thresh:
-                    l.append((pos + i - n, b[i - n:i]))
+                    s = b[i - n:i]
+                    # cut "b'" and "'" for Python 3.x bytes type
+                    if fileobj.filebytes.TYPE is not str:
+                        s = ("%s" % s)[2:-1]
+                    l.append((pos + i - n, s))
                     if len(l) >= fileobj.setting.ext_strings_count:
                         break
                 n = 0

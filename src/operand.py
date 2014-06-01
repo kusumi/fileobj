@@ -198,7 +198,7 @@ class Operand (object):
         if self.__amp:
             if not _is_digit(x):
                 return True
-        elif x == ord('0') or not _is_digit(x):
+        elif x == 0x30 or not _is_digit(x): # '0'
             return True # 0 for literal.zero
         self.__amp.append(x)
         return False
@@ -297,7 +297,7 @@ class Operand (object):
 
     def __scan_slow_tab(self):
         if not self.__at_tail_cursor() or \
-            self.__buf[self.__get_tail_cursor() - 1] == ord(' '):
+            self.__buf[self.__get_tail_cursor() - 1] == 0x20: # ' '
             return False
         ope = self.__prev.ope
         arg = self.__prev.arg
@@ -386,7 +386,7 @@ def _to_string(l):
     return ''.join([chr(x) for x in l])
 
 def _is_digit(x):
-    return ord('0') <= x <= ord('9')
+    return 0x30 <= x <= 0x39 # '0' <= x <= '9'
 
 def _is_null(l):
     return _get_type(l) == _null

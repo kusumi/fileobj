@@ -39,7 +39,7 @@ def get(f):
         return _attrd.get(f)
     else:
         attr = util.Namespace(
-            magic='', marks={}, undo=undo.Undo())
+            magic='', offset=0, length=0, marks={}, undo=undo.Undo())
         return _attrd.setdefault(f, attr)
 
 def remove(f):

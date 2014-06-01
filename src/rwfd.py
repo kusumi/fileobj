@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import filebytes
 from . import rofd
 from . import util
 
@@ -58,28 +59,28 @@ class Fileobj (rofd.Fileobj):
         b = super(Fileobj, self).read(x, n)
         if not b or not self.__diff:
             return b
-        l = list(b)
+        l = filebytes.split(b)
         for i in util.get_xrange(x, x + n):
             if i in self.__diff:
                 l[i - x] = self.__diff[i]
-        return ''.join(l)
+        return filebytes.join(l)
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         # don't use buf for both ufn/rfn because ufn lose original buf
-        if x + len(s) > self.get_size():
-            s = s[:self.get_size() - x]
+        if x + len(l) > self.get_size():
+            l = l[:self.get_size() - x]
         if rec:
-            ubuf = self.read(x, len(s))
+            ubuf = filebytes.ords(self.read(x, len(l)))
             def ufn(ref):
                 ref.replace(x, ubuf, False)
                 return x
 
-        for i, c in enumerate(s):
-            self.__diff[x + i] = c
+        for i, c in enumerate(l):
+            self.__diff[x + i] = filebytes.input_to_bytes((c,))
         self.__dirty = not not self.__diff
 
         if rec:
-            rbuf = s[:]
+            rbuf = l[:]
             def rfn(ref):
                 ref.replace(x, rbuf, False)
                 return x

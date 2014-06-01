@@ -23,6 +23,7 @@
 
 from __future__ import division
 
+from . import filebytes
 from . import setting
 from . import util
 
@@ -152,27 +153,27 @@ class Fileops (object):
             assert 0 <= x <= self.get_max_pos(), x
             assert n >= 0, x
         if n <= 0:
-            return ''
+            return filebytes.BLANK
         if self.__ref.is_barrier_active():
             return self.__ref.barrier_read(x, n)
         else:
             return self.__ref.read(x, n)
 
-    def insert(self, x, s, rec=True):
+    def insert(self, x, l, rec=True):
         if setting.use_debug:
             assert 0 <= x <= self.get_max_pos(), x
         if self.__ref.is_barrier_active():
-            self.__ref.barrier_insert(x, s, rec)
+            self.__ref.barrier_insert(x, l, rec)
         else:
-            self.__ref.insert(x, s, rec)
+            self.__ref.insert(x, l, rec)
 
-    def replace(self, x, s, rec=True):
+    def replace(self, x, l, rec=True):
         if setting.use_debug:
             assert 0 <= x <= self.get_max_pos(), x
         if self.__ref.is_barrier_active():
-            self.__ref.barrier_replace(x, s, rec)
+            self.__ref.barrier_replace(x, l, rec)
         else:
-            self.__ref.replace(x, s, rec)
+            self.__ref.replace(x, l, rec)
 
     def delete(self, x, n, rec=True):
         if x + n > self.get_size():

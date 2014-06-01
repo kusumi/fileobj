@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import filebytes
 from . import util
 
 _ = util.str_to_bytes
@@ -29,27 +30,27 @@ class _magic (object):
     def test(self, fo):
         util.raise_no_impl("test")
     def get_magic(self):
-        return ''
+        return filebytes.BLANK
     def get_name(self):
         util.raise_no_impl("name")
 
     def test_head(self, fo, b=None):
         if b is None:
             b = self.get_magic()
-            assert isinstance(b, str)
+            assert isinstance(b, filebytes.TYPE)
         return self.read(fo, 0, len(b)) == b
 
     def test_tail(self, fo, b=None):
         if b is None:
             b = self.get_magic()
-            assert isinstance(b, str)
+            assert isinstance(b, filebytes.TYPE)
         return self.read(fo, fo.get_size() - len(b), len(b)) == b
 
     def read(self, fo, x, n):
         """Must use this instead of directly calling fo.read()"""
         size = fo.get_size()
         if x > size - 1:
-            return ''
+            return filebytes.BLANK
         if x + n > size:
             n = size - x
         return fo.read(x, n)
@@ -93,7 +94,7 @@ Python-3.4.0/Lib/importlib/_bootstrap.py"""
         b = self.read(fo, 0, 4)
         if b[2:4] != _("\r\n"):
             return v
-        l = [ord(x) for x in b]
+        l = filebytes.ords(b)
         x = l[0] + (l[1] << 8)
         if x in (20121,):
             v = 1.5

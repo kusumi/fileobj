@@ -26,6 +26,7 @@ from __future__ import with_statement
 import os
 
 from . import chunk
+from . import filebytes
 from . import fileobj
 from . import log
 from . import screen
@@ -106,7 +107,7 @@ class Fileobj (fileobj.Fileobj):
     def mark_chunk(self):
         if not self.cbuf:
             self.cbuf.append(
-                self.alloc_chunk(0, ''))
+                self.alloc_chunk(0, filebytes.BLANK))
         self.cbuf[-1].islast = True
 
     def search(self, x, s, end=-1):
@@ -121,7 +122,7 @@ class Fileobj (fileobj.Fileobj):
                     siz = len(s) - 1
                     b = self.read(pos, siz)
                 else:
-                    b = ''
+                    b = filebytes.BLANK
                 ret = o.search(x, s, b)
                 if ret != -1:
                     return ret
@@ -145,7 +146,7 @@ class Fileobj (fileobj.Fileobj):
                         pos = 0
                     b = self.read(pos, siz)
                 else:
-                    b = ''
+                    b = filebytes.BLANK
                 ret = o.rsearch(x, s, b)
                 if ret != -1:
                     return ret
@@ -177,7 +178,7 @@ class Fileobj (fileobj.Fileobj):
 
     def read(self, x, n):
         if not n:
-            return ''
+            return filebytes.BLANK
         buf = []
         for i in range(self.get_chunk_index(x), len(self.cbuf)):
             b = self.cbuf[i].read(x, n)
@@ -187,4 +188,4 @@ class Fileobj (fileobj.Fileobj):
                 n -= len(b)
                 if n <= 0:
                     break # doesn't always come here
-        return ''.join(buf)
+        return filebytes.join(buf)

@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fcntl
+import hashlib
 import inspect
 import os
 import platform
@@ -186,7 +187,7 @@ def is_graph(c):
 def is_graph_sequence(l):
     return len(l) > 0 and all(is_graph(x) for x in l)
 
-def chr2(c):
+def to_chr_repr(c):
     if is_graph(c):
         if isinstance(c, int):
             return chr(c)
@@ -223,19 +224,19 @@ def get_release_string():
 def raise_no_impl(s):
     raise NotImplementedError("No %s" % s)
 
-KB = 1000
-MB = KB * 1000
-GB = MB * 1000
-TB = GB * 1000
-PB = TB * 1000
-EB = PB * 1000
+KB = 10 ** 3
+MB = 10 ** 6
+GB = 10 ** 9
+TB = 10 ** 12
+PB = 10 ** 15
+EB = 10 ** 18
 
 KiB = 1 << 10
-MiB = KiB << 10
-GiB = MiB << 10
-TiB = GiB << 10
-PiB = TiB << 10
-EiB = PiB << 10
+MiB = 1 << 20
+GiB = 1 << 30
+TiB = 1 << 40
+PiB = 1 << 50
+EiB = 1 << 60
 
 try:
     PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
@@ -606,6 +607,16 @@ def __get_path_attribute(s, default=0):
         return default
     else:
         return ret
+
+def get_md5(b):
+    if isinstance(b, str):
+        b = _(b)
+    m = hashlib.md5(b)
+    return m.hexdigest()
+
+def get_file_md5(f):
+    if os.path.isfile(f):
+        return get_md5(open_file(f).read())
 
 def execute(*l):
     """Return stdout string, stderr string, return code"""

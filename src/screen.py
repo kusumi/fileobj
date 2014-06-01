@@ -28,6 +28,7 @@ import struct
 import sys
 import termios
 
+from . import filebytes
 from . import kbd
 from . import log
 from . import setting
@@ -131,7 +132,7 @@ def update_size():
     if util.is_python_version_or_ht(3, 3):
         x, y = shutil.get_terminal_size()
     else:
-        b = fcntl.ioctl(0, termios.TIOCGWINSZ, '\x00' * 8)
+        b = fcntl.ioctl(0, termios.TIOCGWINSZ, filebytes.ZERO * 8)
         y, x = struct.unpack(util.S2F * 4, b)[:2]
     this._std_size.set(y, x)
 

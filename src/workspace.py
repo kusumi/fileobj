@@ -307,15 +307,15 @@ class Workspace (object):
     def read_current(self, n):
         return self.__cur_fileops.read(self.get_pos(), n)
 
-    def insert(self, x, s, rec=True):
-        self.__cur_fileops.insert(x, s, rec)
-    def insert_current(self, s, rec=True):
-        self.__cur_fileops.insert(self.get_pos(), s, rec)
+    def insert(self, x, l, rec=True):
+        self.__cur_fileops.insert(x, l, rec)
+    def insert_current(self, l, rec=True):
+        self.__cur_fileops.insert(self.get_pos(), l, rec)
 
-    def replace(self, x, s, rec=True):
-        self.__cur_fileops.replace(x, s, rec)
-    def replace_current(self, s, rec=True):
-        self.__cur_fileops.replace(self.get_pos(), s, rec)
+    def replace(self, x, l, rec=True):
+        self.__cur_fileops.replace(x, l, rec)
+    def replace_current(self, l, rec=True):
+        self.__cur_fileops.replace(self.get_pos(), l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_fileops.delete(x, n, rec)

@@ -24,6 +24,7 @@
 from __future__ import division
 import struct
 
+import fileobj.filebytes
 import fileobj.util
 from fileobj.extension import fail
 
@@ -40,7 +41,7 @@ def get_text(co, fo, args):
     elif n < 0x40 or (n % 4):
         fail("Invalid length: %d" % n)
 
-    cfg = tuple(ord(x) for x in b)
+    cfg = fileobj.filebytes.ords(b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
         fail("Invalid vendor id: %s" %
@@ -88,7 +89,7 @@ def get_text(co, fo, args):
 
 def __get_bar(n, word):
     addr = fileobj.util.le_to_int(
-        ''.join([chr(x) for x in word]))
+        fileobj.filebytes.input_to_bytes(word))
     if word[0] & 0x01:
         s = "I/O %04X" % (addr & 0xFFFFFFFC)
     elif word[0] & 0x06:
