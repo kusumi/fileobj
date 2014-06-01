@@ -54,20 +54,12 @@ class FileobjError (util.GenericError):
 
 class Fileobj (object):
     def __init__(self, f, offset, length):
-        try:
-            self.__path = path.Path(f)
-            self.__attr = fileattr.get(self.get_path())
-            self.__attr.offset, self.__attr.length = \
-                self.__parse_mapping_attributes(offset, length)
-            self.__clear_barrier()
-            self.init()
-        except Exception as e:
-            log.error(e)
-            try:
-                self.cleanup()
-            except Exception as e2:
-                log.error(e2)
-            raise e
+        self.__path = path.Path(f)
+        self.__attr = fileattr.get(self.get_path())
+        self.__attr.offset, self.__attr.length = \
+            self.__parse_mapping_attributes(offset, length)
+        self.__clear_barrier()
+        self.init()
 
     def init(self):
         return
@@ -131,6 +123,8 @@ class Fileobj (object):
 
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
+        if not os.path.exists(f):
+            return 0, 0
         bufsiz = kernel.get_buffer_size_safe(f)
         if bufsiz == -1:
             log.error("Failed to read size of {0}".format(f))
@@ -366,7 +360,7 @@ class Fileobj (object):
             return -1, -1, -1
 
     def __read_bbuffer(self, x, n):
-        return filebytes.ordl(self.read(x, n))
+        return filebytes.ords(self.read(x, n), list)
 
     def barrier_read(self, x, n):
         self.__test_barrier(x, n)

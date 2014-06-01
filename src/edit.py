@@ -227,7 +227,7 @@ class _binary (Console):
         seq = seq[:]
         pad = len(seq) % 2
         if pad:
-            seq.append(ord('0'))
+            seq.append(0x30) # '0'
         self.low = False
         ret = self._do_write_buffer(n, seq, pad)
         self.co.add_pos(ret)

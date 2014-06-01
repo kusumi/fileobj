@@ -66,9 +66,9 @@ class _builtin (_node):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
             n = self.__to_int(buf, self.__sign)
-            a = ''.join(["\\x{0:02X}".format(
-                fileobj.filebytes.ord(x)) for x in buf])
-            b = ''.join([fileobj.util.chr2(x) for x in buf])
+            a = ''.join(["\\x{0:02X}".format(x)
+                for x in fileobj.filebytes.ords(buf)])
+            b = ''.join([fileobj.util.to_chr_repr(x) for x in buf])
             s += " {0} {1} [{2}]".format(n, a, b)
         return [s]
 

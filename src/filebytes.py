@@ -33,12 +33,7 @@ def __ord_2k(b):
     return builtin_ord(b)
 
 def __ord_3k(b):
-    if isinstance(b, bytes):
-        return b[0]
-    elif isinstance(b, int):
-        return b
-    else:
-        assert 0, (b, type(b))
+    return b[0]
 
 def join(l):
     return BLANK.join(l)
@@ -49,6 +44,22 @@ def __split_2k(b):
 def __split_3k(b):
     return [b[i : i + 1] for i in range(len(b))]
 
+def __iter_2k(b):
+    for x in b:
+        yield x
+
+def __iter_3k(b):
+    for i in range(len(b)):
+        yield b[i : i + 1]
+
+def __riter_2k(b):
+    for x in reversed(b):
+        yield x
+
+def __riter_3k(b):
+    for i in reversed(range(len(b))):
+        yield b[i : i + 1]
+
 if util.is_python2():
     import __builtin__ as builtin
     TYPE = str
@@ -57,6 +68,8 @@ if util.is_python2():
     SPACE = ' '
     ord = __ord_2k
     split = __split_2k
+    iter = __iter_2k
+    riter = __riter_2k
 else:
     import builtins as builtin
     TYPE = bytes
@@ -65,11 +78,13 @@ else:
     SPACE = _(' ')
     ord = __ord_3k
     split = __split_3k
+    iter = __iter_3k
+    riter = __riter_3k
 
 builtin_ord = builtin.ord
 
-def ordl(b):
-    return [ord(x) for x in b]
+def ords(b, cls=tuple):
+    return cls(ord(x) for x in iter(b))
 
-def ordt(b):
-    return tuple(ord(x) for x in b)
+def seq_to_ords(l, cls=tuple):
+    return cls(ord(x) for x in l)

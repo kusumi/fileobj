@@ -58,14 +58,10 @@ class Fileobj (romap.Fileobj):
         self.__sync_stat(f)
 
     def cleanup(self):
-        try:
-            if not self.map: # if closed if test raises exception
-                return
-            uptodate = self.__sync
-            laststat = self.__stat
-        except Exception as e: # error from __init__
-            log.error(e)
+        if not self.map: # if closed if test raises exception
             return
+        uptodate = self.__sync
+        laststat = self.__stat
         try:
             self.restore_rollback_log(self)
             if self.__anon:
@@ -199,7 +195,7 @@ class Fileobj (romap.Fileobj):
             resized = True
 
         if rec:
-            ubuf = filebytes.ordt(self.read(x, n))
+            ubuf = filebytes.ords(self.read(x, n))
             rbuf = l[:]
             if not resized:
                 def ufn1(ref):
@@ -231,7 +227,7 @@ class Fileobj (romap.Fileobj):
         xx = x + n
 
         if rec:
-            buf = filebytes.ordt(self.read(x, n))
+            buf = filebytes.ords(self.read(x, n))
             def ufn(ref):
                 ref.insert(x, buf, False)
                 return x

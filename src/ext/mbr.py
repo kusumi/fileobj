@@ -46,7 +46,7 @@ def get_text(co, fo, args):
     mag = b[-2:]
     if mag != _("\x55\xAA"):
         fileobj.extension.fail("Invalid magic: {0}".format(repr(mag)))
-    b = fileobj.filebytes.ordt(b)
+    b = fileobj.filebytes.ords(b)
     n = 446
     l = []
     while n < 510:

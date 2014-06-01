@@ -94,7 +94,7 @@ Python-3.4.0/Lib/importlib/_bootstrap.py"""
         b = self.read(fo, 0, 4)
         if b[2:4] != _("\r\n"):
             return v
-        l = filebytes.ordt(b)
+        l = filebytes.ords(b)
         x = l[0] + (l[1] << 8)
         if x in (20121,):
             v = 1.5

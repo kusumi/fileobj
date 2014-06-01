@@ -44,8 +44,9 @@ def get_text(co, fo, args):
             else:
                 if n >= fileobj.setting.ext_strings_thresh:
                     s = b[i - n:i]
+                    # cut "b'" and "'" for Python 3.x bytes type
                     if fileobj.filebytes.TYPE is not str:
-                        s = "{0}".format(s)[2:-1] # cut b' and '
+                        s = "{0}".format(s)[2:-1]
                     l.append((pos + i - n, s))
                     if len(l) >= fileobj.setting.ext_strings_count:
                         break

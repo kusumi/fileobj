@@ -211,7 +211,7 @@ def __go_next_matched(self, cnt, fn):
             return
         b = self.co.read(pos, n)
         d = 0
-        for x in filebytes.split(b):
+        for x in filebytes.iter(b):
             if fn(x):
                 cnt -= 1
                 if not cnt:
@@ -237,7 +237,7 @@ def __go_prev_matched(self, cnt, fn):
             pos -= n
         b = self.co.read(pos, n)
         d = 0
-        for x in reversed(filebytes.split(b)):
+        for x in filebytes.riter(b):
             if fn(x):
                 cnt -= 1
                 if not cnt:
@@ -254,7 +254,7 @@ def __go_prev_matched(self, cnt, fn):
 def start_read_delayed_input(self, amp, ope, args, raw):
     self.co.start_read_delayed_input(
         literal.bracket2_beg.seq[0], literal.bracket2_end.seq[0])
-    self.co.show(util.chr2(ope[0]))
+    self.co.show(util.to_chr_repr(ope[0]))
 
 def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
@@ -550,7 +550,7 @@ def __do_replace_number(self, amp, ope, siz):
         b = util.int_to_bin(x, len(b))
         if b is None:
             raise fileobj.FileobjError("Failed to convert")
-        self.co.replace_current(filebytes.ordt(b))
+        self.co.replace_current(filebytes.ords(b))
         self.co.show(util.bin_to_int(b))
     fn(0)
     self.co.lrepaintf()
@@ -726,7 +726,7 @@ def __single_toggle(self, pos, amp):
             b = b.upper()
         else:
             b = b.lower()
-        self.co.replace(pos, filebytes.ordt(b))
+        self.co.replace(pos, filebytes.ords(b))
         pos += 1
         if screen.test_signal():
             self.co.flash("Toggle interrupted ({0}/{1})".format(x, amp))
@@ -744,7 +744,7 @@ def __buffered_toggle(self, pos, amp):
         if screen.test_signal():
             self.co.flash("Toggle interrupted")
             return 0
-    self.co.replace(pos, filebytes.ordt(l))
+    self.co.replace(pos, filebytes.seq_to_ords(l))
     return 1
 
 @_rollback
@@ -890,7 +890,7 @@ def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
                 self.co.flash("Rotate right interrupted ({0}/{1},{2})".format(
                     pos, end, len(buf)))
                 return 0, None
-    self.co.replace(beg, filebytes.ordt(buf))
+    self.co.replace(beg, filebytes.seq_to_ords(buf))
     return 1, car
 
 @_rollback
@@ -1015,7 +1015,7 @@ def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
                 self.co.flash("Rotate left interrupted ({0}/{1},{2})".format(
                     pos, end, len(buf)))
                 return 0, None
-    self.co.replace(end, filebytes.ordt(buf))
+    self.co.replace(end, filebytes.seq_to_ords(buf))
     return 1, car
 
 @_rollback
@@ -1172,11 +1172,11 @@ def replay_record(self, amp, ope, args, raw):
         self.co.replay_record(ope[1])
 
 def __get_and_ops(mask):
-    return lambda c: filebytes.ord(c) & mask
+    return lambda b: filebytes.ord(b) & mask
 def __get_or_ops(mask):
-    return lambda c: filebytes.ord(c) | mask
+    return lambda b: filebytes.ord(b) | mask
 def __get_xor_ops(mask):
-    return lambda c: filebytes.ord(c) ^ mask
+    return lambda b: filebytes.ord(b) ^ mask
 
 _bit_ops = {
     literal.bit_and.key: __get_and_ops,
@@ -1225,7 +1225,7 @@ def __single_logical_bit_operation(self, pos, amp, fn):
 
 def __buffered_logical_bit_operation(self, pos, amp, fn):
     l = []
-    for b in self.co.read(pos, amp): # works without filebytes.split()
+    for b in filebytes.iter(self.co.read(pos, amp)):
         l.append(fn(b))
         if screen.test_signal():
             self.co.flash("Buffered logical bit operation interrupted")
@@ -1317,7 +1317,7 @@ def __put(self, amp, ope, mov):
         return
     amp = get_int(amp)
     def fn(_):
-        buf = filebytes.ordt(self.co.get_yank_buffer()) * amp
+        buf = filebytes.ords(self.co.get_yank_buffer()) * amp
         pos = self.co.get_pos() + mov
         try:
             self.co.discard_eof()
@@ -1345,7 +1345,7 @@ def __put_over(self, amp, ope, mov):
         return
     amp = get_int(amp)
     def fn(_):
-        buf = filebytes.ordt(self.co.get_yank_buffer()) * amp
+        buf = filebytes.ords(self.co.get_yank_buffer()) * amp
         pos = self.co.get_pos() + mov
         if pos > self.co.get_max_pos():
             pos = self.co.get_max_pos()
@@ -1362,7 +1362,7 @@ def range_put(self, amp, ope, args, raw):
     try:
         self.co.discard_workspace()
         self.co.discard_eof()
-        buf = filebytes.ordt(self.co.get_yank_buffer()) * get_int(amp)
+        buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
         range_delete(self, amp, ope, args, raw)
         self.co.insert_current(buf)
@@ -1379,7 +1379,7 @@ def block_put(self, amp, ope, args, raw):
     try:
         self.co.discard_workspace()
         self.co.discard_eof()
-        buf = filebytes.ordt(self.co.get_yank_buffer()) * get_int(amp)
+        buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
         block_delete(self, amp, ope, args, raw)
         self.co.insert_current(buf)

@@ -119,7 +119,8 @@ class Allocator (object):
                 ret = cls(f, offset, length)
                 ret.set_magic()
                 return ret
-            except Exception:
+            except Exception as e:
+                log.error(e)
                 if setting.use_alloc_raise:
                     raise
                 elif setting.use_alloc_retry:

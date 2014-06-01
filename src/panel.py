@@ -345,7 +345,8 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         return "{0:02X}".format(filebytes.ord(x) & 0xFF)
 
     def get_form_line(self, buf):
-        return ' '.join([self.get_form_single(x) for x in buf])
+        return ' '.join([self.get_form_single(x)
+            for x in filebytes.iter(buf)])
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
@@ -411,10 +412,11 @@ class TextCanvas (DisplayCanvas, text_addon):
             8 : "{0:o}", }
 
     def get_form_single(self, x):
-        return util.chr2(x)
+        return util.to_chr_repr(util.bytes_to_str(x))
 
     def get_form_line(self, buf):
-        return ''.join([self.get_form_single(x) for x in buf])
+        return ''.join([self.get_form_single(x)
+            for x in filebytes.iter(buf)])
 
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
@@ -506,9 +508,16 @@ class OptionCanvas (Canvas, default_addon):
         self.repaint(False)
 
 def use_alt_chgat_methods():
-    return setting.use_alt_chgat or \
-        not util.is_python_version_or_ht(2, 6, 0) or \
-        not kernel.is_linux() # scr.chgat did not work on NetBSD
+    if setting.use_alt_chgat:
+        return True
+    if util.is_python_version_lt(2, 6, 0): # Python 2.5
+        return True
+
+    if kernel.is_linux() or \
+        kernel.is_freebsd():
+        return False # scr.chgat() works
+    else:
+        return True # may not work
 
 def get_min_frame_size():
     return 1 + get_margin(2), 1 + get_margin(2)

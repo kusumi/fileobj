@@ -70,7 +70,7 @@ class Container (object):
                 self.__fileobjs.append(o)
         if not self.__fileobjs:
             self.__fileobjs.append(self.__alloc_buffer(''))
-            assert self.__fileobjs
+        assert self.__fileobjs[0] is not None
 
         fmt = {
             16: "{0:X}",
@@ -581,13 +581,13 @@ class Container (object):
         self.add_delayed_input(x)
 
     def end_read_delayed_input(self):
-        l = [util.chr2(n) for n in self.__delayed_input[1:-1]]
+        l = [util.to_chr_repr(n) for n in self.__delayed_input[1:-1]]
         self.clear_delayed_input()
         return ''.join(l)
 
     def add_delayed_input(self, x):
         self.__delayed_input.append(x)
-        l = [util.chr2(n) for n in self.__delayed_input]
+        l = [util.to_chr_repr(n) for n in self.__delayed_input]
         self.show(''.join(l))
         if x == self.__delayed_input_term:
             return self.__delayed_input_term

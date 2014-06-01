@@ -70,7 +70,7 @@ class Fileobj (rofd.Fileobj):
         if x + len(l) > self.get_size():
             l = l[:self.get_size() - x]
         if rec:
-            ubuf = filebytes.ordt(self.read(x, len(l)))
+            ubuf = filebytes.ords(self.read(x, len(l)))
             def ufn(ref):
                 ref.replace(x, ubuf, False)
                 return x

@@ -1,4 +1,4 @@
-fileobj (v0.7.3)
+fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
 =======
 
 ## About
@@ -7,13 +7,15 @@ fileobj (v0.7.3)
 
 + fileobj is a hex editor with vi like interface. This software is written in Python and works on Python 2.6 or above. It works on Linux, NetBSD, OpenBSD, FreeBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
 
++ Repository is available at GitHub [https://github.com/kusumi/fileobj](https://github.com/kusumi/fileobj)
+
 ## Prerequisites
 
 + Python 2.6 or above
 
-+ Python 3 is supported since v0.7
++ Python 3 is supported since [v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
 
-+ Python 2.5 support is dropped in v0.7, use v0.6 for Python 2.5
++ Python 2.5 support is dropped in [v0.7](https://github.com/kusumi/fileobj/tree/v0.7), use [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) for Python 2.5
 
 + Works on Linux and *BSD
 
@@ -27,7 +29,7 @@ fileobj (v0.7.3)
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.3
+        v0.7.4
         $ fileobj
 
 + or run *setup.py* using Python 3
@@ -36,7 +38,7 @@ fileobj (v0.7.3)
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.3
+        v0.7.4
         $ fileobj
 
 ## Uninstall

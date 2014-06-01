@@ -41,7 +41,7 @@ def get_text(co, fo, args):
     elif n < 0x40 or (n % 4):
         fail("Invalid length: {0}".format(n))
 
-    cfg = fileobj.filebytes.ordt(b)
+    cfg = fileobj.filebytes.ords(b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
         fail("Invalid vendor id: {0}".format(
