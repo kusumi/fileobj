@@ -139,8 +139,7 @@ class Console (object):
                     # clear and let fn take care
                     set_message('')
             else:
-                if msg is not None:
-                    set_message(msg, cursor)
+                set_message(msg, cursor)
                 continue
 
             fn = self.__fn.get(li.seq)
@@ -160,7 +159,8 @@ class Console (object):
 _scr = None
 _log = []
 def init():
-    this._scr = screen.alloc_screen(get_size_y(), get_size_x(),
+    this._scr = screen.alloc_screen(
+        get_size_y(),get_size_x(),
         get_position_y(), get_position_x())
 
 def cleanup(e, tb):
@@ -202,6 +202,7 @@ else:
 
 def resize():
     try:
+        set_message('')
         this._scr.resize(get_size_y(), get_size_x())
         this._scr.mvwin(get_position_y(), get_position_x())
     except Exception as e:
@@ -225,9 +226,12 @@ _banner = ['']
 def set_banner(o):
     if o:
         set_message('')
-        this._banner[0] = "-- {0} --".format(str(o).upper())
+        this._banner[0] = __format_banner(o)
     else:
         this._banner[0] = ''
+
+def __format_banner(o):
+    return "-- {0} --".format(str(o).upper())
 
 def push_banner(s):
     if s:
@@ -240,18 +244,14 @@ def pop_banner():
 _message = ''
 _cursor = -1
 def set_message(o, cursor=-1):
+    if o is None:
+        return # ignore None
     s = str(o)
     if isinstance(o, Exception):
-        if s:
-            this._message = s
-        else:
-            this._message = repr(o)
+        this._message = s if s else repr(o)
         this._cursor = -1
     else:
-        if o is not None:
-            this._message = s
-        else:
-            this._message = ''
+        this._message = s
         this._cursor = cursor
 
 def get_size_y():

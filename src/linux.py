@@ -35,17 +35,17 @@ def get_blkdev_info(fd):
         d = {   "BLKSSZGET" : 0x1268,
                 "BLKGETSIZE": 0x1260, }
         s = "BLKSSZGET"
-        sector_size = ioctl(fd, d[s])
+        sector_size = __ioctl(fd, d[s])
         s = "BLKGETSIZE"
-        size = ioctl(fd, d[s]) * 512
+        size = __ioctl(fd, d[s]) * 512
         return size, sector_size, ''
     except Exception as e:
         log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))
         raise
 
-def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
-    return util.host_to_int(b)
+def __ioctl(fd, n):
+    return util.host_to_int(
+        fcntl.ioctl(fd, n, filebytes.ZERO * 8))
 
 def get_total_ram():
     return get_meminfo("MemTotal")

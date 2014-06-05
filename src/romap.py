@@ -23,7 +23,6 @@
 
 from __future__ import with_statement
 import mmap
-import os
 
 from . import fileobj
 from . import kernel
@@ -73,19 +72,26 @@ class Fileobj (fileobj.Fileobj):
         return '\n'.join(l)
 
     def init(self):
-        f = self.get_path()
-        if kernel.get_file_size(f) <= 0:
-            raise fileobj.FileobjError("{0} is empty".format(f))
-        self.init_mapping(f)
-        assert os.path.exists(self.get_path())
+        if self.is_mappable():
+            self.init_mapping(self.get_path())
+        else:
+            raise fileobj.FileobjError(
+                "Can not mmap(2) {0}".format(self.get_path()))
 
     def cleanup(self):
-        if self.map:
-            self.map.close() # no exception on second time
+        self.cleanup_mapping()
 
     def init_mapping(self, f):
         with util.open_file(f, 'r+') as fd:
             self.map = self.mmap(fd.fileno())
+
+    def cleanup_mapping(self):
+        if self.map:
+            self.map.close() # no exception on second time
+            self.map = None
+
+    def is_mappable(self):
+        return kernel.get_file_size(self.get_path()) > 0
 
     def mmap(self, fileno):
         offset = self.get_mapping_offset()
@@ -99,9 +105,15 @@ class Fileobj (fileobj.Fileobj):
     def __is_using_mmap_offset(self, offset):
         return util.get_class(self)._partial and offset > 0
 
+    def __get_mmap_prot(self):
+        if self.is_readonly():
+            return mmap.PROT_READ
+        else:
+            return mmap.PROT_READ | mmap.PROT_WRITE
+
     def __do_mmap(self, fileno, length):
         return mmap.mmap(fileno, length,
-            mmap.MAP_SHARED, mmap.PROT_READ)
+            mmap.MAP_SHARED, self.__get_mmap_prot())
 
     def __do_mmap_at(self, fileno, offset, length):
         mask = ~(util.PAGE_SIZE - 1)
@@ -112,17 +124,20 @@ class Fileobj (fileobj.Fileobj):
         if length:
             length += delta
         return mmap.mmap(fileno, length,
-            mmap.MAP_SHARED, mmap.PROT_READ, offset=start)
+            mmap.MAP_SHARED, self.__get_mmap_prot(), offset=start)
 
     def __set_delta(self, delta, offset):
         self.__offset_delta = delta
         if self.__is_using_mmap_offset(offset):
             if _has_right_mapping_length:
-                self.__size_delta = self.__offset_delta
+                self.__size_delta = self.get_mmap_offset()
             else:
                 self.__size_delta = offset
         else:
             self.__size_delta = 0
+
+    def get_mmap_offset(self):
+        return self.__offset_delta
 
     def is_dirty(self):
         return False
@@ -135,7 +150,7 @@ class Fileobj (fileobj.Fileobj):
         if setting.use_ignorecase:
             ret = self.__find(x, s, end)
         else:
-            d = self.__offset_delta
+            d = self.get_mmap_offset()
             ret = self.map.find(s, x + d)
             if ret >= 0:
                 ret -= d
@@ -162,7 +177,7 @@ class Fileobj (fileobj.Fileobj):
         if setting.use_ignorecase or not _has_mmap_rfind:
             ret = self.__rfind(x, s, end)
         else:
-            d = self.__offset_delta
+            d = self.get_mmap_offset()
             ret = self.map.rfind(s, 0, x + d + 1)
             if ret >= 0:
                 ret -= d
@@ -189,5 +204,5 @@ class Fileobj (fileobj.Fileobj):
                 return -2
 
     def read(self, x, n):
-        x += self.__offset_delta
+        x += self.get_mmap_offset()
         return self.map[x : x + n]

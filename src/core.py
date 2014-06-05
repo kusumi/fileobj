@@ -68,7 +68,11 @@ For more information, run the program and enter :help<ENTER>")
     parser.add_option("-R",
         action="store_true",
         default=False,
-        help="Read only")
+        help="Read only mode")
+    parser.add_option("-B",
+        action="store_true",
+        default=False,
+        help="Buffer allocation mode")
     parser.add_option("-o",
         type="int",
         default=1,
@@ -93,11 +97,11 @@ For more information, run the program and enter :help<ENTER>")
     parser.add_option("--command",
         action="store_true",
         default=False,
-        help="Print command list")
+        help="Print command list and exit")
     parser.add_option("--sitepkg",
         action="store_true",
         default=False,
-        help="Print site package directory")
+        help="Print site package directory and exit")
     parser.add_option("--executable",
         action="store_true",
         default=False,
@@ -149,6 +153,8 @@ For more information, run the program and enter :help<ENTER>")
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
             allocator.set_default_class(s)
+    if opts.B:
+        allocator.set_default_buffer_class()
     setting.use_readonly |= opts.R
     wspnum = opts.o
     if opts.O:

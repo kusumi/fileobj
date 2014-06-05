@@ -1,4 +1,4 @@
-fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
+fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
 =======
 
 ## About
@@ -29,7 +29,7 @@ fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.4
+        v0.7.5
         $ fileobj
 
 + or run *setup.py* using Python 3
@@ -38,7 +38,7 @@ fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.4
+        v0.7.5
         $ fileobj
 
 ## Uninstall
@@ -246,7 +246,8 @@ fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
         Options:
           --version          show program's version number and exit
           -h, --help         show this help message and exit
-          -R                 Read only
+          -R                 Read only mode
+          -B                 Buffer allocation mode
           -o <num>           Open <num> windows
           -O                 Open each buffer in different window
           --width=<width>    Set window width [[0-9]+|max|min|auto]
@@ -254,8 +255,8 @@ fileobj ([v0.7.4](https://github.com/kusumi/fileobj/releases/tag/v0.7.4))
                              [black|red|green|yellow|blue|magenta|cyan|white]
           --bg=<color>       Set background color
                              [black|red|green|yellow|blue|magenta|cyan|white]
-          --command          Print command list
-          --sitepkg          Print site package directory
+          --command          Print command list and exit
+          --sitepkg          Print site package directory and exit
 
 ## Note
 

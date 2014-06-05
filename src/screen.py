@@ -185,6 +185,10 @@ class _screen (object):
         return
     def chgat(self, y, x, num, attr=def_attr):
         return
+    def getmaxyx(self):
+        return -1, -1
+    def getbegyx(self):
+        return -1, -1
 
 class _stdout_screen (_screen):
     def addstr(self, y, x, s, attr=def_attr):
