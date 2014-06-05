@@ -34,6 +34,7 @@ class Fileops (object):
         self.__ppos = 0
         self.__trail = 0
         self.__reg = None
+        self.__init_ops()
 
     def __getattr__(self, name):
         if name == "_Fileops__ref":
@@ -146,12 +147,40 @@ class Fileops (object):
     def rsearch(self, x, word, end=-1):
         return self.__ref.rsearch(x, word, end)
 
-    def read(self, x, n):
+    def __init_ops(self):
+        if setting.use_debug:
+            self.read    = self.__read_debug
+            self.insert  = self.__insert_debug
+            self.replace = self.__replace_debug
+            self.delete  = self.__delete_debug
+        else:
+            self.read    = self.__read
+            self.insert  = self.__insert
+            self.replace = self.__replace
+            self.delete  = self.__delete
+
+    def __read_debug(self, x, n):
+        self.__assert_position(x)
+        return self.__read(x, n)
+
+    def __insert_debug(self, x, l, rec=True):
+        self.__assert_position(x)
+        self.__insert(x, l, rec)
+
+    def __replace_debug(self, x, l, rec=True):
+        self.__assert_position(x)
+        self.__replace(x, l, rec)
+
+    def __delete_debug(self, x, n, rec=True):
+        self.__assert_position(x)
+        self.__delete(x, n, rec)
+
+    def __assert_position(self, x):
+        assert 0 <= x <= self.get_max_pos(), x
+
+    def __read(self, x, n):
         if x + n > self.get_size():
             n = self.get_size() - x
-        if setting.use_debug:
-            assert 0 <= x <= self.get_max_pos(), x
-            assert n >= 0, x
         if n <= 0:
             return filebytes.BLANK
         if self.__ref.is_barrier_active():
@@ -159,28 +188,21 @@ class Fileops (object):
         else:
             return self.__ref.read(x, n)
 
-    def insert(self, x, l, rec=True):
-        if setting.use_debug:
-            assert 0 <= x <= self.get_max_pos(), x
+    def __insert(self, x, l, rec=True):
         if self.__ref.is_barrier_active():
             self.__ref.barrier_insert(x, l, rec)
         else:
             self.__ref.insert(x, l, rec)
 
-    def replace(self, x, l, rec=True):
-        if setting.use_debug:
-            assert 0 <= x <= self.get_max_pos(), x
+    def __replace(self, x, l, rec=True):
         if self.__ref.is_barrier_active():
             self.__ref.barrier_replace(x, l, rec)
         else:
             self.__ref.replace(x, l, rec)
 
-    def delete(self, x, n, rec=True):
+    def __delete(self, x, n, rec=True):
         if x + n > self.get_size():
             n = self.get_size() - x
-        if setting.use_debug:
-            assert 0 <= x <= self.get_max_pos(), x
-            assert n >= 0, x
         if n <= 0:
             return
         if self.__ref.is_barrier_active():

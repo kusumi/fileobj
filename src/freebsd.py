@@ -35,9 +35,9 @@ def get_blkdev_info(fd):
                 "DIOCGMEDIASIZE"  : 0x40086481,
                 "DIOCGIDENT"      : 0x41006489, }
         s = "DIOCGSECTORSIZE"
-        sector_size = ioctl(fd, d[s])
+        sector_size = __ioctl(fd, d[s])
         s = "DIOCGMEDIASIZE"
-        size = ioctl(fd, d[s])
+        size = __ioctl(fd, d[s])
         s = "DIOCGIDENT"
         b = fcntl.ioctl(fd, d[s], filebytes.SPACE * 256) # DISK_IDENT_SIZE
         label = b.strip(filebytes.ZERO)
@@ -46,9 +46,9 @@ def get_blkdev_info(fd):
         log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
         raise
 
-def ioctl(fd, n):
-    b = fcntl.ioctl(fd, n, filebytes.ZERO * 8)
-    return util.host_to_int(b)
+def __ioctl(fd, n):
+    return util.host_to_int(
+        fcntl.ioctl(fd, n, filebytes.ZERO * 8))
 
 def get_total_ram():
     """
@@ -67,7 +67,8 @@ def get_free_ram():
     return linux.get_free_ram()
 
 def is_blkdev(f):
-    return path.is_blkdev(f) or path.is_chrdev(f)
+    o = path.Path(f)
+    return o.is_blkdev or o.is_chrdev
 
 def has_mremap():
     return False

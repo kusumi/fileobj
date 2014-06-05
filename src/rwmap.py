@@ -29,10 +29,10 @@ from . import filebytes
 from . import fileobj
 from . import kernel
 from . import log
-from . import romap
+from . import rrmap
 from . import util
 
-class Fileobj (romap.Fileobj):
+class Fileobj (rrmap.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
@@ -40,45 +40,36 @@ class Fileobj (romap.Fileobj):
     _partial = False
 
     def __init__(self, f, offset=0, length=0):
-        self.__dirty = False
-        self.__sync = False
         self.__dead = False
-        self.__stat = None
+        self.__sync = False
         self.__anon = None
         super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
-        f = self.get_path()
-        if os.path.isfile(f) and kernel.get_file_size(f) > 0:
+        if self.is_mappable():
             super(Fileobj, self).init()
         else:
             self.__init_anon()
             f = self.__get_backing_path()
             self.init_mapping(f)
-        self.__sync_stat(f)
+            self.update_fstat(f)
 
     def cleanup(self):
-        if not self.map: # if closed if test raises exception
+        if not self.map:
             return
-        uptodate = self.__sync
-        laststat = self.__stat
-        try:
-            self.restore_rollback_log(self)
-            if self.__anon:
-                self.__cleanup_anon()
-            else:
-                self.flush()
-        except Exception, e:
-            log.error(e)
-        finally:
-            super(Fileobj, self).cleanup()
-            if not self.__anon:
-                f = self.get_path()
-                if self.__dead:
-                    util.truncate_file(f)
-                if not uptodate:
-                    util.utime(f, laststat)
-            self.__anon = None
+        t = self.get_fstat()
+        self.restore_unflushed()
+        self.cleanup_mapping()
+        if not self.__anon:
+            util.utimem(self.get_path(), t)
+        if self.__dead and not self.is_dirty():
+            f = self.__get_backing_path()
+            util.truncate_file(f)
+            util.utimem(f, t)
+        self.__cleanup_anon()
+
+    def mmap(self, fileno):
+        return mmap.mmap(fileno, 0)
 
     def __init_anon(self):
         if self.__anon:
@@ -86,7 +77,7 @@ class Fileobj (romap.Fileobj):
         self.__anon = util.open_temp_file()
         self.__anon.write(filebytes.ZERO)
         self.__anon.seek(0)
-        self.__dead = True
+        self.__die()
         log.debug("Create backing file %s for %s" % (
             self.__get_backing_path(),
             self.get_path()))
@@ -94,7 +85,7 @@ class Fileobj (romap.Fileobj):
     def __cleanup_anon(self):
         if not self.__anon:
             return -1
-        if not self.__is_flushed():
+        if not self.__sync:
             return -1
         util.fsync(self.__anon)
         src = self.__get_backing_path()
@@ -108,14 +99,11 @@ class Fileobj (romap.Fileobj):
         shutil.copy2(src, dst)
         self.__anon = None
 
-    def mmap(self, fileno):
-        return mmap.mmap(fileno, 0)
-
-    def clear_dirty(self):
-        self.__dirty = False
-
-    def is_dirty(self):
-        return self.__dirty
+    def __get_backing_path(self):
+        if self.__anon:
+            return self.__anon.name
+        else:
+            return self.get_path()
 
     def get_size(self):
         if not self.__dead:
@@ -123,42 +111,20 @@ class Fileobj (romap.Fileobj):
         else:
             return 0
 
-    def __get_backing_path(self):
-        if self.__anon:
-            return self.__anon.name
-        else:
-            return self.get_path()
-
     def sync(self):
-        f = self.__get_backing_path()
         self.map.flush()
+        self.update_fstat(self.__get_backing_path())
         self.__sync = True
-        self.__sync_stat(f)
 
     def utime(self):
-        f = self.__get_backing_path()
-        util.utime(f)
+        util.utime(self.__get_backing_path())
+        self.update_fstat(self.__get_backing_path())
         self.__sync = True
-        self.__sync_stat(f)
 
-    def __sync_stat(self, f):
-        ret = os.stat(f)
-        if not self.__stat:
-            initial = ret.st_mtime
-            def is_flushed():
-                return self.__stat.st_mtime != initial
-            assert self.__is_flushed is not None
-            self.__is_flushed = is_flushed
-        self.__stat = ret
-
-    def __is_flushed(self):
-        return False
-
-    def read(self, x, n):
-        if not self.is_empty():
-            return super(Fileobj, self).read(x, n)
-        else:
-            return filebytes.BLANK
+    def __die(self, is_dying=True):
+        if not self.__dead and is_dying:
+            util.utime(self.__get_backing_path())
+        self.__dead = is_dying
 
     def insert(self, x, l, rec=True):
         size = self.get_size()
@@ -178,9 +144,8 @@ class Fileobj (romap.Fileobj):
         self.map.resize(size + n)
         self.map.move(xx, x, size - x)
         self.map[x:xx] = filebytes.input_to_bytes(l)
-        self.__dirty = True
-        self.__sync = False
-        self.__dead = False
+        self.touch()
+        self.__die(False)
 
     def replace(self, x, l, rec=True):
         if self.is_empty():
@@ -217,8 +182,7 @@ class Fileobj (romap.Fileobj):
                 self.add_undo(ufn2, rfn2)
 
         self.map[x:xx] = filebytes.input_to_bytes(l)
-        self.__dirty = True
-        self.__sync = False
+        self.touch()
 
     def delete(self, x, n, rec=True):
         if self.is_empty():
@@ -240,7 +204,5 @@ class Fileobj (romap.Fileobj):
         if size > n:
             self.map.resize(size - n)
         else:
-            util.utime(self.__get_backing_path())
-            self.__dead = True
-        self.__dirty = True
-        self.__sync = False
+            self.__die()
+        self.touch()

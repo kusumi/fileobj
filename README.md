@@ -1,4 +1,4 @@
-fileobj ([v0.6.14](https://github.com/kusumi/fileobj/releases/tag/v0.6.14))
+fileobj ([v0.6.15](https://github.com/kusumi/fileobj/releases/tag/v0.6.15))
 =======
 
 ## About
@@ -27,7 +27,7 @@ fileobj ([v0.6.14](https://github.com/kusumi/fileobj/releases/tag/v0.6.14))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.14
+        v0.6.15
         $ fileobj
 
 ## Uninstall
@@ -235,7 +235,8 @@ fileobj ([v0.6.14](https://github.com/kusumi/fileobj/releases/tag/v0.6.14))
         Options:
           --version          show program's version number and exit
           -h, --help         show this help message and exit
-          -R                 Read only
+          -R                 Read only mode
+          -B                 Buffer allocation mode
           -o <num>           Open <num> windows
           -O                 Open each buffer in different window
           --width=<width>    Set window width [[0-9]+|max|min|auto]
@@ -243,8 +244,8 @@ fileobj ([v0.6.14](https://github.com/kusumi/fileobj/releases/tag/v0.6.14))
                              [black|red|green|yellow|blue|magenta|cyan|white]
           --bg=<color>       Set background color
                              [black|red|green|yellow|blue|magenta|cyan|white]
-          --command          Print command list
-          --sitepkg          Print site package directory
+          --command          Print command list and exit
+          --sitepkg          Print site package directory and exit
 
 ## Note
 

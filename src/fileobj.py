@@ -38,7 +38,8 @@ from . import util
 """
 fileobj.Fileobj
     romap.Fileobj
-        rwmap.Fileobj
+        rrmap.Fileobj
+            rwmap.Fileobj
     robuf.Fileobj
         roext.Fileobj
         rwbuf.Fileobj
@@ -232,7 +233,10 @@ class Fileobj (object):
             s in ("insert", "replace", "delete"):
             raise FileobjError("Using readonly mode")
         else:
-            raise FileobjError("%s not supported" % s)
+            raise FileobjError(self.get_no_support_string(s))
+
+    def get_no_support_string(self, s):
+        return "%s not supported" % s
 
     def has_undo(self):
         return self.get_undo_size() > 0

@@ -43,6 +43,9 @@ class Allocator (object):
         else:
             return -1
 
+    def set_default_buffer_class(self):
+        return self.set_default_class("rwbuf")
+
     def __is_valid_class(self, cls, offset, length):
         if not cls._enabled:
             return False
@@ -59,6 +62,7 @@ class Allocator (object):
         if self.__is_ro_class(cls):
             return cls
         return {
+            self.rrmap: self.romap,
             self.rwmap: self.romap,
             self.rwbuf: self.robuf,
             self.rwfd : self.rofd,
@@ -68,7 +72,8 @@ class Allocator (object):
     def __get_alt_class(self, cls):
         return { # no alternative for rofd and roblk
             self.romap: self.robuf,
-            self.rwmap: self.rwbuf,
+            self.rrmap: self.rwbuf,
+            self.rwmap: self.rrmap,
             self.robuf: self.rofd,
             self.rwbuf: self.rwfd,
             self.rwfd : self.rofd,
@@ -86,7 +91,8 @@ class Allocator (object):
         f, offset, length = util.parse_file_path(f)
         o = path.Path(f)
         if not f or o.is_noent:
-            if setting.use_alloc_noent_rwbuf:
+            if setting.use_alloc_noent_rwbuf or \
+                not self.__is_valid_class(self.rwmap, 0, 0):
                 return self.__alloc(f, 0, 0, self.rwbuf)
             else:
                 return self.__alloc(f, 0, 0, self.rwmap)
@@ -102,22 +108,26 @@ class Allocator (object):
             cls = self.__get_blk_class(cls)
 
         while cls:
+            log.info("Trying %s for %s" % (cls, repr(f)))
             if self.__is_valid_class(cls, offset, length):
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
                     if size == -1:
                         log.error("Failed to read size of %s" % f)
                     elif size < setting.mmap_thresh:
-                        cls = self.__get_alt_class(cls)
+                        if self.__is_ro_class(cls):
+                            cls = self.robuf
+                        else:
+                            cls = self.rwbuf
                 return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
 
     def __alloc(self, f, offset, length, cls):
         while cls:
             try:
-                log.info("Using %s for %s" % (cls, repr(f)))
                 ret = cls(f, offset, length)
                 ret.set_magic()
+                log.info("Using %s for %s" % (cls, repr(f)))
                 return ret
             except Exception, e:
                 log.error(e)
@@ -132,6 +142,7 @@ class Allocator (object):
 
 def iter_module_name():
     yield "romap"
+    yield "rrmap"
     yield "rwmap"
     yield "robuf"
     yield "rwbuf"
@@ -145,6 +156,9 @@ def get_default_class():
 
 def set_default_class(s):
     return _allocator.set_default_class(s)
+
+def set_default_buffer_class():
+    return _allocator.set_default_buffer_class()
 
 def alloc(f):
     return _allocator.alloc(f)

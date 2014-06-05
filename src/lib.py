@@ -39,16 +39,6 @@ class Fileops (fileops.Fileops):
         except fileobj.FileobjError, e:
             _print_exc_info(e)
 
-    def read(self, x, n):
-        if n is None:
-            n = self.get_size() - x
-        return super(Fileops, self).read(x, n)
-
-    def delete(self, x, n, rec=True):
-        if n is None:
-            n = self.get_size() - x
-        return super(Fileops, self).delete(x, n, rec)
-
     def append(self, s, rec=True):
         self.discard_eof()
         ret = self.insert(self.get_size(), s, rec)

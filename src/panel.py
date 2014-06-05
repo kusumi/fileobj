@@ -54,23 +54,20 @@ _panel
 
 class _panel (object):
     def __init__(self, siz, pos):
-        self.__size = util.Pair(*siz)
-        self.__position = util.Pair(*pos)
         self.scr = screen.alloc_screen(
-            self.get_size_y(), self.get_size_x(),
-            self.get_position_y(), self.get_position_x(), self)
+            siz[0], siz[1], pos[0], pos[1], self)
 
     def get_size_y(self):
-        return self.__size.y
+        return self.scr.getmaxyx()[0]
 
     def get_size_x(self):
-        return self.__size.x
+        return self.scr.getmaxyx()[1]
 
     def get_position_y(self):
-        return self.__position.y
+        return self.scr.getbegyx()[0]
 
     def get_position_x(self):
-        return self.__position.x
+        return self.scr.getbegyx()[1]
 
     def fill(self, low):
         return
@@ -83,11 +80,9 @@ class _panel (object):
 
     def resize(self, siz, pos):
         if siz:
-            self.__size.set(*siz)
-            self.scr.resize(self.get_size_y(), self.get_size_x())
+            self.scr.resize(*siz)
         if pos:
-            self.__position.set(*pos)
-            self.scr.mvwin(self.get_position_y(), self.get_position_x())
+            self.scr.mvwin(*pos)
 
 class Frame (_panel):
     def __init__(self, siz, pos):

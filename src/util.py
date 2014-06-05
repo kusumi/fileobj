@@ -27,7 +27,6 @@ import inspect
 import os
 import platform
 import re
-import stat
 import string
 import struct
 import subprocess
@@ -560,9 +559,13 @@ def fsync(fd):
 
 def utime(f, st=None):
     if st:
-        os.utime(f, (st[stat.ST_ATIME], st[stat.ST_MTIME]))
+        os.utime(f, (st.st_atime, st.st_mtime))
     else:
-        os.utime(f, None)
+        os.utime(f, None) # touch
+
+def utimem(f, st):
+    current = os.stat(f)
+    os.utime(f, (current.st_atime, st.st_mtime))
 
 def parse_file_path(f):
     """Return tuple of path and offset"""

@@ -123,8 +123,7 @@ class Container (object):
         return x
 
     def flash(self, o=None):
-        if o:
-            self.show(o)
+        self.show(o)
         screen.flash()
 
     def show(self, o):
@@ -132,6 +131,7 @@ class Container (object):
 
     def push_banner(self, s):
         console.push_banner(s)
+
     def pop_banner(self):
         console.pop_banner()
 
