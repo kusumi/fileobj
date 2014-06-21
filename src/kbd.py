@@ -44,6 +44,7 @@ def iter_kbd_name():
     yield "LEFT"
     yield "RIGHT"
     yield "BACKSPACE"
+    yield "BACKSPACE2"
     yield "DELETE"
     yield "RESIZE"
 
@@ -58,6 +59,7 @@ def _get_code(term):
                 curses.KEY_LEFT, \
                 curses.KEY_RIGHT, \
                 curses.ascii.BS, \
+                None, \
                 curses.ascii.DEL, \
                 curses.KEY_RESIZE
     else:
@@ -70,6 +72,7 @@ def _get_code(term):
                 curses.KEY_LEFT, \
                 curses.KEY_RIGHT, \
                 curses.KEY_BACKSPACE, \
+                curses.ascii.DEL, \
                 curses.KEY_DC, \
                 curses.KEY_RESIZE
 
@@ -80,17 +83,18 @@ def _(default, config):
         return config
 
 _code = _get_code(os.getenv("TERM"))
-TAB       = _(_code[0], setting.key_tab)
-ENTER     = _(_code[1], setting.key_enter)
-ESCAPE    = _(_code[2], setting.key_escape)
-SPACE     = _(_code[3], setting.key_space)
-DOWN      = _(_code[4], setting.key_down)
-UP        = _(_code[5], setting.key_up)
-LEFT      = _(_code[6], setting.key_left)
-RIGHT     = _(_code[7], setting.key_right)
-BACKSPACE = _(_code[8], setting.key_backspace)
-DELETE    = _(_code[9], setting.key_delete)
-RESIZE    = _(_code[10], setting.key_resize)
+TAB        = _(_code[0], setting.key_tab)
+ENTER      = _(_code[1], setting.key_enter)
+ESCAPE     = _(_code[2], setting.key_escape)
+SPACE      = _(_code[3], setting.key_space)
+DOWN       = _(_code[4], setting.key_down)
+UP         = _(_code[5], setting.key_up)
+LEFT       = _(_code[6], setting.key_left)
+RIGHT      = _(_code[7], setting.key_right)
+BACKSPACE  = _(_code[8], setting.key_backspace)
+BACKSPACE2 = _(_code[9], setting.key_backspace2) # FIX_ME added for FreeBSD
+DELETE     = _(_code[10], setting.key_delete)
+RESIZE     = _(_code[11], setting.key_resize)
 del _
 
 ERROR     = curses.ERR

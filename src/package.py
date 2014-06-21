@@ -103,6 +103,6 @@ try:
             _pkg_name.append(name)
         else:
             _mod_name.append(name)
-except:
+except Exception:
     if setting.use_debug:
         raise

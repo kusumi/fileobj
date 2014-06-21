@@ -21,71 +21,51 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fcntl
+
+from . import filebytes
+from . import freebsd
+from . import log
+from . import path
 from . import util
 
-_ = util.str_to_bytes
+# FIX_ME need to find a portable way regarding ioctl args,
+# maybe time to use C bindings
 
-def input_to_bytes(l):
-    return util.str_to_bytes(
-        ''.join([chr(x) for x in l]))
+def get_blkdev_info(fd):
+    # ioctl value depends on sizeof(partinfo)
+    if util.is_64bit_cpu(): # assume x86_64/gcc
+        size = 144
+    elif util.is_32bit_cpu(): # assume i386/gcc
+        size = 136
+    else: # forget it
+        log.error("Unsupported processor {0}".format(
+            util.get_cpu_string()))
+        return -1, -1, ''
+    try:
+        DIOCGPART = 0x40006468 | ((size & 0x1FFF) << 16)
+        partinfo = filebytes.pad(size)
+        b = fcntl.ioctl(fd, DIOCGPART, partinfo)
+        size = util.host_to_int(b[8:16])
+        sector_size = util.host_to_int(b[24:28])
+        return size, sector_size, ''
+    except Exception as e:
+        log.error("ioctl({0}, DIOCGPART) failed, {1}".format(fd.name, e))
+        raise
 
-def __ord_2k(b):
-    return builtin_ord(b)
+def get_total_ram():
+    """
+    [root@dragonflybsd ~]# sysctl hw.physmem
+    hw.physmem: 2117337088
+    """
+    return freebsd.get_total_ram()
 
-def __ord_3k(b):
-    return b[0]
+def get_free_ram():
+    return freebsd.get_free_ram()
 
-def join(l):
-    return BLANK.join(l)
+def is_blkdev(f):
+    o = path.Path(f)
+    return o.is_blkdev or o.is_chrdev
 
-def __split_2k(b):
-    return list(b)
-
-def __split_3k(b):
-    return [b[i : i + 1] for i in range(len(b))]
-
-def __iter_2k(b):
-    for x in b:
-        yield x
-
-def __iter_3k(b):
-    for i in range(len(b)):
-        yield b[i : i + 1]
-
-def __riter_2k(b):
-    for x in reversed(b):
-        yield x
-
-def __riter_3k(b):
-    for i in reversed(range(len(b))):
-        yield b[i : i + 1]
-
-def ords(b, cls=tuple):
-    return cls(ord(x) for x in iter(b))
-
-def seq_to_ords(l, cls=tuple):
-    return cls(ord(x) for x in l)
-
-def pad(x):
-    return ZERO * x
-
-if util.is_python2():
-    import __builtin__ as builtin
-    TYPE = str
-    ZERO = "\x00"
-    BLANK = ''
-    ord = __ord_2k
-    split = __split_2k
-    iter = __iter_2k
-    riter = __riter_2k
-else:
-    import builtins as builtin
-    TYPE = bytes
-    ZERO = _("\x00")
-    BLANK = _('')
-    ord = __ord_3k
-    split = __split_3k
-    iter = __iter_3k
-    riter = __riter_3k
-
-builtin_ord = builtin.ord
+def has_mremap():
+    return False

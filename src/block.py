@@ -38,6 +38,7 @@ class methods (object):
     def init_blk(self):
         b = kernel.get_blkdev_info(self.get_path())
         assert b.sector_size % 512 == 0, b.sector_size
+        assert b.size % 512 == 0, b.size
         self.blk_sector_size = b.sector_size
         self.blk_label = b.label
         self.set_size(b.size)

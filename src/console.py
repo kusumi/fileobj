@@ -135,9 +135,7 @@ class Console (object):
             li, amp, ope, arg, raw, msg, cursor = \
                 self.ope.process_incoming(x)
             if li:
-                if msg is not None:
-                    # clear and let fn take care
-                    set_message('')
+                set_message(msg)
             else:
                 set_message(msg, cursor)
                 continue
@@ -160,7 +158,7 @@ _scr = None
 _log = []
 def init():
     this._scr = screen.alloc_screen(
-        get_size_y(),get_size_x(),
+        get_size_y(), get_size_x(),
         get_position_y(), get_position_x())
 
 def cleanup(e, tb):
@@ -177,6 +175,7 @@ def getch():
 
 def refresh():
     clrl()
+    test_flash()
     if this._message: # prefer _message to _banner
         printl(0, this._message)
         if this._cursor != -1:
@@ -253,6 +252,20 @@ def set_message(o, cursor=-1):
     else:
         this._message = s
         this._cursor = cursor
+
+_flashq = []
+def queue_flash(o):
+    _flashq.append(o)
+
+def test_flash():
+    if not _flashq:
+        return -1
+    o = _flashq.pop()
+    if o is not None:
+        set_message(o)
+    screen.flash()
+    while _flashq:
+        _flashq.pop()
 
 def get_size_y():
     return 1

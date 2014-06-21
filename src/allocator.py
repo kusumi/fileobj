@@ -108,12 +108,11 @@ class Allocator (object):
             cls = self.__get_blk_class(cls)
 
         while cls:
-            log.info("Trying {0} for {1}".format(cls, repr(f)))
             if self.__is_valid_class(cls, offset, length):
                 if util.is_subclass(cls, self.romap):
                     size = kernel.get_buffer_size_safe(f)
                     if size == -1:
-                        log.error("Failed to read size of {0}".format(f))
+                        log.error("Failed to stat {0}".format(f))
                     elif size < setting.mmap_thresh:
                         if self.__is_ro_class(cls):
                             cls = self.robuf
@@ -125,6 +124,7 @@ class Allocator (object):
     def __alloc(self, f, offset, length, cls):
         while cls:
             try:
+                log.info("Trying {0} for {1}".format(cls, repr(f)))
                 ret = cls(f, offset, length)
                 ret.set_magic()
                 log.info("Using {0} for {1}".format(cls, repr(f)))

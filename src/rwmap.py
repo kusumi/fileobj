@@ -41,7 +41,7 @@ class Fileobj (rrmap.Fileobj):
 
     def __init__(self, f, offset=0, length=0):
         self.__dead = False
-        self.__sync = False
+        self.__sync = 0
         self.__anon = None
         super(Fileobj, self).__init__(f, offset, length)
 
@@ -58,22 +58,29 @@ class Fileobj (rrmap.Fileobj):
         if not self.map:
             return
         t = self.get_fstat()
-        self.restore_unflushed()
+        self.restore_rollback_log(self)
+        if not self.__anon:
+            self.flush()
+            shcopy = False
+        else:
+            shcopy = self.__flush_anon()
         self.cleanup_mapping()
+
         if not self.__anon:
             util.utimem(self.get_path(), t)
         if self.__dead and not self.is_dirty():
             f = self.__get_backing_path()
             util.truncate_file(f)
             util.utimem(f, t)
-        self.__cleanup_anon()
+        if self.__anon and shcopy:
+            self.__copy_anon()
+        self.__anon = None
 
     def mmap(self, fileno):
         return mmap.mmap(fileno, 0)
 
     def __init_anon(self):
-        if self.__anon:
-            return -1
+        assert not self.__anon
         self.__anon = util.open_temp_file()
         self.__anon.write(filebytes.ZERO)
         self.__anon.seek(0)
@@ -82,11 +89,7 @@ class Fileobj (rrmap.Fileobj):
             self.__get_backing_path(),
             self.get_path()))
 
-    def __cleanup_anon(self):
-        if not self.__anon:
-            return -1
-        if not self.__sync:
-            return -1
+    def __copy_anon(self):
         util.fsync(self.__anon)
         src = self.__get_backing_path()
         dst = self.get_path()
@@ -97,7 +100,12 @@ class Fileobj (rrmap.Fileobj):
         if os.path.exists(dst):
             return -1
         shutil.copy2(src, dst)
-        self.__anon = None
+
+    def __flush_anon(self):
+        self.sync()
+        self.clear_dirty()
+        assert self.__sync >= 1
+        return self.__sync >= 2 # need copying
 
     def __get_backing_path(self):
         if self.__anon:
@@ -114,16 +122,16 @@ class Fileobj (rrmap.Fileobj):
     def sync(self):
         self.map.flush()
         self.update_fstat(self.__get_backing_path())
-        self.__sync = True
+        self.__sync += 1
 
     def utime(self):
-        util.utime(self.__get_backing_path())
+        util.touch(self.__get_backing_path())
         self.update_fstat(self.__get_backing_path())
-        self.__sync = True
+        self.__sync += 1
 
     def __die(self, is_dying=True):
         if not self.__dead and is_dying:
-            util.utime(self.__get_backing_path())
+            util.touch(self.__get_backing_path())
         self.__dead = is_dying
 
     def insert(self, x, l, rec=True):
@@ -144,7 +152,7 @@ class Fileobj (rrmap.Fileobj):
         self.map.resize(size + n)
         self.map.move(xx, x, size - x)
         self.map[x:xx] = filebytes.input_to_bytes(l)
-        self.touch()
+        self.set_dirty()
         self.__die(False)
 
     def replace(self, x, l, rec=True):
@@ -182,7 +190,7 @@ class Fileobj (rrmap.Fileobj):
                 self.add_undo(ufn2, rfn2)
 
         self.map[x:xx] = filebytes.input_to_bytes(l)
-        self.touch()
+        self.set_dirty()
 
     def delete(self, x, n, rec=True):
         if self.is_empty():
@@ -205,4 +213,4 @@ class Fileobj (rrmap.Fileobj):
             self.map.resize(size - n)
         else:
             self.__die()
-        self.touch()
+        self.set_dirty()

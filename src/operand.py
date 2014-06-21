@@ -33,7 +33,8 @@ from . import util
 class Operand (object):
     def __init__(self):
         self.__history = history.History(None)
-        self.__prev = util.Namespace(key=kbd.ERROR, ope='', arg='', raw=[])
+        self.__prev = util.Namespace(
+            key=kbd.ERROR, ope='', arg='', raw=[])
         self.init([], [], [])
 
     def init(self, rl, fl, sl):
@@ -42,15 +43,14 @@ class Operand (object):
         self.__fasts = fl
         self.__slows = sl
         self.__cand = {
-            None : candidate.LiteralCandidate(self.__slows),
-        }
+            None : candidate.LiteralCandidate(self.__slows), }
         l = literal.get_arg_literals()
         a = candidate.LiteralCandidate(l)
         p = candidate.PathCandidate()
         for li in self.__slows:
             if li is literal.s_set:
                 self.__cand[li.str] = a
-            if li is literal.s_e or \
+            if  li is literal.s_e or \
                 li is literal.s_w or \
                 li is literal.s_wneg or \
                 li is literal.s_wq or \
@@ -63,7 +63,7 @@ class Operand (object):
         self.__history.flush()
 
     def clear(self):
-        self.__cursor = 0
+        self.__pos = 0
         self.__amp = []
         self.__buf = []
         self.__ope = []
@@ -110,27 +110,27 @@ class Operand (object):
     def __get_min_cursor(self):
         return 1
     def __at_min_cursor(self):
-        return self.__cursor <= self.__get_min_cursor()
+        return self.__pos <= self.__get_min_cursor()
 
     def __get_max_cursor(self):
         return screen.get_size_x() - 2
     def __at_max_cursor(self):
-        return self.__cursor >= self.__get_max_cursor()
+        return self.__pos >= self.__get_max_cursor()
 
     def __get_tail_cursor(self):
         return len(self.__buf)
     def __at_tail_cursor(self):
-        return self.__cursor == self.__get_tail_cursor()
+        return self.__pos == self.__get_tail_cursor()
 
     def __add_buffer(self, c):
-        self.__buf.insert(self.__cursor, c)
-        self.__cursor += 1
+        self.__buf.insert(self.__pos, c)
+        self.__pos += 1
         self.__parse_buffer()
 
     def __set_buffer(self, l):
         self.clear()
         self.__buf = list(l)
-        self.__cursor = len(self.__buf)
+        self.__pos = len(self.__buf)
         self.__parse_buffer()
 
     def __set_string(self, s):
@@ -150,49 +150,65 @@ class Operand (object):
 
     def process_incoming(self, x):
         if _is_null(self.__buf) and not self.__scan_amp(x):
-            return None, \
-                None, None, None, None, \
-                None, -1
+            return  None, \
+                    None, \
+                    None, \
+                    None, \
+                    None, \
+                    None, \
+                    -1
 
-        a = _get_type(self.__buf)
-        if a == _null:
+        _type = _get_type(self.__buf)
+        if _type == _null:
             ret = self.__scan_null(x)
-        elif a == _fast:
+        elif _type == _fast:
             ret = self.__scan_fast(x)
         else:
             ret = self.__scan_slow(x)
         if not ret:
-            msg = None
-            if a != _fast:
+            if _type != _fast:
                 msg = _to_string(self.__buf)
-            return None, \
-                None, None, None, None, \
-                msg, self.__cursor
+            else:
+                msg = None
+            return  None, \
+                    None, \
+                    None, \
+                    None, \
+                    None, \
+                    msg, \
+                    self.__pos
 
-        a = _get_type(self.__buf)
-        if a == _null:
+        _type = _get_type(self.__buf)
+        if _type == _null:
             li = self.__match_null()
-        elif a == _fast:
+        elif _type == _fast:
             li = self.__match_fast()
         else:
             li = self.__match_slow()
 
-        amp = None
         if self.__amp:
             amp = int(_to_string(self.__amp))
             if amp > util.MAX_INT:
                 amp = util.MAX_INT
             elif amp < util.MIN_INT:
                 amp = util.MIN_INT
-        ope = ''
+        else:
+            amp = None
         if util.is_graph_sequence(self.__ope):
             ope = _to_string(self.__ope)
-        msg = None
+        else:
+            ope = ''
         if _is_slow(self.__buf):
-            msg = li.str
-        return li, \
-            amp, ope, self.__arg[:], self.__buf[:], \
-            msg, self.__cursor
+            msg = ''
+        else:
+            msg = None
+        return  li, \
+                amp, \
+                ope, \
+                self.__arg[:], \
+                self.__buf[:], \
+                msg, \
+                self.__pos
 
     def __scan_amp(self, x):
         if self.__amp:
@@ -244,27 +260,27 @@ class Operand (object):
             self.__get_newer_history()
             return False
         elif x == kbd.LEFT:
-            if self.__cursor > self.__get_min_cursor():
-                self.__cursor -= 1
+            if self.__pos > self.__get_min_cursor():
+                self.__pos -= 1
             return False
         elif x == kbd.RIGHT:
-            if self.__cursor < self.__get_tail_cursor():
-                self.__cursor += 1
+            if self.__pos < self.__get_tail_cursor():
+                self.__pos += 1
             return False
-        elif x == kbd.BACKSPACE:
+        elif x == kbd.BACKSPACE or x == kbd.BACKSPACE2:
             self.__backspace_slow()
             return False
         elif x == kbd.DELETE:
             self.__delete_slow()
             return False
         elif x == util.ctrl('a'):
-            self.__cursor = self.__get_min_cursor()
+            self.__pos = self.__get_min_cursor()
             return False
         elif x == util.ctrl('e'):
-            self.__cursor = self.__get_tail_cursor()
+            self.__pos = self.__get_tail_cursor()
             return False
         elif x == util.ctrl('k'):
-            self.__buf[self.__cursor:] = ''
+            self.__buf[self.__pos:] = ''
             self.__parse_buffer()
             return False
         elif x == kbd.ENTER:
@@ -316,7 +332,7 @@ class Operand (object):
         if self.__at_tail_cursor():
             self.__backspace_slow()
         else:
-            del self.__buf[self.__cursor]
+            del self.__buf[self.__pos]
         if not self.__buf:
             self.clear()
             self.__history.reset_cursor(key)
@@ -326,8 +342,8 @@ class Operand (object):
         key = chr(self.__buf[0])
         if self.__at_min_cursor() and not self.__at_tail_cursor():
             return
-        del self.__buf[self.__cursor - 1]
-        self.__cursor -= 1
+        del self.__buf[self.__pos - 1]
+        self.__pos -= 1
         if not self.__buf:
             self.clear()
             self.__history.reset_cursor(key)

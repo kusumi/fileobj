@@ -28,6 +28,7 @@ import inspect
 import os
 import platform
 import re
+import resource
 import string
 import struct
 import subprocess
@@ -36,6 +37,7 @@ import tempfile
 import traceback
 
 from . import kbd
+from . import libc
 from . import package
 from . import setting
 from . import version
@@ -236,11 +238,14 @@ PiB = 1 << 50
 EiB = 1 << 60
 
 try:
-    PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
+    PAGE_SIZE = resource.getpagesize()
 except Exception:
-    PAGE_SIZE = 4 * KiB # pretend 4 KiB
-    if setting.use_debug:
-        raise
+    try:
+        PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
+    except Exception:
+        PAGE_SIZE = 4 * KiB # pretend 4 KiB
+        if setting.use_debug:
+            raise
 
 _str_size_dict = {
     "KB" : KB,
@@ -335,6 +340,16 @@ def get_size_string(arg):
             s = s.rstrip('0').rstrip('.')
             return "{0}[{1}]".format(s, d[n])
     return "0[B]"
+
+def get_cpu_string():
+    """Return cpu name"""
+    return platform.processor()
+
+def is_64bit_cpu():
+    return libc.get_pointer_size() == 8
+
+def is_32bit_cpu():
+    return libc.get_pointer_size() == 4
 
 def is_le_cpu():
     return sys.byteorder == "little"
@@ -555,18 +570,18 @@ def fsync(fd):
         fd.flush()
         os.fsync(fd.fileno()) # call fsync(2)
 
-def utime(f, st=None):
-    if st:
-        os.utime(f, (st.st_atime, st.st_mtime))
-    else:
-        os.utime(f, None) # touch
+def utime(f, st):
+    os.utime(f, (st.st_atime, st.st_mtime))
 
 def utimem(f, st):
     current = os.stat(f)
     os.utime(f, (current.st_atime, st.st_mtime))
 
+def touch(f):
+    os.utime(f, None)
+
 def parse_file_path(f):
-    """Return tuple of path and offset"""
+    """Return tuple of path, offset, length"""
     if not setting.use_file_path_attr:
         return f, 0, 0
     if '@' in f:

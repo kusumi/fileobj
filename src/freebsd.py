@@ -35,20 +35,19 @@ def get_blkdev_info(fd):
                 "DIOCGMEDIASIZE"  : 0x40086481,
                 "DIOCGIDENT"      : 0x41006489, }
         s = "DIOCGSECTORSIZE"
-        sector_size = __ioctl(fd, d[s])
+        sector_size = util.host_to_int(
+            fcntl.ioctl(fd, d[s], filebytes.pad(4)))
         s = "DIOCGMEDIASIZE"
-        size = __ioctl(fd, d[s])
+        size = util.host_to_int(
+            fcntl.ioctl(fd, d[s], filebytes.pad(8)))
         s = "DIOCGIDENT"
-        b = fcntl.ioctl(fd, d[s], filebytes.SPACE * 256) # DISK_IDENT_SIZE
+        DISK_IDENT_SIZE = 256
+        b = fcntl.ioctl(fd, d[s], filebytes.pad(DISK_IDENT_SIZE))
         label = b.strip(filebytes.ZERO)
         return size, sector_size, label
     except Exception as e:
         log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))
         raise
-
-def __ioctl(fd, n):
-    return util.host_to_int(
-        fcntl.ioctl(fd, n, filebytes.ZERO * 8))
 
 def get_total_ram():
     """

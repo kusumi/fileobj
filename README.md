@@ -1,13 +1,13 @@
-fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
+fileobj ([v0.7.6](https://github.com/kusumi/fileobj/releases/tag/v0.7.6))
 =======
 
 ## About
 
 + [http://sourceforge.net/projects/fileobj/](http://sourceforge.net/projects/fileobj/)
 
-+ fileobj is a hex editor with vi like interface. This software is written in Python and works on Python 2.6 or above. It works on Linux, NetBSD, OpenBSD, FreeBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
++ fileobj is a portable hex editor with vi like interface. This software is written in Python and works on Python 2.6 or above. It works on Linux, NetBSD, OpenBSD, FreeBSD, DragonFlyBSD and possibly other unix operating systems that support ncurses. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
 
-+ Repository is available at GitHub [https://github.com/kusumi/fileobj](https://github.com/kusumi/fileobj)
++ Repository is available at GitHub [https://github.com/kusumi/fileobj/tree/v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
 
 ## Prerequisites
 
@@ -17,7 +17,15 @@ fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
 
 + Python 2.5 support is dropped in [v0.7](https://github.com/kusumi/fileobj/tree/v0.7), use [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) for Python 2.5
 
-+ Works on Linux and *BSD
+|    |<=Python 2.4|Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|
+|:---|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
+|v0.6|-           |o         |o         |o         |-         |-         |-         |-         |-         |
+|v0.7|-           |-         |o         |o         |o         |o         |o         |o         |o         |
+
+|    |Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Windows|*nix|
+|:---|:----|:-----|:------|:------|:-----------|:------|:---|
+|v0.6|o    |o     |o      |o      |o           |-      |?   |
+|v0.7|o    |o     |o      |o      |o           |-      |?   |
 
 ## Install
 
@@ -29,7 +37,7 @@ fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.5
+        v0.7.6
         $ fileobj
 
 + or run *setup.py* using Python 3
@@ -38,7 +46,7 @@ fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.5
+        v0.7.6
         $ fileobj
 
 ## Uninstall
@@ -260,6 +268,15 @@ fileobj ([v0.7.5](https://github.com/kusumi/fileobj/releases/tag/v0.7.5))
 
 ## Note
 
-+ Generates a new directory *~/.fileobj*
++ Generates a new directory *${HOME}/.fileobj*
 
 + Some keyboard keys may not work correctly on vt100 terminal
+
++ NetBSD requires py-curses package other than the python package itself
+
+        $ uname
+        NetBSD
+        $ sudo python ./setup.py install --force --record ./install.out
+        No module named _curses
+        $ cd /usr/pkgsrc/devel/py-curses
+        $ sudo make install

@@ -101,6 +101,7 @@ def iter_env_name():
     yield "FILEOBJ_KEY_LEFT"
     yield "FILEOBJ_KEY_RIGHT"
     yield "FILEOBJ_KEY_BACKSPACE"
+    yield "FILEOBJ_KEY_BACKSPACE2"
     yield "FILEOBJ_KEY_DELETE"
     yield "FILEOBJ_KEY_RESIZE"
 
@@ -477,6 +478,9 @@ def _get_setting_key_right():
 
 def _get_setting_key_backspace():
     return _get_setting_key("FILEOBJ_KEY_BACKSPACE")
+
+def _get_setting_key_backspace2():
+    return _get_setting_key("FILEOBJ_KEY_BACKSPACE2")
 
 def _get_setting_key_delete():
     return _get_setting_key("FILEOBJ_KEY_DELETE")

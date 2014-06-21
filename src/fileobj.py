@@ -128,7 +128,7 @@ class Fileobj (object):
             return 0, 0
         bufsiz = kernel.get_buffer_size_safe(f)
         if bufsiz == -1:
-            log.error("Failed to read size of {0}".format(f))
+            log.error("Failed to stat {0}, using 0/0".format(f))
             return 0, 0
 
         if offset <= 0:
@@ -199,7 +199,7 @@ class Fileobj (object):
         raise FileobjError("Read only")
 
     def utime(self):
-        util.utime(self.get_path())
+        util.touch(self.get_path())
 
     def creat(self, f):
         with util.create_file(f) as fd:

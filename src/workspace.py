@@ -46,13 +46,13 @@ class Workspace (object):
         self.__vwindows = {}
         self.__bwindows = {}
         self.__twindows = {}
-        self.__owindows = {}
+        self.__swindows = {}
         self.__cur_fileops = None
         self.__cur_console = None
         self.__def_vwindow = self.__get_virtual_window()
         self.__def_bwindow = self.__get_binary_window()
         self.__def_twindow = self.__get_text_window()
-        self.__def_owindow = self.__get_option_window()
+        self.__def_swindow = self.__get_status_window()
 
     def __getattr__(self, name):
         if name == "_Workspace__cur_fileops":
@@ -69,7 +69,7 @@ class Workspace (object):
             self.__get_virtual_window(cls), \
             self.__get_binary_window(cls), \
             self.__get_text_window(cls), \
-            self.__get_option_window(cls)
+            self.__get_status_window(cls)
 
     def __set_buffer(self, o):
         self.__cur_fileops = o
@@ -81,7 +81,7 @@ class Workspace (object):
             o.set_buffer(self.__cur_fileops)
         for o in self.__twindows.values():
             o.set_buffer(self.__cur_fileops)
-        for o in self.__owindows.values():
+        for o in self.__swindows.values():
             o.set_buffer(self.__cur_fileops)
 
     def set_console(self, con, arg):
@@ -170,11 +170,11 @@ class Workspace (object):
     def build_dryrun_delta(self, hei_delta, beg_delta):
         return self.build_dryrun(
             self.__def_twindow.get_size_y() +
-            self.__def_owindow.get_size_y() + hei_delta,
+            self.__def_swindow.get_size_y() + hei_delta,
             self.__def_bwindow.get_position_y() + beg_delta)
 
     def build(self, hei, beg):
-        h = window.get_option_window_height()
+        h = window.get_status_window_height()
         def __build_virtual_window(o):
             siz = hei - h, self.__guess_virtual_window_width()
             pos = beg, 0
@@ -187,14 +187,14 @@ class Workspace (object):
             siz = hei - h, self.__guess_text_window_width()
             pos = beg, self.__def_bwindow.get_size_x()
             self.__build_window(o, siz, pos)
-        def __build_option_window(o):
-            siz = h, self.__guess_option_window_width()
+        def __build_status_window(o):
+            siz = h, self.__guess_status_window_width()
             pos = beg + self.__def_bwindow.get_size_y(), 0
             self.__build_window(o, siz, pos)
         self.__build_virtual_window = __build_virtual_window
         self.__build_binary_window = __build_binary_window
         self.__build_text_window = __build_text_window
-        self.__build_option_window = __build_option_window
+        self.__build_status_window = __build_status_window
         self.resize()
 
     def resize(self):
@@ -204,8 +204,8 @@ class Workspace (object):
             self.__build_binary_window(o)
         for o in self.__twindows.values():
             self.__build_text_window(o)
-        for o in self.__owindows.values():
-            self.__build_option_window(o)
+        for o in self.__swindows.values():
+            self.__build_status_window(o)
 
     def __build_virtual_window(self, o):
         self.__build_window(o, None, None)
@@ -213,7 +213,7 @@ class Workspace (object):
         self.__build_window(o, None, None)
     def __build_text_window(self, o):
         self.__build_window(o, None, None)
-    def __build_option_window(self, o):
+    def __build_status_window(self, o):
         self.__build_window(o, None, None)
 
     def __build_window(self, o, siz, pos):
@@ -226,12 +226,12 @@ class Workspace (object):
         return window.get_width(panel.BinaryCanvas, self.__bpl)
     def __guess_text_window_width(self):
         return window.get_width(panel.TextCanvas, self.__bpl)
-    def __guess_option_window_width(self):
+    def __guess_status_window_width(self):
         return self.__guess_binary_window_width() + \
             self.__guess_text_window_width()
 
     def is_gt_max_width(self):
-        return self.__guess_option_window_width() > screen.get_size_x()
+        return self.__guess_status_window_width() > screen.get_size_x()
 
     def __get_virtual_window(self, cls=def_console_class):
         if cls not in self.__vwindows:
@@ -285,22 +285,22 @@ class Workspace (object):
             self.__twindows[cls] = o
         return self.__twindows[cls]
 
-    def __get_option_window(self, cls=def_console_class):
-        if cls not in self.__owindows:
+    def __get_status_window(self, cls=def_console_class):
+        if cls not in self.__swindows:
             if cls is def_console_class:
-                o = window.Window(panel.OptionCanvas, panel.Frame)
+                o = window.Window(panel.StatusCanvas, panel.Frame)
             elif cls is void.ExtConsole:
-                o = self.__def_owindow
+                o = self.__def_swindow
             elif cls is visual.Console:
-                o = self.__def_owindow
+                o = self.__def_swindow
             elif cls is visual.ExtConsole:
-                o = self.__def_owindow
+                o = self.__def_swindow
             elif util.is_subclass(cls, edit.Console):
-                o = self.__def_owindow
+                o = self.__def_swindow
             o.set_buffer(self.__cur_fileops)
-            self.__build_option_window(o)
-            self.__owindows[cls] = o
-        return self.__owindows[cls]
+            self.__build_status_window(o)
+            self.__swindows[cls] = o
+        return self.__swindows[cls]
 
     def read(self, x, n):
         return self.__cur_fileops.read(x, n)

@@ -27,7 +27,7 @@ from . import rwfd
 class Fileobj (rwfd.Fileobj, block.methods):
     _insert  = False
     _replace = True
-    _delete  = True
+    _delete  = False
     _enabled = True
     _partial = True
 

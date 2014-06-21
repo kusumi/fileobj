@@ -25,7 +25,6 @@ import os
 
 from . import filebytes
 from . import kernel
-from . import log
 from . import romap
 from . import util
 
@@ -49,16 +48,10 @@ class Fileobj (romap.Fileobj):
         if not self.map:
             return
         t = self.get_fstat()
-        self.restore_unflushed()
+        self.restore_rollback_log(self)
+        self.flush()
         self.cleanup_mapping()
         util.utimem(self.get_path(), t)
-
-    def restore_unflushed(self):
-        try:
-            self.restore_rollback_log(self)
-            self.flush()
-        except Exception as e:
-            log.error(e)
 
     def clear_dirty(self):
         self.__dirty = False
@@ -71,7 +64,7 @@ class Fileobj (romap.Fileobj):
         self.update_fstat(self.get_path())
 
     def utime(self):
-        util.utime(self.get_path())
+        util.touch(self.get_path())
         self.update_fstat(self.get_path())
 
     def get_fstat(self):
@@ -80,7 +73,7 @@ class Fileobj (romap.Fileobj):
     def update_fstat(self, f):
         self.__stat = os.stat(f)
 
-    def touch(self):
+    def set_dirty(self):
         self.__dirty = True
 
     def read(self, x, n):
@@ -110,7 +103,7 @@ class Fileobj (romap.Fileobj):
             self.add_undo(ufn, rfn)
 
         self.map[x:xx] = filebytes.input_to_bytes(l)
-        self.touch()
+        self.set_dirty()
 
     def get_no_support_string(self, s):
         if not kernel.has_mremap() and s in ("insert", "delete"):

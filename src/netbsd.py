@@ -29,11 +29,23 @@ from . import log
 from . import path
 from . import util
 
+# FIX_ME need to find a portable way regarding ioctl args,
+# maybe time to use C bindings
+
 def get_blkdev_info(fd):
+    # ioctl value depends on sizeof(disklabel)
+    if util.is_64bit_cpu(): # assume x86_64/gcc
+        size = 408
+    elif util.is_32bit_cpu(): # assume i386/gcc
+        size = 404
+    else: # forget it
+        log.error("Unsupported processor {0}".format(
+            util.get_cpu_string()))
+        return -1, -1, ''
     try:
-        DIOCGDINFO = 0x41946465
-        b = fcntl.ioctl(fd, DIOCGDINFO,
-            filebytes.SPACE * 1000) # struct disklabel
+        DIOCGDINFO = 0x40006465 | ((size & 0x1FFF) << 16)
+        disklabel = filebytes.pad(size)
+        b = fcntl.ioctl(fd, DIOCGDINFO, disklabel)
         d_typename   = b[8:24]
         d_secsize    = util.host_to_int(b[40:44])
         d_nsectors   = util.host_to_int(b[44:48])
