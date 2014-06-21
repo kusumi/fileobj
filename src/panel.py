@@ -49,7 +49,7 @@ _panel
             extension.ExtBinaryCanvas
                 visual.ExtBinaryCanvas
             extension.ExtTextCanvas
-        OptionCanvas
+        StatusCanvas
 """
 
 class _panel (object):
@@ -443,9 +443,9 @@ class TextCanvas (DisplayCanvas, text_addon):
     def __get_column_posstr(self, n):
         return (self.__cstr[setting.offset_num_radix] % n)[-1]
 
-class OptionCanvas (Canvas, default_addon):
+class StatusCanvas (Canvas, default_addon):
     def set_buffer(self, fileops):
-        super(OptionCanvas, self).set_buffer(fileops)
+        super(StatusCanvas, self).set_buffer(fileops)
         if self.fileops:
             a = ''
             if setting.use_debug:

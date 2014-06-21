@@ -91,7 +91,7 @@ class Chunk (object):
             if self.islast:
                 nullsize = x + len(l) - size
                 self.buffer[size:] = alloc_buffer(
-                    filebytes.ZERO * nullsize)
+                    filebytes.pad(nullsize))
             else:
                 l = l[:size - x]
         xx = x + len(l)

@@ -44,6 +44,9 @@ def get_kernel_module():
     elif is_freebsd():
         from . import freebsd
         return freebsd
+    elif is_dragonflybsd():
+        from . import dragonflybsd
+        return dragonflybsd
 
 _system = util.get_system_string()
 def is_linux():
@@ -54,14 +57,11 @@ def is_openbsd():
     return _system == "OpenBSD"
 def is_freebsd():
     return _system == "FreeBSD"
-
-_blkdev_info = {}
+def is_dragonflybsd():
+    return _system == "DragonFly" # No "BSD"
 
 def get_blkdev_info(f):
     f = path.get_path(f)
-    if f in _blkdev_info:
-        return _blkdev_info[f]
-
     o = get_kernel_module()
     if not o:
         raise KernelError(
@@ -73,17 +73,18 @@ def get_blkdev_info(f):
     with util.open_file(f) as fd:
         l = o.get_blkdev_info(fd)
         b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
-        _blkdev_info[f] = b
         log.info("Block device %s (%s, %s, %s)" % (
-            b.name, util.get_size_string(b.size),
-            util.get_size_string(b.sector_size), repr(b.label)))
+            b.name,
+            util.get_size_string(b.size),
+            util.get_size_string(b.sector_size),
+            repr(b.label)))
         return b
 
 def get_buffer_size(f):
     # caller need to catch exception
     if is_blkdev(f):
         return get_blkdev_info(f).size
-    if not path.is_file(f):
+    if not os.path.isfile(f):
         return -1
     ret = get_file_size(f)
     if ret > 0:

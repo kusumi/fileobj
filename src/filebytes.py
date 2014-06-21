@@ -60,12 +60,20 @@ def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
 
+def ords(b, cls=tuple):
+    return cls(ord(x) for x in iter(b))
+
+def seq_to_ords(l, cls=tuple):
+    return cls(ord(x) for x in l)
+
+def pad(x):
+    return ZERO * x
+
 if util.is_python2():
     import __builtin__ as builtin
     TYPE = str
     ZERO = "\x00"
     BLANK = ''
-    SPACE = ' '
     ord = __ord_2k
     split = __split_2k
     iter = __iter_2k
@@ -75,16 +83,9 @@ else:
     TYPE = None
     ZERO = _("\x00")
     BLANK = _('')
-    SPACE = _(' ')
     ord = __ord_3k
     split = __split_3k
     iter = __iter_3k
     riter = __riter_3k
 
 builtin_ord = builtin.ord
-
-def ords(b, cls=tuple):
-    return cls(ord(x) for x in iter(b))
-
-def seq_to_ords(l, cls=tuple):
-    return cls(ord(x) for x in l)

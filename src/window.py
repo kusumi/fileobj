@@ -82,10 +82,10 @@ class Window (object):
 
 def get_min_height():
     # need at least two lines for binary/text canvas
-    return 2 + panel.get_margin(2) + get_option_window_height()
+    return 2 + panel.get_margin(2) + get_status_window_height()
 
-def get_option_window_height():
-    # need two lines for option canvas
+def get_status_window_height():
+    # need two lines for status canvas
     return 2 + panel.get_margin(2)
 
 def get_width(cls, bytes_per_line):

@@ -21,25 +21,51 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import block
-from . import rwfd
+import fcntl
 
-class Fileobj (rwfd.Fileobj, block.methods):
-    _insert  = False
-    _replace = True
-    _delete  = False
-    _enabled = True
-    _partial = True
+from . import filebytes
+from . import freebsd
+from . import log
+from . import path
+from . import util
 
-    def __str__(self):
-        return "%s\n\n%s" % (
-            super(Fileobj, self).__str__(), self.to_string())
+# FIX_ME need to find a portable way regarding ioctl args,
+# maybe time to use C bindings
 
-    def init(self):
-        self.init_blk()
+def get_blkdev_info(fd):
+    # ioctl value depends on sizeof(partinfo)
+    if util.is_64bit_cpu(): # assume x86_64/gcc
+        size = 144
+    elif util.is_32bit_cpu(): # assume i386/gcc
+        size = 136
+    else: # forget it
+        log.error("Unsupported processor %s" %
+            util.get_cpu_string())
+        return -1, -1, ''
+    try:
+        DIOCGPART = 0x40006468 | ((size & 0x1FFF) << 16)
+        partinfo = filebytes.pad(size)
+        b = fcntl.ioctl(fd, DIOCGPART, partinfo)
+        size = util.host_to_int(b[8:16])
+        sector_size = util.host_to_int(b[24:28])
+        return size, sector_size, ''
+    except Exception, e:
+        log.error("ioctl(%s, DIOCGPART) failed, %s" % (fd.name, e))
+        raise
 
-    def get_sector_size(self):
-        return self.get_blk_sector_size()
+def get_total_ram():
+    """
+    [root@dragonflybsd ~]# sysctl hw.physmem
+    hw.physmem: 2117337088
+    """
+    return freebsd.get_total_ram()
 
-    def creat(self, f):
-        self.creat_blk()
+def get_free_ram():
+    return freebsd.get_free_ram()
+
+def is_blkdev(f):
+    o = path.Path(f)
+    return o.is_blkdev or o.is_chrdev
+
+def has_mremap():
+    return False

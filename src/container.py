@@ -23,6 +23,7 @@
 
 from __future__ import division
 import collections
+import os
 
 from . import allocator
 from . import console
@@ -123,8 +124,7 @@ class Container (object):
         return x
 
     def flash(self, o=None):
-        self.show(o)
-        screen.flash()
+        console.queue_flash(o)
 
     def show(self, o):
         console.set_message(o)
@@ -511,7 +511,7 @@ class Container (object):
 
     def __load_stream(self):
         f = setting.get_stream_path()
-        if path.is_file(f):
+        if os.path.isfile(f):
             try:
                 l = trace.read(f)
                 if l:

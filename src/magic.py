@@ -243,7 +243,6 @@ class BZIPMagic (_magic):
 class _blk_magic (_magic):
     pass
 
-# define and initialize before MBRMagic
 class ISO9660Magic (_blk_magic):
     def test(self, fo):
         for x in (0x8001, 0x8801, 0x9001):
@@ -254,6 +253,14 @@ class ISO9660Magic (_blk_magic):
         return _("CD001")
     def get_name(self):
         return "ISO9660"
+
+class LVM2PVMagic (_blk_magic):
+    def test(self, fo):
+        return self.read(fo, 512, 8) == self.get_magic()
+    def get_magic(self):
+        return _("LABELONE")
+    def get_name(self):
+        return "LVM2|PV"
 
 class MBRMagic (_blk_magic):
     def test(self, fo):
@@ -296,7 +303,9 @@ ZIPMagic, \
 GZIPMagic, \
 BZIPMagic, \
 ISO9660Magic, \
+LVM2PVMagic, \
 MBRMagic,
+# MBRMagic comes last
 
 _blk_magics = tuple(cls for cls in _magics
     if util.is_subclass(cls, _blk_magic, False))
