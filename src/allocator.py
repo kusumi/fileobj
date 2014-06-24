@@ -110,16 +110,22 @@ class Allocator (object):
         while cls:
             if self.__is_valid_class(cls, offset, length):
                 if util.is_subclass(cls, self.romap):
-                    size = kernel.get_buffer_size_safe(f)
-                    if size == -1:
-                        log.error("Failed to stat {0}".format(f))
-                    elif size < setting.mmap_thresh:
-                        if self.__is_ro_class(cls):
-                            cls = self.robuf
-                        else:
-                            cls = self.rwbuf
+                    cls = self.__test_mmap_class(f, offset, length, cls)
                 return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
+
+    def __test_mmap_class(self, f, offset, length, cls):
+        size = kernel.get_buffer_size_safe(f)
+        if size == -1:
+            log.error("Failed to stat {0}".format(f))
+        elif size < setting.mmap_thresh:
+            if self.__is_ro_class(cls):
+                cls = self.robuf
+            else:
+                cls = self.rwbuf
+        if not setting.use_readonly and (offset or length):
+            cls = self.__get_alt_class(cls)
+        return cls
 
     def __alloc(self, f, offset, length, cls):
         while cls:
