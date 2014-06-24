@@ -57,6 +57,11 @@ def iter_type_name():
     yield "c_wchar"
     yield "c_wchar_p"
 
+def __normalize_name(s):
+    if s.startswith("c_"):
+        s = s[2:]
+    return s
+
 def __init_ctypes():
     for k in iter_type_name():
         if not hasattr(ctypes, k):
@@ -80,14 +85,23 @@ def __register_sizeof_function(type_name, type_size):
     setattr(this, s, fn)
 
 def __build_sizeof_function_name(type_name):
-    return "get_sizeof_{0}".format(type_name[2:])
+    return "get_sizeof_{0}".format(__normalize_name(type_name))
 
-def iter_undefined_function():
+def iter_type():
     for k in iter_type_name():
         s = __build_sizeof_function_name(k)
         fn = getattr(this, s)
+        yield __normalize_name(k), s, fn
+
+def iter_defined_type():
+    for u, s, fn in iter_type():
+        if fn() != -1:
+            yield u, s, fn
+
+def iter_undefined_type():
+    for u, s, fn in iter_type():
         if fn() == -1:
-            yield s, fn
+            yield u, s, fn
 
 def get_pointer_size():
     ret = this.get_sizeof_void_p()

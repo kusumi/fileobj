@@ -107,7 +107,7 @@ class Fileobj (romap.Fileobj):
 
     def get_no_support_string(self, s):
         if not kernel.has_mremap() and s in ("insert", "delete"):
-            return "{0} has no mremap(2). Run with -B option.".format(
-                util.get_system_string())
+            return "{0} has no mremap(2), use -B option to enable {1}".format(
+                util.get_system_string(), s)
         else:
             return super(Fileobj, self).get_no_support_string(s)

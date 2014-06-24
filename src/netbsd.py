@@ -27,6 +27,7 @@ from . import filebytes
 from . import linux
 from . import log
 from . import path
+from . import setting
 from . import util
 
 # FIX_ME need to find a portable way regarding ioctl args,
@@ -34,7 +35,9 @@ from . import util
 
 def get_blkdev_info(fd):
     # ioctl value depends on sizeof(disklabel)
-    if util.is_64bit_cpu(): # assume x86_64/gcc
+    if setting.netbsd_sizeof_disklabel > 0:
+        size = setting.netbsd_sizeof_disklabel
+    elif util.is_64bit_cpu(): # assume x86_64/gcc
         size = 408
     elif util.is_32bit_cpu(): # assume i386/gcc
         size = 404
@@ -57,7 +60,8 @@ def get_blkdev_info(fd):
             x = d_secperunit
         return x * d_secsize, d_secsize, d_typename
     except Exception as e:
-        log.error("ioctl({0}, DIOCGDINFO) failed, {1}".format(fd.name, e))
+        log.error("ioctl({0}, {1}) failed, {2}".format(
+            fd.name, "DIOCGDINFO", e))
         raise
 
 def get_total_ram():

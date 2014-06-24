@@ -21,10 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import inspect
 import os
 import re
+import sys
 
+import fileobj.extension
 import fileobj.filebytes
+import fileobj.libc
 import fileobj.path
 import fileobj.setting
 import fileobj.util
@@ -37,104 +41,79 @@ class _node (object):
         self.type = type
     def get_size(self):
         return 0
-    def get_lines(self, buf, name, indent):
+    def get_expr(self, buf, name, indent):
         return []
-
-_toplevel_regex = \
-    re.compile(r"\s*struct\s+(\S+)\s*{([\s\S]+?)}\s*;")
-_struct_member_regex = \
-    re.compile(r"^(\S+)\[([0-9]+)\]$")
-_builtin_type_regex = \
-    re.compile(r"^(u|s)(8|16|32|64)([a-z]*)$")
 
 class _builtin (_node):
     def __init__(self):
-        super(_builtin, self).__init__(fileobj.util.get_class_name(self))
-        m = _builtin_type_regex.match(self.type)
-        if not m:
-            assert 0, "Invalid type {0}".format(self.type)
-        sign, size, byteorder = m.groups()
-        self.__sign = sign == "s"
-        if byteorder == "le":
-            self.__to_int = fileobj.util.le_to_int
-        elif byteorder == "be":
-            self.__to_int = fileobj.util.be_to_int
-        else:
-            self.__to_int = fileobj.util.bin_to_int
+        super(_builtin, self).__init__(
+            fileobj.util.get_class_name(self))
 
-    def get_lines(self, buf, name, indent):
+    def get_expr(self, buf, name, indent):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
-            n = self.__to_int(buf, self.__sign)
+            n = self.to_int(buf)
             a = ''.join(["\\x{0:02X}".format(x)
                 for x in fileobj.filebytes.ords(buf)])
             b = ''.join([fileobj.util.to_chr_repr(x) for x in buf])
             s += " {0} {1} [{2}]".format(n, a, b)
         return [s]
 
-class u8 (_builtin):
-    def get_size(self):
-        return 1
-class u8le (u8):
-    pass
-class u8be (u8):
-    pass
+_toplevel_regex = re.compile(
+    r"\s*struct\s+(\S+)\s*{([\s\S]+?)}\s*;")
+_struct_member_regex = re.compile(
+    r"^(\S+)\[([0-9]+)\]$")
+_builtin_type_regex = re.compile(
+    r"^(u|s)(8|16|32|64)(le|be)$")
 
-class s8 (_builtin):
+def __create_builtin_class(name, size):
     def get_size(self):
-        return 1
-class s8le (s8):
-    pass
-class s8be (s8):
-    pass
+        return size
+    sign = name[0] != 'u'
+    m = _builtin_type_regex.match(name)
+    if not m:
+        def to_int(self, b):
+            return fileobj.util.host_to_int(b, sign)
+    elif m.group(3) == "le":
+        def to_int(self, b):
+            return fileobj.util.le_to_int(b, sign)
+    else:
+        def to_int(self, b):
+            return fileobj.util.be_to_int(b, sign)
+    return type(name, (_builtin,),
+        dict(get_size=get_size, to_int=to_int,),)
 
-class u16 (_builtin):
-    def get_size(self):
-        return 2
-class u16le (u16):
-    pass
-class u16be (u16):
-    pass
+u8    = __create_builtin_class("u8", 1)
+u8le  = __create_builtin_class("u8le", 1)
+u8be  = __create_builtin_class("u8be", 1)
 
-class s16 (_builtin):
-    def get_size(self):
-        return 2
-class s16le (s16):
-    pass
-class s16be (s16):
-    pass
+s8    = __create_builtin_class("s8", 1)
+s8le  = __create_builtin_class("s8le", 1)
+s8be  = __create_builtin_class("s8be", 1)
 
-class u32 (_builtin):
-    def get_size(self):
-        return 4
-class u32le (u32):
-    pass
-class u32be (u32):
-    pass
+u16   = __create_builtin_class("u16", 2)
+u16le = __create_builtin_class("u16le", 2)
+u16be = __create_builtin_class("u16be", 2)
 
-class s32 (_builtin):
-    def get_size(self):
-        return 4
-class s32le (s32):
-    pass
-class s32be (s32):
-    pass
+s16   = __create_builtin_class("s16", 2)
+s16le = __create_builtin_class("s16le", 2)
+s16be = __create_builtin_class("s16be", 2)
 
-class u64 (_builtin):
-    def get_size(self):
-        return 8
-class u64le (u64):
-    pass
-class u64be (u64):
-    pass
+u32   = __create_builtin_class("u32", 4)
+u32le = __create_builtin_class("u32le", 4)
+u32be = __create_builtin_class("u32be", 4)
 
-class s64 (_builtin):
-    def get_size(self):
-        return 8
-class s64le (s64):
-    pass
-class s64be (s64):
-    pass
+s32   = __create_builtin_class("s32", 4)
+s32le = __create_builtin_class("s32le", 4)
+s32be = __create_builtin_class("s32be", 4)
+
+u64   = __create_builtin_class("u64", 8)
+u64le = __create_builtin_class("u64le", 8)
+u64be = __create_builtin_class("u64be", 8)
+
+s64   = __create_builtin_class("s64", 8)
+s64le = __create_builtin_class("s64le", 8)
+s64be = __create_builtin_class("s64be", 8)
 
 class _struct (_node):
     def __init__(self, type, defs):
@@ -142,17 +121,18 @@ class _struct (_node):
         self.__member = []
         for type, name in self.__iter_member(defs):
             o = get_node(type)
-            assert o, "{0} not defined yet".format(type)
+            if not o:
+                fileobj.extension.fail("{0} not defined yet".format(type))
             self.__member.append(fileobj.util.Namespace(node=o, name=name))
 
     def get_size(self):
         return sum(o.node.get_size() for o in self.__member)
 
-    def get_lines(self, buf, name, indent):
+    def get_expr(self, buf, name, indent):
         l = ["{0}struct {1} {{".format(I(indent), self.type)]
         for o in self.__member:
             n = o.node.get_size()
-            l.extend(o.node.get_lines(buf[:n], o.name, indent+1))
+            l.extend(o.node.get_expr(buf[:n], o.name, indent+1))
             buf = buf[n:]
         x = " {0}".format(name)
         l.append("{0}}}{1};".format(I(indent), x.rstrip()))
@@ -164,7 +144,8 @@ class _struct (_node):
             if l:
                 if l[0] == "struct":
                     l = l[1:]
-                assert len(l) == 2, "Invalid syntax: {0}".format(l)
+                if len(l) != 2:
+                    fileobj.extension.fail("Invalid syntax: {0}".format(l))
                 type, name = l
                 m = _struct_member_regex.match(name)
                 if m:
@@ -187,6 +168,8 @@ def init_node():
         u64(), u64le(), u64be(),
         s64(), s64le(), s64be(),
     ]
+    if fileobj.setting.use_ext_cstruct_libc:
+        __init_libc_node()
 
 def get_node(s):
     for o in _nodes:
@@ -244,8 +227,27 @@ def get_text(co, fo, args):
         o = get_node(x)
         if o:
             buf = fo.read(pos, o.get_size())
-            l.extend(o.get_lines(buf, '', 0))
+            l.extend(o.get_expr(buf, '', 0))
         else:
             l.append("struct {0} is not defined in {1}".format(x, f))
         l.append('')
     return l
+
+def __init_libc_class():
+    for name, size in __iter_libc_type():
+        cls = __create_builtin_class(name, size)
+        setattr(this, name, cls)
+
+def __init_libc_node():
+    for name, size in __iter_libc_type():
+        cls = getattr(this, name)
+        assert inspect.isclass(cls)
+        _nodes.append(cls())
+
+def __iter_libc_type():
+    for u, s, fn in fileobj.libc.iter_defined_type():
+        yield u, fn()
+
+this = sys.modules[__name__]
+if fileobj.setting.use_ext_cstruct_libc:
+    __init_libc_class()

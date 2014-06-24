@@ -27,6 +27,7 @@ from . import filebytes
 from . import freebsd
 from . import log
 from . import path
+from . import setting
 from . import util
 
 # FIX_ME need to find a portable way regarding ioctl args,
@@ -34,7 +35,9 @@ from . import util
 
 def get_blkdev_info(fd):
     # ioctl value depends on sizeof(partinfo)
-    if util.is_64bit_cpu(): # assume x86_64/gcc
+    if setting.dragonflybsd_sizeof_partinfo > 0:
+        size = setting.dragonflybsd_sizeof_partinfo
+    elif util.is_64bit_cpu(): # assume x86_64/gcc
         size = 144
     elif util.is_32bit_cpu(): # assume i386/gcc
         size = 136
@@ -50,7 +53,8 @@ def get_blkdev_info(fd):
         sector_size = util.host_to_int(b[24:28])
         return size, sector_size, ''
     except Exception as e:
-        log.error("ioctl({0}, DIOCGPART) failed, {1}".format(fd.name, e))
+        log.error("ioctl({0}, {1}) failed, {2}".format(
+            fd.name, "DIOCGPART", e))
         raise
 
 def get_total_ram():
