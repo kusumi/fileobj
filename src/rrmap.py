@@ -87,19 +87,20 @@ class Fileobj (romap.Fileobj):
         if x + len(l) > size:
             l = l[:size - x]
 
+        xorig = x
         x += self.get_mmap_offset()
         n = len(l)
         xx = x + n
 
         if rec:
-            ubuf = filebytes.ords(self.read(x, n))
+            ubuf = filebytes.ords(self.read(xorig, n))
             rbuf = l[:]
             def ufn(ref):
-                ref.replace(x, ubuf, False)
-                return x
+                ref.replace(xorig, ubuf, False)
+                return xorig
             def rfn(ref):
-                ref.replace(x, rbuf, False)
-                return x
+                ref.replace(xorig, rbuf, False)
+                return xorig
             self.add_undo(ufn, rfn)
 
         self.map[x:xx] = filebytes.input_to_bytes(l)
