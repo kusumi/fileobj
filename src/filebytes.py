@@ -30,7 +30,7 @@ def input_to_bytes(l):
         ''.join([chr(x) for x in l]))
 
 def __ord_2k(b):
-    return builtin_ord(b)
+    return __builtin_ord(b)
 
 def __ord_3k(b):
     return b[0]
@@ -88,4 +88,4 @@ else:
     iter = __iter_3k
     riter = __riter_3k
 
-builtin_ord = builtin.ord
+__builtin_ord = builtin.ord

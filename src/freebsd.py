@@ -46,7 +46,8 @@ def get_blkdev_info(fd):
         label = b.strip(filebytes.ZERO)
         return size, sector_size, label
     except Exception, e:
-        log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
+        log.error("ioctl(%s, %s) failed, %s" % (
+            fd.name, s, e))
         raise
 
 def get_total_ram():

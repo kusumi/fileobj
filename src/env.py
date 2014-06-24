@@ -85,12 +85,15 @@ def iter_env_name():
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
     yield "FILEOBJ_ROFD_READ_QUEUE_SIZE"
+    yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
+    yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
     yield "FILEOBJ_EXT_STRINGS_RANGE"
     yield "FILEOBJ_EXT_STRINGS_COUNT"
     yield "FILEOBJ_EXT_STRINGS_THRESH"
     yield "FILEOBJ_EXT_CSTRUCT_PATH"
     yield "FILEOBJ_EXT_CSTRUCT_BASE"
     yield "FILEOBJ_EXT_CSTRUCT_DIR"
+    yield "FILEOBJ_USE_EXT_CSTRUCT_LIBC"
     yield "FILEOBJ_KEY_TAB"
     yield "FILEOBJ_KEY_ENTER"
     yield "FILEOBJ_KEY_ESCAPE"
@@ -433,6 +436,12 @@ def _get_setting_rwbuf_chunk_size_high():
 def _get_setting_rofd_read_queue_size():
     return _test_gt_zero_or_default("FILEOBJ_ROFD_READ_QUEUE_SIZE", 1)
 
+def _get_setting_netbsd_sizeof_disklabel():
+    return _test_gt_zero_or_default("FILEOBJ_NETBSD_SIZEOF_DISKLABEL", -1)
+
+def _get_setting_dragonflybsd_sizeof_partinfo():
+    return _test_gt_zero_or_default("FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO", -1)
+
 def _get_setting_ext_strings_range():
     return _test_gt_zero_or_default("FILEOBJ_EXT_STRINGS_RANGE", 1024)
 
@@ -450,6 +459,9 @@ def _get_setting_ext_cstruct_base():
 
 def _get_setting_ext_cstruct_dir():
     return this.FILEOBJ_EXT_CSTRUCT_DIR
+
+def _get_setting_use_ext_cstruct_libc():
+    return _test_bool("FILEOBJ_USE_EXT_CSTRUCT_LIBC", True)
 
 def _get_setting_key_tab():
     return _get_setting_key("FILEOBJ_KEY_TAB")

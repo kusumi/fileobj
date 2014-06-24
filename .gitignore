@@ -38,3 +38,4 @@ nosetests.xml
 
 unittest
 MANIFEST
+install.out
