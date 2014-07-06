@@ -40,6 +40,10 @@ class Window (object):
             raise AttributeError(name)
         return getattr(self.__canvas, name)
 
+    def cleanup(self):
+        self.__frame.cleanup()
+        self.__canvas.cleanup()
+
     def __get_canvas_size(self):
         y, x = [l[1] - l[0] for l in
             zip(panel.get_min_frame_size(),

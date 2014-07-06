@@ -27,5 +27,8 @@ if __name__ == '__main__':
     import fileobj.nodep
     fileobj.nodep.test()
 
+    import sys
     import fileobj.core
-    fileobj.core.dispatch()
+    ret = fileobj.core.dispatch()
+    if ret:
+        sys.exit(-ret)

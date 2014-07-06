@@ -25,7 +25,6 @@ from __future__ import division
 
 from . import ascii
 from . import filebytes
-from . import kernel
 from . import log
 from . import screen
 from . import setting
@@ -54,8 +53,14 @@ _panel
 
 class _panel (object):
     def __init__(self, siz, pos):
-        self.scr = screen.alloc_screen(
+        self.scr = screen.alloc(
             siz[0], siz[1], pos[0], pos[1], self)
+
+    def cleanup(self):
+        try:
+            self.scr.cleanup()
+        except AttributeError:
+            pass
 
     def get_size_y(self):
         return self.scr.getmaxyx()[0]
@@ -272,7 +277,7 @@ class Canvas (_panel):
 class DisplayCanvas (Canvas):
     def __init__(self, siz, pos):
         super(DisplayCanvas, self).__init__(siz, pos)
-        if use_alt_chgat_methods():
+        if screen.use_alt_chgat():
             self.chgat_posstr = self.alt_chgat_posstr
             self.chgat_cursor = self.alt_chgat_cursor
 
@@ -453,6 +458,8 @@ class StatusCanvas (Canvas, default_addon):
                     util.get_python_executable_string(),
                     version.__version__,
                     self.fileops.get_type())
+                if screen.use_alt_chgat():
+                    a += "<*> "
             a += self.fileops.get_short_path()
             if not a:
                 a = util.NO_NAME
@@ -501,18 +508,6 @@ class StatusCanvas (Canvas, default_addon):
 
     def sync_cursor(self):
         self.repaint(False)
-
-def use_alt_chgat_methods():
-    if setting.use_alt_chgat:
-        return True
-    if util.is_python_version_lt(2, 6, 0): # Python 2.5
-        return True
-
-    if kernel.is_linux() or \
-        kernel.is_freebsd():
-        return False # scr.chgat() works
-    else:
-        return True # may not work
 
 def get_min_frame_size():
     return 1 + get_margin(2), 1 + get_margin(2)

@@ -271,12 +271,12 @@ class MBRMagic (_blk_magic):
         return "MBR"
 
 def get_string(fo):
-    return _get_string(fo, _magics)
+    return __get_sring(fo, _magics)
 
 def get_blk_string(fo):
-    return _get_string(fo, _blk_magics)
+    return __get_sring(fo, _blk_magics)
 
-def _get_string(fo, l):
+def __get_sring(fo, l):
     if fo.is_empty():
         return ''
     for cls in l:

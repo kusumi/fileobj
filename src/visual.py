@@ -39,7 +39,7 @@ VISUAL_BLOCK = "VISUAL BLOCK"
 
 class _visual_addon (object):
     def init_method(self):
-        if panel.use_alt_chgat_methods():
+        if screen.use_alt_chgat():
             self.__chgat_single = self.__alt_chgat_single
             self.__chgat_head = self.__alt_chgat_head
             self.__chgat_tail = self.__alt_chgat_tail

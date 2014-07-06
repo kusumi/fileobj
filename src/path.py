@@ -89,7 +89,7 @@ class Path (object):
     def is_error(self):
         return _test(self.__type, _t_error)
 
-    def _get_type_string(self):
+    def __get_type_string(self):
         ret = []
         if self.is_noent:
             ret.append("noent")
@@ -114,7 +114,7 @@ class Path (object):
         if self.is_error:
             ret.append("error")
         return '|'.join(ret)
-    type = property(_get_type_string)
+    type = property(__get_type_string)
 
 def get_path(f):
     if not f:

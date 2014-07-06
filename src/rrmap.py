@@ -107,8 +107,9 @@ class Fileobj (romap.Fileobj):
         self.set_dirty()
 
     def get_no_support_string(self, s):
-        if not kernel.has_mremap() and s in ("insert", "delete"):
-            return "%s has no mremap(2), use -B option to enable %s" % (
-                util.get_system_string(), s)
+        msg = "use -B option to enable %s" % s
+        if kernel.has_mremap():
+            return "Can not %s, %s" % (s, msg)
         else:
-            return super(Fileobj, self).get_no_support_string(s)
+            return "%s has no mremap(2), %s" % (
+                util.get_system_string(), msg)

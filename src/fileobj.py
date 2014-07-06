@@ -68,24 +68,34 @@ class Fileobj (object):
         return
 
     def set_magic(self):
-        if setting.use_magic_scan:
-            if self.__path.is_file:
-                self.__attr.magic = magic.get_string(self)
-            elif kernel.is_blkdev(self.get_path()):
-                self.__attr.magic = magic.get_blk_string(self)
+        if not setting.use_magic_scan:
+            return -1
+        if self.__path.is_file:
+            self.__attr.magic = magic.get_string(self)
+        elif kernel.is_blkdev(self.get_path()):
+            self.__attr.magic = magic.get_blk_string(self)
 
     def test_insert(self):
-        return util.get_class(self)._insert
+        return self._insert
     def test_replace(self):
-        return util.get_class(self)._replace
+        return self._replace
     def test_delete(self):
-        return util.get_class(self)._delete
+        return self._delete
+
+    def test_enabled(self):
+        return self._enabled
+    def test_partial(self):
+        return self._partial
 
     def is_readonly(self):
-        return \
-            not self.test_insert() and \
-            not self.test_replace() and \
-            not self.test_delete()
+        assert self.test_enabled()
+        if self.test_insert():
+            return False
+        if self.test_replace():
+            return False
+        if self.test_delete():
+            return False
+        return True
 
     def is_empty(self):
         size = self.get_size()
@@ -94,21 +104,17 @@ class Fileobj (object):
         elif size <= 0:
             return self.is_barrier_empty()
         else:
-            return size + self.get_barrier_delta() <= 0
+            size += self.get_barrier_delta()
+            return size <= 0
 
     def clear_dirty(self):
         return
 
     def is_dirty(self):
         util.raise_no_impl("is_dirty")
-    def _is_dirty(self):
-        return self.is_dirty() or self.is_barrier_dirty()
 
     def get_size(self):
         util.raise_no_impl("get_size")
-    def _get_size(self):
-        return self.get_size() + self.get_barrier_delta()
-
     def get_sector_size(self):
         return -1
     def get_path(self):

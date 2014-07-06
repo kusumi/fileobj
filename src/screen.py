@@ -25,7 +25,6 @@ import curses
 import fcntl
 import shutil
 import struct
-import sys
 import termios
 
 from . import filebytes
@@ -35,8 +34,9 @@ from . import setting
 from . import util
 
 _std = None
-_std_size = util.Pair()
+_size = util.Pair()
 _signaled = False
+_has_chgat = True
 
 ACS_FOCUS   = 0 # use default
 A_NORMAL    = curses.A_NORMAL
@@ -48,49 +48,74 @@ def_attr    = A_NORMAL
 color_attr  = 0
 
 def init(fg='', bg=''):
+    global _std, _has_chgat
     update_size()
-    if not setting.use_curses:
+    if _std:
         return -1
-    if not this._std:
-        this._std = curses.initscr()
-        this.ACS_FOCUS = curses.ACS_CKBOARD
-        if fg or bg:
-            if _init_color(fg, bg) == -1:
-                log.error("Failed to init color")
-        this._std.keypad(1)
-        this._std.bkgd(' ', this.color_attr)
-        this._std.refresh()
-        curses.noecho()
-        curses.cbreak()
-        try:
-            curses.curs_set(0) # vt100 fails here but just ignore
-        except Exception, e:
-            log.debug(e)
+    if not setting.use_stdout:
+        _std = __init_curses(fg, bg)
+    else:
+        _std = alloc(get_size_y(), get_size_x(), 0, 0)
+    _std.keypad(1)
+    _std.bkgd(' ', color_attr)
+    _std.refresh()
+    try:
+        # fails on Python 2.5 and some os
+        __test_chgat(_std)
+        _has_chgat = True
+    except Exception, e:
+        log.debug(e)
+        _has_chgat = False
 
 def cleanup():
+    global _std
     clear_size()
-    if this._std:
-        this._std.keypad(0)
-        curses.echo()
-        curses.nocbreak()
-        curses.endwin()
-        this._std = None
+    if not _std:
+        return -1
+    _std.keypad(0)
+    _std = None
+    if not setting.use_stdout:
+        __cleanup_curses()
 
-def _init_color(fg, bg):
+def __init_curses(fg, bg):
+    global ACS_FOCUS
+    std = curses.initscr()
+    ACS_FOCUS = curses.ACS_CKBOARD
+    if fg or bg:
+        if __init_curses_color(fg, bg) == -1:
+            log.error("Failed to init color")
+    curses.noecho()
+    curses.cbreak()
+    try:
+        # vt100 fails here but just ignore
+        curses.curs_set(0)
+    except Exception, e:
+        log.debug(e)
+    return std
+
+def __cleanup_curses():
+    assert not curses.isendwin()
+    curses.echo()
+    curses.nocbreak()
+    curses.endwin()
+
+def __init_curses_color(fg, bg):
+    global color_attr
     if not curses.has_colors():
         return -1
-    fg, bg = _parse_color_string(fg, bg)
+    fg, bg = __get_curses_color_string(fg, bg)
     try:
         pair = 1
         curses.start_color()
         curses.init_pair(pair,
-            getattr(curses, fg), getattr(curses, bg))
-        this.color_attr = curses.color_pair(pair)
+            getattr(curses, fg),
+            getattr(curses, bg))
+        color_attr = curses.color_pair(pair)
     except Exception, e:
         log.error(e)
         return -1
 
-def _parse_color_string(fg, bg):
+def __get_curses_color_string(fg, bg):
     d = dict([(s, "COLOR_%s" % s.upper())
         for s in iter_color_name()])
     white = d.get("white")
@@ -104,6 +129,15 @@ def _parse_color_string(fg, bg):
     else: # other/other -> white/other
         return white, bg
 
+def __test_chgat(scr):
+    scr.chgat(0, 0, 1, def_attr)
+    scr.chgat(0, 0, 1, color_attr)
+    scr.chgat(0, 0, 1, def_attr | color_attr)
+    scr.chgat(0, 0, get_size_x(), def_attr)
+    scr.chgat(0, 0, get_size_x(), color_attr)
+    scr.chgat(0, 0, get_size_x(), def_attr | color_attr)
+    scr.erase()
+
 def iter_color_name():
     yield "black"
     yield "red"
@@ -115,18 +149,18 @@ def iter_color_name():
     yield "white"
 
 def refresh():
-    if this._std:
-        this._std.clear()
-        this._std.refresh()
+    _std.clear()
+    _std.refresh()
 
 def flash():
-    if this._std:
+    if not setting.use_stdout:
         curses.flash()
 
 def get_size_y():
-    return this._std_size.y
+    return _size.y
+
 def get_size_x():
-    return this._std_size.x
+    return _size.x
 
 def update_size():
     if util.is_python_version_or_ht(3, 3):
@@ -134,81 +168,92 @@ def update_size():
     else:
         b = fcntl.ioctl(0, termios.TIOCGWINSZ, filebytes.pad(8))
         y, x = struct.unpack(util.S2F * 4, b)[:2]
-    this._std_size.set(y, x)
+    _size.set(y, x)
 
 def clear_size():
-    this._std_size.set(0, 0)
+    _size.set(0, 0)
 
 def sti():
-    this._signaled = True
+    global _signaled
+    _signaled = True
+
 def cli():
-    this._signaled = False
+    global _signaled
+    _signaled = False
 
 def test_signal():
-    if this._signaled:
+    ret = _signaled
+    if ret:
         cli()
-        return True
-    else:
-        return False
+    return ret
 
-class _screen (object):
-    def __init__(self, nlines, ncols, begin_y, begin_x):
-        self.refer(None)
+def has_chgat():
+    return _has_chgat
 
-    def refer(self, ref):
+def use_alt_chgat():
+    return setting.use_alt_chgat or not has_chgat()
+
+class window (object):
+    def __init__(self, leny, lenx, begy, begx, ref):
+        self.siz = util.Pair(leny, lenx)
+        self.pos = util.Pair(begy, begx)
         self.ref = ref
+        self.init()
 
-    def get_decorated_string(self, y, x, s):
-        ret = "(%2d, %3d) %s" % (y, x, s)
-        if setting.use_debug:
-            return "%s %s" % (repr(self.ref), ret)
-        else:
-            return ret
+    def init(self):
+        return
+    def cleanup(self):
+        return
 
+    def mkstr(self, y, x, s):
+        return "%s (%2d, %3d) %s" % (
+            repr(self.ref), y, x, repr(s))
+
+    def keypad(self, yes):
+        return
+    def idlok(self, yes):
+        return
+    def scrollok(self, flag):
+        return
+    def bkgd(self, ch, attr):
+        return
     def addstr(self, y, x, s, attr=def_attr):
         return
     def getch(self):
-        return kbd.DEAD
+        return kbd.QUIT
     def clrtoeol(self):
+        return
+    def clear(self):
+        return
+    def erase(self):
         return
     def refresh(self):
         return
     def move(self, y, x):
         return
     def mvwin(self, y, x):
-        return
-    def resize(self, nlines, ncols):
-        return
+        self.pos.set(y, x)
+    def resize(self, y, x):
+        self.siz.set(y, x)
     def box(self):
         return
     def border(self, ls, rs, ts, bs, tl, tr, bl, br):
         return
-    def chgat(self, y, x, num, attr=def_attr):
+    def chgat(self, y, x, num, attr):
         return
     def getmaxyx(self):
-        return -1, -1
+        return self.siz.y, self.siz.x
     def getbegyx(self):
-        return -1, -1
+        return self.pos.y, self.pos.x
 
-class _stdout_screen (_screen):
-    def addstr(self, y, x, s, attr=def_attr):
-        util.print_stdout(self.get_decorated_string(y, x, s))
-
-class _quiet_screen (_screen):
-    def addstr(self, y, x, s, attr=def_attr):
-        return
-
-def alloc_screen(nlines, ncols, begin_y, begin_x, ref=None):
-    if setting.use_curses:
-        scr = curses.newwin(nlines, ncols, begin_y, begin_x)
-        scr.scrollok(0)
-        scr.idlok(0)
-        scr.keypad(1)
-        scr.bkgd(' ', this.color_attr)
-        return scr
+def alloc(leny, lenx, begy, begx, ref=None):
+    if not setting.use_stdout:
+        scr = curses.newwin(leny, lenx, begy, begx)
     else:
-        scr = _stdout_screen(nlines, ncols, begin_y, begin_x)
-        scr.refer(ref)
-        return scr
-
-this = sys.modules[__name__]
+        from . import stdout
+        scr = stdout.newwin(leny, lenx, begy, begx, ref)
+    scr.scrollok(0)
+    scr.idlok(0)
+    scr.keypad(1)
+    scr.bkgd(' ', color_attr)
+    return scr

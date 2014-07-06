@@ -33,6 +33,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 
 from . import kbd
@@ -43,10 +44,10 @@ from . import version
 
 if setting.use_debug:
     import pdb
-    set_bp = pdb.set_trace
+    bp = pdb.set_trace
 else:
-    def set_bp():
-        return
+    def bp():
+        return -1
 
 NO_NAME = "[No Name]"
 
@@ -122,10 +123,18 @@ def is_python3_supported():
     return version.get_version() >= (0, 7, 0)
 
 def get_program_path():
-    return sys.argv[0]
+    return sys.argv[0] if sys.argv else ''
 
 def get_program_name():
     return os.path.basename(get_program_path())
+
+def is_running_script():
+    return os.path.isfile(get_program_path())
+
+def is_running_fileobj():
+    # running script/profile.py does not match this
+    return is_running_script() and \
+        get_program_name() == "fileobj"
 
 _Xregex = re.compile(r"\\X[%s]{1,}$" % string.hexdigits)
 _xregex = re.compile(r"\\x([%s]{1,2})" % string.hexdigits)
@@ -198,7 +207,7 @@ def to_chr_repr(c):
         return '.'
 
 def ctrl(c):
-    """Get str arg and return int"""
+    """Take str/bytes and return int"""
     return kbd.ctrl(ord(c))
 
 def find_string(src, s):
@@ -369,8 +378,8 @@ U2F = _struct_ufmts.get(2)
 U4F = _struct_ufmts.get(4)
 U8F = _struct_ufmts.get(8)
 
-_struct_sfmts = \
-    dict([(k, v.lower()) for k, v in _struct_ufmts.items()])
+_struct_sfmts = dict(
+    [(k, v.lower()) for k, v in _struct_ufmts.items()])
 S1F = _struct_sfmts.get(1)
 S2F = _struct_sfmts.get(2)
 S4F = _struct_sfmts.get(4)
@@ -636,6 +645,14 @@ def get_file_md5(f):
     if os.path.isfile(f):
         return get_md5(open_file(f).read())
 
+def get_stamp(prefix=''):
+    # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097.bin
+    return "%s.%s.%s.pid%d" % (
+        prefix,
+        time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),
+        get_python_executable_string(),
+        os.getpid())
+
 def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
@@ -741,11 +758,9 @@ def get_traceback(tb):
                 ret.append(x.rstrip())
     return ret
 
-def print_stdout(o):
-    sys.stdout.write("%s\n" % object_to_string(o))
-
-def print_stderr(o):
-    sys.stderr.write("%s\n" % object_to_string(o))
+def printf(o, error=False):
+    fd = sys.stderr if error else sys.stdout
+    fd.write("%s\n" % object_to_string(o))
 
 def object_to_string(o):
     if isinstance(o, Exception):

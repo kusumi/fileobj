@@ -21,13 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-
 from . import kbd
 from . import literal
 from . import log
 from . import methods
-from . import panel
 from . import screen
 from . import setting
 from . import trace
@@ -110,7 +107,7 @@ class Console (object):
         refresh()
         x = self.co.getch()
         if setting.use_trace:
-            this._log.append(x)
+            _log.append(x)
         if screen.test_signal():
             self.ope.clear()
             set_message('')
@@ -124,13 +121,15 @@ class Console (object):
         self.co.lrepaint()
         while True:
             x = self.read_incoming()
-            if x == kbd.DEAD:
-                return -1
-            elif x == kbd.INTERRUPT:
-                return
-            elif x == kbd.ERROR:
+            if x == kbd.ERROR:
                 self.ope.clear()
                 continue
+            elif x == kbd.CONTINUE:
+                continue
+            elif x == kbd.INTERRUPT:
+                return
+            elif x == kbd.QUIT:
+                return -1
 
             li, amp, ope, arg, raw, msg, cursor = \
                 self.ope.process_incoming(x)
@@ -156,36 +155,47 @@ class Console (object):
 
 _scr = None
 _log = []
+chgat = None
 def init():
-    this._scr = screen.alloc_screen(
+    global _scr, chgat
+    if _scr:
+        return -1
+    _scr = screen.alloc(
         get_size_y(), get_size_x(),
         get_position_y(), get_position_x())
+    if screen.use_alt_chgat():
+        chgat = __alt_chgat
+    else:
+        chgat = __chgat
 
 def cleanup(e, tb):
-    this._scr = None
+    global _scr
+    if not _scr:
+        return -1
+    _scr = None
     if setting.use_trace:
-        l = this._log[:]
+        l = _log[:]
         if l and l[-1] == kbd.ENTER:
             del l[-1]
         if trace.write(setting.get_trace_path(), l, e, tb):
             log.error("Failed to write trace")
 
 def getch():
-    return this._scr.getch()
+    return _scr.getch()
 
 def refresh():
     clrl()
     test_flash()
-    if this._message: # prefer _message to _banner
-        printl(0, this._message)
-        if this._cursor != -1:
-            chgat(this._cursor, this._message, screen.A_STANDOUT)
-    elif this._banner:
-        printl(0, ''.join(this._banner))
-    this._scr.refresh()
+    if _message: # prefer _message to _banner
+        printl(0, _message)
+        if _cursor != -1:
+            chgat(_cursor, _message, screen.A_STANDOUT)
+    elif _banner:
+        printl(0, ''.join(_banner))
+    _scr.refresh()
 
 def __chgat(x, s, attr):
-    this._scr.chgat(0, x, 1, attr | screen.color_attr)
+    _scr.chgat(0, x, 1, attr | screen.color_attr)
 
 def __alt_chgat(x, s, attr):
     if x < len(s):
@@ -194,30 +204,25 @@ def __alt_chgat(x, s, attr):
         c = ' '
     printl(x, c, attr)
 
-if panel.use_alt_chgat_methods():
-    chgat = __alt_chgat
-else:
-    chgat = __chgat
-
 def resize():
     try:
         set_message('')
-        this._scr.resize(get_size_y(), get_size_x())
-        this._scr.mvwin(get_position_y(), get_position_x())
+        _scr.resize(get_size_y(), get_size_x())
+        _scr.mvwin(get_position_y(), get_position_x())
     except Exception, e:
         log.error(e)
 
 def printl(x, s, attr=screen.def_attr):
     try:
-        this._scr.addstr(0, x, s, attr | screen.color_attr)
+        _scr.addstr(0, x, s, attr | screen.color_attr)
     except Exception, e:
         if len(s) < screen.get_size_x() - 1:
             log.debug((e, x, s))
 
 def clrl():
     try:
-        this._scr.move(0, 0)
-        this._scr.clrtoeol()
+        _scr.move(0, 0)
+        _scr.clrtoeol()
     except Exception, e:
         log.error(e)
 
@@ -225,9 +230,9 @@ _banner = ['']
 def set_banner(o):
     if o:
         set_message('')
-        this._banner[0] = __format_banner(o)
+        _banner[0] = __format_banner(o)
     else:
-        this._banner[0] = ''
+        _banner[0] = ''
 
 def __format_banner(o):
     return "-- %s --" % str(o).upper()
@@ -235,23 +240,24 @@ def __format_banner(o):
 def push_banner(s):
     if s:
         set_message('')
-    this._banner.append(s)
+    _banner.append(s)
 
 def pop_banner():
-    return this._banner.pop()
+    return _banner.pop()
 
 _message = ''
 _cursor = -1
 def set_message(o, cursor=-1):
+    global _message, _cursor
     if o is None:
         return # ignore None
     s = str(o)
     if isinstance(o, Exception):
-        this._message = s if s else repr(o)
-        this._cursor = -1
+        _message = s if s else repr(o)
+        _cursor = -1
     else:
-        this._message = s
-        this._cursor = cursor
+        _message = s
+        _cursor = cursor
 
 _flashq = []
 def queue_flash(o):
@@ -278,5 +284,3 @@ def get_position_y():
 
 def get_position_x():
     return 0
-
-this = sys.modules[__name__]

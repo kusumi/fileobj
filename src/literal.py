@@ -388,11 +388,11 @@ def get_lines(l):
 def print_literal():
     init()
     s = get_lines(get_literals())
-    util.print_stdout('\n'.join(s).rstrip())
+    util.printf('\n'.join(s).rstrip())
     cleanup()
 
 def init():
-    if this._tree_root.children:
+    if _tree_root.children:
         return -1
 
     for o in util.iter_site_ext_module():
@@ -403,111 +403,112 @@ def init():
             except Exception:
                 desc = ''
             s = o.__name__.rpartition('.')[2]
-            setattr(this, "s_" + s, ExtLiteral(':' + s, fn, desc))
+            li = ExtLiteral(':' + s, fn, desc)
+            setattr(this, "s_" + s, li)
 
     for o in util.iter_dir_values(this):
         if isinstance(o, Literal):
             o.init()
 
     # alias
-    this.k.alias(this.up)
-    this.enter.alias(
-        this.j.alias(this.down)
+    k.alias(up)
+    enter.alias(
+        j.alias(down)
     )
-    this.bspace.alias(
-        this.h.alias(this.left)
+    bspace.alias(
+        h.alias(left)
     )
-    this.space.alias(
-        this.l.alias(this.right)
+    space.alias(
+        l.alias(right)
     )
-    this.ctrlw_ctrlw.alias(this.ctrlw_w)
-    this.ctrlw_ctrlt.alias(this.ctrlw_t)
-    this.ctrlw_ctrlb.alias(this.ctrlw_b)
-    this.ctrlw_ctrlv.alias(
-        this.ctrlw_v.alias(
-            this.ctrlw_ctrls.alias(this.ctrlw_s)
+    ctrlw_ctrlw.alias(ctrlw_w)
+    ctrlw_ctrlt.alias(ctrlw_t)
+    ctrlw_ctrlb.alias(ctrlw_b)
+    ctrlw_ctrlv.alias(
+        ctrlw_v.alias(
+            ctrlw_ctrls.alias(ctrlw_s)
         )
     )
-    this.ctrlw_c.alias(this.s_close)
-    this.ctrlw_ctrlo.alias(
-        this.ctrlw_o.alias(this.s_only)
+    ctrlw_c.alias(s_close)
+    ctrlw_ctrlo.alias(
+        ctrlw_o.alias(s_only)
     )
-    this.ctrlw_q.alias(this.s_q)
-    this.tab.alias(this.s_bnext)
-    this.d.alias(
-        this.x.alias(this.delete)
+    ctrlw_q.alias(s_q)
+    tab.alias(s_bnext)
+    d.alias(
+        x.alias(delete)
     )
-    this.ZZ.alias(this.s_x)
-    this.ZQ.alias(this.s_qneg)
-    this.s_brewind.alias(this.s_bfirst)
-    this.s_bNext.alias(this.s_bprev)
+    ZZ.alias(s_x)
+    ZQ.alias(s_qneg)
+    s_brewind.alias(s_bfirst)
+    s_bNext.alias(s_bprev)
 
     # refer
-    this.gg.refer(this.G)
-    this.doller.refer(this.zero)
-    this.L.refer(
-        this.M.refer(H)
+    gg.refer(G)
+    doller.refer(zero)
+    L.refer(
+        M.refer(H)
     )
-    this.b.refer(this.w)
-    this.bracket2_beg.refer(
-        this.bracket2_end.refer(
-            this.bracket1_beg.refer(
-                this.bracket1_end.refer(
-                    this.parens_beg.refer(this.parens_end)
+    b.refer(w)
+    bracket2_beg.refer(
+        bracket2_end.refer(
+            bracket1_beg.refer(
+                bracket1_end.refer(
+                    parens_beg.refer(parens_end)
                 )
             )
         )
     )
-    this.ctrlu.refer(this.ctrlb)
-    this.ctrld.refer(this.ctrlf)
-    this.ctrlv.refer(
-        this.V.refer(this.v)
+    ctrlu.refer(ctrlb)
+    ctrld.refer(ctrlf)
+    ctrlv.refer(
+        V.refer(v)
     )
-    this.g_ctrlg.refer(this.ctrlg)
-    this.rol.refer(this.ror)
-    this.y.refer(this.Y)
-    this.p.refer(this.P)
-    this.o.refer(this.O)
-    this.n.refer(this.N)
-    this.r.refer(
-        this.R.refer(
-            this.A.refer(
-                this.a.refer(
-                    this.I.refer(this.i)
+    g_ctrlg.refer(ctrlg)
+    rol.refer(ror)
+    y.refer(Y)
+    p.refer(P)
+    o.refer(O)
+    n.refer(N)
+    r.refer(
+        R.refer(
+            A.refer(
+                a.refer(
+                    I.refer(i)
                 )
             )
         )
     )
-    this.backtick_reg.refer(this.m_reg)
-    this.q.refer(this.q_reg)
-    this.atsign_at.refer(this.atsign_reg)
-    this.bit_xor.refer(
-        this.bit_or.refer(this.bit_and)
+    backtick_reg.refer(m_reg)
+    q.refer(q_reg)
+    atsign_at.refer(atsign_reg)
+    bit_xor.refer(
+        bit_or.refer(bit_and)
     )
-    this.s_bdelete.refer(this.s_e)
-    this.s_delmarksneg.refer(this.s_delmarks)
-    this.s_rsearch.refer(this.s_fsearch)
-    this.s_set_oct.refer(
-        this.s_set_dec.refer(
-            this.s_set_hex.refer(this.s_set)
+    s_bdelete.refer(s_e)
+    s_delmarksneg.refer(s_delmarks)
+    s_rsearch.refer(s_fsearch)
+    s_set_oct.refer(
+        s_set_dec.refer(
+            s_set_hex.refer(s_set)
         )
     )
-    this.s_set_ascii.refer(
-        this.s_set_binary.refer(this.s_set)
+    s_set_ascii.refer(
+        s_set_binary.refer(s_set)
     )
-    this.s_set_be.refer(
-        this.s_set_le.refer(this.s_set)
+    s_set_be.refer(
+        s_set_le.refer(s_set)
     )
-    this.s_set_nows.refer(
-        this.s_set_ws.refer(this.s_set)
+    s_set_nows.refer(
+        s_set_ws.refer(s_set)
     )
-    this.s_set_noic.refer(
-        this.s_set_ic.refer(this.s_set)
+    s_set_noic.refer(
+        s_set_ic.refer(s_set)
     )
-    this.s_set_nosi.refer(
-        this.s_set_si.refer(this.s_set)
+    s_set_nosi.refer(
+        s_set_si.refer(s_set)
     )
-    this.s_set_width.refer(this.s_set)
+    s_set_width.refer(s_set)
 
     def fn(l, o, cls):
         for li in sorted(o.children):
@@ -517,8 +518,8 @@ def init():
         return tuple(l)
 
     for cls in Literal, FastLiteral, SlowLiteral, ArgLiteral, ExtLiteral:
-        this._literals[cls] = fn([], this._tree_root, cls)
-    this._literals[None] = tuple(sorted(get_literals()))
+        _literals[cls] = fn([], _tree_root, cls)
+    _literals[None] = tuple(sorted(get_literals()))
 
 def cleanup():
     for s, o in util.iter_dir_items(this):
@@ -526,6 +527,6 @@ def cleanup():
             o.cleanup()
         if isinstance(o, ExtLiteral):
             delattr(this, s)
-    this._literals.clear()
+    _literals.clear()
 
 this = sys.modules[__name__]

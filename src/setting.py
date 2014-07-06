@@ -36,22 +36,26 @@ def reset():
             env.env_to_setting_name(s), env.get_setting(s))
 
 def get_trace_path():
-    return _get_path("trace")
-def get_stream_path():
-    return _get_path("stream")
-def get_log_path():
-    return _get_path("log")
-def get_history_path():
-    return _get_path("history")
-def get_ext_cstruct_path():
-    return _get_path("ext_cstruct")
+    return __get_path("trace")
 
-def _get_path(s):
-    f = getattr(this, "%s_path" % s)
+def get_stream_path():
+    return __get_path("stream")
+
+def get_log_path():
+    return __get_path("log")
+
+def get_history_path():
+    return __get_path("history")
+
+def get_ext_cstruct_path():
+    return __get_path("ext_cstruct")
+
+def __get_path(s):
+    f = getattr(this, s + "_path")
+    b = getattr(this, s + "_base")
+    d = getattr(this, s + "_dir")
     if f:
         return f
-    b = getattr(this, "%s_base" % s)
-    d = getattr(this, "%s_dir" % s)
     if b and d:
         return os.path.join(d, b)
     elif not b:

@@ -25,7 +25,7 @@ import os
 import platform
 import sys
 
-def _test(version, name):
+def __test(version, name):
     if not version:
         version = sys.version_info
     version = tuple(version[:3])
@@ -44,16 +44,16 @@ def _test(version, name):
     del curses
 
 def test():
-    if _ignore_test():
+    if __ignore_test():
         return -1
     try:
-        _test(None, None)
+        __test(None, None)
     except Exception:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)
         sys.exit(1)
 
-def _ignore_test():
+def __ignore_test():
     e = os.getenv("FILEOBJ_USE_TEST")
     if isinstance(e, str) and e.lower() == "false":
         return True
