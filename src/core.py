@@ -40,17 +40,20 @@ from . import setting
 from . import util
 from . import version
 
-def cleanup(targs):
-    console.cleanup(*targs)
+def cleanup(arg):
+    if arg.done:
+        return -1
+    arg.done = True
+    console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
-    e, tb = targs
-    if e:
-        log.error(e)
-        util.print_stderr(e)
-    for s in tb:
+    if arg.e:
+        log.error(arg.e)
+        util.printf(arg.e, True)
+    for s in arg.tb:
         log.error(s)
-        util.print_stderr(s)
+        util.printf(s, True)
+    log.info("Cleanup")
     log.cleanup()
 
 def sigint_handler(sig, frame):
@@ -59,7 +62,7 @@ def sigint_handler(sig, frame):
 def sigterm_handler(sig, frame):
     sys.exit(1)
 
-def dispatch():
+def dispatch(optargs=None):
     colors = '|'.join(list(screen.iter_color_name()))
     parser = optparse.OptionParser(version=version.__version__,
         usage="Usage: %prog [options] [path1 path2 ...]\n\
@@ -110,6 +113,10 @@ For more information, run the program and enter :help<ENTER>")
         action="store_true",
         default=setting.use_debug,
         help=optparse.SUPPRESS_HELP)
+    parser.add_option("--stdout",
+        action="store_true",
+        default=setting.use_stdout,
+        help=optparse.SUPPRESS_HELP)
     parser.add_option("--env",
         action="store_true",
         default=False,
@@ -124,28 +131,30 @@ For more information, run the program and enter :help<ENTER>")
             default=False,
             help=optparse.SUPPRESS_HELP)
 
-    opts, args = parser.parse_args()
-    setting.use_debug |= opts.debug
+    opts, args = parser.parse_args(optargs)
+    if opts.debug:
+        setting.use_debug = True
+    if opts.stdout:
+        setting.use_stdout = True
 
     if opts.command:
         literal.print_literal()
-        sys.exit(0)
+        return
     if opts.sitepkg:
         for x in package.get_paths():
-            util.print_stdout(x)
-        sys.exit(0)
+            util.printf(x)
+        return
     if opts.executable:
-        util.print_stdout(
-            util.get_python_executable_string())
-        sys.exit(0)
+        util.printf(util.get_python_executable_string())
+        return
     if opts.env:
         env.print_env()
-        sys.exit(0)
+        return
     if opts.history:
         history.print_history(opts.history)
-        sys.exit(0)
+        return
 
-    targs = [None, []]
+    targs = util.Namespace(e=None, tb=[], done=False)
     atexit.register(cleanup, targs)
     ret = setting.init_user()
     log.init(util.get_program_name())
@@ -177,20 +186,23 @@ For more information, run the program and enter :help<ENTER>")
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     try:
+        co = None
         literal.init()
         screen.init(opts.fg, opts.bg)
         console.init()
-        co = None
         co = container.Container()
         if not co.init(args, wspnum, opts.width):
             co.repaint()
             co.dispatch()
     except Exception as e:
         tb = sys.exc_info()[2]
-        targs[0] = e
-        targs[1] = util.get_traceback(tb)
+        targs.e = e
+        targs.tb = util.get_traceback(tb)
     finally:
         if co:
             co.cleanup()
-    if targs[0]:
-        sys.exit(1)
+
+    if not util.is_running_fileobj():
+        cleanup(targs)
+    if targs.e:
+        return -1

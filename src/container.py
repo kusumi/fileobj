@@ -93,7 +93,7 @@ class Container (object):
             wsp.add_buffer(i, fileops.Fileops(o), self.__get_console())
 
         for i in range(1, wspnum):
-            o = self.clone_workspace()
+            o = self.__cur_workspace.clone()
             o.goto_buffer(i % len(self.__fileobjs))
             self.__workspaces.append(o)
             if self.__build(True):
@@ -102,6 +102,8 @@ class Container (object):
         return self.build()
 
     def cleanup(self):
+        for o in self.__workspaces:
+            o.cleanup()
         for o in self.__fileobjs:
             o.cleanup()
         self.__operand.cleanup()
@@ -354,7 +356,7 @@ class Container (object):
     def add_workspace(self):
         i = self.__get_buffer_index(self.get_path())
         cur_workspace = self.__cur_workspace
-        new_workspace = self.clone_workspace()
+        new_workspace = self.__cur_workspace.clone()
         self.__clear_workspace_delta()
         self.__workspaces.insert(
             self.__workspaces.index(cur_workspace), new_workspace)
@@ -398,6 +400,7 @@ class Container (object):
     def __remove_workspace(self, o):
         self.__clear_workspace_delta()
         self.__workspaces.remove(o)
+        o.cleanup()
 
     def goto_next_workspace(self):
         return self.__set_workspace(self.__get_next_workspace())

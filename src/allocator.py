@@ -123,8 +123,6 @@ class Allocator (object):
                 cls = self.robuf
             else:
                 cls = self.rwbuf
-        if not setting.use_readonly and (offset or length):
-            cls = self.__get_alt_class(cls)
         return cls
 
     def __alloc(self, f, offset, length, cls):

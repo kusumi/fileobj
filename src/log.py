@@ -22,16 +22,16 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-import sys
 
 from . import setting
 from . import util
 from . import version
 
 def init(name, f=None):
+    global _logger
     if not setting.use_log:
         return -1
-    if this._logger:
+    if _logger:
         return -1
     try:
         logger = logging.getLogger(name)
@@ -40,8 +40,8 @@ def init(name, f=None):
         else:
             logger.setLevel(getattr(
                 logging, setting.log_level, logging.WARNING))
-        _add_handler(logger, f)
-        this._logger = logger
+        __add_handler(logger, f)
+        _logger = logger
     except Exception:
         return -1
 
@@ -54,19 +54,18 @@ def init(name, f=None):
         util.get_program_path(), version.__version__))
 
 def cleanup():
-    if not setting.use_log:
-        return -1
-    if not this._logger:
+    global _logger
+    if not _logger:
         return -1
     try:
         verbose("Bye")
-        _remove_handler(this._logger)
+        __remove_handler(_logger)
     except Exception:
         return -1
     finally:
-        this._logger = None
+        _logger = None
 
-def _add_handler(logger, f):
+def __add_handler(logger, f):
     if not logger.handlers:
         if not f:
             f = setting.get_log_path()
@@ -75,31 +74,30 @@ def _add_handler(logger, f):
             "%(asctime)s %(name)s %(levelname)s %(message)s"))
         logger.addHandler(hnd)
 
-def _remove_handler(logger):
+def __remove_handler(logger):
     for hnd in logger.handlers:
         logger.removeHandler(hnd)
         hnd.close()
 
 def debug(o):
-    return _log(o, logging.DEBUG)
+    return __log(o, logging.DEBUG)
 def info(o):
-    return _log(o, logging.INFO)
+    return __log(o, logging.INFO)
 def warning(o):
-    return _log(o, logging.WARNING)
+    return __log(o, logging.WARNING)
 def error(o):
-    return _log(o, logging.ERROR)
+    return __log(o, logging.ERROR)
 def critical(o):
-    return _log(o, logging.CRITICAL)
+    return __log(o, logging.CRITICAL)
 
 def verbose(o, level=logging.INFO):
     if setting.use_log_verbose:
-        _log(o, level)
+        __log(o, level)
 
-def _log(o, level):
-    if this._logger:
-        this._logger.log(level, util.object_to_string(o))
+def __log(o, level):
+    if _logger:
+        _logger.log(level, util.object_to_string(o))
     else:
         return -1
 
 _logger = None
-this = sys.modules[__name__]

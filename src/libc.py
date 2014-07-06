@@ -94,14 +94,14 @@ def iter_type():
         yield __normalize_name(k), s, fn
 
 def iter_defined_type():
-    for u, s, fn in iter_type():
+    for name, func_name, fn in iter_type():
         if fn() != -1:
-            yield u, s, fn
+            yield name, func_name, fn
 
 def iter_undefined_type():
-    for u, s, fn in iter_type():
+    for name, func_name, fn in iter_type():
         if fn() == -1:
-            yield u, s, fn
+            yield name, func_name, fn
 
 def get_pointer_size():
     ret = this.get_sizeof_void_p()

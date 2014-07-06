@@ -24,7 +24,6 @@
 from __future__ import with_statement
 import os
 import sys
-import time
 
 from . import env
 from . import log
@@ -41,28 +40,28 @@ def iter_trace_word(tf):
         for i in range(0, len(buf), n):
             yield util.bin_to_int(buf[i : i + n])
 
-def write(tf, l, e, tb):
+def write(trace_path, l, e, tb):
     try:
-        b = os.path.basename(tf)
-        tf += time.strftime(
-            "-%Y-%m-%d-%H:%M:%S", time.localtime())
-        sf = tf + ".sh"
-        _write_trace(tf, l)
-        _write_script(sf, tf, e, tb)
+        trace_base = os.path.basename(trace_path)
+        uniq_path = trace_path + util.get_stamp()
+        tf = uniq_path + ".bin"
+        sf = uniq_path + ".sh"
+        __write_trace(tf, l)
+        __write_script(sf, tf, e, tb)
         if setting.use_trace_symlink:
-            _creat_symlink(tf, b)
-            _creat_symlink(sf, b + ".sh")
+            __creat_symlink(tf, trace_base + ".bin")
+            __creat_symlink(sf, trace_base + ".sh")
     except Exception as e:
         log.error(e)
 
-def _write_trace(tf, l):
+def __write_trace(tf, l):
     with util.create_file(tf) as fd:
         for x in l:
             fd.write(util.int_to_bin(x, setting.trace_word_size))
         util.fsync(fd)
         log.debug("Wrote trace to {0}".format(fd))
 
-def _write_script(sf, tf, e, tb):
+def __write_script(sf, tf, e, tb):
     with util.create_text_file(sf) as fd:
         ret = util.execute("which", "sh")
         if not ret[2]:
@@ -71,11 +70,11 @@ def _write_script(sf, tf, e, tb):
             fd.write("# {0}\n".format(util.exc_to_string(e)))
         for s in tb:
             fd.write("# {0}\n".format(s))
-        fd.write("{0}\n".format(_get_cmdline(tf)))
+        fd.write("{0}\n".format(__get_cmdline(tf)))
         util.fsync(fd)
         log.debug("Wrote text to {0}".format(fd))
 
-def _get_cmdline(tf):
+def __get_cmdline(tf):
     l = list(env.iter_env_name())
     ret = ["FILEOBJ_STREAM_PATH={0}".format(tf)]
     for k in os.environ:
@@ -86,7 +85,7 @@ def _get_cmdline(tf):
     ret.extend(sys.argv)
     return ' '.join(ret)
 
-def _creat_symlink(f, basename):
+def __creat_symlink(f, basename):
     if os.path.isfile(f):
         d = os.path.dirname(f)
         l = os.path.join(d, basename)

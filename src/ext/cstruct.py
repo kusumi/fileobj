@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import inspect
 import os
 import re
 import sys
@@ -34,7 +33,7 @@ import fileobj.setting
 import fileobj.util
 
 def I(x):
-    return '    ' * x
+    return ' ' * 4 * x
 
 class _node (object):
     def __init__(self, type):
@@ -66,6 +65,7 @@ _struct_member_regex = re.compile(
 _builtin_type_regex = re.compile(
     r"^(u|s)(8|16|32|64)(le|be)$")
 
+_classes = []
 def __create_builtin_class(name, size):
     def get_size(self):
         return size
@@ -77,43 +77,28 @@ def __create_builtin_class(name, size):
     elif m.group(3) == "le":
         def to_int(self, b):
             return fileobj.util.le_to_int(b, sign)
-    else:
+    elif m.group(3) == "be":
         def to_int(self, b):
             return fileobj.util.be_to_int(b, sign)
-    return type(name, (_builtin,),
+    else:
+        assert 0, m.group(0)
+    cls = type(name, (_builtin,),
         dict(get_size=get_size, to_int=to_int,),)
+    assert cls not in _classes
+    _classes.append(cls)
+    setattr(sys.modules[__name__], name, cls)
 
-u8    = __create_builtin_class("u8", 1)
-u8le  = __create_builtin_class("u8le", 1)
-u8be  = __create_builtin_class("u8be", 1)
+def __init_class():
+    for x in range(4):
+        size = 2 ** x
+        for sign in "us":
+            for suffix in ("", "le", "be"):
+                name = "{0}{1}{2}".format(sign, size * 8, suffix)
+                __create_builtin_class(name, size)
 
-s8    = __create_builtin_class("s8", 1)
-s8le  = __create_builtin_class("s8le", 1)
-s8be  = __create_builtin_class("s8be", 1)
-
-u16   = __create_builtin_class("u16", 2)
-u16le = __create_builtin_class("u16le", 2)
-u16be = __create_builtin_class("u16be", 2)
-
-s16   = __create_builtin_class("s16", 2)
-s16le = __create_builtin_class("s16le", 2)
-s16be = __create_builtin_class("s16be", 2)
-
-u32   = __create_builtin_class("u32", 4)
-u32le = __create_builtin_class("u32le", 4)
-u32be = __create_builtin_class("u32be", 4)
-
-s32   = __create_builtin_class("s32", 4)
-s32le = __create_builtin_class("s32le", 4)
-s32be = __create_builtin_class("s32be", 4)
-
-u64   = __create_builtin_class("u64", 8)
-u64le = __create_builtin_class("u64le", 8)
-u64be = __create_builtin_class("u64be", 8)
-
-s64   = __create_builtin_class("s64", 8)
-s64le = __create_builtin_class("s64le", 8)
-s64be = __create_builtin_class("s64be", 8)
+    if fileobj.setting.use_ext_cstruct_libc:
+        for name, func_name, fn in fileobj.libc.iter_defined_type():
+            __create_builtin_class(name, fn())
 
 class _struct (_node):
     def __init__(self, type, defs):
@@ -158,18 +143,7 @@ class _struct (_node):
 _nodes = []
 def init_node():
     global _nodes
-    _nodes = [
-        u8(), u8le(), u8be(),
-        s8(), s8le(), s8be(),
-        u16(), u16le(), u16be(),
-        s16(), s16le(), s16be(),
-        u32(), u32le(), u32be(),
-        s32(), s32le(), s32be(),
-        u64(), u64le(), u64be(),
-        s64(), s64le(), s64be(),
-    ]
-    if fileobj.setting.use_ext_cstruct_libc:
-        __init_libc_node()
+    _nodes = [cls() for cls in _classes]
 
 def get_node(s):
     for o in _nodes:
@@ -233,21 +207,4 @@ def get_text(co, fo, args):
         l.append('')
     return l
 
-def __init_libc_class():
-    for name, size in __iter_libc_type():
-        cls = __create_builtin_class(name, size)
-        setattr(this, name, cls)
-
-def __init_libc_node():
-    for name, size in __iter_libc_type():
-        cls = getattr(this, name)
-        assert inspect.isclass(cls)
-        _nodes.append(cls())
-
-def __iter_libc_type():
-    for u, s, fn in fileobj.libc.iter_defined_type():
-        yield u, fn()
-
-this = sys.modules[__name__]
-if fileobj.setting.use_ext_cstruct_libc:
-    __init_libc_class()
+__init_class()

@@ -24,13 +24,17 @@
 import curses
 import curses.ascii
 import os
+import sys
 
 from . import setting
 
 def ctrl(c):
-    return curses.ascii.ctrl(c) # return int/str if type is int/str
+    """Return int/str if type is int/str"""
+    return curses.ascii.ctrl(c)
+
 def isspace(c):
     return curses.ascii.isspace(c)
+
 def isgraph(c):
     return curses.ascii.isgraph(c)
 
@@ -44,12 +48,25 @@ def iter_kbd_name():
     yield "LEFT"
     yield "RIGHT"
     yield "BACKSPACE"
-    yield "BACKSPACE2"
+    yield "BACKSPACE2" # FIX_ME added for FreeBSD
     yield "DELETE"
     yield "RESIZE"
 
-def _get_code(term):
-    if term.startswith("vt"):
+def get_code(term, use_stdout):
+    if use_stdout:
+        return  curses.ascii.TAB, \
+                curses.ascii.LF, \
+                curses.ascii.ESC, \
+                curses.ascii.SP, \
+                curses.KEY_DOWN, \
+                curses.KEY_UP, \
+                curses.KEY_LEFT, \
+                curses.KEY_RIGHT, \
+                curses.KEY_BACKSPACE, \
+                curses.ascii.DEL, \
+                curses.KEY_DC, \
+                KEY_DEAD(0x100),
+    elif term.startswith("vt"):
         return  curses.ascii.TAB, \
                 curses.ascii.LF, \
                 curses.ascii.ESC, \
@@ -59,9 +76,9 @@ def _get_code(term):
                 curses.KEY_LEFT, \
                 curses.KEY_RIGHT, \
                 curses.ascii.BS, \
-                None, \
+                KEY_DEAD(0x100), \
                 curses.ascii.DEL, \
-                curses.KEY_RESIZE
+                curses.KEY_RESIZE,
     else:
         return  curses.ascii.TAB, \
                 curses.ascii.LF, \
@@ -74,30 +91,41 @@ def _get_code(term):
                 curses.KEY_BACKSPACE, \
                 curses.ascii.DEL, \
                 curses.KEY_DC, \
-                curses.KEY_RESIZE
+                curses.KEY_RESIZE,
 
-def _(default, config):
-    if config is None:
-        return default
-    else:
-        return config
+def KEY_DEAD(x):
+    return DEAD | (x << 16)
 
-_code = _get_code(os.getenv("TERM"))
-TAB        = _(_code[0], setting.key_tab)
-ENTER      = _(_code[1], setting.key_enter)
-ESCAPE     = _(_code[2], setting.key_escape)
-SPACE      = _(_code[3], setting.key_space)
-DOWN       = _(_code[4], setting.key_down)
-UP         = _(_code[5], setting.key_up)
-LEFT       = _(_code[6], setting.key_left)
-RIGHT      = _(_code[7], setting.key_right)
-BACKSPACE  = _(_code[8], setting.key_backspace)
-BACKSPACE2 = _(_code[9], setting.key_backspace2) # FIX_ME added for FreeBSD
-DELETE     = _(_code[10], setting.key_delete)
-RESIZE     = _(_code[11], setting.key_resize)
-del _
+ERROR      = curses.ERR
+DEAD       = 0xDEAD
+CONTINUE   = KEY_DEAD(0)
+INTERRUPT  = KEY_DEAD(1)
+QUIT       = KEY_DEAD(2)
 
-ERROR     = curses.ERR
-DEAD      = 0xDEAD
-INTERRUPT = None
-ARROWS    = DOWN, UP, LEFT, RIGHT
+TAB        = KEY_DEAD(3)
+ENTER      = KEY_DEAD(4)
+ESCAPE     = KEY_DEAD(5)
+SPACE      = KEY_DEAD(6)
+DOWN       = KEY_DEAD(7)
+UP         = KEY_DEAD(8)
+LEFT       = KEY_DEAD(9)
+RIGHT      = KEY_DEAD(10)
+BACKSPACE  = KEY_DEAD(11)
+BACKSPACE2 = KEY_DEAD(12)
+DELETE     = KEY_DEAD(13)
+RESIZE     = KEY_DEAD(14)
+ARROWS     = DOWN, UP, LEFT, RIGHT
+
+def init(term):
+    global ARROWS
+    l = get_code(term, setting.use_stdout)
+    for i, s in enumerate(iter_kbd_name()):
+        config = getattr(setting, "key_" + s.lower())
+        if config is not None:
+            setattr(this, s, config)
+        else:
+            setattr(this, s, l[i])
+    ARROWS = DOWN, UP, LEFT, RIGHT
+
+this = sys.modules[__name__]
+init(os.getenv("TERM"))

@@ -62,10 +62,12 @@ class Fileops (object):
     def is_empty(self):
         return self.__ref.is_empty()
     def is_dirty(self):
-        return self.__ref._is_dirty()
+        return self.__ref.is_dirty() or \
+            self.__ref.is_barrier_dirty()
 
     def get_size(self):
-        return self.__ref._get_size()
+        return self.__ref.get_size() + \
+            self.__ref.get_barrier_delta()
     def get_sector_size(self):
         return self.__ref.get_sector_size()
     def get_path(self):
@@ -176,7 +178,8 @@ class Fileops (object):
         self.__delete(x, n, rec)
 
     def __assert_position(self, x):
-        assert 0 <= x <= self.get_max_pos(), x
+        _max_pos = self.get_max_pos()
+        assert 0 <= x <= _max_pos, (x, _max_pos)
 
     def __read(self, x, n):
         if x + n > self.get_size():

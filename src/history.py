@@ -185,4 +185,4 @@ def print_history(f):
                 s = " <NEW>"
             else:
                 s = ''
-            util.print_stdout("{0} \"{1}\"{2}".format(i, v[i], s))
+            util.printf("{0} \"{1}\"{2}".format(i, v[i], s))

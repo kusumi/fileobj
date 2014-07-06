@@ -103,7 +103,7 @@ class Fileobj (fileobj.Fileobj):
             return self.__do_mmap_at(fileno, offset, length)
 
     def __is_using_mmap_offset(self, offset):
-        return util.get_class(self)._partial and offset > 0
+        return self.test_partial() and offset > 0
 
     def __get_mmap_prot(self):
         if self.is_readonly():
