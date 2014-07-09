@@ -107,7 +107,7 @@ class Frame (_panel):
 class FocusableFrame (Frame):
     def box(self, focus):
         if focus:
-            self.scr.border(*[screen.ACS_FOCUS for x in range(8)])
+            self.scr.border(*[screen.A_FOCUS for x in range(8)])
         else:
             self.scr.box()
 
@@ -191,16 +191,16 @@ class Canvas (_panel):
                 setting.barrier_size, x))
             setting.barrier_size = x
 
-    def chgat(self, y, x, num, attr=screen.def_attr):
+    def chgat(self, y, x, num, attr=screen.A_DEFAULT):
         """May raise exception on page change for previous pos"""
         try:
-            self.scr.chgat(y, x, num, attr | screen.color_attr)
+            self.scr.chgat(y, x, num, attr | screen.A_COLOR)
         except Exception:
             pass
 
-    def printl(self, y, x, s, attr=screen.def_attr):
+    def printl(self, y, x, s, attr=screen.A_DEFAULT):
         try:
-            self.scr.addstr(y, x, s, attr | screen.color_attr)
+            self.scr.addstr(y, x, s, attr | screen.A_COLOR)
         except Exception as e:
             if (y < self.get_size_y() - 1) or \
                 (x + len(s) < self.get_size_x() - 1):

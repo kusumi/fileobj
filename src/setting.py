@@ -30,11 +30,6 @@ def iter_setting_name():
     for s in env.iter_env_name():
         yield env.env_to_setting_name(s)
 
-def reset():
-    for s in env.iter_env_name():
-        setattr(this,
-            env.env_to_setting_name(s), env.get_setting(s))
-
 def get_trace_path():
     return __get_path("trace")
 
@@ -102,5 +97,10 @@ def init_user():
             this.userdir_base = None
             return -1
 
+def init():
+    for s in env.iter_env_name():
+        setattr(this, env.env_to_setting_name(s),
+            env.get_setting(s))
+
 this = sys.modules[__name__]
-reset()
+init()

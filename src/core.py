@@ -113,10 +113,6 @@ For more information, run the program and enter :help<ENTER>")
         action="store_true",
         default=setting.use_debug,
         help=optparse.SUPPRESS_HELP)
-    parser.add_option("--stdout",
-        action="store_true",
-        default=setting.use_stdout,
-        help=optparse.SUPPRESS_HELP)
     parser.add_option("--env",
         action="store_true",
         default=False,
@@ -134,8 +130,6 @@ For more information, run the program and enter :help<ENTER>")
     opts, args = parser.parse_args(optargs)
     if opts.debug:
         setting.use_debug = True
-    if opts.stdout:
-        setting.use_stdout = True
 
     if opts.command:
         literal.print_literal()
@@ -164,7 +158,8 @@ For more information, run the program and enter :help<ENTER>")
             allocator.set_default_class(s)
     if opts.B:
         allocator.set_default_buffer_class()
-    setting.use_readonly |= opts.R
+    if opts.R:
+        setting.use_readonly = True
     wspnum = opts.o
     if opts.O:
         wspnum = len(args)

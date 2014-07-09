@@ -28,23 +28,94 @@ import tty
 
 from . import kbd
 from . import log
-from . import screen
 from . import setting
 from . import util
 
 _stdin = sys.stdin
 _attr = None
+_count = 0
 
-class _window (screen.window):
+A_DEFAULT   = 0
+A_BOLD      = 1
+A_STANDOUT  = 2
+A_UNDERLINE = 4
+A_FOCUS     = 0
+A_COLOR     = 0
+
+class _window (object):
+    def __init__(self, leny, lenx, begy, begx, ref):
+        self.__siz = util.Pair(leny, lenx)
+        self.__pos = util.Pair(begy, begx)
+        self.__ref = ref
+        self.init()
+
     def init(self):
-        init()
+        global _count
+        if not _count:
+            init_tty()
+        _count += 1
         self.__ib = collections.deque()
         self.__ob = collections.deque()
 
     def cleanup(self):
-        cleanup()
+        global _count
         self.__clear_input()
         self.__clear_output()
+        _count -= 1
+        if not _count:
+            cleanup_tty()
+
+    def __mkstr(self, y, x, s):
+        return "{0} ({1:2}, {2:3}) {3}".format(
+            repr(self.__ref), y, x, repr(s))
+
+    def keypad(self, yes):
+        return
+
+    def idlok(self, yes):
+        return
+
+    def scrollok(self, flag):
+        return
+
+    def bkgd(self, ch, attr):
+        return
+
+    def addstr(self, y, x, s, attr=A_DEFAULT):
+        util.printf(self.__mkstr(y, x, s))
+
+    def clrtoeol(self):
+        return
+
+    def clear(self):
+        return
+
+    def refresh(self):
+        return
+
+    def move(self, y, x):
+        return
+
+    def mvwin(self, y, x):
+        self.__pos.set(y, x)
+
+    def resize(self, y, x):
+        self.__siz.set(y, x)
+
+    def box(self):
+        return
+
+    def border(self, ls, rs, ts, bs, tl, tr, bl, br):
+        return
+
+    def chgat(self, y, x, num, attr):
+        return
+
+    def getmaxyx(self):
+        return self.__siz.y, self.__siz.x
+
+    def getbegyx(self):
+        return self.__pos.y, self.__pos.x
 
     def __clear_input(self):
         self.__ib.clear()
@@ -110,13 +181,28 @@ class _window (screen.window):
         self.__clear_input()
         return kbd.CONTINUE
 
-    def addstr(self, y, x, s, attr=screen.def_attr):
-        util.printf(self.mkstr(y, x, s))
+def init(fg, bg):
+    from . import screen
+    return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
+        A_FOCUS, A_COLOR
+
+def cleanup():
+    return
+
+def flash():
+    return
 
 def newwin(leny, lenx, begy, begx, ref=None):
     return _window(leny, lenx, begy, begx, ref)
 
-def init():
+def has_chgat():
+    return True
+
+def iter_color_name():
+    yield "black"
+    yield "white"
+
+def init_tty():
     global _attr
     if _attr:
         return -1
@@ -125,7 +211,7 @@ def init():
         tty.setcbreak(_stdin)
         log.debug("Set tty cbreak")
 
-def cleanup():
+def cleanup_tty():
     global _attr
     if not _attr:
         return -1
