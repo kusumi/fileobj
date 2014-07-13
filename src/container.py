@@ -102,8 +102,6 @@ class Container (object):
         return self.build()
 
     def cleanup(self):
-        for o in self.__workspaces:
-            o.cleanup()
         for o in self.__fileobjs:
             o.cleanup()
         self.__operand.cleanup()
@@ -400,7 +398,6 @@ class Container (object):
     def __remove_workspace(self, o):
         self.__clear_workspace_delta()
         self.__workspaces.remove(o)
-        o.cleanup()
 
     def goto_next_workspace(self):
         return self.__set_workspace(self.__get_next_workspace())

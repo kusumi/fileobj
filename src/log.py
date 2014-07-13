@@ -45,12 +45,12 @@ def init(name, f=None):
     except Exception:
         return -1
 
-    verbose('=' * 80)
-    verbose("Using Python {0} on {1} {2}".format(
+    info('=' * 80)
+    info("Using Python {0} on {1} {2}".format(
         util.get_python_version_string(),
         util.get_system_string(),
         util.get_release_string()))
-    verbose("Running {0} ({1})".format(
+    info("Running {0} ({1})".format(
         util.get_program_path(), version.__version__))
 
 def cleanup():
@@ -58,7 +58,7 @@ def cleanup():
     if not _logger:
         return -1
     try:
-        verbose("Bye")
+        info("Bye")
         __remove_handler(_logger)
     except Exception:
         return -1
@@ -89,10 +89,6 @@ def error(o):
     return __log(o, logging.ERROR)
 def critical(o):
     return __log(o, logging.CRITICAL)
-
-def verbose(o, level=logging.INFO):
-    if setting.use_log_verbose:
-        __log(o, level)
 
 def __log(o, level):
     if _logger:

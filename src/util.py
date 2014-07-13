@@ -43,13 +43,6 @@ from . import package
 from . import setting
 from . import version
 
-if setting.use_debug:
-    import pdb
-    bp = pdb.set_trace
-else:
-    def bp():
-        return -1
-
 NO_NAME = "[No Name]"
 
 class GenericError (Exception):
@@ -748,13 +741,18 @@ def get_imported_modules():
 def get_import_exceptions():
     return dict(_exceptions)
 
-def get_traceback(tb):
-    ret = []
-    for s in traceback.format_tb(tb):
+def iter_traceback(tb=None):
+    if tb:
+        g = traceback.format_tb(tb)
+    else:
+        g = traceback.format_stack()
+    for s in g:
         for x in s.split('\n'):
             if x:
-                ret.append(x.rstrip())
-    return ret
+                yield x.rstrip()
+
+def get_traceback(tb=None):
+    return tuple(iter_traceback(tb))
 
 def printf(o, error=False):
     file = sys.stderr if error else sys.stdout
@@ -774,3 +772,7 @@ def get_class(o):
 
 def get_class_name(o):
     return get_class(o).__name__
+
+def bp():
+    import pdb
+    pdb.set_trace()
