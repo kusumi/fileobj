@@ -40,33 +40,35 @@ from . import setting
 from . import util
 from . import version
 
-def cleanup(arg):
+def __cleanup(arg):
     if arg.done:
         return -1
     arg.done = True
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
-    if arg.e:
-        log.error(arg.e)
-        util.printf(arg.e, True)
-    for s in arg.tb:
-        log.error(s)
-        util.printf(s, True)
+    __log_result(arg, log.error)
+    __log_result(arg, lambda s: util.printf(s, True))
     log.info("Cleanup")
     log.cleanup()
 
-def sigint_handler(sig, frame):
+def __log_result(arg, fn):
+    if arg.e:
+        fn(arg.e)
+    for s in arg.tb:
+        fn(s)
+
+def __sigint_handler(sig, frame):
     screen.sti()
 
-def sigterm_handler(sig, frame):
+def __sigterm_handler(sig, frame):
     sys.exit(1)
 
 def dispatch(optargs=None):
     colors = '|'.join(list(screen.iter_color_name()))
-    parser = optparse.OptionParser(version=version.__version__,
-        usage="Usage: %prog [options] [path1 path2 ...]\n\
-For more information, run the program and enter :help<ENTER>")
+    usage = "Usage: %prog [options] [file paths ...]\nFor more information " \
+        + "run %s and type :help<ENTER>" % util.get_program_name()
+    parser = optparse.OptionParser(version=version.__version__, usage=usage)
 
     parser.add_option("-R",
         action="store_true",
@@ -149,7 +151,7 @@ For more information, run the program and enter :help<ENTER>")
         return
 
     targs = util.Namespace(e=None, tb=[], done=False)
-    atexit.register(cleanup, targs)
+    atexit.register(__cleanup, targs)
     ret = setting.init_user()
     log.init(util.get_program_name())
 
@@ -170,6 +172,7 @@ For more information, run the program and enter :help<ENTER>")
         if isinstance(o.dest, str):
             a = getattr(opts, o.dest, None)
             log.debug("Option %s -> %s" % (o.dest, a))
+
     if ret == -1:
         log.error("Failed to make user directory")
     log.debug(sys.argv)
@@ -177,8 +180,8 @@ For more information, run the program and enter :help<ENTER>")
         util.get_size_string(kernel.get_free_ram()),
         util.get_size_string(kernel.get_total_ram())))
 
-    signal.signal(signal.SIGINT, sigint_handler)
-    signal.signal(signal.SIGTERM, sigterm_handler)
+    signal.signal(signal.SIGINT, __sigint_handler)
+    signal.signal(signal.SIGTERM, __sigterm_handler)
 
     try:
         co = None
@@ -198,6 +201,6 @@ For more information, run the program and enter :help<ENTER>")
             co.cleanup()
 
     if not util.is_running_fileobj():
-        cleanup(targs)
+        __cleanup(targs)
     if targs.e:
         return -1

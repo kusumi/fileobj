@@ -181,7 +181,10 @@ def cleanup(e, tb):
             log.error("Failed to write trace")
 
 def getch():
-    return _scr.getch()
+    if setting.use_getch:
+        return _scr.getch()
+    else:
+        return kbd.QUIT
 
 def refresh():
     clrl()

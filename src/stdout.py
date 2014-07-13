@@ -33,7 +33,7 @@ from . import util
 
 _stdin = sys.stdin
 _attr = None
-_count = 0
+_windows = []
 
 A_DEFAULT   = 0
 A_BOLD      = 1
@@ -47,22 +47,19 @@ class _window (object):
         self.__siz = util.Pair(leny, lenx)
         self.__pos = util.Pair(begy, begx)
         self.__ref = ref
-        self.init()
 
     def init(self):
-        global _count
-        if not _count:
+        if not _windows:
             init_tty()
-        _count += 1
+        _windows.append(self)
         self.__ib = collections.deque()
         self.__ob = collections.deque()
 
     def cleanup(self):
-        global _count
         self.__clear_input()
         self.__clear_output()
-        _count -= 1
-        if not _count:
+        _windows.remove(self)
+        if not _windows:
             cleanup_tty()
 
     def __mkstr(self, y, x, s):
@@ -187,13 +184,16 @@ def init(fg, bg):
         A_FOCUS, A_COLOR
 
 def cleanup():
-    return
+    while _windows:
+        _windows[0].cleanup()
 
 def flash():
     return
 
 def newwin(leny, lenx, begy, begx, ref=None):
-    return _window(leny, lenx, begy, begx, ref)
+    scr = _window(leny, lenx, begy, begx, ref)
+    scr.init()
+    return scr
 
 def has_chgat():
     return True

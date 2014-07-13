@@ -28,6 +28,7 @@ import sys
 def iter_env_name():
     yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
+    yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
     yield "FILEOBJ_USE_STDIN_CBREAK"
     yield "FILEOBJ_USE_FILE_PATH_ATTR"
@@ -48,7 +49,6 @@ def iter_env_name():
     yield "FILEOBJ_COLOR_FG"
     yield "FILEOBJ_COLOR_BG"
     yield "FILEOBJ_USE_LOG"
-    yield "FILEOBJ_USE_LOG_VERBOSE"
     yield "FILEOBJ_LOG_LEVEL"
     yield "FILEOBJ_LOG_PATH"
     yield "FILEOBJ_LOG_BASE"
@@ -174,6 +174,9 @@ def __get_setting_use_test():
 def __get_setting_use_debug():
     return __test_bool("FILEOBJ_USE_DEBUG", False)
 
+def __get_setting_use_getch():
+    return __test_bool("FILEOBJ_USE_GETCH", True)
+
 def __get_setting_use_stdout():
     return __test_bool("FILEOBJ_USE_STDOUT", False)
 
@@ -253,9 +256,6 @@ def __get_setting_color_bg():
 
 def __get_setting_use_log():
     return __test_bool("FILEOBJ_USE_LOG", True)
-
-def __get_setting_use_log_verbose():
-    return __test_bool("FILEOBJ_USE_LOG_VERBOSE", True)
 
 def __get_setting_log_level():
     return __test_name("FILEOBJ_LOG_LEVEL", "WARNING")

@@ -62,16 +62,6 @@ class Workspace (object):
     def __len__(self):
         return len(self.__windows)
 
-    def cleanup(self):
-        for o in self.__vwindows.values():
-            o.cleanup()
-        for o in self.__bwindows.values():
-            o.cleanup()
-        for o in self.__twindows.values():
-            o.cleanup()
-        for o in self.__swindows.values():
-            o.cleanup()
-
     def __set_window(self, con):
         # virtual window comes first
         cls = util.get_class(con)

@@ -56,12 +56,6 @@ class _panel (object):
         self.scr = screen.alloc(
             siz[0], siz[1], pos[0], pos[1], self)
 
-    def cleanup(self):
-        try:
-            self.scr.cleanup()
-        except AttributeError:
-            pass
-
     def get_size_y(self):
         return self.scr.getmaxyx()[0]
 
