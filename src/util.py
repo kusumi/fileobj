@@ -528,6 +528,9 @@ def is_same_file(a, b):
     else:
         return False
 
+def get_inode(f):
+    return os.stat(f).st_ino
+
 def open_file(f, mode='r'):
     return open(f, mode + 'b')
 

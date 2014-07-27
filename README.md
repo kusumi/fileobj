@@ -1,4 +1,4 @@
-fileobj ([v0.6.21](https://github.com/kusumi/fileobj/releases/tag/v0.6.21))
+fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
 =======
 
 ## About
@@ -35,7 +35,7 @@ fileobj ([v0.6.21](https://github.com/kusumi/fileobj/releases/tag/v0.6.21))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.21
+        v0.6.22
         $ fileobj
 
 ## Uninstall
@@ -157,11 +157,10 @@ fileobj ([v0.6.21](https://github.com/kusumi/fileobj/releases/tag/v0.6.21))
         :sector         Print sector size for block device
         :self           Print current console instance string
         :set            Set option
+                address Set address radix to arg [16|10|8]
+                status  Set buffer size and current position to arg [16|10|8]
                 binary  Set binary edit mode (unset ascii edit mode)
                 ascii   Set ascii edit mode (unset binary edit mode)
-                hex     Set output radix to hexadecimal
-                dec     Set output radix to decimal
-                oct     Set output radix to octal
                 ic      Set ic mode (ignore the case of alphabets on search)
                 noic    Unset ic mode
                 le      Set endianness to little (unset big endian if set)
@@ -245,6 +244,7 @@ fileobj ([v0.6.21](https://github.com/kusumi/fileobj/releases/tag/v0.6.21))
           -h, --help         show this help message and exit
           -R                 Read only mode
           -B                 Buffer allocation mode
+          -x                 Show buffer size and current position in hexadecimal
           -o <num>           Open <num> windows
           -O                 Open each buffer in different window
           --width=<width>    Set window width [[0-9]+|max|min|auto]

@@ -254,7 +254,7 @@ def __go_prev_matched(self, cnt, fn):
 def start_read_delayed_input(self, amp, ope, args, raw):
     self.co.start_read_delayed_input(
         literal.bracket2_beg.seq[0], literal.bracket2_end.seq[0])
-    self.co.show(util.to_chr_repr(ope[0]))
+    self.co.show(ope[0])
 
 def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
@@ -363,13 +363,6 @@ def remove_other_workspace(self, amp, ope, args, raw):
     if self.co.remove_other_workspace() != -1:
         self.co.repaint()
 
-def __set_oct(self, args):
-    setting.offset_num_radix = 8
-def __set_dec(self, args):
-    setting.offset_num_radix = 10
-def __set_hex(self, args):
-    setting.offset_num_radix = 16
-
 def __set_binary(self, args):
     setting.editmode = 'B'
 def __set_ascii(self, args):
@@ -395,6 +388,26 @@ def __set_si(self, args):
 def __set_nosi(self, args):
     setting.use_siprefix = False
 
+def __set_address(self, args):
+    __set_radix_arg(self, args, "address_num_radix")
+def __set_status(self, args):
+    __set_radix_arg(self, args, "status_num_radix")
+
+def __set_radix_arg(self, args, name):
+    if len(args) == 1:
+        self.co.show(getattr(setting, name))
+        return
+    try:
+        radix = args[1]
+        x = int(radix)
+    except Exception:
+        self.co.flash("Invalid arg: %s" % radix)
+        return
+    if x in (16, 10, 8):
+        setattr(setting, name, x)
+    else:
+        self.co.flash("Invalid arg: %d" % x)
+
 def __set_width(self, args):
     prev = self.co.get_bytes_per_line()
     if len(args) == 1:
@@ -407,20 +420,19 @@ def __set_width(self, args):
         self.co.repaint()
 
 _set_methods = {
-    literal.s_set_oct.seq:    __set_oct,
-    literal.s_set_dec.seq:    __set_dec,
-    literal.s_set_hex.seq:    __set_hex,
-    literal.s_set_binary.seq: __set_binary,
-    literal.s_set_ascii.seq:  __set_ascii,
-    literal.s_set_le.seq:     __set_le,
-    literal.s_set_be.seq:     __set_be,
-    literal.s_set_ws.seq:     __set_ws,
-    literal.s_set_nows.seq:   __set_nows,
-    literal.s_set_ic.seq:     __set_ic,
-    literal.s_set_noic.seq:   __set_noic,
-    literal.s_set_si.seq:     __set_si,
-    literal.s_set_nosi.seq:   __set_nosi,
-    literal.s_set_width.seq:  __set_width, }
+    literal.s_set_binary.seq:  __set_binary,
+    literal.s_set_ascii.seq:   __set_ascii,
+    literal.s_set_le.seq:      __set_le,
+    literal.s_set_be.seq:      __set_be,
+    literal.s_set_ws.seq:      __set_ws,
+    literal.s_set_nows.seq:    __set_nows,
+    literal.s_set_ic.seq:      __set_ic,
+    literal.s_set_noic.seq:    __set_noic,
+    literal.s_set_si.seq:      __set_si,
+    literal.s_set_nosi.seq:    __set_nosi,
+    literal.s_set_address.seq: __set_address,
+    literal.s_set_status.seq:  __set_status,
+    literal.s_set_width.seq:   __set_width, }
 
 def set_option(self, amp, ope, args, raw):
     if not args:

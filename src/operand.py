@@ -267,7 +267,7 @@ class Operand (object):
             if self.__pos < self.__get_tail_cursor():
                 self.__pos += 1
             return False
-        elif x == kbd.BACKSPACE or x == kbd.BACKSPACE2:
+        elif x in kbd.get_backspaces():
             self.__backspace_slow()
             return False
         elif x == kbd.DELETE:
@@ -393,7 +393,7 @@ class Operand (object):
             s = _to_string(self.__buf)
             return literal.InvalidLiteral(s, None, '')
 
-_arrows = list(kbd.ARROWS)
+_arrows = list(kbd.get_arrows())
 _arrows.append(util.ctrl('p'))
 _arrows.append(util.ctrl('n'))
 _null, _fast, _slow = range(3)

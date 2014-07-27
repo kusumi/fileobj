@@ -25,7 +25,7 @@ from __future__ import division
 import os
 import sys
 
-def iter_env_name():
+def __iter_env_name():
     yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_GETCH"
@@ -66,8 +66,9 @@ def iter_env_name():
     yield "FILEOBJ_USE_SINGLE_OPERATION"
     yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
-    yield "FILEOBJ_OFFSET_NUM_WIDTH"
-    yield "FILEOBJ_OFFSET_NUM_RADIX"
+    yield "FILEOBJ_ADDRESS_NUM_WIDTH"
+    yield "FILEOBJ_ADDRESS_NUM_RADIX"
+    yield "FILEOBJ_STATUS_NUM_RADIX"
     yield "FILEOBJ_EDITMODE"
     yield "FILEOBJ_ENDIANNESS"
     yield "FILEOBJ_USE_WRAPSCAN"
@@ -108,14 +109,15 @@ def iter_env_name():
     yield "FILEOBJ_KEY_DELETE"
     yield "FILEOBJ_KEY_RESIZE"
 
+def iter_env_name():
+    for x in _envs_name:
+        yield x
+
 def get_setting(envname):
-    if envname in _envs_name:
-        funcname = "__get_setting_%s" % \
-            env_to_setting_name(envname)
-        fn = getattr(this, funcname)
-        return fn()
-    else:
-        assert 0, "Invalid env: %s" % envname
+    funcname = "__get_setting_%s" % \
+        env_to_setting_name(envname)
+    fn = getattr(this, funcname)
+    return fn()
 
 def env_to_setting_name(s):
     return s[len("FILEOBJ_"):].lower()
@@ -316,21 +318,26 @@ def __get_setting_ram_thresh_ratio():
 def __get_setting_use_even_size_window():
     return __test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
-def __get_setting_offset_num_width():
-    return __test_gt_zero_or_default("FILEOBJ_OFFSET_NUM_WIDTH", 8)
+def __get_setting_address_num_width():
+    return __test_gt_zero_or_default("FILEOBJ_ADDRESS_NUM_WIDTH", 8)
 
-def __get_setting_offset_num_radix():
-    e = __getenv("FILEOBJ_OFFSET_NUM_RADIX")
-    _ = 16
+def __get_setting_address_num_radix():
+    return __get_setting_radix("FILEOBJ_ADDRESS_NUM_RADIX", 16)
+
+def __get_setting_status_num_radix():
+    return __get_setting_radix("FILEOBJ_STATUS_NUM_RADIX", 10)
+
+def __get_setting_radix(envname, default):
+    e = __getenv(envname)
     if e is None:
-        return _
+        return default
     try:
         x = int(e)
-        if x in (8, 10, 16):
+        if x in (16, 10, 8):
             return x
     except Exception:
         pass
-    return _
+    return default
 
 def __get_setting_editmode():
     e = __getenv("FILEOBJ_EDITMODE")
@@ -529,9 +536,9 @@ def print_env():
 def __getenv(envname):
     return getattr(this, envname)
 
-_envs_name = tuple(iter_env_name())
+_envs_name = tuple(sorted(__iter_env_name()))
 this = sys.modules[__name__]
 
-for _ in _envs_name:
+for _ in iter_env_name():
     setattr(this, _, os.getenv(_))
 del _

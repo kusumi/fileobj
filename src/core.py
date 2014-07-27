@@ -78,6 +78,10 @@ def dispatch(optargs=None):
         action="store_true",
         default=False,
         help="Buffer allocation mode")
+    parser.add_option("-x",
+        action="store_true",
+        default=False,
+        help="Show buffer size and current position in hexadecimal")
     parser.add_option("-o",
         type="int",
         default=1,
@@ -162,6 +166,8 @@ def dispatch(optargs=None):
         allocator.set_default_buffer_class()
     if opts.R:
         setting.use_readonly = True
+    if opts.x:
+        setting.status_num_radix = 16
     wspnum = opts.o
     if opts.O:
         wspnum = len(args)
