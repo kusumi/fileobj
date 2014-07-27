@@ -77,13 +77,13 @@ class Container (object):
             16: "{0:X}",
             10: "{0:d}",
             8 : "{0:o}",
-        }.get(setting.offset_num_radix)
+        }.get(setting.address_num_radix)
         s = fmt.format(
             max([o.get_size() for o in self.__fileobjs]))
-        if len(s) > setting.offset_num_width:
+        if len(s) > setting.address_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):
-                    setting.offset_num_width = x
+                    setting.address_num_width = x
                     break
 
         self.__workspaces.append(workspace.Workspace(width))
@@ -581,18 +581,23 @@ class Container (object):
         self.add_delayed_input(x)
 
     def end_read_delayed_input(self):
-        l = [util.to_chr_repr(n) for n in self.__delayed_input[1:-1]]
+        l = [chr(x) for x in self.__delayed_input[1:-1]]
         self.clear_delayed_input()
         return ''.join(l)
 
     def add_delayed_input(self, x):
-        self.__delayed_input.append(x)
-        l = [util.to_chr_repr(n) for n in self.__delayed_input]
+        if util.is_graph(x):
+            self.__delayed_input.append(x)
+        elif x == kbd.ESCAPE:
+            self.clear_delayed_input()
+        elif x in kbd.get_backspaces():
+            if len(self.__delayed_input) > 1:
+                self.__delayed_input.pop()
+            else:
+                self.clear_delayed_input()
+        l = [chr(i) for i in self.__delayed_input]
         self.show(''.join(l))
         if x == self.__delayed_input_term:
-            return self.__delayed_input_term
-        elif not util.is_graph(x):
-            self.clear_delayed_input()
             return x
         else:
             return kbd.ERROR

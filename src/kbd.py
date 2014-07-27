@@ -114,10 +114,14 @@ BACKSPACE  = KEY_DEAD(11)
 BACKSPACE2 = KEY_DEAD(12)
 DELETE     = KEY_DEAD(13)
 RESIZE     = KEY_DEAD(14)
-ARROWS     = DOWN, UP, LEFT, RIGHT
+
+def get_backspaces():
+    return BACKSPACE, BACKSPACE2
+
+def get_arrows():
+    return DOWN, UP, LEFT, RIGHT
 
 def init(term):
-    global ARROWS
     l = get_code(term, setting.use_stdout)
     for i, s in enumerate(iter_kbd_name()):
         config = getattr(setting, "key_" + s.lower())
@@ -125,7 +129,6 @@ def init(term):
             setattr(this, s, config)
         else:
             setattr(this, s, l[i])
-    ARROWS = DOWN, UP, LEFT, RIGHT
 
 this = sys.modules[__name__]
 init(os.getenv("TERM"))

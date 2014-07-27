@@ -117,7 +117,7 @@ class binary_addon (object):
     def get_cell(self):
         return 3, 1
     def get_offset(self):
-        return 1, setting.offset_num_width + 3
+        return 1, setting.address_num_width + 3
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
@@ -329,7 +329,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             16: "|{0}| ",
             10: " {0}| ",
             8 : "<{0}> ", }
-        n = setting.offset_num_width
+        n = setting.address_num_width
         self.__lstr_fmt = {
             16: "{{0:0{0}X}}".format(n),
             10: "{{0:{0}d}}".format(n),
@@ -390,12 +390,12 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.offset_num_radix].format(n)
+        return self.__cstr[setting.address_num_radix].format(n)
 
     def __get_line_posstr(self, n):
-        return self.__lstr[setting.offset_num_radix].format(
-            self.__lstr_fmt[setting.offset_num_radix].format(
-                n)[-setting.offset_num_width:])
+        return self.__lstr[setting.address_num_radix].format(
+            self.__lstr_fmt[setting.address_num_radix].format(
+                n)[-setting.address_num_width:])
 
 class TextCanvas (DisplayCanvas, text_addon):
     def __init__(self, siz, pos):
@@ -440,9 +440,16 @@ class TextCanvas (DisplayCanvas, text_addon):
         self.printl(0, self.offset.x, s, screen.A_UNDERLINE)
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.offset_num_radix].format(n)[-1]
+        return self.__cstr[setting.address_num_radix].format(n)[-1]
 
 class StatusCanvas (Canvas, default_addon):
+    def __init__(self, siz, pos):
+        super(StatusCanvas, self).__init__(siz, pos)
+        self.__nstr = {
+            16: "0x{0:X}",
+            10: "{0:d}",
+            8 : "0{0:o}", }
+
     def set_buffer(self, fileops):
         super(StatusCanvas, self).set_buffer(fileops)
         if self.fileops:
@@ -490,9 +497,11 @@ class StatusCanvas (Canvas, default_addon):
         per = "{0:.1f}".format(self.fileops.get_pos_percentage())
         if per.endswith(".0"):
             per = per[:-2]
+        siz = self.fileops.get_size()
         pos = self.fileops.get_pos()
+        fmt = self.__nstr[setting.status_num_radix]
         s += "{0}[B] {1:>4}% {2}".format(
-            self.fileops.get_size(), per, pos)
+            fmt.format(siz), per, fmt.format(pos))
         x = self.fileops.read(pos, 1)
         if x:
             n = filebytes.ord(x)

@@ -313,9 +313,6 @@ s_qneg        = SlowLiteral(":q!", None, "Close current window if >1 windows exi
 s_fsearch     = SearchLiteral('/', None, "Search forward. e.g. '/\\x12Python\\x34', '/\\X1234'")
 s_rsearch     = SearchLiteral('?', None, "Search backward. e.g. '?\\x12Python\\x34', '?\\X1234'")
 
-s_set_hex     = ArgLiteral("hex", None, "Set output radix to hexadecimal")
-s_set_dec     = ArgLiteral("dec", None, "Set output radix to decimal")
-s_set_oct     = ArgLiteral("oct", None, "Set output radix to octal")
 s_set_binary  = ArgLiteral("binary", None, "Set binary edit mode (unset ascii edit mode)")
 s_set_ascii   = ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)")
 s_set_le      = ArgLiteral("le", None, "Set endianness to little (unset big endian if set)")
@@ -326,6 +323,8 @@ s_set_ic      = ArgLiteral("ic", None, "Set ic mode (ignore the case of alphabet
 s_set_noic    = ArgLiteral("noic", None, "Unset ic mode")
 s_set_si      = ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)")
 s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)")
+s_set_address = ArgLiteral("address", None, "Set address radix to arg [16|10|8]")
+s_set_status  = ArgLiteral("status", None, "Set buffer size and current position to arg [16|10|8]")
 s_set_width   = ArgLiteral("width", None, "Set window width to arg [[0-9]+|max|min|auto]")
 
 def get_slow_strings():
@@ -395,20 +394,20 @@ def init():
     if _tree_root.children:
         return -1
 
-    for o in util.iter_site_ext_module():
-        fn = getattr(o, "get_text", None)
+    for _ in util.iter_site_ext_module():
+        fn = getattr(_, "get_text", None)
         if fn:
             try:
-                desc = o.get_description()
+                desc = _.get_description()
             except Exception:
                 desc = ''
-            s = o.__name__.rpartition('.')[2]
+            s = _.__name__.rpartition('.')[2]
             li = ExtLiteral(':' + s, fn, desc)
             setattr(this, "s_" + s, li)
 
-    for o in util.iter_dir_values(this):
-        if isinstance(o, Literal):
-            o.init()
+    for _ in util.iter_dir_values(this):
+        if isinstance(_, Literal):
+            _.init()
 
     # alias
     k.alias(up)
@@ -488,11 +487,6 @@ def init():
     s_bdelete.refer(s_e)
     s_delmarksneg.refer(s_delmarks)
     s_rsearch.refer(s_fsearch)
-    s_set_oct.refer(
-        s_set_dec.refer(
-            s_set_hex.refer(s_set)
-        )
-    )
     s_set_ascii.refer(
         s_set_binary.refer(s_set)
     )
@@ -507,6 +501,9 @@ def init():
     )
     s_set_nosi.refer(
         s_set_si.refer(s_set)
+    )
+    s_set_status.refer(
+        s_set_address.refer(s_set)
     )
     s_set_width.refer(s_set)
 

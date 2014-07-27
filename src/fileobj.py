@@ -55,17 +55,34 @@ class FileobjError (util.GenericError):
 
 class Fileobj (object):
     def __init__(self, f, offset, length):
+        self.__uniq = -1
         self.__path = path.Path(f)
         self.__attr = fileattr.get(self.get_path())
         self.__attr.offset, self.__attr.length = \
             self.__parse_mapping_attributes(offset, length)
         self.__clear_barrier()
         self.init()
+        self.__init_unique()
 
     def init(self):
         return
     def cleanup(self):
         return
+
+    def __init_unique(self):
+        try:
+            self.__uniq = util.get_inode(self.get_path())
+        except Exception as e:
+            log.debug(e)
+
+    def __test_unique(self, f):
+        if self.__uniq == -1:
+            return True
+        try:
+            return self.__uniq == util.get_inode(f)
+        except Exception as e:
+            log.debug(e)
+            return True
 
     def set_magic(self):
         if not setting.use_magic_scan:
@@ -117,6 +134,8 @@ class Fileobj (object):
         util.raise_no_impl("get_size")
     def get_sector_size(self):
         return -1
+    def get_uniq(self):
+        return self.__uniq
     def get_path(self):
         return self.__path.path
     def get_short_path(self):
@@ -163,6 +182,10 @@ class Fileobj (object):
                 raise FileobjError("Read only")
         elif os.path.exists(f):
             raise FileobjError(f + " exists")
+
+        if this == f and not self.__test_unique(f):
+            raise FileobjError(
+                "The buffer has been changed since reading it!!!")
 
         o = path.Path(f)
         f = o.path

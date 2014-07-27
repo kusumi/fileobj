@@ -70,6 +70,8 @@ class Fileops (object):
             self.__ref.get_barrier_delta()
     def get_sector_size(self):
         return self.__ref.get_sector_size()
+    def get_uniq(self):
+        return self.__ref.get_uniq()
     def get_path(self):
         return self.__ref.get_path()
     def get_short_path(self):
