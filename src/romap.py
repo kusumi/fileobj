@@ -116,8 +116,7 @@ class Fileobj (fileobj.Fileobj):
             mmap.MAP_SHARED, self.__get_mmap_prot())
 
     def __do_mmap_at(self, fileno, offset, length):
-        mask = ~(util.PAGE_SIZE - 1)
-        start = offset & mask
+        start = util.align_head(offset, util.PAGE_SIZE)
         delta = offset - start
         assert start % mmap.ALLOCATIONGRANULARITY == 0, start
         self.__set_delta(delta, offset)
@@ -154,6 +153,8 @@ class Fileobj (fileobj.Fileobj):
             ret = self.map.find(s, x + d)
             if ret >= 0:
                 ret -= d
+            else:
+                ret = fileobj.NOTFOUND
         screen.cli()
         return ret
 
@@ -161,16 +162,16 @@ class Fileobj (fileobj.Fileobj):
         n = util.PAGE_SIZE
         while True:
             if end != -1 and x >= end:
-                return -1
+                return fileobj.NOTFOUND
             b = self.read(x, n)
             pos = util.find_string(b, s)
             if pos >= 0:
                 return x + pos
             elif x + len(b) >= self.get_size():
-                return -1
+                return fileobj.NOTFOUND
             x += (n - len(s))
             if screen.test_signal():
-                return -2
+                return fileobj.INTERRUPT
 
     def rsearch(self, x, s, end=-1):
         s = util.str_to_bytes(s)
@@ -181,13 +182,15 @@ class Fileobj (fileobj.Fileobj):
             ret = self.map.rfind(s, 0, x + d + 1)
             if ret >= 0:
                 ret -= d
+            else:
+                ret = fileobj.NOTFOUND
         screen.cli()
         return ret
 
     def __rfind(self, x, s, end):
         while True:
             if end != -1 and x <= end:
-                return -1
+                return fileobj.NOTFOUND
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
@@ -198,10 +201,10 @@ class Fileobj (fileobj.Fileobj):
             if pos >= 0:
                 return i + pos
             elif not i:
-                return -1
+                return fileobj.NOTFOUND
             x -= (n - len(s))
             if screen.test_signal():
-                return -2
+                return fileobj.INTERRUPT
 
     def read(self, x, n):
         x += self.get_mmap_offset()

@@ -142,7 +142,9 @@ class Container (object):
             con = None
         self.__cur_workspace.set_console(con, arg)
 
-    def __get_console(self, cls=workspace.def_console_class):
+    def __get_console(self, cls=None):
+        if not cls:
+            cls = workspace.get_default_console()
         if cls not in self.__consoles:
             self.__consoles[cls] = cls(self, self.__operand)
         return self.__consoles[cls]
@@ -157,11 +159,17 @@ class Container (object):
 
     def __alloc_buffer(self, f):
         if not self.has_buffer(f):
-            o = allocator.alloc(f)
+            o = self.alloc_fileobj(f)
             if o:
                 return o
             if not self.has_buffer(''):
-                return allocator.alloc('') # never fail
+                return self.alloc_fileobj('') # never fail
+
+    def alloc_fileobj(self, f):
+        try:
+            return allocator.alloc(f)
+        except allocator.AllocatorError, e:
+            self.flash(e)
 
     def add_buffer(self, f):
         """Add buffer and make current workspace focus that"""
@@ -277,7 +285,7 @@ class Container (object):
                     self.flash("Not enough room")
                     return ret
             if setting.use_even_size_window:
-                screen.refresh()
+                screen.clear()
             return self.__build(False)
 
     def __build(self, dry):
@@ -457,7 +465,7 @@ class Container (object):
     def resize(self):
         x = screen.get_size_x()
         screen.update_size()
-        screen.refresh()
+        screen.clear()
         if screen.get_size_x() != x:
             if self.is_gt_max_width():
                 self.set_bytes_per_line("max")

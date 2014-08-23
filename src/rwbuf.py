@@ -21,18 +21,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import with_statement
 import os
 
 from . import filebytes
 from . import fileobj
 from . import log
-from . import robuf
+from . import rrbuf
 from . import setting
-from . import stash
-from . import util
 
-class Fileobj (robuf.Fileobj):
+class Fileobj (rrbuf.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
@@ -41,7 +38,6 @@ class Fileobj (robuf.Fileobj):
 
     def __init__(self, f, offset=0, length=0):
         self.__count = 0
-        self.__dirty = False
         super(Fileobj, self).__init__(f, offset, length)
 
     def init(self):
@@ -51,59 +47,16 @@ class Fileobj (robuf.Fileobj):
         else:
             self.init_chunk(filebytes.BLANK)
 
-    def clear_dirty(self):
-        self.__dirty = False
-
-    def is_dirty(self):
-        return self.__dirty
-
-    def sync(self):
-        hdr = self.__read_unmapped_header()
-        trr = self.__read_unmapped_trailer()
-        try:
-            f = self.get_path()
-            tmp = stash.TemporaryFile(f, unlink=True)
-            with util.open_file(f, 'w') as fd:
-                if hdr:
-                    fd.write(hdr)
-                fd.write(self.read(0, self.get_size()))
-                if trr:
-                    fd.write(trr)
-                util.fsync(fd)
-        except Exception:
-            if tmp:
-                tmp.restore()
-            raise
-        finally:
-            if tmp:
-                tmp.cleanup()
-
-    def __read_unmapped_header(self):
-        offset = self.get_mapping_offset()
-        if not offset:
-            return filebytes.BLANK
-        with util.open_file(self.get_path()) as fd:
-            return fd.read(offset)
-
-    def __read_unmapped_trailer(self):
-        length = self.get_mapping_length()
-        if not length:
-            return filebytes.BLANK
-        with util.open_file(self.get_path()) as fd:
-            fd.seek(self.get_mapping_offset() + length)
-            return fd.read()
-
     def __sync_size(self, o, delta):
         for i in range(self.cbuf.index(o) + 1, len(self.cbuf)):
             self.cbuf[i].offset += delta
         self.set_size(self.get_size() + delta)
 
     def __test_balance(self, iosize):
-        if iosize >= setting.robuf_chunk_size:
+        if iosize >= self.get_chunk_size():
             return True
         self.__count += 1
-        if self.__count == \
-            setting.rwbuf_chunk_balance_interval:
+        if self.__count == setting.rwbuf_chunk_balance_interval:
             self.__count = 0
             return True
         else:
@@ -112,11 +65,11 @@ class Fileobj (robuf.Fileobj):
     def __balance_chunk(self):
         for o in self.cbuf:
             if len(o) < setting.rwbuf_chunk_size_low:
-                if self.__merge_chunk(o, setting.robuf_chunk_size) != -1:
+                if self.__merge_chunk(o, self.get_chunk_size()) != -1:
                     break
         for o in self.cbuf:
             if len(o) > setting.rwbuf_chunk_size_high:
-                if self.__split_chunk(o, setting.robuf_chunk_size) != -1:
+                if self.__split_chunk(o, self.get_chunk_size()) != -1:
                     break
         if setting.use_debug:
             l = [len(o) for o in self.cbuf]
@@ -169,7 +122,7 @@ class Fileobj (robuf.Fileobj):
         o = self.cbuf[self.get_chunk_index(x)]
         n = o.insert(x, l)
         self.__sync_size(o, n)
-        self.__dirty = True
+        self.set_dirty()
         if self.__test_balance(len(l)):
             self.__balance_chunk()
         if rec:
@@ -190,8 +143,8 @@ class Fileobj (robuf.Fileobj):
         buf = []
         oldsize = self.get_size()
         endsize = len(self.cbuf[-1])
-        for i in range(self.get_chunk_index(x), len(self.cbuf)):
-            ret, orig = self.cbuf[i].replace(x, l)
+        for o in self.iter_chunk(x):
+            ret, orig = o.replace(x, l)
             if rec:
                 buf.extend(orig) # str or int
             l = l[ret:]
@@ -200,11 +153,11 @@ class Fileobj (robuf.Fileobj):
                 delta = len(self.cbuf[-1]) - endsize
                 if delta:
                     self.__sync_size(self.cbuf[-1], delta)
-                self.__dirty = True
+                self.set_dirty()
                 if self.__test_balance(len(ll)):
                     self.__balance_chunk()
                 if rec:
-                    ubuf = _seq_to_ords(buf)
+                    ubuf = self.seq_to_ords(buf)
                     rbuf = ll[:len(ubuf)]
                     newsize = self.get_size()
                     if newsize == oldsize:
@@ -233,8 +186,7 @@ class Fileobj (robuf.Fileobj):
         xx, nn = x, n
         buf = []
         dead = []
-        for i in range(self.get_chunk_index(x), len(self.cbuf)):
-            o = self.cbuf[i]
+        for o in self.iter_chunk(x):
             ret, orig = o.delete(x, n)
             if rec:
                 buf.extend(orig) # str or int
@@ -255,11 +207,11 @@ class Fileobj (robuf.Fileobj):
             o.offset = size
             size += len(o)
         self.set_size(size)
-        self.__dirty = True
+        self.set_dirty()
         if self.__test_balance(nn):
             self.__balance_chunk()
         if rec:
-            buf = _seq_to_ords(buf)
+            buf = self.seq_to_ords(buf)
             def ufn(ref):
                 ref.insert(xx, buf, False)
                 return xx
@@ -267,10 +219,3 @@ class Fileobj (robuf.Fileobj):
                 ref.delete(xx, nn, False)
                 return xx
             self.add_undo(ufn, rfn)
-
-# adaptive version of filebytes.seq_to_ords()
-def _seq_to_ords(l):
-    if isinstance(l[0], filebytes.TYPE):
-        return filebytes.seq_to_ords(l)
-    else:
-        return tuple(l)

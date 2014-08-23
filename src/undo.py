@@ -23,6 +23,9 @@
 
 from . import util
 
+ERROR    = -1
+NOTFOUND = -2
+
 class Undo (object):
     def __init__(self):
         self.__undoredo = []
@@ -69,27 +72,43 @@ class Undo (object):
 
     def undo(self, ref):
         if self.__cursor > 0:
-            self.__cursor -= 1
-            ufn, rfn = self.__undoredo[self.__cursor]
-            if self.__base != -1 and self.__cursor >= self.__base:
-                self.__rollback.pop()
-            else:
-                self.__rollback.append((rfn, +1))
-            return ufn(ref), self.__cursor == self.__base
+            ret, msg, rfn = self.__undo(ref, self.__cursor - 1)
+            if ret != ERROR:
+                self.__cursor -= 1
+                if self.__base != -1 and self.__cursor >= self.__base:
+                    self.__rollback.pop()
+                else:
+                    self.__rollback.append((rfn, +1))
+            return ret, self.__cursor == self.__base, msg
         else:
-            return -1, False
+            return NOTFOUND, False, ''
+
+    def __undo(self, ref, index):
+        try:
+            ufn, rfn = self.__undoredo[index]
+            return ufn(ref), '', rfn
+        except Exception, e:
+            return ERROR, str(e), None
 
     def redo(self, ref):
         if self.__cursor < len(self):
-            ufn, rfn = self.__undoredo[self.__cursor]
-            self.__cursor += 1
-            if self.__base != -1 and self.__cursor <= self.__base:
-                self.__rollback.pop()
-            else:
-                self.__rollback.append((ufn, -1))
-            return rfn(ref), self.__cursor == self.__base
+            ret, msg, ufn = self.__redo(ref, self.__cursor)
+            if ret != ERROR:
+                self.__cursor += 1
+                if self.__base != -1 and self.__cursor <= self.__base:
+                    self.__rollback.pop()
+                else:
+                    self.__rollback.append((ufn, -1))
+            return ret, self.__cursor == self.__base, msg
         else:
-            return -1, False
+            return NOTFOUND, False, ''
+
+    def __redo(self, ref, index):
+        try:
+            ufn, rfn = self.__undoredo[index]
+            return rfn(ref), '', ufn
+        except Exception, e:
+            return ERROR, str(e), None
 
     def get_undo_size(self):
         return self.__cursor
@@ -100,13 +119,14 @@ class Undo (object):
     def get_rollback_log_size(self):
         return len(self.__rollback)
 
-    def update_base(self):
+    def sync_base_pointer(self):
         """Throw away log and overwrite base with current"""
         total = 0
         while self.__rollback:
             fn, delta = self.__rollback.pop()
             total += delta
-        assert self.__cursor + total == self.__base
+        if self.__base != -1:
+            assert self.__cursor + total == self.__base
         self.__base = self.__cursor
         return total
 
@@ -118,5 +138,6 @@ class Undo (object):
             total += delta
             fn(ref)
         self.__cursor += total
-        assert self.__cursor == self.__base
+        if self.__base != -1:
+            assert self.__cursor == self.__base
         return total

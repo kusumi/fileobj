@@ -21,10 +21,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import libc
 from . import log
 from . import netbsd
 from . import path
+from . import setting
 from . import util
+
+PT_READ_I   = 1
+PT_READ_D   = 2
+PT_WRITE_I  = 4
+PT_WRITE_D  = 5
+PT_CONTINUE = 7
+PT_KILL     = 8
+PT_ATTACH   = 9
+PT_DETACH   = 10
 
 def get_blkdev_info(fd):
     return netbsd.get_blkdev_info(fd)
@@ -48,5 +59,50 @@ def get_free_ram():
 def is_blkdev(f):
     return path.is_blkdev(f)
 
+def is_blkdev_supported():
+    return True
+
 def has_mremap():
     return False
+
+def has_pid(pid):
+    return netbsd.has_pid(pid)
+
+def get_pid_name(pid):
+    return netbsd.get_pid_name(pid)
+
+def is_pid_path_supported():
+    return setting.use_vm_non_linux and libc.has_ptrace()
+
+def ptrace_peektext(pid, addr):
+    return libc.ptrace(PT_READ_I, pid, addr, None)
+
+def ptrace_peekdata(pid, addr):
+    return libc.ptrace(PT_READ_D, pid, addr, None)
+
+def ptrace_poketext(pid, addr, data):
+    return libc.ptrace(PT_WRITE_I, pid, addr, data)
+
+def ptrace_pokedata(pid, addr, data):
+    return libc.ptrace(PT_WRITE_D, pid, addr, data)
+
+def ptrace_cont(pid):
+    return libc.ptrace(PT_CONTINUE, pid, 1, 0)
+
+def ptrace_kill(pid):
+    return libc.ptrace(PT_KILL, pid, None, None)
+
+def ptrace_attach(pid):
+    return libc.ptrace(PT_ATTACH, pid, None, None)
+
+def ptrace_detach(pid):
+    return libc.ptrace(PT_DETACH, pid, 1, 0)
+
+ptrace_peek = ptrace_peektext
+ptrace_poke = ptrace_poketext
+
+def get_ptrace_word_size():
+    return libc.get_ptrace_data_size()
+
+def init():
+    libc.init_ptrace("int")

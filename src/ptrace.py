@@ -21,68 +21,52 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import kernel
 from . import util
 
-_ = util.str_to_bytes
+ERROR = None
 
-def input_to_bytes(l):
-    return util.str_to_bytes(
-        ''.join([chr(x) for x in l]))
+def _I(ret, err):
+    if ret is None or ret == -1:
+        ret = ERROR
+    return ret, err
 
-def __ord_2k(b):
-    return __builtin_ord(b)
+def _B(ret, err):
+    if ret is None:
+        ret = ERROR
+    else:
+        ret = util.int_to_host(ret, get_word_size())
+    return ret, err
 
-def __ord_3k(b):
-    return b[0]
+def peektext(pid, addr):
+    return _B(*kernel.ptrace_peektext(pid, addr))
 
-def join(l):
-    return BLANK.join(l)
+def peekdata(pid, addr):
+    return _B(*kernel.ptrace_peekdata(pid, addr))
 
-def __split_2k(b):
-    return list(b)
+def poketext(pid, addr, data):
+    return _I(*kernel.ptrace_poketext(pid, addr, data))
 
-def __split_3k(b):
-    return [b[i : i + 1] for i in range(len(b))]
+def pokedata(pid, addr, data):
+    return _I(*kernel.ptrace_pokedata(pid, addr, data))
 
-def __iter_2k(b):
-    for x in b:
-        yield x
+def cont(pid):
+    return _I(*kernel.ptrace_cont(pid))
 
-def __iter_3k(b):
-    for i in range(len(b)):
-        yield b[i : i + 1]
+def kill(pid):
+    return _I(*kernel.ptrace_kill(pid))
 
-def __riter_2k(b):
-    for x in reversed(b):
-        yield x
+def attach(pid):
+    return _I(*kernel.ptrace_attach(pid))
 
-def __riter_3k(b):
-    for i in reversed(range(len(b))):
-        yield b[i : i + 1]
+def detach(pid):
+    return _I(*kernel.ptrace_detach(pid))
 
-def ords(b, cls=tuple):
-    return cls(ord(x) for x in iter(b))
+def peek(pid, addr):
+    return _B(*kernel.ptrace_peek(pid, addr))
 
-def seq_to_ords(l, cls=tuple):
-    return cls(ord(x) for x in l)
+def poke(pid, addr, data):
+    return _I(*kernel.ptrace_poke(pid, addr, data))
 
-def pad(x):
-    return ZERO * x
-
-if util.is_python2():
-    from __builtin__ import ord as __builtin_ord
-    TYPE = str
-    ZERO = "\x00"
-    BLANK = ''
-    ord = __ord_2k
-    split = __split_2k
-    iter = __iter_2k
-    riter = __riter_2k
-else:
-    TYPE = None
-    ZERO = _("\x00")
-    BLANK = _('')
-    ord = __ord_3k
-    split = __split_3k
-    iter = __iter_3k
-    riter = __riter_3k
+def get_word_size():
+    return kernel.get_ptrace_word_size()

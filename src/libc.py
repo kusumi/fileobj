@@ -21,10 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import struct
+import errno
 import sys
 
-# taken from linux Python 3.4 ctypes
+from . import setting
+
+# taken from Linux Python 3.4 ctypes
 def iter_type_name():
     yield "c_bool"
     yield "c_byte"
@@ -57,41 +59,82 @@ def iter_type_name():
     yield "c_wchar"
     yield "c_wchar_p"
 
-def __normalize_name(s):
-    if s.startswith("c_"):
-        s = s[2:]
-    return s
+TYPE_PREFIX = "c_"
 
-def __init_ctypes():
+def __init_libc():
+    global _libc, get_errno
+    name = ctypes.util.find_library("c")
+    _libc = ctypes.CDLL(name, use_errno=True)
+    def get_errno():
+        ret = ctypes.get_errno()
+        ctypes.set_errno(0)
+        return ret
+
+def get_errno():
+    return errno.EPERM
+
+def init_ptrace(data_type):
+    if hasattr(_libc, "ptrace"):
+        s = TYPE_PREFIX + data_type
+        _ = getattr(ctypes, s, None)
+        if _:
+            _libc.ptrace.dattype = _
+            _libc.ptrace.restype = _
+
+def has_ptrace():
+    if not hasattr(_libc, "ptrace"):
+        return False
+    if not hasattr(_libc.ptrace, "dattype"):
+        return False # call init_ptrace() first
+    return True
+
+def get_ptrace_data_size():
+    if has_ptrace():
+        return ctypes.sizeof(_libc.ptrace.dattype)
+    else:
+        return -1
+
+def ptrace(request, pid, addr, data):
+    """Return None, errno on error"""
+    if not has_ptrace():
+        return None, 0
+    if request == -1:
+        return None, 0
+    if addr is not None:
+        addr = ctypes.c_long(addr)
+    if data is not None:
+        data = _libc.ptrace.dattype(data)
+    ret = _libc.ptrace(request, pid, addr, data)
+    err = get_errno()
+    if ret == -1 and err != 0:
+        return None, err
+    else:
+        return ret, err
+
+def __init_types():
     for k in iter_type_name():
-        if not hasattr(ctypes, k):
-            __register_sizeof_function(k, -1)
-            continue
         try:
             v = getattr(ctypes, k)
-            type_size = ctypes.sizeof(v)
-            __register_sizeof_function(k, type_size)
+            __register_type(k, ctypes.sizeof(v))
         except Exception:
-            __register_sizeof_function(k, -1)
+            __register_type(k, -1)
 
-def __init_pseudo():
-    for k in iter_type_name():
-        __register_sizeof_function(k, -1)
-
-def __register_sizeof_function(type_name, type_size):
-    s = __build_sizeof_function_name(type_name)
-    def fn():
-        return type_size
-    setattr(this, s, fn)
-
-def __build_sizeof_function_name(type_name):
-    return "get_sizeof_%s" % __normalize_name(type_name)
+# keep this separated from __init_types()
+def __register_type(type_name, type_size):
+    s = __get_type_function_name(type_name)
+    setattr(this, s, lambda: type_size)
 
 def iter_type():
     for k in iter_type_name():
-        s = __build_sizeof_function_name(k)
+        s = __get_type_function_name(k)
         fn = getattr(this, s)
-        yield __normalize_name(k), s, fn
+        yield _(k), s, fn
+
+def __get_type_function_name(type_name):
+    return "get_sizeof_%s" % _(type_name)
+
+def _(s):
+    return s[len(TYPE_PREFIX):]
 
 def iter_defined_type():
     for name, func_name, fn in iter_type():
@@ -103,16 +146,15 @@ def iter_undefined_type():
         if fn() == -1:
             yield name, func_name, fn
 
-def get_pointer_size():
-    ret = this.get_sizeof_void_p()
-    if ret != -1:
-        return ret
-    else:
-        return struct.calcsize('P')
-
 this = sys.modules[__name__]
+_libc = None
+
 try:
     import ctypes
-    __init_ctypes()
-except ImportError:
-    __init_pseudo()
+    import ctypes.util
+    __init_types()
+    if tuple(sys.version_info[:2]) >= (2, 6):
+        __init_libc()
+except Exception:
+    if setting.use_debug:
+        raise

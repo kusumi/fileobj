@@ -58,20 +58,8 @@ class Console (console.Console):
         if arg.start != -1:
             methods.go_to(self, arg.start)
         self.go_right(arg.delta)
-
-        if setting.use_barrier:
-            siz = setting.barrier_size
-        else:
-            siz = -1
-        if self.co.get_barrier(siz) != -1:
-            def put(self):
-                return self.co.put_barrier()
-        else:
-            und = self.co.get_undo_size()
-            pos = self.co.get_pos()
-            def put(self):
-                self.co.rollback_until(und)
-                return pos
+        assert self.co.get_barrier(
+            setting.barrier_size) != -1
 
         l = []
         while True:
@@ -103,18 +91,19 @@ class Console (console.Console):
                 self.__enqueue(l, ret, x)
             elif ret == MOTION:
                 if arg.limit > 0:
-                    put(self)
+                    self.co.put_barrier()
                     break
                 self.__enqueue(l, ret, x)
             elif ret == ESCAPE:
                 if arg.limit > 0 or not l:
-                    put(self)
+                    self.co.put_barrier()
                     break
                 k, v = zip(*l)
                 if MOTION in k or \
                     x == kbd.INTERRUPT:
                     arg.amp = 1
-                self.co.set_pos(put(self))
+                self.co.set_pos(self.co.put_barrier())
+                self.co.test_access()
                 if len(l) == 1:
                     self.__sync(arg.amp, k[0], v[0], arg)
                 else:
@@ -346,13 +335,13 @@ class AR (_ascii, _replace):
 class RangeAR (AR):
     def write_buffer(self, n, seq):
         methods.range_replace(
-            self, None, None, chr(seq[0]), None)
+            self, None, None, seq[0], None)
         return -1
 
 class BlockAR (AR):
     def write_buffer(self, n, seq):
         methods.block_replace(
-            self, None, None, chr(seq[0]), None)
+            self, None, None, seq[0], None)
         return -1
 
 def get_ascii(upper, lower):

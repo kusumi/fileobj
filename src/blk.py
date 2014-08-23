@@ -21,68 +21,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import fileobj
+from . import kernel
 from . import util
 
-_ = util.str_to_bytes
+enabled = kernel.is_blkdev_supported()
 
-def input_to_bytes(l):
-    return util.str_to_bytes(
-        ''.join([chr(x) for x in l]))
+class methods (object):
+    def get_string(self, s):
+        l = []
+        l.append("device size %s" %
+            util.get_size_string(self.get_size()))
+        l.append("sector size %s" %
+            util.get_size_string(self.get_sector_size()))
+        l.append("label %s" % self.blk_label)
+        return self.add_string(s, '\n'.join(l))
 
-def __ord_2k(b):
-    return __builtin_ord(b)
+    def init_blk(self):
+        b = kernel.get_blkdev_info(self.get_path())
+        align = 1 << 9
+        assert b.sector_size % align == 0, b.sector_size
+        assert b.size % align == 0, b.size
+        self.blk_sector_size = b.sector_size
+        self.blk_label = b.label
+        self.set_size(b.size)
+        self.set_align(self.get_sector_size())
+        self.set_window(0, 1)
+        self.init_file()
 
-def __ord_3k(b):
-    return b[0]
+    def get_blk_sector_size(self):
+        return self.blk_sector_size
 
-def join(l):
-    return BLANK.join(l)
-
-def __split_2k(b):
-    return list(b)
-
-def __split_3k(b):
-    return [b[i : i + 1] for i in range(len(b))]
-
-def __iter_2k(b):
-    for x in b:
-        yield x
-
-def __iter_3k(b):
-    for i in range(len(b)):
-        yield b[i : i + 1]
-
-def __riter_2k(b):
-    for x in reversed(b):
-        yield x
-
-def __riter_3k(b):
-    for i in reversed(range(len(b))):
-        yield b[i : i + 1]
-
-def ords(b, cls=tuple):
-    return cls(ord(x) for x in iter(b))
-
-def seq_to_ords(l, cls=tuple):
-    return cls(ord(x) for x in l)
-
-def pad(x):
-    return ZERO * x
-
-if util.is_python2():
-    from __builtin__ import ord as __builtin_ord
-    TYPE = str
-    ZERO = "\x00"
-    BLANK = ''
-    ord = __ord_2k
-    split = __split_2k
-    iter = __iter_2k
-    riter = __riter_2k
-else:
-    TYPE = None
-    ZERO = _("\x00")
-    BLANK = _('')
-    ord = __ord_3k
-    split = __split_3k
-    iter = __iter_3k
-    riter = __riter_3k
+    def creat_blk(self):
+        raise fileobj.FileobjError(
+            "Can only write to %s" % self.get_path())

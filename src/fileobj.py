@@ -33,6 +33,7 @@ from . import package
 from . import path
 from . import screen
 from . import setting
+from . import undo
 from . import util
 
 """
@@ -42,13 +43,21 @@ fileobj.Fileobj
             rwmap.Fileobj
     robuf.Fileobj
         roext.Fileobj
-        rwbuf.Fileobj
-            rwext.Fileobj
+        rovm.Fileobj
+        rrbuf.Fileobj
+            rrvm.Fileobj
+            rwbuf.Fileobj
+                rwext.Fileobj
     rofd.Fileobj
         roblk.Fileobj
         rwfd.Fileobj
             rwblk.Fileobj
 """
+
+# any negative should work
+ERROR     = -1
+NOTFOUND  = -2
+INTERRUPT = -3
 
 class FileobjError (util.GenericError):
     pass
@@ -70,8 +79,11 @@ class Fileobj (object):
         return
 
     def __init_unique(self):
+        f = self.get_path()
+        if not os.path.exists(f):
+            return -1
         try:
-            self.__uniq = util.get_inode(self.get_path())
+            self.__uniq = util.get_inode(f)
         except Exception, e:
             log.debug(e)
 
@@ -91,6 +103,9 @@ class Fileobj (object):
             self.__attr.magic = magic.get_string(self)
         elif kernel.is_blkdev(self.get_path()):
             self.__attr.magic = magic.get_blk_string(self)
+
+    def test_access(self):
+        return True
 
     def test_insert(self):
         return self._insert
@@ -140,6 +155,8 @@ class Fileobj (object):
         return self.__path.path
     def get_short_path(self):
         return self.__path.short_path
+    def get_alias(self):
+        return ''
     def get_magic(self):
         return self.__attr.magic
     def get_mapping_offset(self):
@@ -149,11 +166,10 @@ class Fileobj (object):
 
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
-        if not os.path.exists(f):
-            return 0, 0
         bufsiz = kernel.get_buffer_size_safe(f)
         if bufsiz == -1:
-            log.error("Failed to stat %s, using 0/0" % f)
+            if os.path.isfile(f):
+                log.error("Failed to stat %s, using 0/0" % f)
             return 0, 0
 
         if offset <= 0:
@@ -208,8 +224,7 @@ class Fileobj (object):
                 else:
                     self.creat(f)
                     creat = True
-                self.clear_dirty()
-                self.__attr.undo.update_base()
+                self.sync_undo()
             else:
                 assert not os.path.exists(f), f
                 self.creat(f)
@@ -242,10 +257,10 @@ class Fileobj (object):
             util.fsync(fd)
 
     def search(self, x, s, end=-1):
-        """Return -1 if not found, -2 if interrupted"""
+        """Return NOTFOUND if not found, INTERRUPT if interrupted"""
         self.raise_no_support("search")
     def rsearch(self, x, s, end=-1):
-        """Return -1 if not found, -2 if interrupted"""
+        """Return NOTFOUND if not found, INTERRUPT if interrupted"""
         self.raise_no_support("backward search")
 
     def read(self, x, n):
@@ -267,6 +282,9 @@ class Fileobj (object):
     def get_no_support_string(self, s):
         return "%s not supported" % s
 
+    def add_string(self, a, b):
+        return "%s\n\n%s" % (a, b)
+
     def has_undo(self):
         return self.get_undo_size() > 0
     def has_redo(self):
@@ -285,34 +303,32 @@ class Fileobj (object):
     def merge_undo(self, n):
         self.__attr.undo.merge_undo(n)
 
+    def sync_undo(self):
+        self.__attr.undo.sync_base_pointer()
+        self.clear_dirty()
+
     def restore_rollback_log(self, ref):
         self.__attr.undo.restore_rollback_log(ref)
 
     def undo(self, n=1):
-        """Return -1 if no undos, -2 if interrupted"""
-        ret = -1
-        for i in util.get_xrange(n):
-            ret, is_at_base = self.__attr.undo.undo(self)
-            if ret == -1:
-                return -1
-            if is_at_base:
-                self.clear_dirty()
-            if screen.test_signal():
-                return -2
-        return ret
+        return self.__undo(n, self.__attr.undo.undo)
 
     def redo(self, n=1):
-        """Return -1 if no redos, -2 if interrupted"""
-        ret = -1
+        return self.__undo(n, self.__attr.undo.redo)
+
+    def __undo(self, n, fn):
+        ret = NOTFOUND
         for i in util.get_xrange(n):
-            ret, is_at_base = self.__attr.undo.redo(self)
-            if ret == -1:
-                return -1
+            ret, is_at_base, msg = fn(self)
             if is_at_base:
                 self.clear_dirty()
+            if ret == undo.ERROR:
+                return ERROR, msg
+            if ret == undo.NOTFOUND:
+                return NOTFOUND, ''
             if screen.test_signal():
-                return -2
-        return ret
+                return INTERRUPT, ''
+        return ret, ''
 
     def rollback(self, n=1):
         if n < 1:
@@ -344,8 +360,6 @@ class Fileobj (object):
                 del self.__attr.marks[k]
 
     def get_barrier(self, ret, offset, size):
-        if not setting.use_barrier:
-            return -1
         try:
             self.__bretval = ret
             self.__boffset = offset

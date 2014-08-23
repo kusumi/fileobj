@@ -97,7 +97,7 @@ class Fileobj (rrmap.Fileobj):
             return -1
         if not os.path.isfile(src):
             return -1
-        if os.path.exists(dst):
+        if kernel.get_file_size(dst) > 0:
             return -1
         shutil.copy2(src, dst)
 

@@ -1,4 +1,4 @@
-fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
+fileobj ([v0.6.23](https://github.com/kusumi/fileobj/releases/tag/v0.6.23))
 =======
 
 ## About
@@ -35,7 +35,7 @@ fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.22
+        v0.6.23
         $ fileobj
 
 ## Uninstall
@@ -80,6 +80,21 @@ fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
 + Open a block (loop) device /dev/loop0
 
         $ sudo fileobj /dev/loop0
+
++ Open virtual address space of a user process (experimental and currently only for Linux on >= Python 2.6)
+
+        $ pgrep -l a.out
+        10337 a.out
+        $ objdump -s -j .rodata ./a.out
+        
+        ./a.out:     file format elf64-x86-64
+        
+        Contents of section .rodata:
+         4005c8 01000200 00000000 00000000 00000000  ................
+         4005d8 41424344 45464748 494a4b4c 4d4e4f50  ABCDEFGHIJKLMNOP
+         4005e8 51525354 55565758 595a3031 32333435  QRSTUVWXYZ012345
+         4005f8 36373839 00                          6789.           
+        $ fileobj pid10337@0x4005c8:0x35
 
 ## List of commands
 
@@ -244,6 +259,7 @@ fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
           -h, --help         show this help message and exit
           -R                 Read only mode
           -B                 Buffer allocation mode
+          -d                 Show buffer address starting from @offset
           -x                 Show buffer size and current position in hexadecimal
           -o <num>           Open <num> windows
           -O                 Open each buffer in different window
@@ -269,3 +285,5 @@ fileobj ([v0.6.22](https://github.com/kusumi/fileobj/releases/tag/v0.6.22))
         No module named _curses
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
+
++ If the ncurses border lines are shown with messed up characters on Putty, try changing settings of the section 'Window -> Appearance' and/or 'Window -> Translation'. Changing the character set to "Use font encoding" from "UTF-8" or whatever the setting already there may work.

@@ -78,6 +78,10 @@ def dispatch(optargs=None):
         action="store_true",
         default=False,
         help="Buffer allocation mode")
+    parser.add_option("-d",
+        action="store_true",
+        default=False,
+        help="Show buffer address starting from @offset")
     parser.add_option("-x",
         action="store_true",
         default=False,
@@ -162,10 +166,12 @@ def dispatch(optargs=None):
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
             allocator.set_default_class(s)
-    if opts.B:
-        allocator.set_default_buffer_class()
     if opts.R:
         setting.use_readonly = True
+    if opts.B:
+        allocator.set_default_buffer_class()
+    if opts.d:
+        setting.use_address_num_offset = True
     if opts.x:
         setting.status_num_radix = 16
     wspnum = opts.o

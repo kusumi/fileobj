@@ -24,6 +24,7 @@
 import array
 
 from . import filebytes
+from . import fileobj
 from . import setting
 from . import util
 
@@ -58,7 +59,7 @@ class Chunk (object):
         if n >= 0:
             return x + n
         else:
-            return -1
+            return fileobj.NOTFOUND
 
     def rsearch(self, x, s, next_buffer):
         b = self.read(self.offset, x + 1 - self.offset)
@@ -72,7 +73,7 @@ class Chunk (object):
             else:
                 return ret
         else:
-            return -1
+            return fileobj.NOTFOUND
 
     def read(self, x, n):
         x = self.__get_local_offset(x)

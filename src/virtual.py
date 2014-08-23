@@ -89,7 +89,8 @@ class _canvas (panel.Canvas):
         self.fileops.set_pos(pos - pos % self.bufmap.x)
 
     def go_ltail(self, n):
-        pos = self.get_line_offset(self.fileops.get_pos()) + self.bufmap.x - 1
+        pos = self.get_line_offset(
+            self.fileops.get_pos()) + self.bufmap.x - 1
         if n > 0:
             pos += self.bufmap.x * n
         self.fileops.set_pos(pos)

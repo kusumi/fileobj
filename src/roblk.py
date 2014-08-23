@@ -21,19 +21,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import block
+from . import blk
 from . import rofd
 
-class Fileobj (rofd.Fileobj, block.methods):
+class Fileobj (rofd.Fileobj, blk.methods):
     _insert  = False
     _replace = False
     _delete  = False
-    _enabled = True
+    _enabled = blk.enabled
     _partial = True
 
     def __str__(self):
-        return "%s\n\n%s" % (
-            super(Fileobj, self).__str__(), self.to_string())
+        return self.get_string(
+            super(Fileobj, self).__str__())
 
     def init(self):
         self.init_blk()
