@@ -23,9 +23,11 @@
 
 from __future__ import division
 
+from . import blk
 from . import filebytes
 from . import setting
 from . import util
+from . import vm
 
 class Fileops (object):
     def __init__(self, ref):
@@ -50,12 +52,20 @@ class Fileops (object):
         self.__ref.cleanup()
         self.__ref = None
 
+    def test_access(self):
+        return self.__ref.test_access()
+
     def test_insert(self):
         return self.__ref.test_insert()
     def test_replace(self):
         return self.__ref.test_replace()
     def test_delete(self):
         return self.__ref.test_delete()
+
+    def is_blk(self):
+        return isinstance(self.__ref, blk.methods)
+    def is_vm(self):
+        return isinstance(self.__ref, vm.methods)
 
     def is_readonly(self):
         return self.__ref.is_readonly()
@@ -76,6 +86,8 @@ class Fileops (object):
         return self.__ref.get_path()
     def get_short_path(self):
         return self.__ref.get_short_path()
+    def get_alias(self):
+        return self.__ref.get_alias()
     def get_magic(self):
         return self.__ref.get_magic()
     def get_mapping_offset(self):
@@ -87,9 +99,10 @@ class Fileops (object):
 
     def get_pos_percentage(self):
         if self.is_empty():
-            return float(0)
+            p = 0
         else:
-            return 100.0 * (self.get_pos() + 1) / self.get_size()
+            p = (self.get_pos() + 1) / self.get_size()
+        return p * 100.0
 
     def get_max_pos(self):
         if self.is_empty():

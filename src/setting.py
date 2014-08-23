@@ -62,13 +62,6 @@ def __get_path(s):
         else:
             return ''
 
-def get_procfs_path(x):
-    if x and this.procfs_mount_dir:
-        f = os.path.join(this.procfs_mount_dir, x)
-        if os.path.exists(f):
-            return f
-    return ''
-
 def get_userdir_path():
     if this.userdir_path:
         return this.userdir_path

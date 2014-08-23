@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
+import os
 
 from . import ascii
 from . import filebytes
@@ -180,7 +181,7 @@ class Canvas (_panel):
     def resize(self, siz, pos):
         super(Canvas, self).resize(siz, pos)
         x = self.get_capacity()
-        if setting.use_barrier and setting.barrier_size < x:
+        if setting.barrier_size < x:
             log.debug("Change default barrier size {0} -> {1}".format(
                 setting.barrier_size, x))
             setting.barrier_size = x
@@ -393,6 +394,8 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         return self.__cstr[setting.address_num_radix].format(n)
 
     def __get_line_posstr(self, n):
+        if setting.use_address_num_offset:
+            n += self.fileops.get_mapping_offset()
         return self.__lstr[setting.address_num_radix].format(
             self.__lstr_fmt[setting.address_num_radix].format(
                 n)[-setting.address_num_width:])
@@ -461,17 +464,16 @@ class StatusCanvas (Canvas, default_addon):
                     self.fileops.get_type())
                 if screen.use_alt_chgat():
                     a += "<*> "
-            a += self.fileops.get_short_path()
-            if not a:
-                a = util.NO_NAME
+            a += self.__get_buffer_name()
             offset = self.fileops.get_mapping_offset()
             length = self.fileops.get_mapping_length()
-            if offset:
-                a += " @{0}".format(offset)
-            if length:
-                if not offset:
-                    a += " @0"
-                a += ":{0}".format(length)
+            fmt = self.__nstr[setting.status_num_radix]
+            if offset or length:
+                a += " @"
+                a += fmt.format(offset)
+                if length:
+                    a += ":"
+                    a += fmt.format(length)
             if self.fileops.is_readonly():
                 a += " [RO]"
             b = self.fileops.get_magic()
@@ -481,6 +483,19 @@ class StatusCanvas (Canvas, default_addon):
                 yield 0, a
                 yield 1, b
             self.iter_buffer_template = fn
+
+    def __get_buffer_name(self):
+        f = self.fileops.get_short_path()
+        if f:
+            alias = self.fileops.get_alias()
+            if alias:
+                f += "|{0}".format(alias)
+            if self.fileops.is_vm():
+                b = os.path.basename(f)
+                f = "[{0}]".format(b)
+            return f
+        else:
+            return util.NO_NAME
 
     def iter_buffer_template(self):
         yield 0, ''

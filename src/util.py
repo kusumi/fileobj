@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 from __future__ import print_function
 import fcntl
 import hashlib
@@ -103,15 +104,6 @@ def is_python2_version_or_ht(*l):
 
 def is_python3_version_or_ht(*l):
     return is_python3() and is_python_version_or_ht(*l)
-
-def is_python_version_lt(*l):
-    return not is_python_version_or_ht(*l)
-
-def is_python2_version_lt(*l):
-    return is_python2() and is_python_version_lt(*l)
-
-def is_python3_version_lt(*l):
-    return is_python3() and is_python_version_lt(*l)
 
 def is_python3_supported():
     return version.get_version() >= (0, 7, 0)
@@ -347,11 +339,36 @@ def get_cpu_string():
     """Return cpu name"""
     return platform.processor()
 
+def get_pointer_size():
+    ret = libc.get_sizeof_void_p()
+    if ret != -1:
+        return ret
+    else:
+        return struct.calcsize('P')
+
 def is_64bit_cpu():
-    return libc.get_pointer_size() == 8
+    return get_pointer_size() == 8
 
 def is_32bit_cpu():
-    return libc.get_pointer_size() == 4
+    return get_pointer_size() == 4
+
+def get_address_space():
+    # simply return 2 ^ pointer_size
+    size = get_pointer_size() << 3
+    return 2 ** size
+
+def align_range(beg, end, align):
+    beg = align_head(beg, align)
+    end = align_tail(end, align)
+    return beg, end
+
+def align_head(addr, align):
+    mask = ~(align - 1)
+    return addr & mask
+
+def align_tail(addr, align):
+    mask = ~(align - 1)
+    return (addr + align - 1) & mask
 
 def is_le_cpu():
     return sys.byteorder == "little"
@@ -585,6 +602,71 @@ def utimem(f, st):
 def touch(f):
     os.utime(f, None)
 
+def has_pid_access(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+def has_pid(pid):
+    for l in iter_ps_ax():
+        if pid == l[0]:
+            return True
+    return False
+
+def get_pid_name(pid):
+    for l in iter_ps_ax():
+        if pid == l[0]:
+            cmd = l[-1].split(" ")[0]
+            if re.match(r"^\[.+\]$", cmd): # Linux kernel thread
+                return cmd[1:-1]
+            else:
+                return os.path.basename(cmd)
+    return ''
+
+def iter_ps_ax():
+    try:
+        s = execute("ps", "ax")[0]
+    except Exception:
+        s = ''
+    l = s.split('\n')
+    for x in l[1:]:
+        if x:
+            ret = __split_ps_ax_line(x)
+            if ret is not None:
+                yield ret
+
+def __split_ps_ax_line(s):
+    # e.g. " 2680 ?        Sl     0:01 libvirtd --daemon"
+    try:
+        s = s.strip()
+        s = re.sub(r" +", " ", s)
+        l = s.split(" ", 4)
+        l[0] = int(l[0])
+        assert len(l) == 5, l
+        return l
+    except Exception:
+        pass
+
+def parse_waitpid_result(status):
+    l = []
+    if os.WIFEXITED(status):
+        l.append("WIFEXITED({0})".format(
+            os.WEXITSTATUS(status)))
+    if os.WIFSIGNALED(status):
+        l.append("WIFSIGNALED({0})".format(
+            os.WTERMSIG(status)))
+    if os.WCOREDUMP(status):
+        l.append("WCOREDUMP")
+    if os.WIFSTOPPED(status):
+        l.append("WIFSTOPPED({0})".format(
+            os.WSTOPSIG(status)))
+    if hasattr(os, "WIFCONTINUED") and \
+        os.WIFCONTINUED(status):
+        l.append("WIFCONTINUED")
+    return '|'.join(l)
+
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
     if not setting.use_file_path_attr:
@@ -640,7 +722,7 @@ def get_file_md5(f):
         return get_md5(open_file(f).read())
 
 def get_stamp(prefix=''):
-    # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097.bin
+    # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
     return "{0}.{1}.{2}.pid{3}".format(
         prefix,
         time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),
@@ -775,7 +857,3 @@ def get_class(o):
 
 def get_class_name(o):
     return get_class(o).__name__
-
-def bp():
-    import pdb
-    pdb.set_trace()

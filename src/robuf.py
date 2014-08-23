@@ -48,8 +48,9 @@ class Fileobj (fileobj.Fileobj):
 
     def __str__(self):
         l = []
-        l.append("size {0}".format(util.get_size_string(self.get_size())))
-        l.append("chunk size {0}[B]".format(setting.robuf_chunk_size))
+        s = util.get_size_string(self.get_size())
+        l.append("size {0}".format(s))
+        l.append("chunk size {0}[B]".format(self.get_chunk_size()))
         l.append("chunk total {0}\n".format(len(self.cbuf)))
         for i, o in enumerate(self.cbuf):
             l.append("[{0}] {1}".format(i, o))
@@ -76,6 +77,9 @@ class Fileobj (fileobj.Fileobj):
     def set_size(self, size):
         self.__size = size
 
+    def get_chunk_size(self):
+        return setting.robuf_chunk_size
+
     def set_search_thresh(self):
         r = setting.robuf_search_thresh_ratio
         if r is None: # heuristic
@@ -88,17 +92,19 @@ class Fileobj (fileobj.Fileobj):
             else:
                 r = 0.5
         self.__thresh = int(self.get_size() * r)
-        if self.__thresh:
-            log.debug("{0} has search thresh at {1}[B]/{2}[B]".format(
-                self.get_short_path(), self.__thresh, self.get_size()))
+        log.debug("{0} has search thresh at {1}[B]/{2}[B]".format(
+            self.get_short_path(),
+            self.__thresh,
+            self.get_size()))
 
     def alloc_chunk(self, offset, buf):
         return chunk.Chunk(offset, buf)
 
     def init_chunk(self, b):
         self.cbuf = []
-        for i in range(0, len(b), setting.robuf_chunk_size):
-            bb = b[i : i + setting.robuf_chunk_size]
+        siz = self.get_chunk_size()
+        for i in range(0, len(b), siz):
+            bb = b[i : i + siz]
             self.cbuf.append(self.alloc_chunk(i, bb))
         self.set_size(len(b))
         self.mark_chunk()
@@ -106,8 +112,8 @@ class Fileobj (fileobj.Fileobj):
 
     def mark_chunk(self):
         if not self.cbuf:
-            self.cbuf.append(
-                self.alloc_chunk(0, filebytes.BLANK))
+            o = self.alloc_chunk(0, filebytes.BLANK)
+            self.cbuf.append(o)
         self.cbuf[-1].islast = True
 
     def search(self, x, s, end=-1):
@@ -124,12 +130,12 @@ class Fileobj (fileobj.Fileobj):
                 else:
                     b = filebytes.BLANK
                 ret = o.search(x, s, b)
-                if ret != -1:
+                if ret != fileobj.NOTFOUND:
                     return ret
                 x = o.offset + len(o)
             if screen.test_signal():
-                return -2
-        return -1
+                return fileobj.INTERRUPT
+        return fileobj.NOTFOUND
 
     def rsearch(self, x, s, end=-1):
         s = util.str_to_bytes(s)
@@ -148,12 +154,17 @@ class Fileobj (fileobj.Fileobj):
                 else:
                     b = filebytes.BLANK
                 ret = o.rsearch(x, s, b)
-                if ret != -1:
+                if ret != fileobj.NOTFOUND:
                     return ret
                 x = o.offset - 1
             if screen.test_signal():
-                return -2
-        return -1
+                return fileobj.INTERRUPT
+        return fileobj.NOTFOUND
+
+    def iter_chunk(self, pos):
+        index = self.get_chunk_index(pos)
+        for i in range(index, len(self.cbuf)):
+            yield self.cbuf[i]
 
     def get_chunk_index(self, pos):
         if pos <= self.__thresh:
@@ -180,8 +191,8 @@ class Fileobj (fileobj.Fileobj):
         if not n:
             return filebytes.BLANK
         buf = []
-        for i in range(self.get_chunk_index(x), len(self.cbuf)):
-            b = self.cbuf[i].read(x, n)
+        for o in self.iter_chunk(x):
+            b = o.read(x, n)
             if b:
                 buf.append(b)
                 x += len(b)

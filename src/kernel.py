@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# using the module name 'kernel' since 'os' is used by inbox module
+
 from __future__ import with_statement
 import os
 
@@ -85,7 +87,10 @@ def get_buffer_size(f):
     if is_blkdev(f):
         return get_blkdev_info(f).size
     if not os.path.isfile(f):
-        return -1
+        if to_pid(f) != -1:
+            return util.get_address_space()
+        else:
+            return -1
     ret = get_file_size(f)
     if ret > 0:
         return ret
@@ -130,10 +135,18 @@ def get_free_ram():
         return -1
 
 def is_blkdev(f):
-    """Return True if block device is supported"""
+    """Return True if f is block device"""
     o = get_kernel_module()
     if o:
         return o.is_blkdev(f)
+    else:
+        return False
+
+def is_blkdev_supported():
+    """Return True if block device is supported"""
+    o = get_kernel_module()
+    if o:
+        return o.is_blkdev_supported()
     else:
         return False
 
@@ -144,3 +157,105 @@ def has_mremap():
         return o.has_mremap()
     else:
         return False
+
+def has_pid(pid):
+    """Return True if pid exists"""
+    o = get_kernel_module()
+    if o:
+        return o.has_pid(pid)
+    else:
+        return False
+
+def get_pid_name(pid):
+    """Return process name of pid if possible"""
+    o = get_kernel_module()
+    if o:
+        return o.get_pid_name(pid)
+    else:
+        return ''
+
+def is_pid_path_supported():
+    """Return True if pid path is supported"""
+    o = get_kernel_module()
+    if o:
+        return o.is_pid_path_supported()
+    else:
+        return False
+
+def is_pid_path(f):
+    pid = to_pid(f)
+    return pid != -1 and has_pid(pid)
+
+def to_pid(f):
+    try:
+        f = os.path.basename(f)
+        return int(f[len("pid"):])
+    except Exception:
+        return -1
+
+def ptrace_peektext(pid, addr):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_peektext(pid, addr)
+
+def ptrace_peekdata(pid, addr):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_peekdata(pid, addr)
+
+def ptrace_poketext(pid, addr, data):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_poketext(pid, addr, data)
+
+def ptrace_pokedata(pid, addr, data):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_pokedata(pid, addr, data)
+
+def ptrace_cont(pid):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_cont(pid)
+
+def ptrace_kill(pid):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_kill(pid)
+
+def ptrace_attach(pid):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_attach(pid)
+
+def ptrace_detach(pid):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_detach(pid)
+
+def ptrace_peek(pid, addr):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_peek(pid, addr)
+
+def ptrace_poke(pid, addr, data):
+    o = get_kernel_module()
+    if o:
+        return o.ptrace_poke(pid, addr, data)
+
+def get_ptrace_word_size():
+    o = get_kernel_module()
+    if o:
+        return o.get_ptrace_word_size()
+    else:
+        return -1
+
+def init():
+    o = get_kernel_module()
+    if o:
+        try:
+            return o.init()
+        except Exception as e:
+            log.error(e)
+    return -1
+init()

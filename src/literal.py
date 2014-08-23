@@ -324,7 +324,7 @@ s_set_noic    = ArgLiteral("noic", None, "Unset ic mode")
 s_set_si      = ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)")
 s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)")
 s_set_address = ArgLiteral("address", None, "Set address radix to arg [16|10|8]")
-s_set_status  = ArgLiteral("status", None, "Set buffer size and current position to arg [16|10|8]")
+s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to arg [16|10|8]")
 s_set_width   = ArgLiteral("width", None, "Set window width to arg [[0-9]+|max|min|auto]")
 
 def get_slow_strings():

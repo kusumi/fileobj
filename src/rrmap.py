@@ -83,9 +83,8 @@ class Fileobj (romap.Fileobj):
             return filebytes.BLANK
 
     def replace(self, x, l, rec=True):
-        size = self.get_size()
-        if x + len(l) > size:
-            l = l[:size - x]
+        if x + len(l) > self.get_size():
+            l = l[:self.get_size() - x]
 
         xorig = x
         x += self.get_mmap_offset()

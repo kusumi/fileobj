@@ -65,7 +65,7 @@ def cleanup():
     _std = None
     _screen.cleanup()
 
-def refresh():
+def clear():
     _std.clear()
     _std.refresh()
 

@@ -21,34 +21,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import fileobj
-from . import kernel
-from . import util
+from . import robuf
+from . import vm
 
-class methods (object):
-    def to_string(self):
-        l = []
-        l.append("device size {0}".format(
-            util.get_size_string(self.get_size())))
-        l.append("sector size {0}".format(
-            util.get_size_string(self.get_sector_size())))
-        l.append("label {0}".format(self.blk_label))
-        return '\n'.join(l)
+class Fileobj (robuf.Fileobj, vm.methods):
+    _insert  = False
+    _replace = False
+    _delete  = False
+    _enabled = vm.enabled
+    _partial = True
 
-    def init_blk(self):
-        b = kernel.get_blkdev_info(self.get_path())
-        assert b.sector_size % 512 == 0, b.sector_size
-        assert b.size % 512 == 0, b.size
-        self.blk_sector_size = b.sector_size
-        self.blk_label = b.label
-        self.set_size(b.size)
-        self.set_align(self.get_sector_size())
-        self.set_window(0, 1)
-        self.init_file()
+    def __str__(self):
+        return self.get_string(
+            super(Fileobj, self).__str__())
 
-    def get_blk_sector_size(self):
-        return self.blk_sector_size
+    def init(self):
+        self.init_vm()
 
-    def creat_blk(self):
-        raise fileobj.FileobjError(
-            "Can only write to {0}".format(self.get_path()))
+    def get_alias(self):
+        return self.get_vm_alias()

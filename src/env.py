@@ -29,6 +29,7 @@ import sys
 def __iter_env_name():
     yield "FILEOBJ_USE_TEST"
     yield "FILEOBJ_USE_DEBUG"
+    yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
     yield "FILEOBJ_USE_STDIN_CBREAK"
@@ -45,7 +46,7 @@ def __iter_env_name():
     yield "FILEOBJ_USERDIR_PATH"
     yield "FILEOBJ_USERDIR_BASE"
     yield "FILEOBJ_USERDIR_DIR"
-    yield "FILEOBJ_PROCFS_MOUNT_DIR"
+    yield "FILEOBJ_PROCFS_MOUNT_POINT"
     yield "FILEOBJ_USE_READONLY"
     yield "FILEOBJ_COLOR_FG"
     yield "FILEOBJ_COLOR_BG"
@@ -59,7 +60,6 @@ def __iter_env_name():
     yield "FILEOBJ_HISTORY_PATH"
     yield "FILEOBJ_HISTORY_BASE"
     yield "FILEOBJ_HISTORY_DIR"
-    yield "FILEOBJ_USE_BARRIER"
     yield "FILEOBJ_BARRIER_SIZE"
     yield "FILEOBJ_BARRIER_EXTEND"
     yield "FILEOBJ_USE_ALT_CHGAT"
@@ -67,6 +67,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SINGLE_OPERATION"
     yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
+    yield "FILEOBJ_USE_ADDRESS_NUM_OFFSET"
     yield "FILEOBJ_ADDRESS_NUM_WIDTH"
     yield "FILEOBJ_ADDRESS_NUM_RADIX"
     yield "FILEOBJ_STATUS_NUM_RADIX"
@@ -77,11 +78,13 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SIPREFIX"
     yield "FILEOBJ_WIDTH"
     yield "FILEOBJ_USE_MAGIC_SCAN"
-    yield "FILEOBJ_USE_ALLOC_RETRY"
-    yield "FILEOBJ_USE_ALLOC_RAISE"
+    yield "FILEOBJ_USE_ALLOC_RECOVER"
     yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
     yield "FILEOBJ_MMAP_THRESH"
+    yield "FILEOBJ_PTRACE_DELAY"
+    yield "FILEOBJ_USE_VM_NON_LINUX"
+    yield "FILEOBJ_USE_RRVM_RAW"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
     yield "FILEOBJ_ROBUF_SEARCH_THRESH_RATIO"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
@@ -177,6 +180,9 @@ def __get_setting_use_test():
 def __get_setting_use_debug():
     return __test_bool("FILEOBJ_USE_DEBUG", False)
 
+def __get_setting_use_pid_path():
+    return __test_bool("FILEOBJ_USE_PID_PATH", True)
+
 def __get_setting_use_getch():
     return __test_bool("FILEOBJ_USE_GETCH", True)
 
@@ -237,8 +243,8 @@ def __get_setting_userdir_dir():
     else:
         return e
 
-def __get_setting_procfs_mount_dir():
-    return __test_name("FILEOBJ_PROCFS_MOUNT_DIR", "/proc")
+def __get_setting_procfs_mount_point():
+    return __test_name("FILEOBJ_PROCFS_MOUNT_POINT", "/proc")
 
 def __get_setting_use_readonly():
     return __test_bool("FILEOBJ_USE_READONLY", False)
@@ -287,9 +293,6 @@ def __get_setting_history_base():
 def __get_setting_history_dir():
     return __getenv("FILEOBJ_HISTORY_DIR")
 
-def __get_setting_use_barrier():
-    return __test_bool("FILEOBJ_USE_BARRIER", True)
-
 def __get_setting_barrier_size():
     return __test_gt_zero_or_default("FILEOBJ_BARRIER_SIZE", 8192)
 
@@ -318,6 +321,9 @@ def __get_setting_ram_thresh_ratio():
 
 def __get_setting_use_even_size_window():
     return __test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
+
+def __get_setting_use_address_num_offset():
+    return __test_bool("FILEOBJ_USE_ADDRESS_NUM_OFFSET", False)
 
 def __get_setting_address_num_width():
     return __test_gt_zero_or_default("FILEOBJ_ADDRESS_NUM_WIDTH", 8)
@@ -379,11 +385,8 @@ def __get_setting_width():
 def __get_setting_use_magic_scan():
     return __test_bool("FILEOBJ_USE_MAGIC_SCAN", True)
 
-def __get_setting_use_alloc_retry():
-    return __test_bool("FILEOBJ_USE_ALLOC_RETRY", True)
-
-def __get_setting_use_alloc_raise():
-    return __test_bool("FILEOBJ_USE_ALLOC_RAISE", False)
+def __get_setting_use_alloc_recover():
+    return __test_bool("FILEOBJ_USE_ALLOC_RECOVER", True)
 
 def __get_setting_use_alloc_noent_rwbuf():
     return __test_bool("FILEOBJ_USE_ALLOC_NOENT_RWBUF", True)
@@ -404,6 +407,27 @@ def __get_setting_mmap_thresh():
         return _
     else:
         return x
+
+def __get_setting_ptrace_delay():
+    e = __getenv("FILEOBJ_PTRACE_DELAY")
+    _ = __test_ratio(5) # 5/100 = 50 msec
+    if e is None:
+        return _
+    try:
+        t = int(e) // 10 # assume e[msec]
+    except Exception:
+        return _
+    x = __test_ratio(t)
+    if x is None:
+        return _
+    else:
+        return x
+
+def __get_setting_use_vm_non_linux():
+    return __test_bool("FILEOBJ_USE_VM_NON_LINUX", False)
+
+def __get_setting_use_rrvm_raw():
+    return __test_bool("FILEOBJ_USE_RRVM_RAW", False)
 
 def __get_setting_robuf_chunk_size():
     try:

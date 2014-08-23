@@ -92,6 +92,4 @@ def alloc(f, name=''):
         o.set_magic()
     else:
         o = allocator.alloc(f)
-        if not o:
-            o = allocator.alloc('')
     return Fileops(o)

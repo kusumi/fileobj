@@ -33,8 +33,6 @@ from . import visual
 from . import void
 from . import window
 
-def_console_class = void.Console
-
 class Workspace (object):
     def __init__(self, width):
         self.__bpl = 1
@@ -49,10 +47,11 @@ class Workspace (object):
         self.__swindows = {}
         self.__cur_fileops = None
         self.__cur_console = None
-        self.__def_vwindow = self.__get_virtual_window()
-        self.__def_bwindow = self.__get_binary_window()
-        self.__def_twindow = self.__get_text_window()
-        self.__def_swindow = self.__get_status_window()
+        self.__def_vwindow, \
+        self.__def_bwindow, \
+        self.__def_twindow, \
+        self.__def_swindow \
+        = self.__set_window(None)
 
     def __getattr__(self, name):
         if name == "_Workspace__cur_fileops":
@@ -62,27 +61,12 @@ class Workspace (object):
     def __len__(self):
         return len(self.__windows)
 
-    def __set_window(self, con):
-        # virtual window comes first
-        cls = util.get_class(con)
-        self.__windows = \
-            self.__get_virtual_window(cls), \
-            self.__get_binary_window(cls), \
-            self.__get_text_window(cls), \
-            self.__get_status_window(cls)
+    def dispatch(self):
+        return -1
 
     def __set_buffer(self, o):
         self.__cur_fileops = o
         self.set_console(None, None)
-        self.__set_window(self.__cur_console)
-        for o in self.__vwindows.values():
-            o.set_buffer(self.__cur_fileops)
-        for o in self.__bwindows.values():
-            o.set_buffer(self.__cur_fileops)
-        for o in self.__twindows.values():
-            o.set_buffer(self.__cur_fileops)
-        for o in self.__swindows.values():
-            o.set_buffer(self.__cur_fileops)
 
     def set_console(self, con, arg):
         if con:
@@ -91,16 +75,27 @@ class Workspace (object):
             i = self.__fileopss.index(self.__cur_fileops)
             self.__cur_console = self.__consoles[i]
         self.__set_window(self.__cur_console)
+        for o in self.__windows:
+            o.set_buffer(self.__cur_fileops)
         def dispatch():
             return self.__cur_console.dispatch(arg)
         self.dispatch = dispatch
 
-    def dispatch(self):
-        return -1
+    def __set_window(self, con):
+        # virtual window comes first
+        if con:
+            cls = util.get_class(con)
+        else:
+            cls = get_default_console()
+        self.__windows = \
+            self.__get_virtual_window(cls), \
+            self.__get_binary_window(cls), \
+            self.__get_text_window(cls), \
+            self.__get_status_window(cls)
+        return self.__windows
 
     def discard_window(self):
-        self.__windows = self.__get_virtual_window(
-            util.get_class(self.__cur_console)),
+        self.__windows = self.__windows[0],
 
     def restore_window(self):
         self.__set_window(self.__cur_console)
@@ -165,7 +160,7 @@ class Workspace (object):
         if min_y > std_y or min_y > hei or hei > std_y:
             return -1
         if self.is_gt_max_width():
-            return -2
+            return -1
 
     def build_dryrun_delta(self, hei_delta, beg_delta):
         return self.build_dryrun(
@@ -233,74 +228,81 @@ class Workspace (object):
     def is_gt_max_width(self):
         return self.__guess_status_window_width() > screen.get_size_x()
 
-    def __get_virtual_window(self, cls=def_console_class):
+    def __get_virtual_window(self, cls):
         if cls not in self.__vwindows:
-            if cls is def_console_class:
-                o = window.Window(virtual.BinaryCanvas, virtual.NullFrame)
-            elif cls is void.ExtConsole:
-                o = window.Window(virtual.ExtCanvas, virtual.NullFrame)
-            elif cls is visual.Console:
-                o = self.__def_vwindow
-            elif cls is visual.ExtConsole:
-                o = self.__get_virtual_window(void.ExtConsole)
-            elif util.is_subclass(cls, edit.Console):
-                o = self.__def_vwindow
-            o.set_buffer(self.__cur_fileops)
-            self.__build_virtual_window(o)
-            self.__vwindows[cls] = o
+            self.__register_virtual_window(cls)
         return self.__vwindows[cls]
 
-    def __get_binary_window(self, cls=def_console_class):
+    def __get_binary_window(self, cls):
         if cls not in self.__bwindows:
-            if cls is def_console_class:
-                o = window.Window(panel.BinaryCanvas, panel.FocusableFrame)
-            elif cls is void.ExtConsole:
-                o = window.Window(
-                    extension.ExtBinaryCanvas, panel.FocusableFrame)
-            elif cls is visual.Console:
-                o = window.Window(visual.BinaryCanvas, panel.FocusableFrame)
-            elif cls is visual.ExtConsole:
-                o = window.Window(visual.ExtBinaryCanvas, panel.FocusableFrame)
-            elif util.is_subclass(cls, edit.Console):
-                o = self.__def_bwindow
-            o.set_buffer(self.__cur_fileops)
-            self.__build_binary_window(o)
-            self.__bwindows[cls] = o
+            self.__register_binary_window(cls)
         return self.__bwindows[cls]
 
-    def __get_text_window(self, cls=def_console_class):
+    def __get_text_window(self, cls):
         if cls not in self.__twindows:
-            if cls is def_console_class:
-                o = window.Window(panel.TextCanvas, panel.Frame)
-            elif cls is void.ExtConsole:
-                o = window.Window(extension.ExtTextCanvas, panel.Frame)
-            elif cls is visual.Console:
-                o = window.Window(visual.TextCanvas, panel.Frame)
-            elif cls is visual.ExtConsole:
-                o = self.__get_text_window(void.ExtConsole)
-            elif util.is_subclass(cls, edit.Console):
-                o = self.__def_twindow
-            o.set_buffer(self.__cur_fileops)
-            self.__build_text_window(o)
-            self.__twindows[cls] = o
+            self.__register_text_window(cls)
         return self.__twindows[cls]
 
-    def __get_status_window(self, cls=def_console_class):
+    def __get_status_window(self, cls):
         if cls not in self.__swindows:
-            if cls is def_console_class:
-                o = window.Window(panel.StatusCanvas, panel.Frame)
-            elif cls is void.ExtConsole:
-                o = self.__def_swindow
-            elif cls is visual.Console:
-                o = self.__def_swindow
-            elif cls is visual.ExtConsole:
-                o = self.__def_swindow
-            elif util.is_subclass(cls, edit.Console):
-                o = self.__def_swindow
-            o.set_buffer(self.__cur_fileops)
-            self.__build_status_window(o)
-            self.__swindows[cls] = o
+            self.__register_status_window(cls)
         return self.__swindows[cls]
+
+    def __register_virtual_window(self, cls):
+        if cls is get_default_console():
+            o = window.Window(virtual.BinaryCanvas, virtual.NullFrame)
+        elif cls is void.ExtConsole:
+            o = window.Window(virtual.ExtCanvas, virtual.NullFrame)
+        elif cls is visual.Console:
+            o = self.__def_vwindow
+        elif cls is visual.ExtConsole:
+            o = self.__get_virtual_window(void.ExtConsole)
+        elif util.is_subclass(cls, edit.Console):
+            o = self.__def_vwindow
+        self.__build_virtual_window(o)
+        self.__vwindows[cls] = o
+
+    def __register_binary_window(self, cls):
+        if cls is get_default_console():
+            o = window.Window(panel.BinaryCanvas, panel.FocusableFrame)
+        elif cls is void.ExtConsole:
+            o = window.Window(extension.ExtBinaryCanvas, panel.FocusableFrame)
+        elif cls is visual.Console:
+            o = window.Window(visual.BinaryCanvas, panel.FocusableFrame)
+        elif cls is visual.ExtConsole:
+            o = window.Window(visual.ExtBinaryCanvas, panel.FocusableFrame)
+        elif util.is_subclass(cls, edit.Console):
+            o = self.__def_bwindow
+        self.__build_binary_window(o)
+        self.__bwindows[cls] = o
+
+    def __register_text_window(self, cls):
+        if cls is get_default_console():
+            o = window.Window(panel.TextCanvas, panel.Frame)
+        elif cls is void.ExtConsole:
+            o = window.Window(extension.ExtTextCanvas, panel.Frame)
+        elif cls is visual.Console:
+            o = window.Window(visual.TextCanvas, panel.Frame)
+        elif cls is visual.ExtConsole:
+            o = self.__get_text_window(void.ExtConsole)
+        elif util.is_subclass(cls, edit.Console):
+            o = self.__def_twindow
+        self.__build_text_window(o)
+        self.__twindows[cls] = o
+
+    def __register_status_window(self, cls):
+        if cls is get_default_console():
+            o = window.Window(panel.StatusCanvas, panel.Frame)
+        elif cls is void.ExtConsole:
+            o = self.__def_swindow
+        elif cls is visual.Console:
+            o = self.__def_swindow
+        elif cls is visual.ExtConsole:
+            o = self.__def_swindow
+        elif util.is_subclass(cls, edit.Console):
+            o = self.__def_swindow
+        self.__build_status_window(o)
+        self.__swindows[cls] = o
 
     def read(self, x, n):
         return self.__cur_fileops.read(x, n)
@@ -458,3 +460,6 @@ class Workspace (object):
                     return ret
             except ValueError:
                 return -1
+
+def get_default_console():
+    return void.Console

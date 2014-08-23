@@ -42,7 +42,6 @@ class Fileobj (fileobj.Fileobj):
         self.fd = None
         self.__size = -1
         self.__align = 0
-        self.__mask = 0
         self.__ra_window = None
         self.__ra_queue = collections.deque()
         self.__ra_count = collections.defaultdict(int)
@@ -52,7 +51,6 @@ class Fileobj (fileobj.Fileobj):
     def __str__(self):
         sl = []
         sl.append("read align {0}".format(self.__align))
-        sl.append("read mask {0}".format(self.__mask))
         sl.append("read_ahead window {0}".format(str(self.__ra_window)))
         sl.append("\nread_ahead size range")
         for i, o in enumerate(self.__ra_queue):
@@ -107,10 +105,8 @@ class Fileobj (fileobj.Fileobj):
     def set_align(self, align):
         if align > 1:
             self.__align = align
-            self.__mask = ~(align - 1)
         else:
             self.__align = 0
-            self.__mask = 0
 
     def set_window(self, beg, end):
         assert beg >= 0 and end >= 0
@@ -121,22 +117,22 @@ class Fileobj (fileobj.Fileobj):
         n = util.PAGE_SIZE
         while True:
             if end != -1 and x >= end:
-                return -1
+                return fileobj.NOTFOUND
             b = self.read(x, n)
             pos = util.find_string(b, s)
             if pos >= 0:
                 return x + pos
             elif x + len(b) >= self.get_size():
-                return -1
+                return fileobj.NOTFOUND
             x += (n - len(s))
             if screen.test_signal():
-                return -2
+                return fileobj.INTERRUPT
 
     def rsearch(self, x, s, end=-1):
         s = util.str_to_bytes(s)
         while True:
             if end != -1 and x <= end:
-                return -1
+                return fileobj.NOTFOUND
             n = util.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
@@ -147,10 +143,10 @@ class Fileobj (fileobj.Fileobj):
             if pos >= 0:
                 return i + pos
             elif not i:
-                return -1
+                return fileobj.NOTFOUND
             x -= (n - len(s))
             if screen.test_signal():
-                return -2
+                return fileobj.INTERRUPT
 
     def read(self, x, n):
         x += self.get_mapping_offset()
@@ -168,9 +164,8 @@ class Fileobj (fileobj.Fileobj):
             end += n * self.__ra_window[1]
 
             if self.__align:
-                beg &= self.__mask
-                end += (self.__align - 1)
-                end &= self.__mask
+                beg, end = util.align_range(
+                    beg, end, self.__align)
             try:
                 self.fd.seek(beg)
                 b = self.fd.read(end - beg)

@@ -26,7 +26,6 @@ import os
 import platform
 import time
 
-from . import allocator
 from . import filebytes
 from . import fileobj
 from . import kernel
@@ -43,7 +42,7 @@ CONTINUE = "CONTINUE"
 RETURN   = "RETURN"
 QUIT     = "QUIT"
 
-def _rollback(fn):
+def _cleanup(fn):
     def _(self, amp, ope, args, raw):
         try:
             und = self.co.get_undo_size()
@@ -415,7 +414,7 @@ def __set_width(self, args):
     elif self.co.set_bytes_per_line(args[1]) == -1:
         self.co.flash("Invalid arg: {0}".format(args[1]))
     elif self.co.get_bytes_per_line() != prev:
-        screen.refresh()
+        screen.clear()
         self.co.build()
         self.co.repaint()
 
@@ -509,17 +508,17 @@ def show_args(self, amp, ope, args, raw):
     l[l.index(x)] = "[{0}]".format(x)
     self.co.show(' '.join(l))
 
-@_rollback
+@_cleanup
 def inc_number(self, amp, ope, args, raw):
     __do_replace_number(self, get_int(amp), ope, 1)
 
-@_rollback
+@_cleanup
 def range_inc_number(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     __do_replace_number(self, get_int(amp), ope, siz)
 
-@_rollback
+@_cleanup
 def block_inc_number(self, amp, ope, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
@@ -528,17 +527,17 @@ def block_inc_number(self, amp, ope, args, raw):
     else:
         self.co.flash()
 
-@_rollback
+@_cleanup
 def dec_number(self, amp, ope, args, raw):
     __do_replace_number(self, -get_int(amp), ope, 1)
 
-@_rollback
+@_cleanup
 def range_dec_number(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     __do_replace_number(self, -get_int(amp), ope, siz)
 
-@_rollback
+@_cleanup
 def block_dec_number(self, amp, ope, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
@@ -620,22 +619,22 @@ def __search(self, pos, s, is_forward):
     else:
         fn = self.co.rsearch
     ret = fn(pos, word, -1)
-    if ret == -1 and setting.use_wrapscan:
+    if ret == fileobj.NOTFOUND and setting.use_wrapscan:
         if is_forward:
             x = 0
         else:
             x = self.co.get_max_pos()
         ret = fn(x, word, pos)
-    if ret == -1:
+    if ret == fileobj.NOTFOUND:
         self.co.flash("Search {0} failed".format(repr(word)))
-    elif ret == -2:
+    elif ret == fileobj.INTERRUPT:
         self.co.flash("Search {0} interrupted".format(repr(word)))
     elif ret < 0:
         self.co.flash("Search error {0}".format(ret))
     elif ret != self.co.get_pos():
         go_to(self, ret)
 
-@_rollback
+@_cleanup
 def delete(self, amp, ope, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
@@ -650,7 +649,7 @@ def delete(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def backspace(self, amp, ope, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
@@ -672,13 +671,13 @@ def delete_till_end(self, amp, ope, args, raw):
     if x > 0:
         delete(self, x, ope, args, raw)
 
-@_rollback
+@_cleanup
 def range_delete(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     delete(self, siz, ope, [], raw)
 
-@_rollback
+@_cleanup
 def block_delete(self, amp, ope, args, raw):
     test_delete_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
@@ -707,7 +706,7 @@ def block_delete(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def toggle(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -759,13 +758,13 @@ def __buffered_toggle(self, pos, amp):
     self.co.replace(pos, filebytes.seq_to_ords(l))
     return 1
 
-@_rollback
+@_cleanup
 def range_toggle(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     toggle(self, siz, ope, [], raw)
 
-@_rollback
+@_cleanup
 def block_toggle(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -787,7 +786,7 @@ def block_toggle(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def range_replace(self, amp, ope, args, raw):
     test_replace_raise(self)
     beg, siz = __get_range(self)
@@ -801,7 +800,7 @@ def range_replace(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def block_replace(self, amp, ope, args, raw):
     test_replace_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
@@ -825,7 +824,7 @@ def block_replace(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def rotate_right(self, amp, ope, args, raw):
     test_empty_raise(self)
     __do_rotate_right(self, amp, ope, self.co.get_size() - self.co.get_pos())
@@ -905,13 +904,13 @@ def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
     self.co.replace(beg, filebytes.seq_to_ords(buf))
     return 1, car
 
-@_rollback
+@_cleanup
 def range_rotate_right(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     __do_rotate_right(self, amp, ope, siz)
 
-@_rollback
+@_cleanup
 def block_rotate_right(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -951,7 +950,7 @@ def block_rotate_right(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def rotate_left(self, amp, ope, args, raw):
     test_empty_raise(self)
     __do_rotate_left(self, amp, ope, self.co.get_pos() + 1)
@@ -1030,13 +1029,13 @@ def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
     self.co.replace(end, filebytes.seq_to_ords(buf))
     return 1, car
 
-@_rollback
+@_cleanup
 def range_rotate_left(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg + siz - 1)
     __do_rotate_left(self, amp, ope, siz)
 
-@_rollback
+@_cleanup
 def block_rotate_left(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -1076,7 +1075,7 @@ def block_rotate_left(self, amp, ope, args, raw):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def repeat(self, amp, ope, args, raw):
     pxfn = self.co.get_xprev_context()
     if not pxfn:
@@ -1106,25 +1105,25 @@ def __call_context(self, fn, i):
     self.co.lrepaintf()
 
 def undo(self, amp, ope, args, raw):
-    ret = self.co.undo(get_int(amp))
-    if ret == -1:
-        self.co.flash("Already at oldest change")
-    elif ret == -2:
-        self.co.flash("Undo interrupted")
-    elif ret >= 0 and ret != self.co.get_pos():
-        self.co.set_pos(ret)
-    self.co.lrepaintf()
+    __undo(self, amp, self.co.undo,
+        "Already at oldest change", "Undo interrupted")
 
 def undo_all(self, amp, ope, args, raw):
     siz = self.co.get_undo_size()
     undo(self, siz if siz else 1, ope, args, raw)
 
 def redo(self, amp, ope, args, raw):
-    ret = self.co.redo(get_int(amp))
-    if ret == -1:
-        self.co.flash("Already at newest change")
-    elif ret == -2:
-        self.co.flash("Redo interrupted")
+    __undo(self, amp, self.co.redo,
+        "Already at newest change", "Redo interrupted")
+
+def __undo(self, amp, fn, msg_notfound, msg_interrupt):
+    ret, msg = fn(get_int(amp))
+    if ret == fileobj.ERROR:
+        self.co.flash(msg)
+    elif ret == fileobj.NOTFOUND:
+        self.co.flash(msg_notfound)
+    elif ret == fileobj.INTERRUPT:
+        self.co.flash(msg_interrupt)
     elif ret >= 0 and ret != self.co.get_pos():
         self.co.set_pos(ret)
     self.co.lrepaintf()
@@ -1195,7 +1194,7 @@ _bit_ops = {
     literal.bit_or.key : __get_or_ops,
     literal.bit_xor.key: __get_xor_ops, }
 
-@_rollback
+@_cleanup
 def logical_bit_operation(self, amp, ope, arg, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -1245,13 +1244,13 @@ def __buffered_logical_bit_operation(self, pos, amp, fn):
     self.co.replace(pos, l)
     return 1
 
-@_rollback
+@_cleanup
 def range_logical_bit_operation(self, amp, ope, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
     logical_bit_operation(self, siz, ope, [], raw)
 
-@_rollback
+@_cleanup
 def block_logical_bit_operation(self, amp, ope, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
@@ -1315,10 +1314,10 @@ def block_yank(self, amp, ope, args, raw):
         self.co.show("{0} yanked".format(
             util.get_size_string(self.co.get_yank_buffer_size())))
 
-@_rollback
+@_cleanup
 def put(self, amp, ope, args, raw):
     return __put(self, amp, ope, 0)
-@_rollback
+@_cleanup
 def put_after(self, amp, ope, args, raw):
     return __put(self, amp, ope, 1)
 
@@ -1343,10 +1342,10 @@ def __put(self, amp, ope, mov):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def put_over(self, amp, ope, args, raw):
     __put_over(self, amp, ope, 0)
-@_rollback
+@_cleanup
 def put_over_after(self, amp, ope, args, raw):
     __put_over(self, amp, ope, 1)
 
@@ -1367,7 +1366,7 @@ def __put_over(self, amp, ope, mov):
     self.co.lrepaintf()
     self.co.set_prev_context(fn)
 
-@_rollback
+@_cleanup
 def range_put(self, amp, ope, args, raw):
     test_insert_raise(self)
     test_delete_raise(self)
@@ -1384,7 +1383,7 @@ def range_put(self, amp, ope, args, raw):
         self.co.restore_workspace()
         self.co.lrepaintf()
 
-@_rollback
+@_cleanup
 def block_put(self, amp, ope, args, raw):
     test_insert_raise(self)
     test_delete_raise(self)
@@ -1544,7 +1543,7 @@ def __save_partial(self, args, fn, force):
         else:
             tmp = None
         assert not os.path.exists(f)
-        o = allocator.alloc(f)
+        o = self.co.alloc_fileobj(f) # should not fail
         o.insert(0, buf)
         msg, new = o.flush()
         if msg:

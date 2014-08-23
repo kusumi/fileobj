@@ -28,11 +28,20 @@ from . import path
 from . import setting
 from . import util
 
+class AllocatorError (util.GenericError):
+    pass
+
 class Allocator (object):
     def __init__(self):
         for s in iter_module_name():
             setattr(self, s, fileobj.get_class(s))
         self.set_default_class("rwmap")
+
+    def iter_enabled_class(self):
+        for s in iter_module_name():
+            cls = getattr(self, s)
+            if cls._enabled:
+                yield cls
 
     def get_default_class(self):
         return self.__def_class
@@ -64,20 +73,24 @@ class Allocator (object):
         return {
             self.rrmap: self.romap,
             self.rwmap: self.romap,
+            self.rrbuf: self.robuf,
             self.rwbuf: self.robuf,
             self.rwfd : self.rofd,
             self.rwblk: self.roblk,
+            self.rrvm : self.rovm,
         }.get(cls)
 
     def __get_alt_class(self, cls):
-        return { # no alternative for rofd and roblk
+        return { # no alternative for rofd, roblk and rovm
             self.romap: self.robuf,
             self.rrmap: self.rwbuf,
             self.rwmap: self.rrmap,
             self.robuf: self.rofd,
-            self.rwbuf: self.rwfd,
+            self.rrbuf: self.rwfd,
+            self.rwbuf: self.rrbuf,
             self.rwfd : self.rofd,
             self.rwblk: self.roblk,
+            self.rrvm : self.rovm,
         }.get(cls)
 
     def __get_blk_class(self, cls):
@@ -86,26 +99,35 @@ class Allocator (object):
         else:
             return self.rwblk
 
+    def __get_vm_class(self, cls):
+        if self.__is_ro_class(cls):
+            return self.rovm
+        else:
+            return self.rrvm
+
     def alloc(self, f):
         f = path.get_path(f)
         f, offset, length = util.parse_file_path(f)
         o = path.Path(f)
-        if not f or o.is_noent:
-            if setting.use_alloc_noent_rwbuf or \
-                not self.__is_valid_class(self.rwmap, 0, 0):
-                return self.__alloc(f, 0, 0, self.rwbuf)
-            else:
-                return self.__alloc(f, 0, 0, self.rwmap)
+        is_non = not f or o.is_noent
+        is_pid = setting.use_pid_path and kernel.is_pid_path(f)
+
+        if is_non and not is_pid:
+            return self.__alloc_noent(f)
+
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)
-            return
+            raise AllocatorError(ret)
 
         cls = self.__def_class
-        if setting.use_readonly or not util.is_writable(f):
+        if setting.use_readonly or \
+            (not is_pid and not util.is_writable(f)):
             cls = self.__get_ro_class(cls)
         if kernel.is_blkdev(f):
             cls = self.__get_blk_class(cls)
+        if is_non and is_pid:
+            cls = self.__get_vm_class(cls)
 
         while cls:
             if self.__is_valid_class(cls, offset, length):
@@ -113,6 +135,14 @@ class Allocator (object):
                     cls = self.__test_mmap_class(f, offset, length, cls)
                 return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
+
+    def __alloc_noent(self, f):
+        if setting.use_alloc_noent_rwbuf or \
+            not self.__is_valid_class(self.rwmap, 0, 0):
+            cls = self.rwbuf
+        else:
+            cls = self.rwmap
+        return self.__alloc(f, 0, 0, cls)
 
     def __test_mmap_class(self, f, offset, length, cls):
         size = kernel.get_buffer_size_safe(f)
@@ -126,34 +156,40 @@ class Allocator (object):
         return cls
 
     def __alloc(self, f, offset, length, cls):
+        if not setting.use_alloc_recover:
+            return self.__alloc_fileobj(f, offset, length, cls)
         while cls:
             try:
-                log.info("Trying {0} for {1}".format(cls, repr(f)))
-                ret = cls(f, offset, length)
-                ret.set_magic()
-                log.info("Using {0} for {1}".format(cls, repr(f)))
-                return ret
+                return self.__alloc_fileobj(f, offset, length, cls)
             except Exception as e:
                 log.error(e)
-                if setting.use_alloc_raise:
-                    raise
-                elif setting.use_alloc_retry:
-                    cls = self.__get_alt_class(cls)
-                    if not cls:
-                        return
-                else:
-                    return
+                cls = self.__get_alt_class(cls)
+                if not cls:
+                    raise AllocatorError(str(e))
+
+    def __alloc_fileobj(self, f, offset, length, cls):
+        log.info("Trying {0} for {1}".format(cls, repr(f)))
+        ret = cls(f, offset, length)
+        ret.set_magic()
+        log.info("Using {0} for {1}".format(cls, repr(f)))
+        return ret
 
 def iter_module_name():
     yield "romap"
     yield "rrmap"
     yield "rwmap"
     yield "robuf"
+    yield "rrbuf"
     yield "rwbuf"
     yield "rofd"
     yield "rwfd"
     yield "roblk"
     yield "rwblk"
+    yield "rovm"
+    yield "rrvm"
+
+def iter_enabled_class():
+    return _allocator.iter_enabled_class()
 
 def get_default_class():
     return _allocator.get_default_class()

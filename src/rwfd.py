@@ -36,11 +36,16 @@ class Fileobj (rofd.Fileobj):
         super(Fileobj, self).__init__(f, offset, length)
         self.__dirty = False
         self.__diff = {}
+        self.__sbuf = {}
 
     def __str__(self):
-        return "{0}\n\ndiff size {1}".format(
-            super(Fileobj, self).__str__(),
-            util.get_size_string(len(self.__diff)))
+        l = []
+        s = util.get_size_string(len(self.__diff))
+        l.append("diff size {0}".format(s))
+        s = util.get_size_string(len(self.__sbuf))
+        l.append("sbuf size {0}".format(s))
+        return self.add_string(
+            super(Fileobj, self).__str__(), '\n'.join(l))
 
     def clear_dirty(self):
         self.__dirty = False
@@ -50,10 +55,15 @@ class Fileobj (rofd.Fileobj):
 
     def sync(self):
         offset = self.get_mapping_offset()
-        for x in sorted(self.__diff.keys()):
+        for x in sorted(self.__sbuf.keys()):
             self.fd.seek(offset + x)
-            self.fd.write(self.__diff[x])
+            self.fd.write(self.__sbuf[x])
+        self.__sbuf = {}
         util.fsync(self.fd)
+
+    def utime(self):
+        super(Fileobj, self).utime()
+        self.__sbuf = {}
 
     def read(self, x, n):
         b = super(Fileobj, self).read(x, n)
@@ -76,8 +86,10 @@ class Fileobj (rofd.Fileobj):
                 return x
 
         for i, c in enumerate(l):
-            self.__diff[x + i] = filebytes.input_to_bytes((c,))
-        self.__dirty = not not self.__diff
+            b = filebytes.input_to_bytes((c,))
+            self.__diff[x + i] = b
+            self.__sbuf[x + i] = b
+        self.__dirty = not not self.__sbuf
 
         if rec:
             rbuf = l[:]
