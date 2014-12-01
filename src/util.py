@@ -117,7 +117,7 @@ def is_running_script():
     return os.path.isfile(get_program_path())
 
 def is_running_fileobj():
-    # running script/profile.py does not match this
+    # running script/profile does not match this
     return is_running_script() and \
         get_program_name() == "fileobj"
 
@@ -564,7 +564,7 @@ def create_text_file(f):
     return os.fdopen(__create_file(f), 'w+')
 
 def __create_file(f):
-    """raise 'OSError: [Errno 17] File exists: ...' if f exists"""
+    """Raise 'OSError: [Errno 17] File exists: ...' if f exists"""
     return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 def open_temp_file():

@@ -99,6 +99,14 @@ def __get_block(self):
     cnt = (end - beg) // map.x + 1
     return beg, end, map.x, siz, cnt
 
+def __exec(self, fn, i=0):
+    __call_context(self, fn, i)
+    self.co.set_prev_context(fn)
+
+def __call_context(self, fn, i=0):
+    fn(i)
+    self.co.lrepaintf()
+
 def go_up(self, amp=None, ope=None, args=None, raw=None):
     if self.co.go_up(get_int(amp)) == -1:
         self.co.lrepaintf()
@@ -563,9 +571,7 @@ def __do_replace_number(self, amp, ope, siz):
             raise fileobj.FileobjError("Failed to convert")
         self.co.replace_current(filebytes.ords(b))
         self.co.show(util.bin_to_int(b))
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 _did_search_forward = True
 def search_forward(self, amp, ope, args, raw):
@@ -645,9 +651,7 @@ def delete(self, amp, ope, args, raw):
             self.co.init_yank_buffer(buf)
         else:
             self.co.right_add_yank_buffer(buf)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def backspace(self, amp, ope, args, raw):
@@ -662,9 +666,7 @@ def backspace(self, amp, ope, args, raw):
             self.co.init_yank_buffer(buf)
         else:
             self.co.left_add_yank_buffer(buf)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def delete_till_end(self, amp, ope, args, raw):
     x = self.co.get_size() - self.co.get_pos()
@@ -702,9 +704,7 @@ def block_delete(self, amp, ope, args, raw):
         else:
             self.co.right_add_yank_buffer(buf)
         self.co.merge_undo(i + 1)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def toggle(self, amp, ope, args, raw):
@@ -723,9 +723,7 @@ def toggle(self, amp, ope, args, raw):
             self.co.add_pos(amp)
         elif ret == -1:
             self.co.rollback_until(und)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def __single_toggle(self, pos, amp):
     for x in util.get_xrange(amp):
@@ -782,9 +780,7 @@ def block_toggle(self, amp, ope, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def range_replace(self, amp, ope, args, raw):
@@ -796,9 +792,7 @@ def range_replace(self, amp, ope, args, raw):
         pos = self.co.get_pos()
         self.co.replace(pos, l)
         self.co.set_pos(pos + siz)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def block_replace(self, amp, ope, args, raw):
@@ -820,9 +814,7 @@ def block_replace(self, amp, ope, args, raw):
                 return
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def rotate_right(self, amp, ope, args, raw):
@@ -850,9 +842,7 @@ def __do_rotate_right(self, amp, ope, siz):
             self.co.merge_undo(ret)
         elif ret == -1:
             self.co.rollback_until(und)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def __single_rotate_right(self, shift, beg, end):
     car = 0
@@ -946,9 +936,7 @@ def block_rotate_right(self, amp, ope, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(org)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def rotate_left(self, amp, ope, args, raw):
@@ -976,9 +964,7 @@ def __do_rotate_left(self, amp, ope, siz):
             self.co.merge_undo(ret)
         elif ret == -1:
             self.co.rollback_until(und)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def __single_rotate_left(self, shift, beg, end):
     car = 0
@@ -1071,9 +1057,7 @@ def block_rotate_left(self, amp, ope, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(org)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def repeat(self, amp, ope, args, raw):
@@ -1081,12 +1065,12 @@ def repeat(self, amp, ope, args, raw):
     if not pxfn:
         self.co.flash("No previous command")
     elif amp is None:
-        __call_context(self, pxfn, 0)
+        __call_context(self, pxfn)
     else:
         amp = get_int(amp)
         fn = self.co.get_prev_context()
         if amp <= 1:
-            __call_context(self, fn, 0)
+            __call_context(self, fn)
             self.co.set_prev_context(fn)
         else:
             def xfn(i):
@@ -1097,12 +1081,8 @@ def repeat(self, amp, ope, args, raw):
                     else:
                         fn(1)
                 self.co.merge_undo_until(und)
-            __call_context(self, xfn, 0)
+            __call_context(self, xfn)
             self.co.set_prev_context(fn, xfn)
-
-def __call_context(self, fn, i):
-    fn(i)
-    self.co.lrepaintf()
 
 def undo(self, amp, ope, args, raw):
     __undo(self, amp, self.co.undo,
@@ -1214,9 +1194,7 @@ def logical_bit_operation(self, amp, ope, arg, raw):
             self.co.add_pos(amp)
         elif ret == -1:
             self.co.rollback_until(und)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def __single_logical_bit_operation(self, pos, amp, fn):
     for x in util.get_xrange(amp):
@@ -1271,9 +1249,7 @@ def block_logical_bit_operation(self, amp, ope, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 def yank(self, amp, ope, args, raw):
     try:
@@ -1338,9 +1314,7 @@ def __put(self, amp, ope, mov):
             go_right(self, mov + len(buf) - 1)
         finally:
             self.co.restore_eof()
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def put_over(self, amp, ope, args, raw):
@@ -1362,9 +1336,7 @@ def __put_over(self, amp, ope, mov):
             pos = self.co.get_max_pos()
         self.co.replace(pos, buf)
         go_right(self, len(buf) - 1)
-    fn(0)
-    self.co.lrepaintf()
-    self.co.set_prev_context(fn)
+    __exec(self, fn)
 
 @_cleanup
 def range_put(self, amp, ope, args, raw):
