@@ -257,10 +257,8 @@ class Fileobj (object):
             util.fsync(fd)
 
     def search(self, x, s, end=-1):
-        """Return NOTFOUND if not found, INTERRUPT if interrupted"""
         self.raise_no_support("search")
     def rsearch(self, x, s, end=-1):
-        """Return NOTFOUND if not found, INTERRUPT if interrupted"""
         self.raise_no_support("backward search")
 
     def read(self, x, n):

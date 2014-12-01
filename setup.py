@@ -1,4 +1,15 @@
 if __name__ == '__main__':
+    import os
+    import sys
+    if not os.path.isfile("./setup.py") or \
+        not os.path.isdir("./src"):
+        # it'll fail anyway but just to make sure
+        sys.stderr.write(
+            "Invalid current directory %s, cd %s and try again.\n" % (
+            os.getcwd(),
+            os.path.abspath(os.path.dirname(sys.argv[0]))))
+        sys.exit(1)
+
     import src.nodep
     src.nodep.test()
 

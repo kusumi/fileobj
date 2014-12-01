@@ -1,4 +1,4 @@
-fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
+fileobj ([v0.7.14](https://github.com/kusumi/fileobj/releases/tag/v0.7.14))
 =======
 
 ## About
@@ -13,9 +13,11 @@ fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
 
 + Python 2.6 or above
 
-+ Python 3 is supported since [v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
+    + Python 3 is supported since [v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
 
-+ Python 2.5 support is dropped in [v0.7](https://github.com/kusumi/fileobj/tree/v0.7), use [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) for Python 2.5
+    + Python 2.5 support is dropped in [v0.7](https://github.com/kusumi/fileobj/tree/v0.7), use [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) for Python 2.5
+
+    + [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) and [v0.7](https://github.com/kusumi/fileobj/tree/v0.7) are basically the same at this point except for supported Python versions mentioned above
 
 |    |<=Python 2.4|Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|
 |:---|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
@@ -37,7 +39,7 @@ fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.13
+        v0.7.14
         $ fileobj
 
 + or run *setup.py* using Python 3
@@ -46,7 +48,7 @@ fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.13
+        v0.7.14
         $ fileobj
 
 ## Uninstall
@@ -88,9 +90,13 @@ fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
 
         $ fileobj ./a.out@1000:2000 ./aa.out@:10000
 
-+ Open a block (loop) device /dev/loop0
++ Open a loop device /dev/loop0
 
         $ sudo fileobj /dev/loop0
+
++ Open MBR of a block device /dev/sda
+
+        $ sudo fileobj /dev/sda@:512
 
 + Open virtual address space of a user process (experimental and currently only for Linux on >= Python 2.6)
 
@@ -297,4 +303,4 @@ fileobj ([v0.7.13](https://github.com/kusumi/fileobj/releases/tag/v0.7.13))
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
 
-+ If the ncurses border lines are shown with messed up characters on Putty, try changing settings of the section 'Window -> Appearance' and/or 'Window -> Translation'. Changing the character set to "Use font encoding" from "UTF-8" or whatever the setting already there may work.
++ If the ncurses border lines are shown with messed up characters on Putty, try changing settings of the section *"Window -> Appearance"* and/or *"Window -> Translation"*. Changing the character set from *"UTF-8"* (or whatever the setting already there) to *"Use font encoding"* may work.

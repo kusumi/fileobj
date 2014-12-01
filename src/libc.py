@@ -152,6 +152,10 @@ _libc = None
 try:
     import ctypes
     import ctypes.util
+except Exception:
+    if setting.use_debug:
+        raise
+try:
     __init_types()
     if tuple(sys.version_info[:2]) >= (2, 6):
         __init_libc()
