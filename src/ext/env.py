@@ -21,19 +21,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.env
+import os
+
 import fileobj.util
 
 def get_text(co, fo, args):
-    n = max([len(x) for x in fileobj.env.iter_env_name()])
-    f = fileobj.util.get_string_format("%-${len}s", len=n)
+    keys = [x for x in os.environ.keys() if x.startswith("FILEOBJ_")]
+    if not keys:
+        return "No env"
+    n = max([len(x) for x in keys])
+    f = fileobj.util.get_string_format("%-${len}s \"%s\"", len=n)
     l = []
-    for x in fileobj.env.iter_env_name():
-        o = getattr(fileobj.env, x, None)
-        s = f % x
-        if o is None:
-            s += " None"
-        else:
-            s += " \"%s\"" % o
-        l.append(s)
+    for x in sorted(keys):
+        o = os.environ.get(x)
+        assert o is not None, x
+        l.append(f % (x, o))
     return l
