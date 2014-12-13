@@ -21,7 +21,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.env
 import fileobj.filebytes
+import fileobj.setting
 import fileobj.util
 
 def get_text(co, fo, args):
@@ -66,3 +68,14 @@ def get_text(co, fo, args):
         for i, x in enumerate(l):
             sl.append(f.format(x[0], x[1]))
     return sl
+
+fileobj.setting.add("ext_strings_range",
+    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_RANGE", 1024))
+fileobj.setting.add("ext_strings_count",
+    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_COUNT", 1024))
+fileobj.setting.add("ext_strings_thresh",
+    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_THRESH", 3))
+
+assert hasattr(fileobj.setting, "ext_strings_range"), "ext_strings_range"
+assert hasattr(fileobj.setting, "ext_strings_count"), "ext_strings_count"
+assert hasattr(fileobj.setting, "ext_strings_thresh"), "ext_strings_thresh"

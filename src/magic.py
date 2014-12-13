@@ -262,6 +262,14 @@ class LVM2PVMagic (_blk_magic):
     def get_name(self):
         return "LVM2|PV"
 
+class HAMMERFSMagic (_blk_magic):
+    def test(self, fo):
+        return self.read(fo, 0, 8) == self.get_magic()
+    def get_magic(self):
+        return _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8")
+    def get_name(self):
+        return "HAMMERFS"
+
 class MBRMagic (_blk_magic):
     def test(self, fo):
         return self.read(fo, 510, 2) == self.get_magic()
@@ -304,6 +312,7 @@ GZIPMagic, \
 BZIPMagic, \
 ISO9660Magic, \
 LVM2PVMagic, \
+HAMMERFSMagic, \
 MBRMagic,
 # MBRMagic comes last
 

@@ -26,10 +26,6 @@ import sys
 
 from . import env
 
-def iter_setting_name():
-    for s in env.iter_env_name():
-        yield env.env_to_setting_name(s)
-
 def get_trace_path():
     return __get_path("trace")
 
@@ -91,9 +87,17 @@ def init_user():
             return -1
 
 def init():
-    for s in env.iter_env_name():
-        setattr(this, env.env_to_setting_name(s),
-            env.get_setting(s))
+    for _ in env.iter_setting():
+        add(*_)
 
+def add(name, value):
+    setattr(this, name, value)
+    _names.append(name)
+
+def iter_setting_name():
+    for x in sorted(_names):
+        yield x
+
+_names = []
 this = sys.modules[__name__]
 init()

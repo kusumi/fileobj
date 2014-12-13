@@ -25,6 +25,7 @@ import os
 import re
 import sys
 
+import fileobj.env
 import fileobj.extension
 import fileobj.filebytes
 import fileobj.libc
@@ -207,4 +208,17 @@ def get_text(co, fo, args):
         l.append('')
     return l
 
+fileobj.setting.add("ext_cstruct_path",
+    os.getenv("FILEOBJ_EXT_CSTRUCT_PATH"))
+fileobj.setting.add("ext_cstruct_base",
+    fileobj.env.test_name("FILEOBJ_EXT_CSTRUCT_BASE", "cstruct"))
+fileobj.setting.add("ext_cstruct_dir",
+    os.getenv("FILEOBJ_EXT_CSTRUCT_DIR"))
+fileobj.setting.add("use_ext_cstruct_libc",
+    fileobj.env.test_bool("FILEOBJ_USE_EXT_CSTRUCT_LIBC", True))
+
+assert hasattr(fileobj.setting, "ext_cstruct_path"), "ext_cstruct_path"
+assert hasattr(fileobj.setting, "ext_cstruct_base"), "ext_cstruct_base"
+assert hasattr(fileobj.setting, "ext_cstruct_dir"), "ext_cstruct_dir"
+assert hasattr(fileobj.setting, "use_ext_cstruct_libc"), "use_ext_cstruct_libc"
 __init_class()
