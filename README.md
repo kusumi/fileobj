@@ -1,4 +1,4 @@
-fileobj ([v0.6.25](https://github.com/kusumi/fileobj/releases/tag/v0.6.25))
+fileobj ([v0.6.26](https://github.com/kusumi/fileobj/releases/tag/v0.6.26))
 =======
 
 ## About
@@ -39,7 +39,7 @@ fileobj ([v0.6.25](https://github.com/kusumi/fileobj/releases/tag/v0.6.25))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.25
+        v0.6.26
         $ fileobj
 
 ## Uninstall

@@ -108,7 +108,7 @@ def is_python3_supported():
     return version.get_version() >= (0, 7, 0)
 
 def get_program_path():
-    return sys.argv[0] if sys.argv else ''
+    return sys.argv[0]
 
 def get_program_name():
     return os.path.basename(get_program_path())

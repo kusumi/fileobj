@@ -69,13 +69,17 @@ def get_text(co, fo, args):
             sl.append(f % (x[0], x[1]))
     return sl
 
-fileobj.setting.add("ext_strings_range",
-    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_RANGE", 1024))
-fileobj.setting.add("ext_strings_count",
-    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_COUNT", 1024))
-fileobj.setting.add("ext_strings_thresh",
-    fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_THRESH", 3))
+def init():
+    fileobj.setting.add("ext_strings_range",
+        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_RANGE", 1024))
+    fileobj.setting.add("ext_strings_count",
+        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_COUNT", 1024))
+    fileobj.setting.add("ext_strings_thresh",
+        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_THRESH", 3))
 
-assert hasattr(fileobj.setting, "ext_strings_range"), "ext_strings_range"
-assert hasattr(fileobj.setting, "ext_strings_count"), "ext_strings_count"
-assert hasattr(fileobj.setting, "ext_strings_thresh"), "ext_strings_thresh"
+def cleanup():
+    fileobj.setting.delete("ext_strings_range")
+    fileobj.setting.delete("ext_strings_count")
+    fileobj.setting.delete("ext_strings_thresh")
+
+init()
