@@ -27,21 +27,18 @@ import sys
 from . import env
 
 def get_trace_path():
-    return __get_path("trace")
+    return get_path("trace")
 
 def get_stream_path():
-    return __get_path("stream")
+    return get_path("stream")
 
 def get_log_path():
-    return __get_path("log")
+    return get_path("log")
 
 def get_history_path():
-    return __get_path("history")
+    return get_path("history")
 
-def get_ext_cstruct_path():
-    return __get_path("ext_cstruct")
-
-def __get_path(s):
+def get_path(s):
     f = getattr(this, s + "_path")
     b = getattr(this, s + "_base")
     d = getattr(this, s + "_dir")
@@ -87,17 +84,52 @@ def init_user():
             return -1
 
 def init():
-    for _ in env.iter_setting():
+    __init(env.iter_setting())
+
+def __init(g):
+    for _ in g:
         add(*_)
 
-def add(name, value):
-    setattr(this, name, value)
-    _names.append(name)
+def cleanup():
+    for k in list(_attr.keys()): # Python 3 needs cast here
+        delete(k)
+
+def add(k, v):
+    if k not in _attr:
+        setattr(this, k, v)
+        _attr[k] = v
+    else:
+        return -1
+
+def delete(k):
+    if k in _attr:
+        delattr(this, k)
+        del _attr[k]
+    else:
+        return -1
+
+def update(k, v):
+    if delete(k) == -1:
+        return -1
+    if add(k, v) == -1:
+        return -1
+
+def get_snapshot():
+    global _snap
+    _snap = dict(_attr)
+
+def set_snapshot():
+    if _attr != _snap:
+        cleanup()
+        __init(_snap.items())
+    else:
+        return -1
 
 def iter_setting_name():
-    for x in sorted(_names):
-        yield x
+    for k in sorted(_attr.keys()):
+        yield k
 
-_names = []
+_attr = {}
+_snap = dict(_attr)
 this = sys.modules[__name__]
 init()

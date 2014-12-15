@@ -174,7 +174,7 @@ def get_text(co, fo, args):
         if not args:
             return "No struct name"
     else:
-        f = fileobj.setting.get_ext_cstruct_path()
+        f = fileobj.setting.get_path("ext_cstruct")
         if fileobj.path.is_noent(f):
             return "Need {0} with struct definition".format(f)
         if not os.path.isfile(f):
@@ -208,17 +208,21 @@ def get_text(co, fo, args):
         l.append('')
     return l
 
-fileobj.setting.add("ext_cstruct_path",
-    os.getenv("FILEOBJ_EXT_CSTRUCT_PATH"))
-fileobj.setting.add("ext_cstruct_base",
-    fileobj.env.test_name("FILEOBJ_EXT_CSTRUCT_BASE", "cstruct"))
-fileobj.setting.add("ext_cstruct_dir",
-    os.getenv("FILEOBJ_EXT_CSTRUCT_DIR"))
-fileobj.setting.add("use_ext_cstruct_libc",
-    fileobj.env.test_bool("FILEOBJ_USE_EXT_CSTRUCT_LIBC", True))
+def init():
+    fileobj.setting.add("ext_cstruct_path",
+        os.getenv("FILEOBJ_EXT_CSTRUCT_PATH"))
+    fileobj.setting.add("ext_cstruct_base",
+        fileobj.env.test_name("FILEOBJ_EXT_CSTRUCT_BASE", "cstruct"))
+    fileobj.setting.add("ext_cstruct_dir",
+        os.getenv("FILEOBJ_EXT_CSTRUCT_DIR"))
+    fileobj.setting.add("use_ext_cstruct_libc",
+        fileobj.env.test_bool("FILEOBJ_USE_EXT_CSTRUCT_LIBC", True))
+    __init_class()
 
-assert hasattr(fileobj.setting, "ext_cstruct_path"), "ext_cstruct_path"
-assert hasattr(fileobj.setting, "ext_cstruct_base"), "ext_cstruct_base"
-assert hasattr(fileobj.setting, "ext_cstruct_dir"), "ext_cstruct_dir"
-assert hasattr(fileobj.setting, "use_ext_cstruct_libc"), "use_ext_cstruct_libc"
-__init_class()
+def cleanup():
+    fileobj.setting.delete("ext_cstruct_path")
+    fileobj.setting.delete("ext_cstruct_base")
+    fileobj.setting.delete("ext_cstruct_dir")
+    fileobj.setting.delete("use_ext_cstruct_libc")
+
+init()
