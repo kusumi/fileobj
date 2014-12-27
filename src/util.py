@@ -22,13 +22,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-import fcntl
-import hashlib
+from __future__ import with_statement
+import contextlib
 import inspect
 import os
 import platform
 import re
-import resource
 import string
 import struct
 import subprocess
@@ -37,8 +36,6 @@ import tempfile
 import time
 import traceback
 
-from . import kbd
-from . import libc
 from . import package
 from . import setting
 from . import version
@@ -76,8 +73,7 @@ def get_python_version_string():
     return '.'.join([str(x) for x in get_python_version()])
 
 def get_python_executable_string():
-    major, minor = get_python_version()[:2]
-    return "python%s.%s" % (major, minor)
+    return "python%d.%d" % (get_python_version()[:2])
 
 def is_python2():
     return get_python_version()[0] == 2
@@ -107,6 +103,9 @@ def is_python3_version_or_ht(*l):
 def is_python3_supported():
     return version.get_version() >= (0, 7, 0)
 
+def get_home():
+    return os.path.expanduser("~")
+
 def get_program_path():
     return sys.argv[0]
 
@@ -135,7 +134,7 @@ def pack_hex_string(s):
             s += '0'
         l = []
         for i in range(0, len(s), 2):
-            l.append("\\x%s" % s[i : i + 2])
+            l.append("\\x" + s[i : i + 2])
         s = ''.join(l)
     pos = 0
     while True:
@@ -166,35 +165,6 @@ def escape_regex_pattern(s):
 def get_string_format(tmp, **kwd):
     return string.Template(tmp).substitute(kwd)
 
-def is_subclass(cls, clsinfo, include_clsinfo=True):
-    if not inspect.isclass(cls):
-        return False
-    ret = issubclass(cls, clsinfo)
-    if include_clsinfo:
-        return ret
-    else:
-        return ret and (cls is not clsinfo)
-
-def is_graph(c):
-    # man isgraph(3) says 'checks for any printable character except space'
-    return kbd.isgraph(c) or c == 0x20 or c == ' '
-
-def is_graph_sequence(l):
-    return len(l) > 0 and all(is_graph(x) for x in l)
-
-def to_chr_repr(c):
-    if is_graph(c):
-        if isinstance(c, int):
-            return chr(c)
-        else:
-            return c
-    else:
-        return '.'
-
-def ctrl(c):
-    """Take str/bytes and return int"""
-    return kbd.ctrl(ord(c))
-
 def find_string(src, s):
     if setting.use_ignorecase:
         return src.lower().find(s.lower())
@@ -207,17 +177,23 @@ def rfind_string(src, s):
     else:
         return src.rfind(s)
 
-def get_system_string():
-    """Return os name"""
+def get_os_name():
+    # e.g. 'Linux'
     ret = platform.system()
     return ret if ret else "Unknown"
 
-def get_release_string():
-    """Return kernel release string"""
-    return platform.release()
+def get_os_release():
+    # e.g. '2.6.32-504.1.3.el6.x86_64'
+    ret = platform.release()
+    return ret if ret else "Unknown"
+
+def get_cpu_name():
+    # e.g. 'x86_64'
+    ret = platform.processor()
+    return ret if ret else "Unknown"
 
 def raise_no_impl(s):
-    raise NotImplementedError("No %s" % s)
+    raise NotImplementedError("No " + s)
 
 KB = 10 ** 3
 MB = 10 ** 6
@@ -232,16 +208,6 @@ GiB = 1 << 30
 TiB = 1 << 40
 PiB = 1 << 50
 EiB = 1 << 60
-
-try:
-    PAGE_SIZE = resource.getpagesize()
-except Exception:
-    try:
-        PAGE_SIZE = os.sysconf("SC_PAGE_SIZE")
-    except Exception:
-        PAGE_SIZE = 4 * KiB # pretend 4 KiB
-        if setting.use_debug:
-            raise
 
 _str_size_dict = {
     "KB" : KB,
@@ -274,10 +240,9 @@ def parse_size_string(s, sector_size=-1):
             s = s[:-len(k)]
             break
     else:
-        if s[-1].upper() == "B":
-            n = 1
-            s = s[:-1]
-        elif s[-3:].upper() == "LBA":
+        # no longer support "xxxB" for "xxx byte"
+        # since this makes it unable to parse hexadcimal B as 11
+        if s[-3:].upper() == "LBA":
             if sector_size == -1:
                 return None
             n = sector_size
@@ -337,27 +302,26 @@ def get_size_string(arg):
             return "%s[%s]" % (s, d[n])
     return "0[B]"
 
-def get_cpu_string():
-    """Return cpu name"""
-    return platform.processor()
-
-def get_pointer_size():
-    ret = libc.get_sizeof_void_p()
-    if ret != -1:
-        return ret
-    else:
-        return struct.calcsize('P')
-
 def is_64bit_cpu():
-    return get_pointer_size() == 8
+    return _cpu_bits == 64
 
 def is_32bit_cpu():
-    return get_pointer_size() == 4
+    return _cpu_bits == 32
 
 def get_address_space():
-    # simply return 2 ^ pointer_size
-    size = get_pointer_size() << 3
-    return 2 ** size
+    return 2 ** _cpu_bits # simply return 2 ^ size
+
+def __get_cpu_bits():
+    s = platform.architecture()[0]
+    m = re.match(r"(\d+)bit", s)
+    if m:
+        return int(m.group(1))
+    else:
+        if MAX_INT > 2 ** 32:
+            return 64
+        else:
+            return 32 # assume either 64 or 32
+_cpu_bits = __get_cpu_bits()
 
 def align_range(beg, end, align):
     beg = align_head(beg, align)
@@ -406,8 +370,8 @@ def __get_endianness_prefix(s):
     else:
         return ''
 
-def __false_assert_unknown_byteorder():
-    assert 0, "unknown byteorder %s" % sys.byteorder
+def __fail_unknown_byteorder():
+    assert 0, "unknown byteorder: " + sys.byteorder
 
 def byte_to_int(b, sign=False):
     if is_le_cpu():
@@ -415,7 +379,7 @@ def byte_to_int(b, sign=False):
     elif is_be_cpu():
         return __bin_to_int('', b[-1:], sign)
     else:
-        __false_assert_unknown_byteorder()
+        __fail_unknown_byteorder()
 
 def bin_to_int(b, sign=False):
     """Result depends on setting.endianness"""
@@ -436,7 +400,7 @@ def host_to_int(b, sign=False):
     elif is_be_cpu():
         return be_to_int(b, sign)
     else:
-        __false_assert_unknown_byteorder()
+        __fail_unknown_byteorder()
 
 def __bin_to_int(prefix, b, sign):
     assert len(b) <= _max_struct_size
@@ -458,14 +422,14 @@ def __pad_bin(prefix, b, sign):
                 elif prefix == ">" or prefix == "!":
                     return __get_padding(i, b, 0, sign) + b
                 else:
-                    assert 0, "unknown prefix %s" % prefix
+                    assert 0, "unknown prefix " + prefix
             else:
                 if is_le_cpu():
                     return b + __get_padding(i, b, len(b) - 1, sign)
                 elif is_be_cpu():
                     return __get_padding(i, b, 0, sign) + b
                 else:
-                    __false_assert_unknown_byteorder()
+                    __fail_unknown_byteorder()
     return b
 
 def __get_padding(size, b, high, sign):
@@ -497,7 +461,7 @@ def int_to_host(x, size):
     elif is_be_cpu():
         return int_to_be(x, size)
     else:
-        __false_assert_unknown_byteorder()
+        __fail_unknown_byteorder()
 
 def __int_to_bin(prefix, x, size):
     assert size <= _max_struct_size
@@ -530,14 +494,61 @@ def __strip_bin(prefix, b, size):
         elif prefix == ">" or prefix == "!":
             return b[len(b)-size:]
         else:
-            assert 0, "unknown prefix %s" % prefix
+            assert 0, "unknown prefix " + prefix
     else:
         if is_le_cpu():
             return b[:size]
         elif is_be_cpu():
             return b[len(b)-size:]
         else:
-            __false_assert_unknown_byteorder()
+            __fail_unknown_byteorder()
+
+__mktmp = tempfile.NamedTemporaryFile # no delete= till Python 2.6
+__mktmp_no_delete = tempfile.mkstemp
+
+def open_temp_file(binary=True, delete=True):
+    mode = 'w+b' if binary else 'w+'
+    dir = setting.get_userdir_path()
+    if not dir:
+        dir = '.'
+    if is_python_version_or_ht(2, 6):
+        try:
+            return __mktmp(mode=mode, delete=delete, dir=dir)
+        except Exception:
+            return __mktmp(mode=mode, delete=delete)
+    elif delete:
+        try:
+            return __mktmp(mode=mode, dir=dir)
+        except Exception:
+            return __mktmp(mode=mode)
+    else:
+        try:
+            l = __mktmp_no_delete(dir=dir)
+        except Exception:
+            l = __mktmp_no_delete()
+        os.close(l[0])
+        return open(l[1], mode)
+
+@contextlib.contextmanager
+def do_atomic_write(dst, binary=True, fsync=None, rename=None):
+    try:
+        src = ""
+        with open_temp_file(binary, False) as tmp:
+            src = tmp.name
+            assert not os.path.islink(src)
+            yield tmp
+            if fsync:
+                fsync(tmp)
+        # see https://docs.python.org/2/library/os.html#os.rename
+        if rename:
+            rename(src, dst)
+        else:
+            os.rename(src, dst) # atomic
+        assert os.path.isfile(dst)
+    finally:
+        if os.path.isfile(src):
+            os.unlink(src) # exception before rename
+        assert not os.path.exists(src)
 
 def is_same_file(a, b):
     if os.path.exists(a) and os.path.exists(b):
@@ -545,129 +556,11 @@ def is_same_file(a, b):
     else:
         return False
 
-def get_inode(f):
-    return os.stat(f).st_ino
-
-def open_file(f, mode='r'):
-    return open(f, mode + 'b')
-
-def open_text_file(f, mode='r'):
-    return open(f, mode)
-
-def truncate_file(f):
-    open(f, 'wb').close()
-
-def create_file(f):
-    return os.fdopen(__create_file(f), 'w+b')
-
-def create_text_file(f):
-    return os.fdopen(__create_file(f), 'w+')
-
-def __create_file(f):
-    """Raise 'OSError: [Errno 17] File exists: ...' if f exists"""
-    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
-
-def open_temp_file():
-    d = setting.get_userdir_path()
-    if not d:
-        d = '.'
-    try:
-        return tempfile.NamedTemporaryFile(dir=d)
-    except Exception:
-        return tempfile.NamedTemporaryFile()
-
-def set_non_blocking(fd):
-    try:
-        fl = fcntl.fcntl(fd.fileno(), fcntl.F_GETFL)
-        fl |= os.O_NONBLOCK
-        fcntl.fcntl(fd.fileno(), fcntl.F_SETFL, fl)
-    except Exception:
-        return -1
-
 def is_readable(f):
     return os.access(f, os.R_OK)
+
 def is_writable(f):
     return os.access(f, os.W_OK)
-
-def fsync(fd):
-    if fd and not fd.closed:
-        fd.flush()
-        os.fsync(fd.fileno()) # call fsync(2)
-
-def utime(f, st):
-    os.utime(f, (st.st_atime, st.st_mtime))
-
-def utimem(f, st):
-    current = os.stat(f)
-    os.utime(f, (current.st_atime, st.st_mtime))
-
-def touch(f):
-    os.utime(f, None)
-
-def has_pid_access(pid):
-    try:
-        os.kill(pid, 0)
-        return True
-    except OSError:
-        return False
-
-def has_pid(pid):
-    for l in iter_ps_ax():
-        if pid == l[0]:
-            return True
-    return False
-
-def get_pid_name(pid):
-    for l in iter_ps_ax():
-        if pid == l[0]:
-            cmd = l[-1].split(" ")[0]
-            if re.match(r"^\[.+\]$", cmd): # Linux kernel thread
-                return cmd[1:-1]
-            else:
-                return os.path.basename(cmd)
-    return ''
-
-def iter_ps_ax():
-    try:
-        s = execute("ps", "ax")[0]
-    except Exception:
-        s = ''
-    l = s.split('\n')
-    for x in l[1:]:
-        if x:
-            ret = __split_ps_ax_line(x)
-            if ret is not None:
-                yield ret
-
-def __split_ps_ax_line(s):
-    # e.g. " 2680 ?        Sl     0:01 libvirtd --daemon"
-    try:
-        s = s.strip()
-        s = re.sub(r" +", " ", s)
-        l = s.split(" ", 4)
-        l[0] = int(l[0])
-        assert len(l) == 5, l
-        return l
-    except Exception:
-        pass
-
-def parse_waitpid_result(status):
-    l = []
-    if os.WIFEXITED(status):
-        l.append("WIFEXITED(%d)" % \
-            os.WEXITSTATUS(status))
-    if os.WIFSIGNALED(status):
-        l.append("WIFSIGNALED(%d)" % \
-            os.WTERMSIG(status))
-    if os.WCOREDUMP(status):
-        l.append("WCOREDUMP")
-    if os.WIFSTOPPED(status):
-        l.append("WIFSTOPPED(%d)" % \
-            os.WSTOPSIG(status))
-    if hasattr(os, "WIFCONTINUED") and \
-        os.WIFCONTINUED(status):
-        l.append("WIFCONTINUED")
-    return '|'.join(l)
 
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
@@ -675,8 +568,9 @@ def parse_file_path(f):
         return f, 0, 0
     if '@' in f:
         i = f.rindex('@')
-        if '/' in f:
-            if i > f.rindex('/'):
+        sep = os.path.sep
+        if sep in f:
+            if i > f.rindex(sep):
                 s = f[i + 1:]
                 f = f[:i]
                 if '-' in s:
@@ -712,16 +606,6 @@ def __get_path_attribute(s, default=0):
         return default
     else:
         return ret
-
-def get_md5(b):
-    if isinstance(b, str):
-        b = _(b)
-    m = hashlib.md5(b)
-    return m.hexdigest()
-
-def get_file_md5(f):
-    if os.path.isfile(f):
-        return get_md5(open_file(f).read())
 
 def get_stamp(prefix=''):
     # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
@@ -785,10 +669,12 @@ def iter_site_module():
             yield o
 
 def iter_site_ext_module():
-    for o in iter_site_module():
-        if o.__name__.startswith(
-            "%sext." % package.get_prefix()):
-            yield o
+    pkg = package.get_prefix() + "ext."
+    for s in package.iter_module_name():
+        if s.startswith(pkg):
+            o = import_module(s)
+            if o:
+                yield o
 
 def iter_dir_items(obj):
     k = dir(obj)
@@ -822,7 +708,7 @@ def import_module(s):
         _exceptions[s] = exc_to_string(e)
         return None
 
-def get_imported_modules():
+def get_import_modules():
     return dict(_modules)
 
 def get_import_exceptions():
@@ -854,8 +740,24 @@ def object_to_string(o):
 def exc_to_string(e):
     return "%s: %s" % (get_class_name(e), e)
 
+def is_class(cls):
+    return inspect.isclass(cls)
+
+def is_subclass(cls, clsinfo, include_clsinfo=True):
+    if not is_class(cls):
+        return False
+    ret = issubclass(cls, clsinfo)
+    if include_clsinfo:
+        return ret
+    else:
+        return ret and (cls is not clsinfo)
+
 def get_class(o):
+    assert not is_class(o), o
     return o.__class__
 
 def get_class_name(o):
-    return get_class(o).__name__
+    if is_class(o):
+        return o.__name__
+    else:
+        return get_class(o).__name__

@@ -23,6 +23,7 @@
 
 import fileobj.env
 import fileobj.filebytes
+import fileobj.kbd
 import fileobj.setting
 import fileobj.util
 
@@ -41,7 +42,7 @@ def get_text(co, fo, args):
     if b:
         n = 0
         for i, c in enumerate(b):
-            if fileobj.util.is_graph(c):
+            if fileobj.kbd.isprint(c):
                 n += 1
             else:
                 if n >= fileobj.setting.ext_strings_thresh:

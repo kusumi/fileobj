@@ -22,10 +22,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
+import os
 
 from . import filebytes
+from . import kernel
+from . import log
 from . import robuf
-from . import stash
 from . import util
 
 class Fileobj (robuf.Fileobj):
@@ -49,38 +51,40 @@ class Fileobj (robuf.Fileobj):
         self.__dirty = True
 
     def sync(self):
-        hdr = self.__read_unmapped_header()
-        trr = self.__read_unmapped_trailer()
-        try:
-            f = self.get_path()
-            tmp = stash.TemporaryFile(f, unlink=True)
-            with util.open_file(f, 'w') as fd:
-                if hdr:
-                    fd.write(hdr)
-                fd.write(self.read(0, self.get_size()))
-                if trr:
-                    fd.write(trr)
-                util.fsync(fd)
-        except Exception:
-            if tmp:
-                tmp.restore()
-            raise
-        finally:
-            if tmp:
-                tmp.cleanup()
+        f = self.get_path()
+        if os.path.islink(f):
+            f = os.path.realpath(f) # must use realpath
+        assert os.path.isfile(f), f
+        assert not os.path.islink(f), f
+        old = self.get_id()
+        self.__overwrite_self(f) # renaming changes inode#
+        new = self.init_id()
+        log.info("%s: id has changed from %d to %d" % (
+            f, old, new))
+
+    def __overwrite_self(self, f):
+        with util.do_atomic_write(f, fsync=kernel.fsync) as fd:
+            log.debug("Renaming %s to %s" % (fd.name, f))
+            hdr = self.__read_unmapped_header()
+            if hdr:
+                fd.write(hdr)
+            fd.write(self.read(0, self.get_size()))
+            trr = self.__read_unmapped_trailer()
+            if trr:
+                fd.write(trr)
 
     def __read_unmapped_header(self):
         offset = self.get_mapping_offset()
         if not offset:
             return filebytes.BLANK
-        with util.open_file(self.get_path()) as fd:
+        with kernel.fopen(self.get_path()) as fd:
             return fd.read(offset)
 
     def __read_unmapped_trailer(self):
         length = self.get_mapping_length()
         if not length:
             return filebytes.BLANK
-        with util.open_file(self.get_path()) as fd:
+        with kernel.fopen(self.get_path()) as fd:
             fd.seek(self.get_mapping_offset() + length)
             return fd.read()
 

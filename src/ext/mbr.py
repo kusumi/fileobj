@@ -45,7 +45,7 @@ def get_text(co, fo, args):
         fileobj.extension.fail("Invalid length: %d" % len(b))
     mag = b[-2:]
     if mag != _("\x55\xAA"):
-        fileobj.extension.fail("Invalid magic: %s" % repr(mag))
+        fileobj.extension.fail("Invalid magic: " + repr(mag))
     b = fileobj.filebytes.ords(b)
     n = 446
     l = []

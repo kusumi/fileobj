@@ -28,6 +28,7 @@ import os
 from . import chunk
 from . import filebytes
 from . import fileobj
+from . import kernel
 from . import log
 from . import screen
 from . import setting
@@ -48,8 +49,7 @@ class Fileobj (fileobj.Fileobj):
 
     def __str__(self):
         l = []
-        s = util.get_size_string(self.get_size())
-        l.append("size %s" % s)
+        l.append("size " + util.get_size_string(self.get_size()))
         l.append("chunk size %d[B]" % self.get_chunk_size())
         l.append("chunk total %d\n" % len(self.cbuf))
         for i, o in enumerate(self.cbuf):
@@ -60,7 +60,7 @@ class Fileobj (fileobj.Fileobj):
         f = self.get_path()
         assert not self.cbuf
         assert os.path.isfile(f), f
-        with util.open_file(f) as fd:
+        with kernel.fopen(f) as fd:
             fd.seek(self.get_mapping_offset())
             length = self.get_mapping_length()
             if length:

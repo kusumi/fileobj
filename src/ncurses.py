@@ -80,8 +80,7 @@ def __init_curses_color(fg, bg):
         return -1
 
 def __get_curses_color_string(fg, bg):
-    d = dict([(s, "COLOR_%s" % s.upper())
-        for s in iter_color_name()])
+    d = dict([(s, "COLOR_" + s.upper()) for s in iter_color_name()])
     white = d.get("white")
     black = d.get("black")
     fg = d.get(fg, white)

@@ -194,7 +194,7 @@ class Operand (object):
                 amp = util.MIN_INT
         else:
             amp = None
-        if util.is_graph_sequence(self.__ope):
+        if kbd.isprints(self.__ope):
             ope = _to_string(self.__ope)
         else:
             ope = ''
@@ -253,10 +253,10 @@ class Operand (object):
             return True
         elif x == kbd.TAB:
             return self.__scan_slow_tab()
-        elif x in (kbd.UP, util.ctrl('p')):
+        elif x in (kbd.UP, kbd.ctrl('p')):
             self.__get_older_history()
             return False
-        elif x in (kbd.DOWN, util.ctrl('n')):
+        elif x in (kbd.DOWN, kbd.ctrl('n')):
             self.__get_newer_history()
             return False
         elif x == kbd.LEFT:
@@ -273,13 +273,13 @@ class Operand (object):
         elif x == kbd.DELETE:
             self.__delete_slow()
             return False
-        elif x == util.ctrl('a'):
+        elif x == kbd.ctrl('a'):
             self.__pos = self.__get_min_cursor()
             return False
-        elif x == util.ctrl('e'):
+        elif x == kbd.ctrl('e'):
             self.__pos = self.__get_tail_cursor()
             return False
-        elif x == util.ctrl('k'):
+        elif x == kbd.ctrl('k'):
             self.__buf[self.__pos:] = ''
             self.__parse_buffer()
             return False
@@ -288,7 +288,7 @@ class Operand (object):
             self.__add_history()
             self.__clear_candidate()
             return True
-        elif util.is_graph(x):
+        elif kbd.isprint(x):
             if len(self.__ope) < self.__get_max_cursor():
                 self.__add_buffer(x)
             return False
@@ -324,7 +324,7 @@ class Operand (object):
         elif len(arg) == 1 and ope in self.__cand:
             s = self.__cand[ope].get(arg[0])
             if s:
-                self.__set_string("%s %s" % (ope, s))
+                self.__set_string(ope + " " + s)
         return False
 
     def __delete_slow(self):
@@ -386,7 +386,7 @@ class Operand (object):
             elif o.match_incomplete(self.__ope):
                 l.append(o)
         if len(l) == 1:
-            s = "%s %s" % (l[0].str, ' '.join(self.__arg))
+            s = l[0].str + " " + ' '.join(self.__arg)
             self.__set_string(s.rstrip())
             return l[0]
         else:
@@ -394,8 +394,8 @@ class Operand (object):
             return literal.InvalidLiteral(s, None, '')
 
 _arrows = list(kbd.get_arrows())
-_arrows.append(util.ctrl('p'))
-_arrows.append(util.ctrl('n'))
+_arrows.append(kbd.ctrl('p'))
+_arrows.append(kbd.ctrl('n'))
 _null, _fast, _slow = range(3)
 
 def _to_string(l):

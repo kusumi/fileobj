@@ -22,8 +22,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import stat
 
+from . import kernel
 from . import util
 
 # no os.path.relpath till Python 2.6
@@ -43,7 +43,7 @@ _t_error = [2 ** x for x in range(11)]
 
 _sep = os.path.sep
 _cwd = os.getcwd()
-_home = os.getenv("HOME", '')
+_home = util.get_home()
 
 class Path (object):
     def __init__(self, f):
@@ -144,7 +144,7 @@ def _get_short_path(f):
         return f.replace(_cwd, '.')
     if f == _home:
         return '~'
-    if _home and f.startswith(_home + _sep): # no os.path.join here
+    if f.startswith(_home + _sep): # no os.path.join here
         return f.replace(_home, '~')
     if _has_relpath:
         rel = os.path.relpath(f, _cwd)
@@ -185,18 +185,18 @@ def _get_type_real(f):
             a = util.is_readable(s)
 
     ret = 0
-    mode = os.stat(f).st_mode
-    if stat.S_ISREG(mode):
+    l = kernel.stat_type(f)
+    if l[0]:
         ret |= _t_file
-    if stat.S_ISDIR(mode):
+    if l[1]:
         ret |= _t_dir
-    if stat.S_ISBLK(mode):
+    if l[2]:
         ret |= _t_blkdev
-    if stat.S_ISCHR(mode):
+    if l[3]:
         ret |= _t_chrdev
-    if stat.S_ISFIFO(mode):
+    if l[4]:
         ret |= _t_fifo
-    if stat.S_ISSOCK(mode):
+    if l[5]:
         ret |= _t_sock
     if not ret:
         return _t_unknown
@@ -229,10 +229,12 @@ def is_error(f):
 def _test(x, bits):
     return (x & bits) != 0
 
-def get_path_failure_message(o):
+def get_path_failure_message(o, allow_link=True):
     f = o.path
     if o.is_dir:
         return f + " is a directory"
+    if o.is_link and not allow_link:
+        return "Ignoring a link: " + f
     elif o.is_noperm:
         return "Permission denied: " + f
     elif o.is_unknown:

@@ -21,14 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fcntl
+import os
 import re
 
-from . import filebytes
-from . import fs
 from . import libc
 from . import log
-from . import path
+from . import unix
 from . import util
 
 PTRACE_PEEKTEXT = 1
@@ -40,22 +38,82 @@ PTRACE_KILL     = 8
 PTRACE_ATTACH   = 16
 PTRACE_DETACH   = 17
 
+def get_term_info():
+    return unix.get_term_info()
+
+def get_lang_info():
+    return unix.get_lang_info()
+
 def get_blkdev_info(fd):
     try:
         d = {   "BLKSSZGET"  : 0x1268,
                 "BLKGETSIZE" : 0x1260, }
         s = "BLKSSZGET"
-        sector_size = util.host_to_int(
-            fcntl.ioctl(fd, d[s], filebytes.pad(4)))
+        sector_size = unix.ioctl_get_int(fd, d[s], 4)
         s = "BLKGETSIZE"
-        size = util.host_to_int(
-            fcntl.ioctl(fd, d[s], filebytes.pad(8)))
+        size = unix.ioctl_get_int(fd, d[s], 8)
         size <<= 9
         return size, sector_size, ''
     except Exception, e:
-        log.error("ioctl(%s, %s) failed, %s" % (
-            fd.name, s, e))
+        log.error("ioctl(%s, %s) failed, %s" % (fd.name, s, e))
         raise
+
+def stat_size(f):
+    return unix.stat_size(f)
+
+def read_size(f):
+    return unix.read_size(f)
+
+def get_inode(f):
+    return unix.get_inode(f)
+
+def fopen(f, mode):
+    return unix.fopen(f, mode)
+
+def fopen_text(f, mode):
+    return unix.fopen_text(f, mode)
+
+def fcreat(f):
+    return unix.fcreat(f)
+
+def fcreat_text(f):
+    return unix.fcreat_text(f)
+
+def symlink(source, link_name):
+    return unix.symlink(source, link_name)
+
+def fsync(fd):
+    return unix.fsync(fd)
+
+def truncate(f, offset):
+    return unix.truncate(f, offset)
+
+def utime(f, st):
+    return unix.utime(f, st)
+
+def touch(f):
+    return unix.touch(f)
+
+def stat_type(f):
+    return unix.stat_type(f)
+
+def get_page_size():
+    return unix.get_page_size()
+
+def set_non_blocking(fd):
+    return unix.set_non_blocking(fd)
+
+def get_terminal_size():
+    return unix.get_terminal_size()
+
+def get_tc(fd):
+    return unix.get_tc(fd)
+
+def set_tc(fd):
+    return unix.set_tc(fd)
+
+def set_cbreak(fd):
+    return unix.set_cbreak(fd)
 
 def get_total_ram():
     return get_meminfo("MemTotal")
@@ -64,12 +122,12 @@ def get_free_ram():
     return get_meminfo("MemFree")
 
 def get_meminfo(s):
-    f = fs.get_procfs_entry("meminfo")
+    f = unix.get_procfs_entry("meminfo")
     if not f:
         return -1
     try:
         s = util.escape_regex_pattern(s)
-        for l in util.open_text_file(f):
+        for l in fopen_text(f, 'r'):
             m = re.match(r"^%s.*\s+(\d+)" % s, l)
             if m:
                 return int(m.group(1)) * util.KiB
@@ -78,24 +136,41 @@ def get_meminfo(s):
     return -1
 
 def is_blkdev(f):
-    return path.is_blkdev(f)
+    l = stat_type(f)
+    if l != -1:
+        return l[2] # blk
+    else:
+        return False
 
 def is_blkdev_supported():
+    return True
+
+def has_mmap():
     return True
 
 def has_mremap():
     return True
 
+def has_pid_access(pid):
+    return unix.kill_sig_zero(pid)
+
 def has_pid(pid):
-    return fs.has_pid(pid) or util.has_pid(pid)
+    return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
 
 def get_pid_name(pid):
     # comm does not exist on older kernels
-    ret = fs.get_pid_name(pid, "comm", "cmdline")
+    ret = unix.get_pid_name_from_fs(pid, "comm", "cmdline")
     if not ret:
-        return util.get_pid_name(pid)
+        return unix.get_pid_name_from_ps(pid, __parse_ps_name)
     else:
         return ret
+
+def __parse_ps_name(name):
+    cmd = name.split(" ")[0]
+    if re.match(r"^\[.+\]$", cmd): # kernel thread
+        return cmd[1:-1]
+    else:
+        return os.path.basename(cmd)
 
 def is_pid_path_supported():
     return libc.has_ptrace()
@@ -129,6 +204,9 @@ ptrace_poke = ptrace_poketext
 
 def get_ptrace_word_size():
     return libc.get_ptrace_data_size()
+
+def parse_waitpid_result(status):
+    return unix.parse_waitpid_result(status)
 
 def init():
     libc.init_ptrace("long")

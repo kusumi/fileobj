@@ -21,12 +21,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fcntl
 import shutil
-import struct
-import termios
 
-from . import filebytes
+from . import kernel
 from . import setting
 from . import util
 
@@ -48,7 +45,8 @@ A_COLOR     = _screen.A_COLOR
 
 def init(fg='', bg=''):
     global _std, A_FOCUS, A_COLOR
-    update_size()
+    if update_size() == -1:
+        return -1
     if _std:
         return -1
     _std, A_FOCUS, A_COLOR = _screen.init(fg, bg)
@@ -80,11 +78,14 @@ def get_size_x():
 
 def update_size():
     if util.is_python_version_or_ht(3, 3):
-        x, y = shutil.get_terminal_size()
+        x, y = shutil.get_terminal_size() # portable ???
     else:
-        b = fcntl.ioctl(0, termios.TIOCGWINSZ, filebytes.pad(8))
-        y, x = struct.unpack(util.S2F * 4, b)[:2]
-    _size.set(y, x)
+        y, x = kernel.get_terminal_size()
+    if -1 not in (y, x):
+        _size.set(y, x)
+    else:
+        clear_size()
+        return -1
 
 def clear_size():
     _size.set(0, 0)

@@ -69,6 +69,12 @@ def seq_to_ords(l, cls=tuple):
 def pad(x):
     return ZERO * x
 
+def rstrip(b):
+    i = b.find(ZERO)
+    if i != -1:
+        b = b[:i]
+    return b.rstrip()
+
 if util.is_python2():
     from __builtin__ import ord as __builtin_ord
     TYPE = str

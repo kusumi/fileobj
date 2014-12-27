@@ -28,6 +28,8 @@ import sys
 import fileobj.env
 import fileobj.extension
 import fileobj.filebytes
+import fileobj.kbd
+import fileobj.kernel
 import fileobj.libc
 import fileobj.path
 import fileobj.setting
@@ -55,7 +57,7 @@ class _builtin (_node):
             n = self.to_int(buf)
             a = ''.join(["\\x%02X" % x
                 for x in fileobj.filebytes.ords(buf)])
-            b = ''.join([fileobj.util.to_chr_repr(x) for x in buf])
+            b = ''.join([fileobj.kbd.to_chr_repr(x) for x in buf])
             s += " %d %s [%s]" % (n, a, b)
         return [s]
 
@@ -108,7 +110,7 @@ class _struct (_node):
         for type, name in self.__iter_member(defs):
             o = get_node(type)
             if not o:
-                fileobj.extension.fail("%s not defined yet" % type)
+                fileobj.extension.fail(type + " not defined yet")
             self.__member.append(fileobj.util.Namespace(node=o, name=name))
 
     def get_size(self):
@@ -120,7 +122,7 @@ class _struct (_node):
             n = o.node.get_size()
             l.extend(o.node.get_expr(buf[:n], o.name, indent+1))
             buf = buf[n:]
-        x = " %s" % name
+        x = " " + name
         l.append("%s}%s;" % (I(indent), x.rstrip()))
         return l
 
@@ -176,12 +178,12 @@ def get_text(co, fo, args):
     else:
         f = fileobj.setting.get_path("ext_cstruct")
         if fileobj.path.is_noent(f):
-            return "Need %s with struct definition" % f
+            return "Need " + f + " with struct definition"
         if not os.path.isfile(f):
-            return "Can not read %s" % f
+            return "Can not read " + f
 
     try:
-        l = fileobj.util.open_text_file(f).readlines()
+        l = fileobj.kernel.fopen_text(f).readlines()
     except Exception, e:
         return str(e)
     l = [x.strip() for x in l if not x.startswith('#')]

@@ -26,6 +26,7 @@ import os
 import sys
 
 from . import env
+from . import kernel
 from . import log
 from . import setting
 from . import util
@@ -34,7 +35,7 @@ def read(tf):
     return tuple(iter_trace_word(tf))
 
 def iter_trace_word(tf):
-    buf = util.open_file(tf).read()
+    buf = kernel.fopen(tf).read()
     n = setting.trace_word_size
     if len(buf) % n == 0:
         for i in range(0, len(buf), n):
@@ -55,14 +56,14 @@ def write(trace_path, l, e, tb):
         log.error(e)
 
 def __write_trace(tf, l):
-    with util.create_file(tf) as fd:
+    with kernel.fcreat(tf) as fd:
         for x in l:
             fd.write(util.int_to_bin(x, setting.trace_word_size))
-        util.fsync(fd)
+        kernel.fsync(fd)
         log.debug("Wrote trace to %s" % fd)
 
 def __write_script(sf, tf, e, tb):
-    with util.create_text_file(sf) as fd:
+    with kernel.fcreat_text(sf) as fd:
         ret = util.execute("which", "sh")
         if not ret[2]:
             fd.write("#!%s" % ret[0])
@@ -71,17 +72,14 @@ def __write_script(sf, tf, e, tb):
         for s in tb:
             fd.write("# %s\n" % s)
         fd.write("%s\n" % __get_cmdline(tf))
-        util.fsync(fd)
+        kernel.fsync(fd)
         log.debug("Wrote text to %s" % fd)
 
 def __get_cmdline(tf):
-    l = list(env.iter_env_name())
-    ret = ["FILEOBJ_STREAM_PATH=%s" % tf]
-    for k in os.environ:
-        if k in l and \
-            k != "FILEOBJ_USE_TRACE" and \
-            k != "FILEOBJ_STREAM_PATH":
-            ret.append("%s=%s" % (k, os.getenv(k)))
+    ret = ["FILEOBJ_STREAM_PATH=" + tf]
+    for k, v in env.iter_defined_env():
+        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_STREAM_PATH"):
+            ret.append(k + "=" + v)
     ret.extend(sys.argv)
     return ' '.join(ret)
 
@@ -91,6 +89,5 @@ def __creat_symlink(f, basename):
         l = os.path.join(d, basename)
         if os.path.islink(l):
             os.unlink(l)
-        os.symlink(f, l)
-        if os.path.islink(l):
+        if kernel.symlink(f, l) != -1:
             log.debug("Create symlink %s -> %s" % (l, f))

@@ -33,20 +33,21 @@ from . import setting
 from . import util
 
 enabled = setting.use_pid_path and \
+    kernel.is_unix() and \
     kernel.is_pid_path_supported()
 
 class methods (object):
     def get_string(self, s):
         l = []
         l.append("pid %d" % self.pid)
-        l.append("name %s" % self.name)
+        l.append("name " + self.name)
         l.append("word size %d" % self.word)
         return self.add_string(s, '\n'.join(l))
 
     def init_vm(self):
         self.word = ptrace.get_word_size()
         assert self.word != -1
-        self.pid = kernel.to_pid(self.get_path())
+        self.pid = kernel.path_to_pid(self.get_path())
         self.name = kernel.get_pid_name(self.pid)
         self.test_vm()
 
@@ -74,16 +75,16 @@ class methods (object):
         return self.get_mapping_offset() + x
 
     def __wait(self):
-        pid, status = os.waitpid(self.pid, 0)
+        pid, status = kernel.waitpid(self.pid, 0)
         if setting.use_debug:
-            ret = util.parse_waitpid_result(status)
+            ret = kernel.parse_waitpid_result(status)
             log.debug("Wait pid %d: %s" % (pid, ret))
 
     def __delay(self):
         time.sleep(setting.ptrace_delay)
 
     def test_vm(self):
-        if not util.has_pid_access(self.pid):
+        if not kernel.has_pid_access(self.pid):
             raise fileobj.FileobjError(
                 "Can not access pid %d" % self.pid)
 

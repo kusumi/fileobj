@@ -67,9 +67,9 @@ class Fileobj (fileobj.Fileobj):
 
     def init(self):
         f = self.get_path()
-        size = kernel.get_buffer_size(f)
+        size = kernel.get_size(f)
         if size <= 0:
-            raise fileobj.FileobjError("%s is empty" % f)
+            raise fileobj.FileobjError(f + " is empty")
         self.set_size(size)
         self.set_align(0)
         self.set_window(1, 1)
@@ -85,7 +85,7 @@ class Fileobj (fileobj.Fileobj):
             mode = 'r'
         else:
             mode = 'r+'
-        self.fd = util.open_file(self.get_path(), mode)
+        self.fd = kernel.fopen(self.get_path(), mode)
 
     def is_dirty(self):
         return False
@@ -114,7 +114,7 @@ class Fileobj (fileobj.Fileobj):
 
     def search(self, x, s, end=-1):
         s = util.str_to_bytes(s)
-        n = util.PAGE_SIZE
+        n = kernel.PAGE_SIZE
         while True:
             if end != -1 and x >= end:
                 return fileobj.NOTFOUND
@@ -133,7 +133,7 @@ class Fileobj (fileobj.Fileobj):
         while True:
             if end != -1 and x <= end:
                 return fileobj.NOTFOUND
-            n = util.PAGE_SIZE
+            n = kernel.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
                 i = 0

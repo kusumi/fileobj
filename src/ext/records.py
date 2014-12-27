@@ -21,14 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.util
+import fileobj.kbd
 
 def get_text(co, fo, args):
     sl = []
     for k, v in co.get_records().items():
         l = []
         for x in v:
-            l.append(chr(x) if fileobj.util.is_graph(x) else x)
+            l.append(chr(x) if fileobj.kbd.isprint(x) else x)
         sl.append("'%s' %s" % (k, l))
     if sl:
         return sl

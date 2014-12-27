@@ -145,9 +145,9 @@ class Allocator (object):
         return self.__alloc(f, 0, 0, cls)
 
     def __test_mmap_class(self, f, offset, length, cls):
-        size = kernel.get_buffer_size_safe(f)
+        size = kernel.get_size_safe(f)
         if size == -1:
-            log.error("Failed to stat %s" % f)
+            log.error("Failed to stat " + f)
         elif size < setting.mmap_thresh:
             if self.__is_ro_class(cls):
                 cls = self.robuf

@@ -116,7 +116,10 @@ def update(k, v):
 
 def get_snapshot():
     global _snap
-    _snap = dict(_attr)
+    if _attr != _snap:
+        _snap = dict(_attr)
+    else:
+        return -1
 
 def set_snapshot():
     if _attr != _snap:
@@ -128,6 +131,10 @@ def set_snapshot():
 def iter_setting_name():
     for k in sorted(_attr.keys()):
         yield k
+
+def iter_setting():
+    for k in iter_setting_name():
+        yield k, getattr(this, k)
 
 _attr = {}
 _snap = dict(_attr)

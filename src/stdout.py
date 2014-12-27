@@ -23,16 +23,14 @@
 
 import collections
 import sys
-import termios
-import tty
 
 from . import kbd
+from . import kernel
 from . import log
 from . import setting
 from . import util
 
 _stdin = sys.stdin
-_attr = None
 _windows = []
 
 A_DEFAULT   = 0
@@ -50,7 +48,11 @@ class _window (object):
 
     def init(self):
         if not _windows:
-            init_tty()
+            kernel.get_tc(_stdin)
+            log.debug("Save tty attr")
+            if setting.use_stdin_cbreak:
+                kernel.set_cbreak(_stdin)
+                log.debug("Set tty cbreak")
         _windows.append(self)
         self.__ib = collections.deque()
         self.__ob = collections.deque()
@@ -60,7 +62,8 @@ class _window (object):
         self.__clear_output()
         _windows.remove(self)
         if not _windows:
-            cleanup_tty()
+            kernel.set_tc(_stdin)
+            log.debug("Restore tty attr")
 
     def __mkstr(self, y, x, s):
         return "%s (%2d, %3d) %s" % (
@@ -201,20 +204,3 @@ def has_chgat():
 def iter_color_name():
     yield "black"
     yield "white"
-
-def init_tty():
-    global _attr
-    if _attr:
-        return -1
-    _attr = termios.tcgetattr(_stdin)
-    if setting.use_stdin_cbreak:
-        tty.setcbreak(_stdin)
-        log.debug("Set tty cbreak")
-
-def cleanup_tty():
-    global _attr
-    if not _attr:
-        return -1
-    termios.tcsetattr(_stdin, termios.TCSANOW, _attr)
-    _attr = None
-    log.debug("Restore tty attr")
