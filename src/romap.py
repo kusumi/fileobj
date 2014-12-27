@@ -55,7 +55,7 @@ class Fileobj (fileobj.Fileobj):
     _insert  = False
     _replace = False
     _delete  = False
-    _enabled = True
+    _enabled = kernel.is_unix() and kernel.has_mmap()
     _partial = _has_mmap_offset
 
     def __init__(self, f, offset=0, length=0):
@@ -76,13 +76,13 @@ class Fileobj (fileobj.Fileobj):
             self.init_mapping(self.get_path())
         else:
             raise fileobj.FileobjError(
-                "Can not mmap(2) {0}".format(self.get_path()))
+                "Can not mmap(2) " + self.get_path())
 
     def cleanup(self):
         self.cleanup_mapping()
 
     def init_mapping(self, f):
-        with util.open_file(f, 'r+') as fd:
+        with kernel.fopen(f, 'r+') as fd:
             self.map = self.mmap(fd.fileno())
 
     def cleanup_mapping(self):
@@ -91,7 +91,7 @@ class Fileobj (fileobj.Fileobj):
             self.map = None
 
     def is_mappable(self):
-        return kernel.get_file_size(self.get_path()) > 0
+        return kernel.stat_size(self.get_path()) > 0
 
     def mmap(self, fileno):
         offset = self.get_mapping_offset()
@@ -116,7 +116,7 @@ class Fileobj (fileobj.Fileobj):
             mmap.MAP_SHARED, self.__get_mmap_prot())
 
     def __do_mmap_at(self, fileno, offset, length):
-        start = util.align_head(offset, util.PAGE_SIZE)
+        start = util.align_head(offset, kernel.PAGE_SIZE)
         delta = offset - start
         assert start % mmap.ALLOCATIONGRANULARITY == 0, start
         self.__set_delta(delta, offset)
@@ -159,7 +159,7 @@ class Fileobj (fileobj.Fileobj):
         return ret
 
     def __find(self, x, s, end):
-        n = util.PAGE_SIZE
+        n = kernel.PAGE_SIZE
         while True:
             if end != -1 and x >= end:
                 return fileobj.NOTFOUND
@@ -191,7 +191,7 @@ class Fileobj (fileobj.Fileobj):
         while True:
             if end != -1 and x <= end:
                 return fileobj.NOTFOUND
-            n = util.PAGE_SIZE
+            n = kernel.PAGE_SIZE
             i = x + 1 - n
             if i < 0:
                 i = 0

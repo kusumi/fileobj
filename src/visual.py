@@ -389,7 +389,7 @@ class _console (console.Console):
         return kbd.INTERRUPT
 
     def handle_invalid_literal(self, li):
-        self.co.flash("Not a visual command {0}".format(li.str))
+        self.co.flash("Not a visual command " + li.str)
         return _exit_visual(self)
 
     def set_banner(self):

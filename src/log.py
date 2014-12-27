@@ -48,8 +48,8 @@ def init(name, f=None):
     info('=' * 80)
     info("Using Python {0} on {1} {2}".format(
         util.get_python_version_string(),
-        util.get_system_string(),
-        util.get_release_string()))
+        util.get_os_name(),
+        util.get_os_release()))
     info("Running {0} ({1})".format(
         util.get_program_path(), version.__version__))
 

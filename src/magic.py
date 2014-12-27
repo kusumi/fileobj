@@ -263,10 +263,12 @@ class LVM2PVMagic (_blk_magic):
         return "LVM2|PV"
 
 class HAMMERFSMagic (_blk_magic):
+    """Magic definition is taken from
+HAMMER_FSBUF_VOLUME in sys/vfs/hammer/hammer_disk.h"""
     def test(self, fo):
         return self.read(fo, 0, 8) == self.get_magic()
     def get_magic(self):
-        return _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8")
+        return _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8") # le
     def get_name(self):
         return "HAMMERFS"
 

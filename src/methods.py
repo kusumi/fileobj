@@ -22,18 +22,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
+from __future__ import with_statement
 import os
 import platform
 import time
 
 from . import filebytes
 from . import fileobj
+from . import kbd
 from . import kernel
 from . import literal
 from . import path
 from . import screen
 from . import setting
-from . import stash
 from . import util
 from . import version
 
@@ -183,15 +184,15 @@ def go_to(self, amp=None, ope=None, args=None, raw=None):
     if self.co.go_to(pos) == -1:
         self.co.lrepaintf()
 
-def __is_graph(b):
-    return util.is_graph(util.bytes_to_str(b))
+def __isprint(b):
+    return kbd.isprint(util.bytes_to_str(b))
 def __is_zero(b):
     return b == filebytes.ZERO
 def __is_non_zero(b):
     return b != filebytes.ZERO
 
 def go_next_char(self, amp, ope, args, raw):
-    __go_next_matched(self, get_int(amp), __is_graph)
+    __go_next_matched(self, get_int(amp), __isprint)
 
 def go_next_zero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_zero)
@@ -200,7 +201,7 @@ def go_next_nonzero(self, amp, ope, args, raw):
     __go_next_matched(self, get_int(amp), __is_non_zero)
 
 def go_prev_char(self, amp, ope, args, raw):
-    __go_prev_matched(self, get_int(amp), __is_graph)
+    __go_prev_matched(self, get_int(amp), __isprint)
 
 def go_prev_zero(self, amp, ope, args, raw):
     __go_prev_matched(self, get_int(amp), __is_zero)
@@ -209,7 +210,7 @@ def go_prev_nonzero(self, amp, ope, args, raw):
     __go_prev_matched(self, get_int(amp), __is_non_zero)
 
 def __go_next_matched(self, cnt, fn):
-    n = util.PAGE_SIZE
+    n = kernel.PAGE_SIZE
     pos = self.co.get_pos()
     while True:
         pos += 1
@@ -234,7 +235,7 @@ def __go_next_matched(self, cnt, fn):
             return
 
 def __go_prev_matched(self, cnt, fn):
-    n = util.PAGE_SIZE
+    n = kernel.PAGE_SIZE
     pos = self.co.get_pos()
     while True:
         if pos < n:
@@ -408,7 +409,7 @@ def __set_radix_arg(self, args, name):
         radix = args[1]
         x = int(radix)
     except Exception:
-        self.co.flash("Invalid arg: {0}".format(radix))
+        self.co.flash("Invalid arg: " + radix)
         return
     if x in (16, 10, 8):
         setattr(setting, name, x)
@@ -420,7 +421,7 @@ def __set_width(self, args):
     if len(args) == 1:
         self.co.show(prev)
     elif self.co.set_bytes_per_line(args[1]) == -1:
-        self.co.flash("Invalid arg: {0}".format(args[1]))
+        self.co.flash("Invalid arg: " + args[1])
     elif self.co.get_bytes_per_line() != prev:
         screen.clear()
         self.co.build()
@@ -460,7 +461,7 @@ def set_option(self, amp, ope, args, raw):
         fn(self, args)
         self.co.lrepaint()
     else:
-        self.co.flash("Unknown option: {0}".format(args[0]))
+        self.co.flash("Unknown option: " + args[0])
 
 def show_current(self, amp, ope, args, raw):
     self.co.show("{0} {1} at {2}".format(
@@ -489,16 +490,16 @@ def show_date(self, amp, ope, args, raw):
 
 def show_platform(self, amp, ope, args, raw):
     self.co.show("{0} {1}".format(
-        util.get_system_string(), util.get_release_string()))
+        util.get_os_name(), util.get_os_release()))
 
 def show_hostname(self, amp, ope, args, raw):
     self.co.show(platform.node())
 
 def show_term(self, amp, ope, args, raw):
-    self.co.show(os.getenv("TERM"))
+    self.co.show(kernel.get_term_info())
 
 def show_lang(self, amp, ope, args, raw):
-    self.co.show(os.getenv("LANG"))
+    self.co.show(kernel.get_lang_info())
 
 def show_version(self, amp, ope, args, raw):
     self.co.show(version.__version__)
@@ -513,7 +514,7 @@ def show_sector_size(self, amp, ope, args, raw):
 def show_args(self, amp, ope, args, raw):
     l = list(self.co.get_buffer_short_paths())
     x = self.co.get_short_path()
-    l[l.index(x)] = "[{0}]".format(x)
+    l[l.index(x)] = "[" + x + "]"
     self.co.show(' '.join(l))
 
 @_cleanup
@@ -1258,8 +1259,8 @@ def yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(b)
-        self.co.show("{0} yanked".format(
-            util.get_size_string(self.co.get_yank_buffer_size())))
+        s = util.get_size_string(self.co.get_yank_buffer_size())
+        self.co.show(s + " yanked")
 
 def yank_till_end(self, amp, ope, args, raw):
     x = self.co.get_size() - self.co.get_pos()
@@ -1287,8 +1288,8 @@ def block_yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(filebytes.join(l))
-        self.co.show("{0} yanked".format(
-            util.get_size_string(self.co.get_yank_buffer_size())))
+        s = util.get_size_string(self.co.get_yank_buffer_size())
+        self.co.show(s + " yanked")
 
 @_cleanup
 def put(self, amp, ope, args, raw):
@@ -1408,10 +1409,9 @@ def close_buffer(self, amp, ope, args, raw):
         else:
             f = self.co.get_path()
         if not self.co.has_buffer(f):
-            self.co.flash("No matching buffer for {0}".format(
-                path.get_short_path(f)))
+            self.co.flash("No matching buffer for " + f)
         elif self.co.has_buffer(f, lambda o: o.is_dirty()):
-            self.co.flash("No write since last change: {0}".format(f))
+            self.co.flash("No write since last change: " + f)
         else:
             self.co.remove_buffer(f)
             self.co.lrepaint()
@@ -1429,10 +1429,10 @@ def __save_buffer(self, args, force):
         return -1
     try:
         if overwrite:
-            tmp = stash.TemporaryFile(f, unlink=True)
+            buf = self.co.read(0, self.co.get_size())
+            msg, new = __overwrite_buffer(self, f, buf)
         else:
-            tmp = None
-        msg, new = self.co.flush(f)
+            msg, new = self.co.flush(f)
         if msg:
             self.co.show(msg)
         if new and os.path.isfile(new):
@@ -1440,11 +1440,18 @@ def __save_buffer(self, args, force):
         self.co.lrepaintf()
     except Exception as e:
         self.co.flash(e)
-        if overwrite and tmp:
-            tmp.restore()
-    finally:
-        if tmp:
-            tmp.cleanup()
+
+def __overwrite_buffer(self, f, buf):
+    assert os.path.isfile(f) # existing file
+    assert not self.co.has_buffer(f) # external file
+    try:
+        with util.do_atomic_write(f, fsync=kernel.fsync) as fd:
+            fd.write(buf)
+        msg = "{0} {1}[B] overwritten".format(f, kernel.get_size(f))
+        return msg, None
+    except Exception as e:
+        raise fileobj.FileobjError("Failed to overwrite: {0}".format(
+            repr(e) if setting.use_debug else e))
 
 def __rename_buffer(self, f):
     pos = self.co.get_pos()
@@ -1465,15 +1472,17 @@ def __get_save_path(self, args, force):
     else:
         o = path.Path(args[0])
         f = o.path
-        ret = path.get_path_failure_message(o)
+        ret = path.get_path_failure_message(o, False)
         if ret:
             self.co.flash(ret)
-        elif f != self.co.get_path() and self.co.has_buffer(f):
+        elif f == self.co.get_path():
+            return f, False # write to itself
+        elif self.co.has_buffer(f):
             self.co.flash(f + " is loaded in another buffer")
-        elif f != self.co.get_path() and not o.is_noent:
-            return f, force
+        elif not o.is_noent:
+            return f, force # overwrite existing external file if force
         else:
-            return f, False
+            return f, False # write new external file
     return None, False
 
 def range_save_buffer(self, amp, ope, args, raw):
@@ -1511,23 +1520,17 @@ def __save_partial(self, args, fn, force):
         return -1
     try:
         if overwrite:
-            tmp = stash.TemporaryFile(f, unlink=True)
+            msg, new = __overwrite_buffer(self, f, buf)
         else:
-            tmp = None
-        assert not os.path.exists(f)
-        o = self.co.alloc_fileobj(f) # should not fail
-        o.insert(0, buf)
-        msg, new = o.flush()
+            assert not os.path.exists(f)
+            o = self.co.alloc_fileobj(f) # should not fail
+            o.insert(0, buf)
+            msg, new = o.flush()
+            assert new, new
         if msg:
             self.co.show(msg)
-        assert new, new
     except Exception as e:
         self.co.flash(e)
-        if overwrite and tmp:
-            tmp.restore()
-    finally:
-        if tmp:
-            tmp.cleanup()
 
 def __get_save_partial_path(self, args, force):
     if len(args) > 1:
@@ -1537,7 +1540,7 @@ def __get_save_partial_path(self, args, force):
     else:
         o = path.Path(args[0])
         f = o.path
-        ret = path.get_path_failure_message(o)
+        ret = path.get_path_failure_message(o, False)
         if ret:
             self.co.flash(ret)
         elif f == self.co.get_path():
@@ -1548,9 +1551,9 @@ def __get_save_partial_path(self, args, force):
             if not force:
                 self.co.flash(f + " exists")
             else:
-                return f, True
+                return f, True # overwrite existing external file
         else:
-            return f, False
+            return f, False # write new external file
     return None, False
 
 def quit(self, amp, ope, args, raw):
@@ -1569,7 +1572,7 @@ def quit(self, amp, ope, args, raw):
             f = l[0]
             self.co.goto_buffer(f)
             self.co.lrepaintf()
-        self.co.flash("No write since last change: {0}".format(f))
+        self.co.flash("No write since last change: " + f)
 
 def force_quit(self, amp, ope, args, raw):
     if len(self.co) > 1:

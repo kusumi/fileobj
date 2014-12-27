@@ -32,7 +32,7 @@ class Fileobj (romap.Fileobj):
     _insert  = False
     _replace = True
     _delete  = False
-    _enabled = True
+    _enabled = romap.Fileobj._enabled
     _partial = romap.Fileobj._partial
 
     def __init__(self, f, offset=0, length=0):
@@ -51,7 +51,7 @@ class Fileobj (romap.Fileobj):
         self.restore_rollback_log(self)
         self.flush()
         self.cleanup_mapping()
-        util.utimem(self.get_path(), t)
+        self.update_mtime(self.get_path(), t)
 
     def clear_dirty(self):
         self.__dirty = False
@@ -64,7 +64,7 @@ class Fileobj (romap.Fileobj):
         self.update_fstat(self.get_path())
 
     def utime(self):
-        util.touch(self.get_path())
+        kernel.touch(self.get_path())
         self.update_fstat(self.get_path())
 
     def get_fstat(self):
@@ -72,6 +72,10 @@ class Fileobj (romap.Fileobj):
 
     def update_fstat(self, f):
         self.__stat = os.stat(f)
+
+    def update_mtime(self, f, st):
+        current = os.stat(f)
+        kernel.utime(f, (current.st_atime, st.st_mtime))
 
     def set_dirty(self):
         self.__dirty = True
@@ -106,9 +110,9 @@ class Fileobj (romap.Fileobj):
         self.set_dirty()
 
     def get_no_support_string(self, s):
-        msg = "use -B option to enable {0}".format(s)
+        msg = "use -B option to enable " + s
         if kernel.has_mremap():
             return "Can not {0}, {1}".format(s, msg)
         else:
             return "{0} has no mremap(2), {1}".format(
-                util.get_system_string(), msg)
+                util.get_os_name(), msg)

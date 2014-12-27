@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from . import filebytes
+from . import kernel
 from . import rofd
 from . import util
 
@@ -40,10 +41,8 @@ class Fileobj (rofd.Fileobj):
 
     def __str__(self):
         l = []
-        s = util.get_size_string(len(self.__diff))
-        l.append("diff size {0}".format(s))
-        s = util.get_size_string(len(self.__sbuf))
-        l.append("sbuf size {0}".format(s))
+        l.append("diff size " + util.get_size_string(len(self.__diff)))
+        l.append("sbuf size " + util.get_size_string(len(self.__sbuf)))
         return self.add_string(
             super(Fileobj, self).__str__(), '\n'.join(l))
 
@@ -59,7 +58,7 @@ class Fileobj (rofd.Fileobj):
             self.fd.seek(offset + x)
             self.fd.write(self.__sbuf[x])
         self.__sbuf = {}
-        util.fsync(self.fd)
+        kernel.fsync(self.fd)
 
     def utime(self):
         super(Fileobj, self).utime()

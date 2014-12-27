@@ -76,8 +76,9 @@ if (_major == 2 and _minor >= 7) or \
     (_major == 3 and _minor >= 2):
     import site
     def get_sites():
-        return [os.path.join(dir, get_name())
-            for dir in site.getsitepackages()]
+        l = [site.getusersitepackages()]
+        l.extend(site.getsitepackages())
+        return [os.path.join(x, get_name()) for x in l]
 else:
     get_sites = None
 

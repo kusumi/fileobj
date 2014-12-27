@@ -85,6 +85,7 @@ def __iter_env_name():
     yield "FILEOBJ_PTRACE_DELAY"
     yield "FILEOBJ_USE_VM_NON_LINUX"
     yield "FILEOBJ_USE_RRVM_RAW"
+    yield "FILEOBJ_USE_PS_AUX"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
     yield "FILEOBJ_ROBUF_SEARCH_THRESH_RATIO"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
@@ -219,12 +220,12 @@ def __get_setting_userdir_base():
 def __get_setting_userdir_dir():
     e = os.getenv("FILEOBJ_USERDIR_DIR")
     if e is None:
-        return os.getenv("HOME", '')
+        return __get_home()
     else:
         return e
 
 def __get_setting_procfs_mount_point():
-    return test_name("FILEOBJ_PROCFS_MOUNT_POINT", "/proc")
+    return test_name("FILEOBJ_PROCFS_MOUNT_POINT", os.path.sep + "proc")
 
 def __get_setting_use_readonly():
     return test_bool("FILEOBJ_USE_READONLY", False)
@@ -376,10 +377,7 @@ def __get_setting_use_array_chunk():
 
 def __get_setting_mmap_thresh():
     e = os.getenv("FILEOBJ_MMAP_THRESH")
-    try:
-        _ = os.sysconf("SC_PAGE_SIZE")
-    except Exception:
-        _ = 4096
+    _ = __get_page_size()
     if e is None:
         return _
     x = __env_ge_zero(e)
@@ -409,12 +407,11 @@ def __get_setting_use_vm_non_linux():
 def __get_setting_use_rrvm_raw():
     return test_bool("FILEOBJ_USE_RRVM_RAW", False)
 
+def __get_setting_use_ps_aux():
+    return test_bool("FILEOBJ_USE_PS_AUX", True)
+
 def __get_setting_robuf_chunk_size():
-    try:
-        default = os.sysconf("SC_PAGE_SIZE")
-    except Exception:
-        default = 4096
-    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", default)
+    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", __get_page_size())
 
 def __get_setting_robuf_search_thresh_ratio():
     e = os.getenv("FILEOBJ_ROBUF_SEARCH_THRESH_RATIO")
@@ -511,13 +508,28 @@ def __get_setting_key(envname):
     except Exception:
         return None
 
+PSEUDO_PAGE_SIZE = 4096 # pretend 4 KiB
+def  __get_page_size():
+    try:
+        return os.sysconf("SC_PAGE_SIZE") # FIX_ME
+    except Exception:
+        return PSEUDO_PAGE_SIZE
+
+def __get_home():
+    return os.path.expanduser("~")
+
 def print_env():
-    for x in iter_env_name():
-        print("{0}={1}".format(x, os.getenv(x)))
+    for k, v in iter_defined_env():
+        print(k + "=" + v)
 
 def iter_env_name():
     for x in sorted(__iter_env_name()):
         yield x
+
+def iter_defined_env():
+    for k in sorted(os.environ):
+        if k.startswith("FILEOBJ_"):
+            yield k, os.environ[k]
 
 def iter_setting():
     this = sys.modules[__name__]

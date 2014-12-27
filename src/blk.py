@@ -25,16 +25,15 @@ from . import fileobj
 from . import kernel
 from . import util
 
-enabled = kernel.is_blkdev_supported()
+enabled = kernel.is_unix() and \
+    kernel.is_blkdev_supported()
 
 class methods (object):
     def get_string(self, s):
         l = []
-        l.append("device size {0}".format(
-            util.get_size_string(self.get_size())))
-        l.append("sector size {0}".format(
-            util.get_size_string(self.get_sector_size())))
-        l.append("label {0}".format(self.blk_label))
+        l.append("device size " + util.get_size_string(self.get_size()))
+        l.append("sector size " + util.get_size_string(self.get_sector_size()))
+        l.append("label " + self.blk_label)
         return self.add_string(s, '\n'.join(l))
 
     def init_blk(self):
@@ -54,4 +53,4 @@ class methods (object):
 
     def creat_blk(self):
         raise fileobj.FileobjError(
-            "Can only write to {0}".format(self.get_path()))
+            "Can only write to " + self.get_path())

@@ -594,7 +594,7 @@ class Container (object):
         return ''.join(l)
 
     def add_delayed_input(self, x):
-        if util.is_graph(x):
+        if kbd.isprint(x):
             self.__delayed_input.append(x)
         elif x == kbd.ESCAPE:
             self.clear_delayed_input()

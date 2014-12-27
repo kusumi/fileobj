@@ -61,11 +61,11 @@ class Console (object):
             for seq in sorted(self.__fn.keys()):
                 li = literal.find_literal(seq)
                 assert li, seq
-                if isinstance(li, literal.RegexLiteral):
+                if literal.is_RegexLiteral(li):
                     rl.append(li)
-                elif isinstance(li, literal.FastLiteral):
+                elif literal.is_FastLiteral(li):
                     fl.append(li)
-                elif isinstance(li, literal.SlowLiteral):
+                elif literal.is_SlowLiteral(li):
                     sl.append(li)
             def fn():
                 self.ope.init(rl, fl, sl)
@@ -238,7 +238,7 @@ def set_banner(o):
         _banner[0] = ''
 
 def __format_banner(o):
-    return "-- {0} --".format(str(o).upper())
+    return "-- " + (str(o).upper()) + " --"
 
 def push_banner(s):
     if s:

@@ -23,8 +23,10 @@
 
 from __future__ import with_statement
 
+import os
 import re
 
+from . import kernel
 from . import panel
 from . import util
 
@@ -40,9 +42,9 @@ class methods (object):
             self.init_chunk(self.__get(width))
 
     def write_raw(self, f):
-        with util.create_text_file(f) as fd:
+        with kernel.fcreat_text(f) as fd:
             fd.write(self.raw)
-            util.fsync(fd)
+            kernel.fsync(fd)
 
     def __get(self, width):
         if not width:
@@ -96,7 +98,8 @@ def fail(s):
 
 def get_path(o):
     f = o.get_path()
-    if re.search(r"/<.+ object at .+>$", f):
+    s = r"{0}<.+ object at .+>$".format(os.path.sep)
+    if re.search(s, f):
         return o.get_short_path()
     else:
         return f

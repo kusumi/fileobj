@@ -23,20 +23,45 @@
 
 import curses
 import curses.ascii
-import os
 import sys
 
+from . import kernel
 from . import setting
 
 def ctrl(c):
-    """Return int/str if type is int/str"""
-    return curses.ascii.ctrl(c)
+    """Take str/bytes and return int"""
+    return curses.ascii.ctrl(ord(c))
+
+#           isspace(3) isgraph(3) isprint(3)
+# 0x09 '\t' True       False      False
+# 0x0A '\n' True       False      False
+# 0x0B '\v' True       False      False
+# 0x0C '\f' True       False      False
+# 0x0D '\r' True       False      False
+# 0x20 ' '  True       False      True
 
 def isspace(c):
     return curses.ascii.isspace(c)
 
 def isgraph(c):
     return curses.ascii.isgraph(c)
+
+def isprint(c):
+    # return True if isgraph(3) or 0x20
+    # this isn't same as isgraph(3) + isspace(3) see above for details
+    return curses.ascii.isprint(c)
+
+def isprints(l):
+    return len(l) > 0 and all(isprint(x) for x in l)
+
+def to_chr_repr(c):
+    if isprint(c):
+        if isinstance(c, int):
+            return chr(c)
+        else:
+            return c
+    else:
+        return '.'
 
 def iter_kbd_name():
     yield "TAB"
@@ -131,4 +156,4 @@ def init(term):
             setattr(this, s, l[i])
 
 this = sys.modules[__name__]
-init(os.getenv("TERM"))
+init(kernel.get_term_info())

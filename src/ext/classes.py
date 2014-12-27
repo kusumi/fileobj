@@ -29,7 +29,7 @@ def get_text(co, fo, args):
     l = []
     for o in fileobj.util.iter_site_module():
         for x in fileobj.util.iter_dir_values(o):
-            if inspect.isclass(x):
+            if fileobj.util.is_class(x):
                 l.append(x)
     if not l:
         return "No class"

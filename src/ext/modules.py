@@ -24,7 +24,7 @@
 import fileobj.util
 
 def get_text(co, fo, args):
-    d = fileobj.util.get_imported_modules()
+    d = fileobj.util.get_import_modules()
     if d:
         g = enumerate(sorted(d.keys()))
         return ["{0:>2} {1}".format(i + 1, d[k]) for i, k in g]

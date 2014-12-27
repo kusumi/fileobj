@@ -36,7 +36,7 @@ class Fileobj (rrmap.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
-    _enabled = kernel.has_mremap()
+    _enabled = kernel.is_unix() and kernel.has_mremap()
     _partial = False
 
     def __init__(self, f, offset=0, length=0):
@@ -67,11 +67,11 @@ class Fileobj (rrmap.Fileobj):
         self.cleanup_mapping()
 
         if not self.__anon:
-            util.utimem(self.get_path(), t)
+            self.update_mtime(self.get_path(), t)
         if self.__dead and not self.is_dirty():
             f = self.__get_backing_path()
-            util.truncate_file(f)
-            util.utimem(f, t)
+            kernel.truncate(f)
+            self.update_mtime(f, t)
         if self.__anon and shcopy:
             self.__copy_anon()
         self.__anon = None
@@ -90,14 +90,14 @@ class Fileobj (rrmap.Fileobj):
             self.get_path()))
 
     def __copy_anon(self):
-        util.fsync(self.__anon)
+        kernel.fsync(self.__anon)
         src = self.__get_backing_path()
         dst = self.get_path()
         if src == dst:
             return -1
         if not os.path.isfile(src):
             return -1
-        if kernel.get_file_size(dst) > 0:
+        if kernel.stat_size(dst) > 0:
             return -1
         shutil.copy2(src, dst)
 
@@ -125,13 +125,13 @@ class Fileobj (rrmap.Fileobj):
         self.__sync += 1
 
     def utime(self):
-        util.touch(self.__get_backing_path())
+        kernel.touch(self.__get_backing_path())
         self.update_fstat(self.__get_backing_path())
         self.__sync += 1
 
     def __die(self, is_dying=True):
         if not self.__dead and is_dying:
-            util.touch(self.__get_backing_path())
+            kernel.touch(self.__get_backing_path())
         self.__dead = is_dying
 
     def insert(self, x, l, rec=True):

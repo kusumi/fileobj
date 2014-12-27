@@ -64,34 +64,36 @@ class FileobjError (util.GenericError):
 
 class Fileobj (object):
     def __init__(self, f, offset, length):
-        self.__uniq = -1
+        self.__id = -1
         self.__path = path.Path(f)
         self.__attr = fileattr.get(self.get_path())
         self.__attr.offset, self.__attr.length = \
             self.__parse_mapping_attributes(offset, length)
         self.__clear_barrier()
         self.init()
-        self.__init_unique()
+        self.init_id()
 
     def init(self):
         return
     def cleanup(self):
         return
 
-    def __init_unique(self):
+    def init_id(self):
         f = self.get_path()
         if not os.path.exists(f):
             return -1
         try:
-            self.__uniq = util.get_inode(f)
+            self.__id = kernel.get_inode(f)
+            return self.__id
         except Exception as e:
             log.debug(e)
+            return -1
 
-    def __test_unique(self, f):
-        if self.__uniq == -1:
+    def test_id(self, f):
+        if self.__id == -1:
             return True
         try:
-            return self.__uniq == util.get_inode(f)
+            return self.__id == kernel.get_inode(f)
         except Exception as e:
             log.debug(e)
             return True
@@ -149,8 +151,8 @@ class Fileobj (object):
         util.raise_no_impl("get_size")
     def get_sector_size(self):
         return -1
-    def get_uniq(self):
-        return self.__uniq
+    def get_id(self):
+        return self.__id
     def get_path(self):
         return self.__path.path
     def get_short_path(self):
@@ -166,10 +168,10 @@ class Fileobj (object):
 
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
-        bufsiz = kernel.get_buffer_size_safe(f)
+        bufsiz = kernel.get_size_safe(f)
         if bufsiz == -1:
             if os.path.isfile(f):
-                log.error("Failed to stat {0}, using 0/0".format(f))
+                log.error("Failed to stat " + f + ", using 0/0")
             return 0, 0
 
         if offset <= 0:
@@ -196,12 +198,13 @@ class Fileobj (object):
         if this == f:
             if self.is_readonly():
                 raise FileobjError("Read only")
+        elif os.path.isdir(f):
+            raise FileobjError(f + " is a directory")
         elif os.path.exists(f):
             raise FileobjError(f + " exists")
 
-        if this == f and not self.__test_unique(f):
-            raise FileobjError(
-                "The buffer has been changed since reading it!!!")
+        if this == f and not self.test_id(f):
+            raise FileobjError(f + " has been changed since reading it!!!")
 
         o = path.Path(f)
         f = o.path
@@ -243,18 +246,18 @@ class Fileobj (object):
         raise FileobjError("Read only")
 
     def utime(self):
-        util.touch(self.get_path())
+        kernel.touch(self.get_path())
 
     def creat(self, f):
-        with util.create_file(f) as fd:
+        with kernel.fcreat(f) as fd:
             pos = 0
             while True:
-                b = self.read(pos, util.PAGE_SIZE)
+                b = self.read(pos, kernel.PAGE_SIZE)
                 if not b:
                     break
                 fd.write(b)
                 pos += len(b)
-            util.fsync(fd)
+            kernel.fsync(fd)
 
     def search(self, x, s, end=-1):
         self.raise_no_support("search")
@@ -278,10 +281,10 @@ class Fileobj (object):
             raise FileobjError(self.get_no_support_string(s))
 
     def get_no_support_string(self, s):
-        return "{0} not supported".format(s)
+        return s + " not supported"
 
     def add_string(self, a, b):
-        return "{0}\n\n{1}".format(a, b)
+        return a + "\n\n" + b
 
     def has_undo(self):
         return self.get_undo_size() > 0

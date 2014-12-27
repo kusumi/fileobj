@@ -131,7 +131,7 @@ def iter_type():
         yield _(k), s, fn
 
 def __get_type_function_name(type_name):
-    return "get_sizeof_{0}".format(_(type_name))
+    return "get_sizeof_" + _(type_name)
 
 def _(s):
     return s[len(TYPE_PREFIX):]

@@ -146,7 +146,7 @@ class _console (console.Console):
         return kbd.ERROR
 
     def handle_invalid_literal(self, li):
-        self.co.flash("Not an editor command {0}".format(li.str))
+        self.co.flash("Not an editor command " + li.str)
         return methods.HANDLED
 
 class Console (_console):

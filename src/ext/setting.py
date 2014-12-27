@@ -24,12 +24,12 @@
 import fileobj.setting
 
 def get_text(co, fo, args):
-    n = max([len(x) for x in fileobj.setting.iter_setting_name()])
+    settings = list(fileobj.setting.iter_setting())
+    if not len(settings):
+        return "No setting"
+    n = max([len(x[0]) for x in settings])
     f = "{{0:<{0}}} {{1}}".format(n)
-    sl = []
-    for x in fileobj.setting.iter_setting_name():
-        if x:
-            sl.append(f.format(x, getattr(fileobj.setting, x)))
-        else:
-            sl.append('')
-    return sl
+    l = []
+    for x in settings:
+        l.append(f.format(*x))
+    return l

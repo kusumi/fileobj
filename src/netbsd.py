@@ -21,15 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fcntl
-
 from . import filebytes
-from . import fs
 from . import libc
 from . import linux
 from . import log
-from . import path
 from . import setting
+from . import unix
 from . import util
 
 PT_READ_I   = 1
@@ -41,8 +38,11 @@ PT_KILL     = 8
 PT_ATTACH   = 9
 PT_DETACH   = 10
 
-# FIX_ME need to find a portable way regarding ioctl args,
-# maybe time to use C bindings
+def get_term_info():
+    return unix.get_term_info()
+
+def get_lang_info():
+    return unix.get_lang_info()
 
 def get_blkdev_info(fd):
     # ioctl value depends on sizeof(disklabel)
@@ -53,13 +53,11 @@ def get_blkdev_info(fd):
     elif util.is_32bit_cpu(): # assume i386/gcc
         size = 404
     else: # forget it
-        log.error("Unsupported processor {0}".format(
-            util.get_cpu_string()))
+        log.error("Unsupported processor " + util.get_cpu_name())
         return -1, -1, ''
     try:
         DIOCGDINFO = 0x40006465 | ((size & 0x1FFF) << 16)
-        disklabel = filebytes.pad(size)
-        b = fcntl.ioctl(fd, DIOCGDINFO, disklabel)
+        b = unix.ioctl(fd, DIOCGDINFO, size)
         d_typename   = b[8:24]
         d_secsize    = util.host_to_int(b[40:44])
         d_nsectors   = util.host_to_int(b[44:48])
@@ -69,11 +67,69 @@ def get_blkdev_info(fd):
         x = d_nsectors * d_ntracks * d_ncylinders
         if d_secperunit > x:
             x = d_secperunit
-        return x * d_secsize, d_secsize, d_typename
+        label = util.bytes_to_str(filebytes.rstrip(d_typename))
+        return x * d_secsize, d_secsize, label
     except Exception as e:
         log.error("ioctl({0}, {1}) failed, {2}".format(
             fd.name, "DIOCGDINFO", e))
         raise
+
+def stat_size(f):
+    return unix.stat_size(f)
+
+def read_size(f):
+    return unix.read_size(f)
+
+def get_inode(f):
+    return unix.get_inode(f)
+
+def fopen(f, mode):
+    return unix.fopen(f, mode)
+
+def fopen_text(f, mode):
+    return unix.fopen_text(f, mode)
+
+def fcreat(f):
+    return unix.fcreat(f)
+
+def fcreat_text(f):
+    return unix.fcreat_text(f)
+
+def symlink(source, link_name):
+    return unix.symlink(source, link_name)
+
+def fsync(fd):
+    return unix.fsync(fd)
+
+def truncate(f, offset):
+    return unix.truncate(f, offset)
+
+def utime(f, st):
+    return unix.utime(f, st)
+
+def touch(f):
+    return unix.touch(f)
+
+def stat_type(f):
+    return unix.stat_type(f)
+
+def get_page_size():
+    return unix.get_page_size()
+
+def set_non_blocking(fd):
+    return unix.set_non_blocking(fd)
+
+def get_terminal_size():
+    return unix.get_terminal_size()
+
+def get_tc(fd):
+    return unix.get_tc(fd)
+
+def set_tc(fd):
+    return unix.set_tc(fd)
+
+def set_cbreak(fd):
+    return unix.set_cbreak(fd)
 
 def get_total_ram():
     """
@@ -92,21 +148,31 @@ def get_free_ram():
     return linux.get_free_ram()
 
 def is_blkdev(f):
-    return path.is_blkdev(f)
+    l = stat_type(f)
+    if l != -1:
+        return l[2] # blk
+    else:
+        return False
 
 def is_blkdev_supported():
+    return True
+
+def has_mmap():
     return True
 
 def has_mremap():
     return True
 
+def has_pid_access(pid):
+    return unix.kill_sig_zero(pid)
+
 def has_pid(pid):
-    return fs.has_pid(pid) or util.has_pid(pid)
+    return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
 
 def get_pid_name(pid):
-    ret = fs.get_pid_name(pid, "cmdline")
+    ret = unix.get_pid_name_from_fs(pid, "cmdline")
     if not ret:
-        return util.get_pid_name(pid)
+        return unix.get_pid_name_from_ps(pid)
     else:
         return ret
 
@@ -142,6 +208,9 @@ ptrace_poke = ptrace_poketext
 
 def get_ptrace_word_size():
     return libc.get_ptrace_data_size()
+
+def parse_waitpid_result(status):
+    return unix.parse_waitpid_result(status)
 
 def init():
     libc.init_ptrace("int")

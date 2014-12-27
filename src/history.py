@@ -25,11 +25,12 @@ from __future__ import with_statement
 import collections
 import time
 
+from . import kbd
+from . import kernel
 from . import literal
 from . import log
 from . import path
 from . import setting
-from . import stash
 from . import util
 
 class _data (object):
@@ -115,16 +116,16 @@ class History (object):
         f = self.__path.path
         if not self.__path.is_file:
             if not self.__path.is_noent:
-                log.error("Can not read {0}".format(f))
+                log.error("Can not read " + f)
             return
         try:
             prefix = list(self.__data.keys())
-            for s in util.open_text_file(f): # from old to new
+            for s in kernel.fopen_text(f): # from old to new
                 s = s.rstrip()
                 if not s or s.startswith("#"):
                     continue
                 k, v = _string_to_data(s)
-                if k in prefix and util.is_graph_sequence(v):
+                if k in prefix and kbd.isprints(v):
                     self.append(k, v)
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))
@@ -132,24 +133,18 @@ class History (object):
     def __write_history(self):
         f = self.__path.path
         if not self.__path.is_file and not self.__path.is_noent:
-            log.error("Can not write to {0}".format(f))
+            log.error("Can not write to " + f)
             return
         try:
-            tmp = stash.TemporaryFile(f, unlink=True)
-            with util.open_text_file(f, 'w') as fd:
+            fsync = kernel.fsync
+            with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
                 fd.write("# {0}\n".format(time.ctime()))
                 for k, v in self:
                     for s in reversed(list(v)): # from old to new
-                        assert util.is_graph_sequence(s)
+                        assert kbd.isprints(s)
                         fd.write(_data_to_string(k, s))
-                util.fsync(fd)
         except Exception as e:
             log.error("Failed to write to {0}, {1}".format(f, e))
-            if tmp:
-                tmp.restore()
-        finally:
-            if tmp:
-                tmp.cleanup()
 
     def reset_cursor(self, k):
         self.__data[k].reset_cursor()

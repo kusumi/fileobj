@@ -274,7 +274,7 @@ class BlockBR (BR):
 
 class _ascii (Console):
     def test_write(self, x):
-        # include 9 to 13
+        # include 9 to 13 -> \t\n\v\f\r
         return kbd.isgraph(x) or kbd.isspace(x)
 
     def handle_write(self, x):

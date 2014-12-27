@@ -66,8 +66,9 @@ def __sigterm_handler(sig, frame):
 
 def dispatch(optargs=None):
     colors = '|'.join(list(screen.iter_color_name()))
-    usage = "Usage: %prog [options] [file paths ...]\nFor more information " \
-        + "run {0} and type :help<ENTER>".format(util.get_program_name())
+    usage = "Usage: %prog [options] [file paths ...]\n" + \
+        "For more information run " + util.get_program_name() + \
+        " and type :help<ENTER>"
     parser = optparse.OptionParser(version=version.__version__, usage=usage)
 
     parser.add_option("-R",
@@ -132,7 +133,7 @@ def dispatch(optargs=None):
         help=optparse.SUPPRESS_HELP)
 
     for s in allocator.iter_module_name():
-        parser.add_option("--{0}".format(s),
+        parser.add_option("--" + s,
             action="store_true",
             default=False,
             help=optparse.SUPPRESS_HELP)
@@ -188,20 +189,23 @@ def dispatch(optargs=None):
     if ret == -1:
         log.error("Failed to make user directory")
     log.debug(sys.argv)
-    log.debug("Free ram {0}/{1}".format(
-        util.get_size_string(kernel.get_free_ram()),
-        util.get_size_string(kernel.get_total_ram())))
+    log.debug("Free ram " +
+        util.get_size_string(kernel.get_free_ram()) + "/" +
+        util.get_size_string(kernel.get_total_ram()))
 
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)
 
     try:
         co = None
-        literal.init()
-        screen.init(opts.fg, opts.bg)
-        console.init()
+        assert literal.init() != -1
+        assert screen.init(opts.fg, opts.bg) != -1
+        assert console.init() != -1
         co = container.Container()
         if not co.init(args, wspnum, opts.width):
+            if setting.use_debug:
+                d = util.get_import_exceptions()
+                assert not d, d
             co.repaint()
             co.dispatch()
     except Exception as e:

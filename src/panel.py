@@ -26,6 +26,7 @@ import os
 
 from . import ascii
 from . import filebytes
+from . import kbd
 from . import log
 from . import screen
 from . import setting
@@ -409,7 +410,7 @@ class TextCanvas (DisplayCanvas, text_addon):
             8 : "{0:o}", }
 
     def get_form_single(self, x):
-        return util.to_chr_repr(util.bytes_to_str(x))
+        return kbd.to_chr_repr(util.bytes_to_str(x))
 
     def get_form_line(self, buf):
         return ''.join([self.get_form_single(x)

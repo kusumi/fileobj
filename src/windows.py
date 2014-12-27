@@ -21,168 +21,175 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import libc
-from . import log
-from . import netbsd
-from . import setting
-from . import unix
+# >>> import curses
+# Traceback (most recent call last):
+#   File "<stdin>", line 1, in <module>
+#   File "C:\Python34\lib\curses\__init__.py", line 13, in <module>
+#     from _curses import *
+# ImportError: No module named '_curses'
+
+# no curses for Python on win32 however unofficial binary is available at
+# http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses
+
+import mmap
+import nt
+import os
+
 from . import util
 
-PT_READ_I   = 1
-PT_READ_D   = 2
-PT_WRITE_I  = 4
-PT_WRITE_D  = 5
-PT_CONTINUE = 7
-PT_KILL     = 8
-PT_ATTACH   = 9
-PT_DETACH   = 10
-
 def get_term_info():
-    return unix.get_term_info()
+    return ''
 
 def get_lang_info():
-    return unix.get_lang_info()
-
-def get_blkdev_info(fd):
-    return netbsd.get_blkdev_info(fd)
+    return ''
 
 def stat_size(f):
-    return unix.stat_size(f)
+    if os.path.isfile(f):
+        return os.stat(f).st_size
+    else:
+        return -1
 
 def read_size(f):
-    return unix.read_size(f)
+    return -1
 
 def get_inode(f):
-    return unix.get_inode(f)
+    return -1
 
 def fopen(f, mode):
-    return unix.fopen(f, mode)
+    return -1
 
 def fopen_text(f, mode):
-    return unix.fopen_text(f, mode)
+    return -1
 
 def fcreat(f):
-    return unix.fcreat(f)
+    return -1
 
 def fcreat_text(f):
-    return unix.fcreat_text(f)
+    return -1
 
 def symlink(source, link_name):
-    return unix.symlink(source, link_name)
+    if util.is_python_version_or_ht(3, 2) and \
+        not os.path.exists(link_name):
+        os.symlink(source, link_name)
+        if not os.path.islink(link_name):
+            return -1
+    else:
+        return -1
 
 def fsync(fd):
-    return unix.fsync(fd)
+    if fd and not fd.closed:
+        fd.flush()
+        os.fsync(fd.fileno())
 
 def truncate(f, offset):
-    return unix.truncate(f, offset)
+    return -1
 
 def utime(f, st):
-    return unix.utime(f, st)
+    if st is None:
+        os.utime(f, None)
+    elif isinstance(st, nt.stat_result):
+        os.utime(f, (st.st_atime, st.st_mtime))
+    else:
+        os.utime(f, (st[0], st[1]))
 
 def touch(f):
-    return unix.touch(f)
+    return utime(f, None)
 
 def stat_type(f):
-    return unix.stat_type(f)
+    return -1
 
 def get_page_size():
-    return unix.get_page_size()
+    ret = __get_mmap_page_size()
+    if ret != -1:
+        return ret
+    return -1
+
+def __get_mmap_page_size():
+    try:
+        return mmap.PAGESIZE
+    except Exception:
+        return -1
 
 def set_non_blocking(fd):
-    return unix.set_non_blocking(fd)
+    return -1
 
 def get_terminal_size():
-    return unix.get_terminal_size()
+    return -1, -1
 
 def get_tc(fd):
-    return unix.get_tc(fd)
+    return -1
 
 def set_tc(fd):
-    return unix.set_tc(fd)
+    return -1
 
 def set_cbreak(fd):
-    return unix.set_cbreak(fd)
+    return -1
 
 def get_total_ram():
-    """
-    [root@openbsd ~]# sysctl hw.physmem
-    hw.physmem=1073266688
-    """
-    try:
-        s = util.execute("sysctl", "hw.physmem")[0]
-        x = s.split("=")[-1]
-        return int(x)
-    except Exception as e:
-        log.error(e)
-        return -1
+    return -1
 
 def get_free_ram():
     return -1
 
 def is_blkdev(f):
-    l = stat_type(f)
-    if l != -1:
-        return l[2] # blk
-    else:
-        return False
+    return False
 
 def is_blkdev_supported():
-    return True
+    return False
 
 def has_mmap():
-    return True
+    return False
 
 def has_mremap():
     return False
 
 def has_pid_access(pid):
-    return unix.kill_sig_zero(pid)
+    return False
 
 def has_pid(pid):
-    return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
+    return False
 
 def get_pid_name(pid):
-    ret = unix.get_pid_name_from_fs(pid, "cmdline")
-    if not ret:
-        return unix.get_pid_name_from_ps(pid)
-    else:
-        return ret
+    return ''
 
 def is_pid_path_supported():
-    return setting.use_vm_non_linux and libc.has_ptrace()
+    return False
 
 def ptrace_peektext(pid, addr):
-    return libc.ptrace(PT_READ_I, pid, addr, None)
+    assert 0, "Not implemented"
 
 def ptrace_peekdata(pid, addr):
-    return libc.ptrace(PT_READ_D, pid, addr, None)
+    assert 0, "Not implemented"
 
 def ptrace_poketext(pid, addr, data):
-    return libc.ptrace(PT_WRITE_I, pid, addr, data)
+    assert 0, "Not implemented"
 
 def ptrace_pokedata(pid, addr, data):
-    return libc.ptrace(PT_WRITE_D, pid, addr, data)
+    assert 0, "Not implemented"
 
 def ptrace_cont(pid):
-    return libc.ptrace(PT_CONTINUE, pid, 1, 0)
+    assert 0, "Not implemented"
 
 def ptrace_kill(pid):
-    return libc.ptrace(PT_KILL, pid, None, None)
+    assert 0, "Not implemented"
 
 def ptrace_attach(pid):
-    return libc.ptrace(PT_ATTACH, pid, None, None)
+    assert 0, "Not implemented"
 
 def ptrace_detach(pid):
-    return libc.ptrace(PT_DETACH, pid, 1, 0)
+    assert 0, "Not implemented"
 
-ptrace_peek = ptrace_peektext
-ptrace_poke = ptrace_poketext
+def ptrace_peek(pid, addr):
+    assert 0, "Not implemented"
+
+def ptrace_poke(pid, addr, data):
+    assert 0, "Not implemented"
 
 def get_ptrace_word_size():
-    return libc.get_ptrace_data_size()
+    assert 0, "Not implemented"
 
 def parse_waitpid_result(status):
-    return unix.parse_waitpid_result(status)
+    return ''
 
 def init():
-    libc.init_ptrace("int")
+    pass

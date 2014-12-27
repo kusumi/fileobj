@@ -115,7 +115,7 @@ class RegexLiteral (FastLiteral):
     def match(self, l):
         if len(l) != self.size:
             return False
-        if not util.is_graph_sequence(l):
+        if not kbd.isprints(l):
             return False
         s = ''.join([chr(x) for x in l])
         if self.regex.match(s):
@@ -126,7 +126,7 @@ class RegexLiteral (FastLiteral):
     def match_incomplete(self, l):
         if len(l) >= self.size:
             return False
-        if not util.is_graph_sequence(l):
+        if not kbd.isprints(l):
             return False
         s = ''.join([chr(x) for x in l])
         if s.startswith(self.key):
@@ -209,33 +209,33 @@ bracket1_beg  = FastLiteral("{", None, "Go to the previous non zero character")
 bracket2_end  = FastLiteral("]", None, "End reading [count]. e.g. '[-0x10KiB]l' '[-020KiB]l' '[-0b10000KiB]l' are all -16384l")
 bracket2_beg  = FastLiteral("[", None, "Start reading [count]. e.g. '[0x10]x' '[020]x' '[0b10000]x' are all 16x")
 go            = FastLiteral("go", None, "Go to [count] byte in the buffer where default is start of the buffer")
-ctrlb         = FastLiteral("<CTRL>b", (util.ctrl('b'),), "Scroll window [count] pages backward in the buffer")
-ctrlu         = FastLiteral("<CTRL>u", (util.ctrl('u'),), "Scroll window [count] half pages backward in the buffer")
-ctrlf         = FastLiteral("<CTRL>f", (util.ctrl('f'),), "Scroll window [count] pages forward in the buffer")
-ctrld         = FastLiteral("<CTRL>d", (util.ctrl('d'),), "Scroll window [count] half pages forward in the buffer")
-ctrll         = FastLiteral("<CTRL>l", (util.ctrl('l'),), "Refresh screen")
-ctrlw_w       = FastLiteral("<CTRL>ww", (util.ctrl('w'), ord('w')), "Change to the next window")
-ctrlw_ctrlw   = FastLiteral("<CTRL>w<CTRL>w", (util.ctrl('w'), util.ctrl('w')), "Change to the next window")
-ctrlw_W       = FastLiteral("<CTRL>wW", (util.ctrl('w'), ord('W')), "Change to the prev window")
-ctrlw_t       = FastLiteral("<CTRL>wt", (util.ctrl('w'), ord('t')), "Change to the top window")
-ctrlw_ctrlt   = FastLiteral("<CTRL>w<CTRL>t", (util.ctrl('w'), util.ctrl('t')), "Change to the top window")
-ctrlw_b       = FastLiteral("<CTRL>wb", (util.ctrl('w'), ord('b')), "Change to the bottom window")
-ctrlw_ctrlb   = FastLiteral("<CTRL>w<CTRL>b", (util.ctrl('w'), util.ctrl('b')), "Change to the bottom window")
-ctrlw_s       = FastLiteral("<CTRL>ws", (util.ctrl('w'), ord('s')), "Split current window")
-ctrlw_ctrls   = FastLiteral("<CTRL>w<CTRL>s", (util.ctrl('w'), util.ctrl('s')), "Split current window")
-ctrlw_v       = FastLiteral("<CTRL>wv", (util.ctrl('w'), ord('v')), "Split current window")
-ctrlw_ctrlv   = FastLiteral("<CTRL>w<CTRL>v", (util.ctrl('w'), util.ctrl('v')), "Split current window")
-ctrlw_plus    = FastLiteral("<CTRL>w+", (util.ctrl('w'), ord('+')), "Increase current window height [count] lines")
-ctrlw_minus   = FastLiteral("<CTRL>w-", (util.ctrl('w'), ord('-')), "Decrease current window height [count] lines")
-ctrlw_c       = FastLiteral("<CTRL>wc", (util.ctrl('w'), ord('c')), "Close current window")
-ctrlw_o       = FastLiteral("<CTRL>wo", (util.ctrl('w'), ord('o')), "Make the current window the only one")
-ctrlw_ctrlo   = FastLiteral("<CTRL>w<CTRL>o", (util.ctrl('w'), util.ctrl('o')), "Make the current window the only one")
-ctrlw_q       = FastLiteral("<CTRL>wq", (util.ctrl('w'), ord('q')), "Close current window if >1 windows exist else quit program")
+ctrlb         = FastLiteral("<CTRL>b", (kbd.ctrl('b'),), "Scroll window [count] pages backward in the buffer")
+ctrlu         = FastLiteral("<CTRL>u", (kbd.ctrl('u'),), "Scroll window [count] half pages backward in the buffer")
+ctrlf         = FastLiteral("<CTRL>f", (kbd.ctrl('f'),), "Scroll window [count] pages forward in the buffer")
+ctrld         = FastLiteral("<CTRL>d", (kbd.ctrl('d'),), "Scroll window [count] half pages forward in the buffer")
+ctrll         = FastLiteral("<CTRL>l", (kbd.ctrl('l'),), "Refresh screen")
+ctrlw_w       = FastLiteral("<CTRL>ww", (kbd.ctrl('w'), ord('w')), "Change to the next window")
+ctrlw_ctrlw   = FastLiteral("<CTRL>w<CTRL>w", (kbd.ctrl('w'), kbd.ctrl('w')), "Change to the next window")
+ctrlw_W       = FastLiteral("<CTRL>wW", (kbd.ctrl('w'), ord('W')), "Change to the prev window")
+ctrlw_t       = FastLiteral("<CTRL>wt", (kbd.ctrl('w'), ord('t')), "Change to the top window")
+ctrlw_ctrlt   = FastLiteral("<CTRL>w<CTRL>t", (kbd.ctrl('w'), kbd.ctrl('t')), "Change to the top window")
+ctrlw_b       = FastLiteral("<CTRL>wb", (kbd.ctrl('w'), ord('b')), "Change to the bottom window")
+ctrlw_ctrlb   = FastLiteral("<CTRL>w<CTRL>b", (kbd.ctrl('w'), kbd.ctrl('b')), "Change to the bottom window")
+ctrlw_s       = FastLiteral("<CTRL>ws", (kbd.ctrl('w'), ord('s')), "Split current window")
+ctrlw_ctrls   = FastLiteral("<CTRL>w<CTRL>s", (kbd.ctrl('w'), kbd.ctrl('s')), "Split current window")
+ctrlw_v       = FastLiteral("<CTRL>wv", (kbd.ctrl('w'), ord('v')), "Split current window")
+ctrlw_ctrlv   = FastLiteral("<CTRL>w<CTRL>v", (kbd.ctrl('w'), kbd.ctrl('v')), "Split current window")
+ctrlw_plus    = FastLiteral("<CTRL>w+", (kbd.ctrl('w'), ord('+')), "Increase current window height [count] lines")
+ctrlw_minus   = FastLiteral("<CTRL>w-", (kbd.ctrl('w'), ord('-')), "Decrease current window height [count] lines")
+ctrlw_c       = FastLiteral("<CTRL>wc", (kbd.ctrl('w'), ord('c')), "Close current window")
+ctrlw_o       = FastLiteral("<CTRL>wo", (kbd.ctrl('w'), ord('o')), "Make the current window the only one")
+ctrlw_ctrlo   = FastLiteral("<CTRL>w<CTRL>o", (kbd.ctrl('w'), kbd.ctrl('o')), "Make the current window the only one")
+ctrlw_q       = FastLiteral("<CTRL>wq", (kbd.ctrl('w'), ord('q')), "Close current window if >1 windows exist else quit program")
 tab           = FastLiteral("<TAB>", (kbd.TAB,), "Change buffer to the next")
-ctrlg         = FastLiteral("<CTRL>g", (util.ctrl('g'),), "Print current size and position")
-g_ctrlg       = FastLiteral("g<CTRL>g", (ord('g'), util.ctrl('g'),), "Print current size and position in sector for block device")
-ctrla         = FastLiteral("<CTRL>a", (util.ctrl('a'),), "Add [count] to the number at cursor")
-ctrlx         = FastLiteral("<CTRL>x", (util.ctrl('x'),), "Subtract [count] from the number at cursor")
+ctrlg         = FastLiteral("<CTRL>g", (kbd.ctrl('g'),), "Print current size and position")
+g_ctrlg       = FastLiteral("g<CTRL>g", (ord('g'), kbd.ctrl('g'),), "Print current size and position in sector for block device")
+ctrla         = FastLiteral("<CTRL>a", (kbd.ctrl('a'),), "Add [count] to the number at cursor")
+ctrlx         = FastLiteral("<CTRL>x", (kbd.ctrl('x'),), "Subtract [count] from the number at cursor")
 period        = FastLiteral(".", None, "Repeat last change")
 toggle        = FastLiteral("~", None, "Switch case of the [count] characters under and after the cursor")
 ror           = FastLiteral(">>", None, "Rotate [count] bits to right")
@@ -247,7 +247,7 @@ d             = FastLiteral("d", None, "Delete [count] characters under and afte
 D             = FastLiteral("D", None, "Delete characters under the cursor until the end of buffer")
 u             = FastLiteral("u", None, "Undo changes")
 U             = FastLiteral("U", None, "Undo all changes")
-ctrlr         = FastLiteral("<CTRL>r", (util.ctrl('r'),), "Redo changes")
+ctrlr         = FastLiteral("<CTRL>r", (kbd.ctrl('r'),), "Redo changes")
 y             = FastLiteral("y", None, "Yank [count] characters")
 Y             = FastLiteral("Y", None, "Yank characters under the cursor until the end of buffer")
 P             = FastLiteral("P", None, "Put the text before the cursor [count] times")
@@ -266,7 +266,7 @@ R             = FastLiteral("R", None, "Start replace edit mode")
 r             = FastLiteral("r", None, "Replace [count] characters under the cursor")
 v             = FastLiteral("v", None, "Start/End visual mode")
 V             = FastLiteral("V", None, "Start/End line visual mode")
-ctrlv         = FastLiteral("<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode")
+ctrlv         = FastLiteral("<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode")
 escape        = FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode")
 resize        = FastLiteral('<RESIZE>', (kbd.RESIZE,), '')
 
@@ -390,6 +390,22 @@ def print_literal():
     util.printf('\n'.join(s).rstrip())
     cleanup()
 
+# keep this separated from init()
+def __register_ext_literal(o, fn):
+    try:
+        desc = o.get_description()
+    except Exception:
+        desc = ''
+    s = o.__name__.rpartition('.')[2]
+    li = ExtLiteral(':' + s, fn, desc)
+    setattr(this, "s_" + s, li)
+
+# keep this separated from init()
+def __register_is_function(cls):
+    def fn(li):
+        return isinstance(li, cls)
+    setattr(this, "is_" + util.get_class_name(cls), fn)
+
 def init():
     if _tree_root.children:
         return -1
@@ -397,17 +413,13 @@ def init():
     for _ in util.iter_site_ext_module():
         fn = getattr(_, "get_text", None)
         if fn:
-            try:
-                desc = _.get_description()
-            except Exception:
-                desc = ''
-            s = _.__name__.rpartition('.')[2]
-            li = ExtLiteral(':' + s, fn, desc)
-            setattr(this, "s_" + s, li)
+            __register_ext_literal(_, fn)
 
     for _ in util.iter_dir_values(this):
         if isinstance(_, Literal):
             _.init()
+        if util.is_subclass(_, Literal):
+            __register_is_function(_)
 
     # alias
     k.alias(up)
@@ -520,9 +532,9 @@ def init():
 
 def cleanup():
     for s, o in util.iter_dir_items(this):
-        if isinstance(o, Literal):
+        if is_Literal(o):
             o.cleanup()
-        if isinstance(o, ExtLiteral):
+        if is_ExtLiteral(o):
             delattr(this, s)
     _literals.clear()
 
