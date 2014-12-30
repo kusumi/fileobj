@@ -92,27 +92,27 @@ class Path (object):
     def __get_type_string(self):
         ret = []
         if self.is_noent:
-            ret.append("noent")
+            ret.append("NOENT")
         if self.is_noperm:
-            ret.append("noperm")
+            ret.append("NOPERM")
         if self.is_link:
-            ret.append("link")
+            ret.append("LINK")
         if self.is_file:
-            ret.append("file")
+            ret.append("FILE")
         if self.is_dir:
-            ret.append("dir")
+            ret.append("DIR")
         if self.is_blkdev:
-            ret.append("blkdev")
+            ret.append("BLKDEV")
         if self.is_chrdev:
-            ret.append("chrdev")
+            ret.append("CHRDEV")
         if self.is_fifo:
-            ret.append("fifo")
+            ret.append("FIFO")
         if self.is_sock:
-            ret.append("sock")
+            ret.append("SOCK")
         if self.is_unknown:
-            ret.append("unknown")
+            ret.append("UNKNOWN")
         if self.is_error:
-            ret.append("error")
+            ret.append("ERROR")
         return '|'.join(ret)
     type = property(__get_type_string)
 
@@ -228,6 +228,14 @@ def is_error(f):
 
 def _test(x, bits):
     return (x & bits) != 0
+
+def is_canonical_type(o):
+    if o.is_noperm or o.is_dir or o.is_unknown:
+        return False
+    elif o.is_error and o.path != '':
+        return False
+    else:
+        return True
 
 def get_path_failure_message(o, allow_link=True):
     f = o.path

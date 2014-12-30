@@ -29,14 +29,14 @@ def input_to_bytes(l):
     return util.str_to_bytes(
         ''.join([chr(x) for x in l]))
 
+def bytes_to_input(b):
+    return ords(b)
+
 def __ord_2k(b):
     return __builtin_ord(b)
 
 def __ord_3k(b):
     return b[0]
-
-def join(l):
-    return BLANK.join(l)
 
 def __split_2k(b):
     return list(b)
@@ -59,6 +59,9 @@ def __riter_2k(b):
 def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
+
+def join(l):
+    return BLANK.join(l)
 
 def ords(b, cls=tuple):
     return cls(ord(x) for x in iter(b))

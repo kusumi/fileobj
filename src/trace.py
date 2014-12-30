@@ -68,7 +68,7 @@ def __write_script(sf, tf, e, tb):
         if not ret[2]:
             fd.write("#!%s" % ret[0])
         if e:
-            fd.write("# %s\n" % util.exc_to_string(e))
+            fd.write("# %s\n" % util.e_to_string(e))
         for s in tb:
             fd.write("# %s\n" % s)
         fd.write("%s\n" % __get_cmdline(tf))

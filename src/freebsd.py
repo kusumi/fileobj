@@ -71,10 +71,10 @@ def read_size(f):
 def get_inode(f):
     return unix.get_inode(f)
 
-def fopen(f, mode):
+def fopen(f, mode='r'):
     return unix.fopen(f, mode)
 
-def fopen_text(f, mode):
+def fopen_text(f, mode='r'):
     return unix.fopen_text(f, mode)
 
 def fcreat(f):

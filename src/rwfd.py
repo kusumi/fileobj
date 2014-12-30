@@ -41,8 +41,10 @@ class Fileobj (rofd.Fileobj):
 
     def __str__(self):
         l = []
-        l.append("diff size " + util.get_size_string(len(self.__diff)))
-        l.append("sbuf size " + util.get_size_string(len(self.__sbuf)))
+        l.append("diff size " +
+            util.get_size_repr(len(self.__diff)))
+        l.append("sbuf size " +
+            util.get_size_repr(len(self.__sbuf)))
         return self.add_string(
             super(Fileobj, self).__str__(), '\n'.join(l))
 

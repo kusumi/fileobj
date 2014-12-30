@@ -52,7 +52,7 @@ def stat_size(f):
 def read_size(f):
     if not os.path.isfile(f):
         return -1
-    with fopen(f, 'r') as fd: # binary
+    with fopen(f) as fd: # binary
         if set_non_blocking(fd) == -1:
             return -1
         try:
@@ -70,10 +70,10 @@ def get_inode(f):
     else:
         return -1
 
-def fopen(f, mode):
+def fopen(f, mode='r'):
     return open(f, mode + 'b')
 
-def fopen_text(f, mode):
+def fopen_text(f, mode='r'):
     return open(f, mode)
 
 def fcreat(f):
@@ -285,7 +285,7 @@ def get_pid_name_from_fs(pid, *entries):
         f = get_procfs_entry("%d/%s" % (pid, s))
         if os.path.isfile(f):
             try:
-                b = fopen(f, 'r').read()
+                b = fopen(f).read()
                 b = filebytes.rstrip(b)
                 return os.path.basename(util.bytes_to_str(b))
             except Exception:

@@ -65,7 +65,7 @@ class FileobjError (util.GenericError):
 class Fileobj (object):
     def __init__(self, f, offset, length):
         self.__id = -1
-        self.__path = path.Path(f)
+        self.__path = self.__init_path(f)
         self.__attr = fileattr.get(self.get_path())
         self.__attr.offset, self.__attr.length = \
             self.__parse_mapping_attributes(offset, length)
@@ -77,6 +77,13 @@ class Fileobj (object):
         return
     def cleanup(self):
         return
+
+    def __init_path(self, f):
+        ret = path.Path(f)
+        if not path.is_canonical_type(ret):
+            raise FileobjError("Invalid type " + ret.type)
+        else:
+            return ret
 
     def init_id(self):
         f = self.get_path()
@@ -232,8 +239,8 @@ class Fileobj (object):
                 assert not os.path.exists(f), f
                 self.creat(f)
         except Exception, e:
-            raise FileobjError("Failed to write: %s" % (
-                repr(e) if setting.use_debug else e))
+            raise FileobjError("Failed to write: " +
+                util.e_to_string(e, verbose=False))
         else:
             msg += "%s %d[B] written" % (f, self.get_size())
             if creat:
@@ -264,6 +271,26 @@ class Fileobj (object):
     def rsearch(self, x, s, end=-1):
         self.raise_no_support("backward search")
 
+    def iter_search(self, x, word):
+        while True:
+            ret = self.search(x, word)
+            if ret == NOTFOUND or ret == INTERRUPT:
+                break
+            yield ret
+            x = ret + 1
+            if x >= self.get_size():
+                break
+
+    def iter_rsearch(self, x, word):
+        while True:
+            ret = self.rsearch(x, word)
+            if ret == NOTFOUND or ret == INTERRUPT:
+                break
+            yield ret
+            x = ret - 1
+            if x < 0:
+                break
+
     def read(self, x, n):
         self.raise_no_support("read")
     def insert(self, x, l, rec=True):
@@ -272,6 +299,27 @@ class Fileobj (object):
         self.raise_no_support("replace")
     def delete(self, x, n, rec=True):
         self.raise_no_support("delete")
+
+    def readall(self):
+        return self.read(0, self.get_size())
+
+    buffer = property(
+        lambda self: self.readall())
+    binary = property(
+        lambda self: filebytes.ords(self.buffer))
+
+    def iter_read(self, x, n):
+        while True:
+            ret = self.read(x, n)
+            if not ret:
+                break
+            yield ret
+            x += len(ret)
+            if x >= self.get_size():
+                break
+
+    def append(self, l, rec=True):
+        self.insert(self.get_size(), l, rec)
 
     def raise_no_support(self, s):
         if setting.use_readonly and \
@@ -356,7 +404,7 @@ class Fileobj (object):
             del self.__attr.marks[k]
 
     def clear_mark(self, cond):
-        for k in self.__attr.marks.keys():
+        for k in list(self.__attr.marks.keys()): # Python 3 needs cast here
             if cond(k):
                 del self.__attr.marks[k]
 

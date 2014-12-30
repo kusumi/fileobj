@@ -31,8 +31,10 @@ enabled = kernel.is_unix() and \
 class methods (object):
     def get_string(self, s):
         l = []
-        l.append("device size " + util.get_size_string(self.get_size()))
-        l.append("sector size " + util.get_size_string(self.get_sector_size()))
+        l.append("device size " +
+            util.get_size_repr(self.get_size()))
+        l.append("sector size " +
+            util.get_size_repr(self.get_sector_size()))
         l.append("label " + self.blk_label)
         return self.add_string(s, '\n'.join(l))
 

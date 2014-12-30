@@ -24,7 +24,7 @@
 import fileobj.extension
 import fileobj.filebytes
 import fileobj.util
-from fileobj.util import get_size_string, byte_to_int, le_to_int
+from fileobj.util import get_size_repr, byte_to_int, le_to_int
 
 USB_DT_DEVICE    = 0x01
 USB_DT_CONFIG    = 0x02
@@ -82,7 +82,7 @@ def btoh(b):
 def __get_device_descriptor(b):
     assert len(b) == 18, "Invalid device descriptor: " + btoh(b)
     l = []
-    l.append("device descriptor " + get_size_string(len(b)))
+    l.append("device descriptor " + get_size_repr(len(b)))
     l.append("    bLength            = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType    = %d" % byte_to_int(b[1:2]))
     l.append("    bcdUSB             = 0x%04X" % le_to_int(b[2:4]))
@@ -102,7 +102,7 @@ def __get_device_descriptor(b):
 def __get_config_descriptor(b):
     assert len(b) == 9, "Invalid config descriptor: " + btoh(b)
     l = []
-    l.append("config descriptor " + get_size_string(len(b)))
+    l.append("config descriptor " + get_size_repr(len(b)))
     l.append("    bLength             = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType     = %d" % byte_to_int(b[1:2]))
     l.append("    wTotalLength        = %d" % le_to_int(b[2:4]))
@@ -116,7 +116,7 @@ def __get_config_descriptor(b):
 def __get_string_descriptor(b):
     assert len(b) > 2, "Invalid string descriptor: " + btoh(b)
     l = []
-    l.append("string descriptor " + get_size_string(len(b)))
+    l.append("string descriptor " + get_size_repr(len(b)))
     l.append("    bLength         = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType = %d" % byte_to_int(b[1:2]))
     return l
@@ -124,7 +124,7 @@ def __get_string_descriptor(b):
 def __get_interface_descriptor(b):
     assert len(b) == 9, "Invalid interface descriptor: " + btoh(b)
     l = []
-    l.append("interface descriptor " + get_size_string(len(b)))
+    l.append("interface descriptor " + get_size_repr(len(b)))
     l.append("    bLength            = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType    = %d" % byte_to_int(b[1:2]))
     l.append("    bInterfaceNumber   = %d" % byte_to_int(b[2:3]))
@@ -139,7 +139,7 @@ def __get_interface_descriptor(b):
 def __get_endpoint_descriptor(b):
     assert len(b) == 7, "Invalid endpoint descriptor: " + btoh(b)
     l = []
-    l.append("endpoint descriptor " + get_size_string(len(b)))
+    l.append("endpoint descriptor " + get_size_repr(len(b)))
     l.append("    bLength          = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType  = %d" % byte_to_int(b[1:2]))
     l.append("    bEndpointAddress = 0x%02X" % byte_to_int(b[2:3]))
@@ -151,7 +151,7 @@ def __get_endpoint_descriptor(b):
 def __get_hid_descriptor(b):
     assert len(b) > 2, "Invalid hid descriptor: " + btoh(b)
     l = []
-    l.append("hid descriptor " + get_size_string(len(b)))
+    l.append("hid descriptor " + get_size_repr(len(b)))
     l.append("    bLength         = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType = %d" % byte_to_int(b[1:2]))
     return l
@@ -159,7 +159,7 @@ def __get_hid_descriptor(b):
 def __get_unknown_descriptor(b):
     assert len(b) > 2, "Invalid descriptor: " + btoh(b)
     l = []
-    l.append("unknown descriptor " + get_size_string(len(b)))
+    l.append("unknown descriptor " + get_size_repr(len(b)))
     l.append("    bLength         = %d" % byte_to_int(b[0:1]))
     l.append("    bDescriptorType = %d" % byte_to_int(b[1:2]))
     return l

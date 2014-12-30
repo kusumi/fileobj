@@ -45,7 +45,7 @@ def __test_module(co, fo, li):
         except fileobj.extension.ExtError:
             pass
         except Exception, e:
-            x[3] = fileobj.util.exc_to_string(e)
+            x[3] = fileobj.util.e_to_string(e)
     return x
 
 def get_description():
