@@ -221,7 +221,7 @@ _str_size_dict = {
     "PIB": PiB,
     "EIB": EiB, }
 
-def parse_size_string(s, sector_size=-1):
+def parse_size_repr(s, sector_size=-1):
     if not s:
         return None
     if s.startswith("+"):
@@ -285,7 +285,7 @@ _bi_str_dict = {
     PiB: "PiB",
     EiB: "EiB", }
 
-def get_size_string(arg):
+def get_size_repr(arg):
     if arg < 0:
         return "{0}[B]".format(int(arg))
     if setting.use_siprefix:
@@ -597,7 +597,7 @@ def parse_file_path(f):
 
 def __get_path_attribute(s, default=0):
     if s:
-        ret = parse_size_string(s)
+        ret = parse_size_repr(s)
     else:
         ret = None
     if ret is None:
@@ -703,7 +703,7 @@ def import_module(s):
             _modules[s] = ret
         return ret
     except Exception as e:
-        _exceptions[s] = exc_to_string(e)
+        _exceptions[s] = e_to_string(e)
         return None
 
 def get_import_modules():
@@ -727,16 +727,21 @@ def get_traceback(tb=None):
 
 def printf(o, error=False):
     fd = sys.stderr if error else sys.stdout
-    print(object_to_string(o), file=fd)
+    print(obj_to_string(o), file=fd)
 
-def object_to_string(o):
+def obj_to_string(o):
     if isinstance(o, Exception):
-        return exc_to_string(o)
+        return e_to_string(o)
     else:
         return str(o)
 
-def exc_to_string(e):
-    return "{0}: {1}".format(get_class_name(e), e)
+def e_to_string(e, verbose=True):
+    # debug or verbose=True shows class name
+    s = str(e)
+    if setting.use_debug or verbose:
+        return get_class_name(e) + ": " + s
+    else:
+        return s
 
 def is_class(cls):
     return inspect.isclass(cls)

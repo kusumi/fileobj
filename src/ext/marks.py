@@ -32,7 +32,7 @@ def get_text(co, fo, args):
         for k in sorted(d.keys()):
             pos = d[k]
             s1 = "{0}[B]".format(pos)
-            s2 = fileobj.util.get_size_string(pos)
+            s2 = fileobj.util.get_size_repr(pos)
             if s1 == s2:
                 s = "  '{0}' {1}".format(k, s1)
             else:

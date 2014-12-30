@@ -190,8 +190,8 @@ def dispatch(optargs=None):
         log.error("Failed to make user directory")
     log.debug(sys.argv)
     log.debug("Free ram " +
-        util.get_size_string(kernel.get_free_ram()) + "/" +
-        util.get_size_string(kernel.get_total_ram()))
+        util.get_size_repr(kernel.get_free_ram()) + "/" +
+        util.get_size_repr(kernel.get_total_ram()))
 
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)

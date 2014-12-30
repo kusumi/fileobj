@@ -268,7 +268,7 @@ def end_read_delayed_input(self, amp, ope, args, raw):
     s = self.co.end_read_delayed_input()
     self.co.show('')
     self.ope.clear()
-    ret = util.parse_size_string(s, self.co.get_sector_size())
+    ret = util.parse_size_repr(s, self.co.get_sector_size())
     if ret == 0:
         return
     elif ret is None:
@@ -466,8 +466,8 @@ def set_option(self, amp, ope, args, raw):
 def show_current(self, amp, ope, args, raw):
     self.co.show("{0} {1} at {2}".format(
         self.co.get_short_path(),
-        util.get_size_string(self.co.get_size()),
-        util.get_size_string(self.co.get_pos())))
+        util.get_size_repr(self.co.get_size()),
+        util.get_size_repr(self.co.get_pos())))
 
 def show_current_sector(self, amp, ope, args, raw):
     sector_size = self.co.get_sector_size()
@@ -507,14 +507,14 @@ def show_version(self, amp, ope, args, raw):
 def show_sector_size(self, amp, ope, args, raw):
     x = self.co.get_sector_size()
     if x != -1:
-        self.co.show(util.get_size_string(x))
+        self.co.show(util.get_size_repr(x))
     else:
         self.co.flash()
 
 def show_args(self, amp, ope, args, raw):
     l = list(self.co.get_buffer_short_paths())
     x = self.co.get_short_path()
-    l[l.index(x)] = "[" + x + "]"
+    l[l.index(x)] = "[{0}]".format(x)
     self.co.show(' '.join(l))
 
 @_cleanup
@@ -1259,7 +1259,7 @@ def yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(b)
-        s = util.get_size_string(self.co.get_yank_buffer_size())
+        s = util.get_size_repr(self.co.get_yank_buffer_size())
         self.co.show(s + " yanked")
 
 def yank_till_end(self, amp, ope, args, raw):
@@ -1288,7 +1288,7 @@ def block_yank(self, amp, ope, args, raw):
         self.co.flash(e)
     else:
         self.co.init_yank_buffer(filebytes.join(l))
-        s = util.get_size_string(self.co.get_yank_buffer_size())
+        s = util.get_size_repr(self.co.get_yank_buffer_size())
         self.co.show(s + " yanked")
 
 @_cleanup
@@ -1429,7 +1429,7 @@ def __save_buffer(self, args, force):
         return -1
     try:
         if overwrite:
-            buf = self.co.read(0, self.co.get_size())
+            buf = self.co.readall()
             msg, new = __overwrite_buffer(self, f, buf)
         else:
             msg, new = self.co.flush(f)
@@ -1450,8 +1450,8 @@ def __overwrite_buffer(self, f, buf):
         msg = "{0} {1}[B] overwritten".format(f, kernel.get_size(f))
         return msg, None
     except Exception as e:
-        raise fileobj.FileobjError("Failed to overwrite: {0}".format(
-            repr(e) if setting.use_debug else e))
+        raise fileobj.FileobjError("Failed to overwrite: " +
+            util.e_to_string(e, verbose=False))
 
 def __rename_buffer(self, f):
     pos = self.co.get_pos()

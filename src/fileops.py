@@ -23,8 +23,11 @@
 
 from __future__ import division
 
+from . import allocator
 from . import blk
 from . import filebytes
+from . import fileobj
+from . import path
 from . import setting
 from . import util
 from . import vm
@@ -164,6 +167,11 @@ class Fileops (object):
     def rsearch(self, x, word, end=-1):
         return self.__ref.rsearch(x, word, end)
 
+    def iter_search(self, x, word):
+        return self.__ref.iter_search(x, word)
+    def iter_rsearch(self, x, word):
+        return self.__ref.iter_rsearch(x, word)
+
     def __init_ops(self):
         if setting.use_debug:
             self.read    = self.__read_debug
@@ -175,6 +183,15 @@ class Fileops (object):
             self.insert  = self.__insert
             self.replace = self.__replace
             self.delete  = self.__delete
+
+    def readall(self):
+        return self.__ref.readall()
+
+    def iter_read(self, x, n):
+        return self.__ref.iter_read(x, n)
+
+    def append(self, l, rec=True):
+        self.__ref.append(l, rec)
 
     def __read_debug(self, x, n):
         self.__assert_position(x)
@@ -285,3 +302,13 @@ class Fileops (object):
 
     def put_barrier(self):
         return self.__ref.put_barrier()
+
+def alloc(f, name=''):
+    f = path.get_path(f)
+    cls = fileobj.get_class(name)
+    if cls:
+        obj = cls(f)
+        obj.set_magic()
+    else:
+        obj = allocator.alloc(f)
+    return Fileops(obj)

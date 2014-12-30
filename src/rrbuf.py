@@ -68,7 +68,7 @@ class Fileobj (robuf.Fileobj):
             hdr = self.__read_unmapped_header()
             if hdr:
                 fd.write(hdr)
-            fd.write(self.read(0, self.get_size()))
+            fd.write(self.readall())
             trr = self.__read_unmapped_trailer()
             if trr:
                 fd.write(trr)

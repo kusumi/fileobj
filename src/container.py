@@ -189,7 +189,7 @@ class Container (object):
             if isinstance(ret, (list, tuple)):
                 ret = '\n'.join(ret)
         except extension.ExtError as e:
-            ret = util.exc_to_string(e)
+            ret = util.e_to_string(e)
 
         from . import rwext as ext
         return self.__add_buffer(ext.Fileobj(ret),

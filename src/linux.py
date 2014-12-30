@@ -67,10 +67,10 @@ def read_size(f):
 def get_inode(f):
     return unix.get_inode(f)
 
-def fopen(f, mode):
+def fopen(f, mode='r'):
     return unix.fopen(f, mode)
 
-def fopen_text(f, mode):
+def fopen_text(f, mode='r'):
     return unix.fopen_text(f, mode)
 
 def fcreat(f):
@@ -127,7 +127,7 @@ def get_meminfo(s):
         return -1
     try:
         s = util.escape_regex_pattern(s)
-        for l in fopen_text(f, 'r'):
+        for l in fopen_text(f):
             m = re.match(r"^{0}.*\s+(\d+)".format(s), l)
             if m:
                 return int(m.group(1)) * util.KiB

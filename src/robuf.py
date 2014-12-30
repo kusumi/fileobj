@@ -49,7 +49,7 @@ class Fileobj (fileobj.Fileobj):
 
     def __str__(self):
         l = []
-        l.append("size " + util.get_size_string(self.get_size()))
+        l.append("size " + util.get_size_repr(self.get_size()))
         l.append("chunk size {0}[B]".format(self.get_chunk_size()))
         l.append("chunk total {0}\n".format(len(self.cbuf)))
         for i, o in enumerate(self.cbuf):

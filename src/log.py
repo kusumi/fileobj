@@ -92,7 +92,7 @@ def critical(o):
 
 def __log(o, level):
     if _logger:
-        _logger.log(level, util.object_to_string(o))
+        _logger.log(level, util.obj_to_string(o))
     else:
         return -1
 

@@ -55,10 +55,10 @@ def read_size(f):
 def get_inode(f):
     return -1
 
-def fopen(f, mode):
+def fopen(f, mode='r'):
     return -1
 
-def fopen_text(f, mode):
+def fopen_text(f, mode='r'):
     return -1
 
 def fcreat(f):
