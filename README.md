@@ -1,4 +1,4 @@
-fileobj ([v0.6.28](https://github.com/kusumi/fileobj/releases/tag/v0.6.28))
+fileobj ([v0.6.29](https://github.com/kusumi/fileobj/releases/tag/v0.6.29))
 =======
 
 ## About
@@ -39,7 +39,7 @@ fileobj ([v0.6.28](https://github.com/kusumi/fileobj/releases/tag/v0.6.28))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.28
+        v0.6.29
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation

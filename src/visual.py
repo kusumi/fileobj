@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -244,9 +244,11 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
     def fill(self, low):
         super(BinaryCanvas, self).fill(low)
         self.update_visual(True)
+        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
+        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class TextCanvas (panel.TextCanvas, _visual_addon):
@@ -257,9 +259,11 @@ class TextCanvas (panel.TextCanvas, _visual_addon):
     def fill(self, low):
         super(TextCanvas, self).fill(low)
         self.update_visual(True)
+        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
+        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
@@ -270,9 +274,11 @@ class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
     def fill(self, low):
         super(ExtBinaryCanvas, self).fill(low)
         self.update_visual(True)
+        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
+        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class _console (console.Console):

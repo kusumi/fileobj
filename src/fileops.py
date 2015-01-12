@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@ from . import vm
 
 class Fileops (object):
     def __init__(self, ref):
+        assert isinstance(ref, fileobj.Fileobj)
         self.__ref = ref
         self.__pos = 0
         self.__ppos = 0
@@ -45,6 +46,24 @@ class Fileops (object):
         if name == "_Fileops__ref":
             raise AttributeError(name)
         return getattr(self.__ref, name)
+
+    def __len__(self):
+        return self.get_size()
+
+    def __getitem__(self, arg):
+        if isinstance(arg, int):
+            pos = arg
+            siz = 1
+        elif isinstance(arg, slice):
+            l = arg.indices(len(self))
+            pos = l[0]
+            siz = l[1] - l[0]
+        else:
+            assert 0, arg
+        assert self.__trail == 0
+        return self.read(
+            self.__get_normalized_pos(pos),
+            self.__get_normalized_size(siz))
 
     def __str__(self):
         return str(self.__ref)
@@ -64,6 +83,9 @@ class Fileops (object):
         return self.__ref.test_replace()
     def test_delete(self):
         return self.__ref.test_delete()
+
+    def is_killed(self):
+        return self.__ref is None
 
     def is_blk(self):
         return isinstance(self.__ref, blk.methods)
@@ -104,14 +126,14 @@ class Fileops (object):
         if self.is_empty():
             p = 0
         else:
-            p = (self.get_pos() + 1) / self.get_size()
+            p = (self.get_pos() + 1) / len(self)
         return p * 100.0
 
     def get_max_pos(self):
         if self.is_empty():
             return 0
         else:
-            return self.get_size() - 1 + self.__trail
+            return len(self) - 1 + self.__trail
 
     def get_pos(self):
         return self.__pos
@@ -162,27 +184,103 @@ class Fileops (object):
     def flush(self, f=None):
         return self.__ref.flush(f)
 
+    def get_search_word(self):
+        return self.__ref.get_search_word()
+    def set_search_word(self, s):
+        self.__ref.set_search_word(s)
+
     def search(self, x, word, end=-1):
         return self.__ref.search(x, word, end)
     def rsearch(self, x, word, end=-1):
         return self.__ref.rsearch(x, word, end)
 
     def iter_search(self, x, word):
-        return self.__ref.iter_search(x, word)
+        return self.__ref.iter_search(
+            self.__get_normalized_pos(x), word)
     def iter_rsearch(self, x, word):
-        return self.__ref.iter_rsearch(x, word)
+        return self.__ref.iter_rsearch(
+            self.__get_normalized_pos(x), word)
 
     def __init_ops(self):
         if setting.use_debug:
-            self.read    = self.__read_debug
-            self.insert  = self.__insert_debug
-            self.replace = self.__replace_debug
-            self.delete  = self.__delete_debug
+            self.read    = self.__debug_read
+            self.insert  = self.__debug_insert
+            self.replace = self.__debug_replace
+            self.delete  = self.__debug_delete
         else:
             self.read    = self.__read
             self.insert  = self.__insert
             self.replace = self.__replace
             self.delete  = self.__delete
+        if util.is_running_outbox() and setting.use_adaptive_fileops:
+            self.read    = self.__decorate_read(self.read)
+            self.insert  = self.__decorate_insert(self.insert)
+            self.replace = self.__decorate_replace(self.replace)
+            self.delete  = self.__decorate_delete(self.delete)
+
+    def __decorate_read(self, fn):
+        def _(x, n):
+            x = self.__get_normalized_pos(x)
+            n = self.__get_normalized_size(n)
+            return fn(x, n)
+        return _
+
+    def __decorate_insert(self, fn):
+        def _(x, l, rec=True):
+            try:
+                self.discard_eof()
+                x = self.__get_normalized_pos(x)
+                l = self.__get_normalized_input(l)
+                fn(x, l, rec)
+            finally:
+                self.restore_eof()
+        return _
+
+    def __decorate_replace(self, fn):
+        def _(x, l, rec=True):
+            x = self.__get_normalized_pos(x)
+            l = self.__get_normalized_input(l)
+            fn(x, l, rec)
+        return _
+
+    def __decorate_delete(self, fn):
+        def _(x, n, rec=True):
+            x = self.__get_normalized_pos(x)
+            n = self.__get_normalized_size(n)
+            fn(x, n, rec)
+        return _
+
+    def __get_normalized_pos(self, pos):
+        _ = self.get_max_pos()
+        if pos < 0:
+            pos = _ + 1 + pos
+        if pos < 0:
+            return 0
+        elif pos > _:
+            return _
+        else:
+            return pos
+
+    def __get_normalized_size(self, siz):
+        if siz < 0:
+            return 0
+        elif siz > len(self):
+            return len(self)
+        else:
+            return siz
+
+    def __get_normalized_input(self, arg):
+        if isinstance(arg, (list, tuple)):
+            if isinstance(arg[0], str):
+                arg = ''.join(arg)
+            elif isinstance(arg[0], filebytes.TYPE):
+                arg = filebytes.join(arg)
+        if isinstance(arg, str):
+            arg = util.str_to_bytes(arg)
+        if isinstance(arg, filebytes.TYPE):
+            arg = filebytes.bytes_to_input(arg)
+        assert isinstance(arg[0], int), arg
+        return arg
 
     def readall(self):
         return self.__ref.readall()
@@ -190,22 +288,19 @@ class Fileops (object):
     def iter_read(self, x, n):
         return self.__ref.iter_read(x, n)
 
-    def append(self, l, rec=True):
-        self.__ref.append(l, rec)
-
-    def __read_debug(self, x, n):
+    def __debug_read(self, x, n):
         self.__assert_position(x)
         return self.__read(x, n)
 
-    def __insert_debug(self, x, l, rec=True):
+    def __debug_insert(self, x, l, rec=True):
         self.__assert_position(x)
         self.__insert(x, l, rec)
 
-    def __replace_debug(self, x, l, rec=True):
+    def __debug_replace(self, x, l, rec=True):
         self.__assert_position(x)
         self.__replace(x, l, rec)
 
-    def __delete_debug(self, x, n, rec=True):
+    def __debug_delete(self, x, n, rec=True):
         self.__assert_position(x)
         self.__delete(x, n, rec)
 
@@ -214,8 +309,8 @@ class Fileops (object):
         assert 0 <= x <= _max_pos, (x, _max_pos)
 
     def __read(self, x, n):
-        if x + n > self.get_size():
-            n = self.get_size() - x
+        if x + n > len(self):
+            n = len(self) - x
         if n <= 0:
             return filebytes.BLANK
         if self.__ref.is_barrier_active():
@@ -236,8 +331,8 @@ class Fileops (object):
             self.__ref.replace(x, l, rec)
 
     def __delete(self, x, n, rec=True):
-        if x + n > self.get_size():
-            n = self.get_size() - x
+        if x + n > len(self):
+            n = len(self) - x
         if n <= 0:
             return
         if self.__ref.is_barrier_active():
@@ -287,7 +382,7 @@ class Fileops (object):
         pos = self.get_pos()
         beg = pos - d
         end = pos + d
-        siz = self.get_size()
+        siz = len(self)
         if beg < 0:
             end -= beg
             if end > siz:
@@ -303,7 +398,7 @@ class Fileops (object):
     def put_barrier(self):
         return self.__ref.put_barrier()
 
-def alloc(f, name=''):
+def __alloc(f, name):
     f = path.get_path(f)
     cls = fileobj.get_class(name)
     if cls:
@@ -312,3 +407,21 @@ def alloc(f, name=''):
     else:
         obj = allocator.alloc(f)
     return Fileops(obj)
+
+if util.is_running_outbox() and \
+    setting.use_auto_fileops_cleanup:
+    import atexit
+
+    def __cleanup(ops):
+        if not ops.is_killed():
+            l = ops.get_path(), ops.get_type() # get before cleanup
+            if ops.cleanup() != -1 and setting.use_debug:
+                util.printf("Cleanup \"%s\" of %s" % l)
+
+    def alloc(f, name=''):
+        ops = __alloc(f, name)
+        atexit.register(__cleanup, ops)
+        return ops
+else:
+    def alloc(f, name=''):
+        return __alloc(f, name)

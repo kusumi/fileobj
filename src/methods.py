@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -621,17 +621,18 @@ def __do_search_next(self, key):
 def __search(self, pos, s, is_forward):
     assert s[0] in "/?"
     word = util.pack_hex_string(s[1:])
+    b = util.str_to_bytes(word)
     if is_forward:
         fn = self.co.search
     else:
         fn = self.co.rsearch
-    ret = fn(pos, word, -1)
+    ret = fn(pos, b, -1)
     if ret == fileobj.NOTFOUND and setting.use_wrapscan:
         if is_forward:
             x = 0
         else:
             x = self.co.get_max_pos()
-        ret = fn(x, word, pos)
+        ret = fn(x, b, pos)
     if ret == fileobj.NOTFOUND:
         self.co.flash("Search %s failed" % repr(word))
     elif ret == fileobj.INTERRUPT:
@@ -640,6 +641,7 @@ def __search(self, pos, s, is_forward):
         self.co.flash("Search error %d" % ret)
     elif ret != self.co.get_pos():
         go_to(self, ret)
+    self.co.lrepaintf()
 
 @_cleanup
 def delete(self, amp, ope, args, raw):
@@ -1146,9 +1148,9 @@ def delete_mark(self, amp, ope, args, raw):
         for k in arg:
             self.co.delete_mark(k)
 
-def clear_mark(self, amp, ope, args, raw):
+def clear_marks(self, amp, ope, args, raw):
     """Does not clear uniq marks"""
-    self.co.clear_mark(lambda k: not k.isupper())
+    self.co.clear_marks(lambda k: not k.isupper())
 
 def start_record(self, amp, ope, args, raw):
     if ope != literal.q.str:
@@ -1457,10 +1459,11 @@ def __rename_buffer(self, f):
     pos = self.co.get_pos()
     if self.co.reload_buffer(f) == -1:
         return -1
+    # renamed
     go_to(self, pos)
     try:
         assert not self.co.is_dirty()
-        self.co.flush()
+        self.co.flush() # throw away rollback log
     except fileobj.FileobjError:
         pass
 

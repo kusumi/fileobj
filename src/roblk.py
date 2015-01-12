@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ class Fileobj (rofd.Fileobj, blk.methods):
         return self.get_string(
             super(Fileobj, self).__str__())
 
-    def init(self):
+    def ctr(self):
         self.init_blk()
 
     def get_sector_size(self):

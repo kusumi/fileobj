@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,9 @@ def get_log_path():
 
 def get_history_path():
     return get_path("history")
+
+def get_marks_path():
+    return get_path("marks")
 
 def get_path(s):
     f = getattr(this, s + "_path")

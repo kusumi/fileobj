@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ class Fileobj (fileobj.Fileobj):
             sl.append("%d[B] %d" % (k, self.__count[k]))
         return '\n'.join(sl)
 
-    def init(self):
+    def ctr(self):
         f = self.get_path()
         size = kernel.get_size(f)
         if size <= 0:
@@ -76,7 +76,7 @@ class Fileobj (fileobj.Fileobj):
         self.init_file()
         assert os.path.exists(self.get_path())
 
-    def cleanup(self):
+    def dtr(self):
         if self.fd and not self.fd.closed:
             self.fd.close()
 
@@ -112,8 +112,7 @@ class Fileobj (fileobj.Fileobj):
         assert beg >= 0 and end >= 0
         self.__ra_window = beg, end
 
-    def search(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def find(self, x, s, end):
         n = kernel.PAGE_SIZE
         while True:
             if end != -1 and x >= end:
@@ -128,8 +127,7 @@ class Fileobj (fileobj.Fileobj):
             if screen.test_signal():
                 return fileobj.INTERRUPT
 
-    def rsearch(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def rfind(self, x, s, end):
         while True:
             if end != -1 and x <= end:
                 return fileobj.NOTFOUND

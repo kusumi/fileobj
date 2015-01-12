@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,10 @@ def __iter_env_name():
     yield "FILEOBJ_HISTORY_PATH"
     yield "FILEOBJ_HISTORY_BASE"
     yield "FILEOBJ_HISTORY_DIR"
+    yield "FILEOBJ_USE_MARKS"
+    yield "FILEOBJ_MARKS_PATH"
+    yield "FILEOBJ_MARKS_BASE"
+    yield "FILEOBJ_MARKS_DIR"
     yield "FILEOBJ_BARRIER_SIZE"
     yield "FILEOBJ_BARRIER_EXTEND"
     yield "FILEOBJ_USE_ALT_CHGAT"
@@ -66,6 +70,8 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SINGLE_OPERATION"
     yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
+    yield "FILEOBJ_USE_HIGHLIGHT_SEARCH"
+    yield "FILEOBJ_USE_POSITION_PERCENTAGE"
     yield "FILEOBJ_USE_ADDRESS_NUM_OFFSET"
     yield "FILEOBJ_ADDRESS_NUM_WIDTH"
     yield "FILEOBJ_ADDRESS_NUM_RADIX"
@@ -80,6 +86,8 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ALLOC_RECOVER"
     yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
+    yield "FILEOBJ_USE_ADAPTIVE_FILEOPS"
+    yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
     yield "FILEOBJ_MMAP_THRESH"
     yield "FILEOBJ_PTRACE_DELAY"
     yield "FILEOBJ_USE_VM_NON_LINUX"
@@ -273,6 +281,18 @@ def __get_setting_history_base():
 def __get_setting_history_dir():
     return os.getenv("FILEOBJ_HISTORY_DIR")
 
+def __get_setting_use_marks():
+    return test_bool("FILEOBJ_USE_MARKS", True)
+
+def __get_setting_marks_path():
+    return os.getenv("FILEOBJ_MARKS_PATH")
+
+def __get_setting_marks_base():
+    return test_name("FILEOBJ_MARKS_BASE", "marks")
+
+def __get_setting_marks_dir():
+    return os.getenv("FILEOBJ_MARKS_DIR")
+
 def __get_setting_barrier_size():
     return test_gt_zero("FILEOBJ_BARRIER_SIZE", 8192)
 
@@ -301,6 +321,12 @@ def __get_setting_ram_thresh_ratio():
 
 def __get_setting_use_even_size_window():
     return test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
+
+def __get_setting_use_highlight_search():
+    return test_bool("FILEOBJ_USE_HIGHLIGHT_SEARCH", True)
+
+def __get_setting_use_position_percentage():
+    return test_bool("FILEOBJ_USE_POSITION_PERCENTAGE", True)
 
 def __get_setting_use_address_num_offset():
     return test_bool("FILEOBJ_USE_ADDRESS_NUM_OFFSET", False)
@@ -373,6 +399,12 @@ def __get_setting_use_alloc_noent_rwbuf():
 
 def __get_setting_use_array_chunk():
     return test_bool("FILEOBJ_USE_ARRAY_CHUNK", True)
+
+def __get_setting_use_adaptive_fileops():
+    return test_bool("FILEOBJ_USE_ADAPTIVE_FILEOPS", True)
+
+def __get_setting_use_auto_fileops_cleanup():
+    return test_bool("FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True)
 
 def __get_setting_mmap_thresh():
     e = os.getenv("FILEOBJ_MMAP_THRESH")

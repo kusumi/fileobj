@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -112,13 +112,25 @@ def get_program_path():
 def get_program_name():
     return os.path.basename(get_program_path())
 
-def is_running_script():
-    return os.path.isfile(get_program_path())
+def is_running_script(name=None):
+    f = get_program_path()
+    s = get_program_name()
+    if name:
+        return os.path.isfile(f) and s == name
+    else:
+        return os.path.isfile(f)
 
 def is_running_fileobj():
-    # running script/profile does not match this
-    return is_running_script() and \
-        get_program_name() == "fileobj"
+    return is_running_script("fileobj")
+
+def is_running_profile():
+    return is_running_script("profile")
+
+def is_running_inbox():
+    return is_running_fileobj() or is_running_profile()
+
+def is_running_outbox():
+    return not is_running_inbox()
 
 _Xregex = re.compile(r"\\X[%s]{1,}$" % string.hexdigits)
 _xregex = re.compile(r"\\x([%s]{1,2})" % string.hexdigits)
@@ -165,17 +177,23 @@ def escape_regex_pattern(s):
 def get_string_format(tmp, **kwd):
     return string.Template(tmp).substitute(kwd)
 
-def find_string(src, s):
+# start == 0 means find from head
+def find_string(src, sub, start=0):
     if setting.use_ignorecase:
-        return src.lower().find(s.lower())
-    else:
-        return src.find(s)
+        src = src.lower()
+        sub = sub.lower()
+    return src.find(sub, start)
 
-def rfind_string(src, s):
+# start == 0 means rfind from tail
+def rfind_string(src, sub, start=0):
+    if start < 0: # start == -1 -> 0 -> len(src)
+        start += 1
+    if start == 0:
+        start = len(src)
     if setting.use_ignorecase:
-        return src.lower().rfind(s.lower())
-    else:
-        return src.rfind(s)
+        src = src.lower()
+        sub = sub.lower()
+    return src.rfind(sub, 0, start)
 
 def get_os_name():
     # e.g. 'Linux'
@@ -313,7 +331,7 @@ def get_address_space():
 
 def __get_cpu_bits():
     s = platform.architecture()[0]
-    m = re.match(r"(\d+)bit", s)
+    m = re.match(r"^(\d+)bit$", s)
     if m:
         return int(m.group(1))
     else:

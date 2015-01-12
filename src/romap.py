@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -71,14 +71,14 @@ class Fileobj (fileobj.Fileobj):
         l.append("size %d" % self.get_size())
         return '\n'.join(l)
 
-    def init(self):
+    def ctr(self):
         if self.is_mappable():
             self.init_mapping(self.get_path())
         else:
             raise fileobj.FileobjError(
                 "Can not mmap(2) " + self.get_path())
 
-    def cleanup(self):
+    def dtr(self):
         self.cleanup_mapping()
 
     def init_mapping(self, f):
@@ -144,8 +144,7 @@ class Fileobj (fileobj.Fileobj):
     def get_size(self):
         return len(self.map) - self.__size_delta
 
-    def search(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def find(self, x, s, end):
         if setting.use_ignorecase:
             ret = self.__find(x, s, end)
         else:
@@ -173,8 +172,7 @@ class Fileobj (fileobj.Fileobj):
             if screen.test_signal():
                 return fileobj.INTERRUPT
 
-    def rsearch(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def rfind(self, x, s, end):
         if setting.use_ignorecase or not _has_mmap_rfind:
             ret = self.__rfind(x, s, end)
         else:

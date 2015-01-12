@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -105,7 +105,7 @@ class _console (console.Console):
         self.add_method(literal.m_reg        , methods, "set_mark")
         self.add_method(literal.backtick_reg , methods, "get_mark")
         self.add_method(literal.s_delmarks   , methods, "delete_mark")
-        self.add_method(literal.s_delmarksneg, methods, "clear_mark")
+        self.add_method(literal.s_delmarksneg, methods, "clear_marks")
         self.add_method(literal.q_reg        , methods, "start_record")
         self.add_method(literal.atsign_reg   , methods, "replay_record")
         self.add_method(literal.atsign_at    , methods, "replay_record")

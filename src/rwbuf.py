@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,10 +40,10 @@ class Fileobj (rrbuf.Fileobj):
         self.__count = 0
         super(Fileobj, self).__init__(f, offset, length)
 
-    def init(self):
+    def ctr(self):
         assert not self.cbuf
         if os.path.isfile(self.get_path()):
-            super(Fileobj, self).init()
+            super(Fileobj, self).ctr()
         else:
             self.init_chunk(filebytes.BLANK)
 

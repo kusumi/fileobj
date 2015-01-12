@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -71,11 +71,20 @@ class Fileobj (object):
             self.__parse_mapping_attributes(offset, length)
         self.__clear_barrier()
         self.init()
-        self.init_id()
 
     def init(self):
-        return
+        self.init_id()
+        self.ctr()
+
     def cleanup(self):
+        self.dtr()
+        self.__id = -1
+        fileattr.remove(self.get_path())
+
+    def ctr(self):
+        return
+
+    def dtr(self):
         return
 
     def __init_path(self, f):
@@ -86,19 +95,21 @@ class Fileobj (object):
             return ret
 
     def init_id(self):
+        self.__id = -1
         f = self.get_path()
         if not os.path.exists(f):
-            return -1
+            return self.__id
         try:
             self.__id = kernel.get_inode(f)
-            return self.__id
         except Exception, e:
             log.debug(e)
-            return -1
+        finally:
+            return self.__id
 
     def test_id(self, f):
         if self.__id == -1:
             return True
+        assert os.path.exists(f), (f, self.__id)
         try:
             return self.__id == kernel.get_inode(f)
         except Exception, e:
@@ -266,10 +277,20 @@ class Fileobj (object):
                 pos += len(b)
             kernel.fsync(fd)
 
+    def get_search_word(self):
+        return self.__attr.word
+
+    def set_search_word(self, s):
+        assert isinstance(s, filebytes.TYPE)
+        self.__attr.word = s
+
     def search(self, x, s, end=-1):
-        self.raise_no_support("search")
+        self.set_search_word(s)
+        return self.find(x, s, end)
+
     def rsearch(self, x, s, end=-1):
-        self.raise_no_support("backward search")
+        self.set_search_word(s)
+        return self.rfind(x, s, end)
 
     def iter_search(self, x, word):
         while True:
@@ -317,9 +338,6 @@ class Fileobj (object):
             x += len(ret)
             if x >= self.get_size():
                 break
-
-    def append(self, l, rec=True):
-        self.insert(self.get_size(), l, rec)
 
     def raise_no_support(self, s):
         if setting.use_readonly and \
@@ -390,20 +408,23 @@ class Fileobj (object):
                     assert self.get_undo_size() == x - n + 1
             return self.undo(1)
 
-    def set_mark(self, k, v):
-        self.__attr.marks[k] = v
-
     def get_mark(self, k):
         return self.__attr.marks.get(k, -1)
 
+    def set_mark(self, k, v):
+        self.__attr.marks[k] = v
+
     def get_marks(self):
         return dict(self.__attr.marks)
+
+    def set_marks(self, d):
+        self.__attr.marks = d
 
     def delete_mark(self, k):
         if k in self.__attr.marks:
             del self.__attr.marks[k]
 
-    def clear_mark(self, cond):
+    def clear_marks(self, cond):
         for k in list(self.__attr.marks.keys()): # Python 3 needs cast here
             if cond(k):
                 del self.__attr.marks[k]

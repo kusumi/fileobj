@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -356,7 +356,7 @@ def is_pid_path(f):
 def path_to_pid(f):
     try:
         f = os.path.basename(f)
-        m = re.match(r"pid(\d+)", f)
+        m = re.match(r"^pid(\d+)$", f)
         if m:
             return int(m.group(1))
         else:

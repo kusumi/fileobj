@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ class methods (object):
 class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
     def set_buffer(self, fileops):
         super(ExtBinaryCanvas, self).set_buffer(fileops)
-        if self.fileops:
+        if self.fileops is not None:
             self.fileops.ioctl(self.bufmap.x)
 
     def get_form_single(self, x):
@@ -86,6 +86,23 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
         c = self.fileops.read(pos, 1)
         s = self.get_form_single(c) if c else ' '
         self.printl(y, x, s, attr)
+
+    def chgat_search(self, pos, attr1, attr2, here):
+        y, x = self.get_coordinate(pos)
+        if here:
+            self.chgat(y, x, 1, attr1 | attr2) # cursor
+        else:
+            self.chgat(y, x, 1, attr1)
+
+    def alt_chgat_search(self, pos, attr1, attr2, here):
+        """Alternative for Python 2.5"""
+        y, x = self.get_coordinate(pos)
+        c = self.fileops.read(pos, 1)
+        s = self.get_form_single(c) if c else ' '
+        if here:
+            self.printl(y, x, s, attr1 | attr2) # cursor
+        else:
+            self.printl(y, x, s, attr1)
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
     def iter_buffer(self):

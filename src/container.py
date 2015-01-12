@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,11 @@ import os
 from . import allocator
 from . import console
 from . import extension
+from . import fileattr
 from . import filebytes
 from . import fileops
 from . import kbd
+from . import marks
 from . import operand
 from . import path
 from . import screen
@@ -52,6 +54,7 @@ class Container (object):
         self.__delayed_input = []
         self.__stream = collections.deque()
         self.__operand = operand.Operand()
+        self.__marks = marks.Marks(None)
         self.__cur_workspace = None
         self.set_prev_context(None)
 
@@ -102,8 +105,11 @@ class Container (object):
         return self.build()
 
     def cleanup(self):
-        for o in self.__fileobjs:
+        while self.__fileobjs:
+            o = self.__fileobjs.pop()
+            self.__store_marks(o)
             o.cleanup()
+        self.__marks.flush()
         self.__operand.cleanup()
 
     def dispatch(self):
@@ -157,10 +163,21 @@ class Container (object):
         for o in self.__workspaces:
             o.restore_window()
 
-    def __alloc_buffer(self, f):
+    def __load_marks(self, o):
+        d = self.__marks.get(o.get_path())
+        if d:
+            o.set_marks(d)
+
+    def __store_marks(self, o):
+        d = o.get_marks()
+        self.__marks.set(o.get_path(), d)
+
+    def __alloc_buffer(self, f, reload=False):
         if not self.has_buffer(f):
             o = self.alloc_fileobj(f)
             if o:
+                if not reload:
+                    self.__load_marks(o)
                 return o
             if not self.has_buffer(''):
                 return self.alloc_fileobj('') # never fail
@@ -171,10 +188,10 @@ class Container (object):
         except allocator.AllocatorError, e:
             self.flash(e)
 
-    def add_buffer(self, f):
+    def add_buffer(self, f, reload=False):
         """Add buffer and make current workspace focus that"""
         if not self.has_buffer(f):
-            o = self.__alloc_buffer(f)
+            o = self.__alloc_buffer(f, reload)
             if o:
                 return self.__add_buffer(o, self.__get_console())
         else:
@@ -211,10 +228,14 @@ class Container (object):
         if o:
             for wsp in self.__workspaces:
                 wsp.remove_buffer(self.__fileobjs.index(o))
+            if reload:
+                d = dict(o.get_marks()) # FIX_ME dirty
             o.cleanup()
             self.__fileobjs.remove(o)
             if reload:
-                self.add_buffer(f)
+                ff = self.add_buffer(f)
+                assert ff == f, (ff, f)
+                self.__get_buffer(ff).set_marks(d)
             if not self.__fileobjs:
                 self.add_buffer('')
         else:
@@ -235,9 +256,11 @@ class Container (object):
         if not self.has_buffer(old):
             return -1
         if old == new:
+            self.__assert_attr_key(new)
             self.remove_buffer(old, reload=True)
         else:
-            f = self.add_buffer(new)
+            self.__assert_attr_key(new)
+            f = self.add_buffer(new, reload=True)
             if f != new:
                 if f is not None:
                     self.remove_buffer(f)
@@ -245,6 +268,11 @@ class Container (object):
             self.remove_buffer(old)
             assert not self.has_buffer(old), old
         assert self.get_path() == new, new
+
+    def __assert_attr_key(self, f):
+        # should have been renamed already or using the same name
+        if util.is_running_inbox():
+            assert fileattr.has_key(f), fileattr.get_keys()
 
     def __get_buffer(self, f, cond=None):
         i = self.__get_buffer_index(f, cond)
