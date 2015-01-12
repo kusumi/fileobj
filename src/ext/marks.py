@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.marks
 import fileobj.util
 
 def get_text(co, fo, args):
@@ -29,14 +30,10 @@ def get_text(co, fo, args):
         f = o.get_path()
         sl.append(f if f else fileobj.util.NO_NAME)
         d = o.get_marks()
-        for k in sorted(d.keys()):
-            pos = d[k]
-            s1 = "{0}[B]".format(pos)
-            s2 = fileobj.util.get_size_repr(pos)
-            if s1 == s2:
-                s = "  '{0}' {1}".format(k, s1)
-            else:
-                s = "  '{0}' {1} ({2})".format(k, s1, s2)
-            sl.append(s)
+        if d:
+            for k in sorted(d.keys()):
+                sl.append(fileobj.marks.get_mark_repr(k, d[k]))
+        else:
+            sl.append("No mark")
         sl.append('')
     return sl

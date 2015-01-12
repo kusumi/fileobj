@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,16 +45,16 @@ class Fileobj (rrmap.Fileobj):
         self.__anon = None
         super(Fileobj, self).__init__(f, offset, length)
 
-    def init(self):
+    def ctr(self):
         if self.is_mappable():
-            super(Fileobj, self).init()
+            super(Fileobj, self).ctr()
         else:
             self.__init_anon()
             f = self.__get_backing_path()
             self.init_mapping(f)
             self.update_fstat(f)
 
-    def cleanup(self):
+    def dtr(self):
         if not self.map:
             return
         t = self.get_fstat()

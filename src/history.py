@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ class History (object):
         if not self.__path.is_file:
             if not self.__path.is_noent:
                 log.error("Can not read " + f)
-            return
+            return -1
         try:
             prefix = list(self.__data.keys())
             for s in kernel.fopen_text(f): # from old to new
@@ -134,7 +134,7 @@ class History (object):
         f = self.__path.path
         if not self.__path.is_file and not self.__path.is_noent:
             log.error("Can not write to " + f)
-            return
+            return -1
         try:
             fsync = kernel.fsync
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:

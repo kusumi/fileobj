@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,28 +33,38 @@ def clear():
 def get_keys():
     return tuple(_attrd.keys())
 
+def has_key(f):
+    return f in _attrd
+
 def get(f):
     f = path.get_path(f)
-    if f in _attrd:
+    if has_key(f):
         return _attrd.get(f)
     else:
-        attr = util.Namespace(
-            magic='', offset=0, length=0, marks={}, undo=undo.Undo())
-        return _attrd.setdefault(f, attr)
+        return _attrd.setdefault(f, __alloc_new())
+
+def __alloc_new():
+    return util.Namespace(
+        magic = '',
+        offset = 0,
+        length = 0,
+        word = util.str_to_bytes(''),
+        marks = {},
+        undo = undo.Undo())
 
 def remove(f):
     f = path.get_path(f)
-    if f in _attrd:
+    if has_key(f):
         del _attrd[f]
     else:
         return -1
 
 def rename(old, new):
     old = path.get_path(old)
-    if old not in _attrd:
+    if not has_key(old):
         return -1
     new = path.get_path(new)
-    if new in _attrd:
+    if has_key(new):
         return -1
     if old == new:
         return -1

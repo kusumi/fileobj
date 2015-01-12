@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,11 +40,11 @@ class Fileobj (romap.Fileobj):
         self.__stat = None
         super(Fileobj, self).__init__(f, offset, length)
 
-    def init(self):
+    def ctr(self):
         self.update_fstat(self.get_path())
-        super(Fileobj, self).init()
+        super(Fileobj, self).ctr()
 
-    def cleanup(self):
+    def dtr(self):
         if not self.map:
             return
         t = self.get_fstat()

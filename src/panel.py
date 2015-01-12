@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -234,6 +234,10 @@ class Canvas (_panel):
         """Return offset of the current line"""
         return pos - pos % self.bufmap.x
 
+    def read_page(self):
+        return self.fileops.read(
+            self.get_page_offset(), self.get_capacity())
+
     def go_up(self, n):
         return self.sync_cursor()
     def go_down(self, n):
@@ -276,9 +280,10 @@ class DisplayCanvas (Canvas):
         if screen.use_alt_chgat():
             self.chgat_posstr = self.alt_chgat_posstr
             self.chgat_cursor = self.alt_chgat_cursor
+            self.chgat_search = self.alt_chgat_search
 
     def iter_buffer(self):
-        b = self.fileops.read(self.get_page_offset(), self.get_capacity())
+        b = self.read_page()
         n = 0
         for i in range(self.bufmap.y):
             yield i, b[n : n + self.bufmap.x]
@@ -290,6 +295,7 @@ class DisplayCanvas (Canvas):
         pos = self.fileops.get_pos()
         self.chgat_posstr(pos, screen.A_BOLD)
         self.chgat_cursor(pos, screen.A_STANDOUT, low)
+        self.update_search(pos)
 
     def update_highlight(self):
         # update prev first since two values may be the same
@@ -299,6 +305,7 @@ class DisplayCanvas (Canvas):
         pos = self.fileops.get_pos()
         self.chgat_posstr(pos, screen.A_BOLD)
         self.chgat_cursor(pos, screen.A_STANDOUT, False)
+        self.range_update_search(pos, ppos, pos)
         self.refresh()
 
     def sync_cursor(self):
@@ -313,12 +320,66 @@ class DisplayCanvas (Canvas):
         return
     def alt_chgat_posstr(self, pos, attr):
         return
+
     def chgat_cursor(self, pos, attr, low):
         return
     def alt_chgat_cursor(self, pos, attr, low):
         return
+
+    def chgat_search(self, pos, attr1, attr2, here):
+        return
+    def alt_chgat_search(self, pos, attr1, attr2, here):
+        return
+
     def fill_posstr(self):
         return
+
+    def __get_search_word(self):
+        if setting.use_highlight_search:
+            s = self.fileops.get_search_word()
+            if s:
+                return s
+
+    def update_search(self, pos):
+        s = self.__get_search_word()
+        if not s:
+            return -1
+        beg = self.get_page_offset()
+        end = self.get_next_page_offset()
+        self.__update_search(pos, beg, end, s)
+
+    def range_update_search(self, pos, beg, end):
+        s = self.__get_search_word()
+        if not s:
+            return -1
+        if beg > end:
+            beg, end = end, beg
+        beg -= (len(s) - 1)
+        end += len(s)
+        self.__update_search(pos, beg, end, s)
+
+    def __update_search(self, pos, beg, end, s):
+        for i in self.__iter_search_word(beg, end, s):
+            for j in range(len(s)):
+                x = i + j
+                here = (x == pos)
+                self.chgat_search(
+                    x, screen.A_BOLD, screen.A_STANDOUT, here)
+
+    def __iter_search_word(self, beg, end, s):
+        if beg < 0:
+            beg = 0
+        b = self.fileops.read(beg, end - beg) # end not inclusive
+        i = 0
+        while True:
+            i = util.find_string(b, s, i)
+            if i == -1:
+                break
+            pos = beg + i
+            if pos < beg or pos > end:
+                break
+            yield pos
+            i += 1
 
 class BinaryCanvas (DisplayCanvas, binary_addon):
     def __init__(self, siz, pos):
@@ -381,6 +442,25 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             self.printl(y, x, s[0], attr)
             self.printl(y, x + 1, s[1])
 
+    def chgat_search(self, pos, attr1, attr2, here):
+        y, x = self.get_coordinate(pos)
+        if here:
+            self.chgat(y, x, 1, attr1 | attr2) # cursor
+            self.chgat(y, x + 1, 1, attr1)
+        else:
+            self.chgat(y, x, 2, attr1)
+
+    def alt_chgat_search(self, pos, attr1, attr2, here):
+        """Alternative for Python 2.5"""
+        y, x = self.get_coordinate(pos)
+        c = self.fileops.read(pos, 1)
+        s = self.get_form_single(c) if c else '  '
+        if here:
+            self.printl(y, x, s[0], attr1 | attr2) # cursor
+            self.printl(y, x + 1, s[1], attr1)
+        else:
+            self.printl(y, x, s, attr1)
+
     def fill_posstr(self):
         self.printl(0, 0, ' ' * self.offset.x) # blank part
         for x in range(self.bufmap.x):
@@ -438,6 +518,23 @@ class TextCanvas (DisplayCanvas, text_addon):
         s = self.get_form_single(c) if c else ' '
         self.printl(y, x, s, attr)
 
+    def chgat_search(self, pos, attr1, attr2, here):
+        y, x = self.get_coordinate(pos)
+        if here:
+            self.chgat(y, x, 1, attr1 | attr2) # cursor
+        else:
+            self.chgat(y, x, 1, attr1)
+
+    def alt_chgat_search(self, pos, attr1, attr2, here):
+        """Alternative for Python 2.5"""
+        y, x = self.get_coordinate(pos)
+        c = self.fileops.read(pos, 1)
+        s = self.get_form_single(c) if c else ' '
+        if here:
+            self.printl(y, x, s, attr1 | attr2) # cursor
+        else:
+            self.printl(y, x, s, attr1)
+
     def fill_posstr(self):
         s = ''.join([self.__get_column_posstr(x) for x in
             range(self.bufmap.x)])
@@ -456,7 +553,7 @@ class StatusCanvas (Canvas, default_addon):
 
     def set_buffer(self, fileops):
         super(StatusCanvas, self).set_buffer(fileops)
-        if self.fileops:
+        if self.fileops is not None:
             a = ''
             if setting.use_debug:
                 a += "<{0}> <{1}> {2} ".format(
@@ -510,14 +607,18 @@ class StatusCanvas (Canvas, default_addon):
         yield i, s
 
         i, s = util.iter_next(g)
-        per = "{0:.1f}".format(self.fileops.get_pos_percentage())
-        if per.endswith(".0"):
-            per = per[:-2]
-        siz = self.fileops.get_size()
         pos = self.fileops.get_pos()
+        siz = self.fileops.get_size()
         fmt = self.__nstr[setting.status_num_radix]
-        s += "{0}[B] {1:>4}% {2}".format(
-            fmt.format(siz), per, fmt.format(pos))
+        l = fmt.format(siz), fmt.format(pos)
+
+        if setting.use_position_percentage:
+            per = "{0:.1f}".format(self.fileops.get_pos_percentage())
+            if per.endswith(".0"):
+                per = per[:-2]
+            s += "{0}[B] {1:>4}% {2}".format(l[0], per, l[1])
+        else:
+            s += "{0}[B] {1}".format(*l)
         x = self.fileops.read(pos, 1)
         if x:
             n = filebytes.ord(x)
@@ -530,12 +631,14 @@ class StatusCanvas (Canvas, default_addon):
 
 def get_min_frame_size():
     return 1 + get_margin(2), 1 + get_margin(2)
+
 def get_min_canvas_size():
     y, x = get_min_frame_size()
     return y - get_margin(2), x - get_margin(2)
 
 def get_min_frame_position():
     return 0, 0
+
 def get_min_canvas_position():
     y, x = get_min_frame_position()
     return y + get_margin(), x + get_margin()

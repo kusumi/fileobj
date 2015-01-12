@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ class Fileobj (fileobj.Fileobj):
             l.append("[{0}] {1}".format(i, o))
         return '\n'.join(l)
 
-    def init(self):
+    def ctr(self):
         f = self.get_path()
         assert not self.cbuf
         assert os.path.isfile(f), f
@@ -116,8 +116,7 @@ class Fileobj (fileobj.Fileobj):
             self.cbuf.append(o)
         self.cbuf[-1].islast = True
 
-    def search(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def find(self, x, s, end):
         for o in self.cbuf:
             if end != -1 and x >= end:
                 break
@@ -137,8 +136,7 @@ class Fileobj (fileobj.Fileobj):
                 return fileobj.INTERRUPT
         return fileobj.NOTFOUND
 
-    def rsearch(self, x, s, end=-1):
-        s = util.str_to_bytes(s)
+    def rfind(self, x, s, end):
         for o in reversed(self.cbuf):
             if end != -1 and x <= end:
                 break

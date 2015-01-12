@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@ from . import history
 from . import kernel
 from . import literal
 from . import log
+from . import marks
 from . import package
 from . import screen
 from . import setting
@@ -131,6 +132,9 @@ def dispatch(optargs=None):
     parser.add_option("--history",
         default=None,
         help=optparse.SUPPRESS_HELP)
+    parser.add_option("--marks",
+        default=None,
+        help=optparse.SUPPRESS_HELP)
 
     for s in allocator.iter_module_name():
         parser.add_option("--" + s,
@@ -157,6 +161,9 @@ def dispatch(optargs=None):
         return
     if opts.history:
         history.print_history(opts.history)
+        return
+    if opts.marks:
+        marks.print_marks(opts.marks)
         return
 
     targs = util.Namespace(e=None, tb=[], done=False)
