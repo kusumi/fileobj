@@ -71,6 +71,7 @@ def __iter_env_name():
     yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
     yield "FILEOBJ_USE_HIGHLIGHT_SEARCH"
+    yield "FILEOBJ_HIGHLIGHT_SEARCH_ATTR"
     yield "FILEOBJ_USE_POSITION_PERCENTAGE"
     yield "FILEOBJ_USE_ADDRESS_NUM_OFFSET"
     yield "FILEOBJ_ADDRESS_NUM_WIDTH"
@@ -324,6 +325,16 @@ def __get_setting_use_even_size_window():
 
 def __get_setting_use_highlight_search():
     return test_bool("FILEOBJ_USE_HIGHLIGHT_SEARCH", True)
+
+def __get_setting_highlight_search_attr():
+    e = os.getenv("FILEOBJ_HIGHLIGHT_SEARCH_ATTR")
+    if e is None:
+        return "bold",
+    ret = []
+    for x in e.split(","):
+        if x:
+            ret.append(x.lower())
+    return tuple(ret)
 
 def __get_setting_use_position_percentage():
     return test_bool("FILEOBJ_USE_POSITION_PERCENTAGE", True)
