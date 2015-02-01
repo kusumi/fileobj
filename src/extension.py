@@ -83,26 +83,24 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
     def alt_chgat_cursor(self, pos, attr, low):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else ' '
+        s = self.read_form_single(pos)
         self.printl(y, x, s, attr)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
         if here:
-            self.chgat(y, x, 1, attr1 | attr2) # cursor
-        else:
             self.chgat(y, x, 1, attr1)
+        else:
+            self.chgat(y, x, 1, attr2)
 
     def alt_chgat_search(self, pos, attr1, attr2, here):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else ' '
+        s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s, attr1 | attr2) # cursor
-        else:
             self.printl(y, x, s, attr1)
+        else:
+            self.printl(y, x, s, attr2)
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
     def iter_buffer(self):

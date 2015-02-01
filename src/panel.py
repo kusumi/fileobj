@@ -160,6 +160,14 @@ class Canvas (_panel):
     def get_form_line(self, buf):
         return buf
 
+    def read_form_single(self, pos):
+        c = self.fileops.read(pos, 1)
+        if c:
+            return self.get_form_single(c)
+        else:
+            d = self.__cell[1] - self.__cell[0]
+            return ' ' * d
+
     def get_cell_width(self, x):
         return self.__cell[0] * x
 
@@ -281,6 +289,14 @@ class DisplayCanvas (Canvas):
             self.chgat_posstr = self.alt_chgat_posstr
             self.chgat_cursor = self.alt_chgat_cursor
             self.chgat_search = self.alt_chgat_search
+        attr = screen.A_DEFAULT
+        for s in setting.highlight_search_attr:
+            name = "A_" + s.upper()
+            if hasattr(screen, name):
+                attr |= getattr(screen, name)
+        if attr == screen.A_DEFAULT:
+            attr = screen.A_BOLD
+        self.__attr_search = attr
 
     def iter_buffer(self):
         b = self.read_page()
@@ -359,12 +375,12 @@ class DisplayCanvas (Canvas):
         self.__update_search(pos, beg, end, s)
 
     def __update_search(self, pos, beg, end, s):
+        attr_cursor = self.__attr_search | screen.A_STANDOUT
         for i in self.__iter_search_word(beg, end, s):
             for j in range(len(s)):
                 x = i + j
                 here = (x == pos)
-                self.chgat_search(
-                    x, screen.A_BOLD, screen.A_STANDOUT, here)
+                self.chgat_search(x, attr_cursor, self.__attr_search, here)
 
     def __iter_search_word(self, beg, end, s):
         if beg < 0:
@@ -376,7 +392,7 @@ class DisplayCanvas (Canvas):
             if i == -1:
                 break
             pos = beg + i
-            if pos < beg or pos > end:
+            if pos < beg or pos >= end:
                 break
             yield pos
             i += 1
@@ -433,8 +449,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
     def alt_chgat_cursor(self, pos, attr, low):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else '  '
+        s = self.read_form_single(pos)
         if low:
             self.printl(y, x, s[0])
             self.printl(y, x + 1, s[1], attr)
@@ -445,21 +460,20 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
         if here:
-            self.chgat(y, x, 1, attr1 | attr2) # cursor
-            self.chgat(y, x + 1, 1, attr1)
+            self.chgat(y, x, 1, attr1)
+            self.chgat(y, x + 1, 1, attr2)
         else:
-            self.chgat(y, x, 2, attr1)
+            self.chgat(y, x, 2, attr2)
 
     def alt_chgat_search(self, pos, attr1, attr2, here):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else '  '
+        s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s[0], attr1 | attr2) # cursor
-            self.printl(y, x + 1, s[1], attr1)
+            self.printl(y, x, s[0], attr1)
+            self.printl(y, x + 1, s[1], attr2)
         else:
-            self.printl(y, x, s, attr1)
+            self.printl(y, x, s, attr2)
 
     def fill_posstr(self):
         self.printl(0, 0, ' ' * self.offset.x) # blank part
@@ -514,26 +528,24 @@ class TextCanvas (DisplayCanvas, text_addon):
     def alt_chgat_cursor(self, pos, attr, low):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else ' '
+        s = self.read_form_single(pos)
         self.printl(y, x, s, attr)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
         if here:
-            self.chgat(y, x, 1, attr1 | attr2) # cursor
-        else:
             self.chgat(y, x, 1, attr1)
+        else:
+            self.chgat(y, x, 1, attr2)
 
     def alt_chgat_search(self, pos, attr1, attr2, here):
         """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
-        c = self.fileops.read(pos, 1)
-        s = self.get_form_single(c) if c else ' '
+        s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s, attr1 | attr2) # cursor
-        else:
             self.printl(y, x, s, attr1)
+        else:
+            self.printl(y, x, s, attr2)
 
     def fill_posstr(self):
         s = ''.join([self.__get_column_posstr(x) for x in

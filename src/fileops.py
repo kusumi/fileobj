@@ -55,15 +55,15 @@ class Fileops (object):
             pos = arg
             siz = 1
         elif isinstance(arg, slice):
-            l = arg.indices(len(self))
+            l = arg.indices(self.get_size())
             pos = l[0]
             siz = l[1] - l[0]
         else:
             assert 0, arg
         assert self.__trail == 0
-        return self.read(
-            self.__get_normalized_pos(pos),
-            self.__get_normalized_size(siz))
+        pos = self.__get_normalized_pos(pos)
+        siz = self.__get_normalized_size(siz)
+        return self.read(pos, siz)
 
     def __str__(self):
         return str(self.__ref)
@@ -126,14 +126,14 @@ class Fileops (object):
         if self.is_empty():
             p = 0
         else:
-            p = (self.get_pos() + 1) / len(self)
+            p = (self.get_pos() + 1) / self.get_size()
         return p * 100.0
 
     def get_max_pos(self):
         if self.is_empty():
             return 0
         else:
-            return len(self) - 1 + self.__trail
+            return self.get_size() - 1 + self.__trail
 
     def get_pos(self):
         return self.__pos
@@ -264,8 +264,8 @@ class Fileops (object):
     def __get_normalized_size(self, siz):
         if siz < 0:
             return 0
-        elif siz > len(self):
-            return len(self)
+        elif siz > self.get_size():
+            return self.get_size()
         else:
             return siz
 
@@ -309,8 +309,8 @@ class Fileops (object):
         assert 0 <= x <= _max_pos, (x, _max_pos)
 
     def __read(self, x, n):
-        if x + n > len(self):
-            n = len(self) - x
+        if x + n > self.get_size():
+            n = self.get_size() - x
         if n <= 0:
             return filebytes.BLANK
         if self.__ref.is_barrier_active():
@@ -331,8 +331,8 @@ class Fileops (object):
             self.__ref.replace(x, l, rec)
 
     def __delete(self, x, n, rec=True):
-        if x + n > len(self):
-            n = len(self) - x
+        if x + n > self.get_size():
+            n = self.get_size() - x
         if n <= 0:
             return
         if self.__ref.is_barrier_active():
@@ -380,9 +380,9 @@ class Fileops (object):
         assert not self.__ref.get_barrier_size()
         d = bsiz // 2
         pos = self.get_pos()
+        siz = self.get_size()
         beg = pos - d
         end = pos + d
-        siz = len(self)
         if beg < 0:
             end -= beg
             if end > siz:
