@@ -782,3 +782,10 @@ def get_class_name(o):
         return o.__name__
     else:
         return get_class(o).__name__
+
+def get_builtin(name):
+    if is_python2():
+        import __builtin__ as builtin
+    else:
+        import builtins as builtin
+    return getattr(builtin, name)

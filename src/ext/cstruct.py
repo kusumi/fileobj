@@ -68,6 +68,11 @@ _struct_member_regex = re.compile(
 _builtin_type_regex = re.compile(
     r"^(u|s)(8|16|32|64)(le|be)$")
 
+# FIX_ME
+# This is necessary as this module uses int()
+# while __create_builtin_class() overwrites int.
+builtin_int = fileobj.util.get_builtin("int")
+
 _classes = []
 def __create_builtin_class(name, size):
     def get_size(self):
@@ -137,7 +142,7 @@ class _struct (_node):
                 type, name = l
                 m = _struct_member_regex.match(name)
                 if m:
-                    n = int(m.group(2))
+                    n = builtin_int(m.group(2))
                     for i in range(n):
                         yield type, "{0}[{1}]".format(m.group(1), i)
                 else:

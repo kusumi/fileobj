@@ -79,7 +79,7 @@ def rstrip(b):
     return b.rstrip()
 
 if util.is_python2():
-    from __builtin__ import ord as __builtin_ord
+    __builtin_ord = util.get_builtin("ord")
     TYPE = str
     ZERO = "\x00"
     BLANK = ''
