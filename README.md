@@ -1,4 +1,4 @@
-fileobj ([v0.6.31](https://github.com/kusumi/fileobj/releases/tag/v0.6.31))
+fileobj ([v0.6.32](https://github.com/kusumi/fileobj/releases/tag/v0.6.32))
 =======
 
 ## About
@@ -19,10 +19,10 @@ fileobj ([v0.6.31](https://github.com/kusumi/fileobj/releases/tag/v0.6.31))
 
     + [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) and [v0.7](https://github.com/kusumi/fileobj/tree/v0.7) are basically the same at this point except for supported Python versions mentioned above
 
-|    |<=Python 2.4|Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|
-|:---|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
-|v0.6|-           |o         |o         |o         |-         |-         |-         |-         |-         |
-|v0.7|-           |-         |o         |o         |o         |o         |o         |o         |o         |
+|    |<=Python 2.4|Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|Python 3.5|
+|:---|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
+|v0.6|-           |o         |o         |o         |-         |-         |-         |-         |-         |-         |
+|v0.7|-           |-         |o         |o         |o         |o         |o         |o         |o         |o         |
 
 |    |Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Windows|*nix|
 |:---|:----|:-----|:------|:------|:-----------|:------|:---|
@@ -39,7 +39,7 @@ fileobj ([v0.6.31](https://github.com/kusumi/fileobj/releases/tag/v0.6.31))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.6.31
+        v0.6.32
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
