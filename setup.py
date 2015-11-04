@@ -19,7 +19,7 @@ if __name__ == '__main__':
     setup(name      = "fileobj",
         version     = __version__,
         author      = "Tomohiro Kusumi",
-        author_email= "`last_name_in_lower_case`@users.sourceforge.net",
+        author_email= "`'.'.join(reversed(author.lower().split()))`@gmail.com",
         url         = "http://sourceforge.net/projects/fileobj",
         description = "Hex Editor for Linux/BSD",
         license     = "BSD License",
