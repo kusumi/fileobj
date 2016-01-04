@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,7 @@
 
 MAJOR = 0
 MINOR = 7
-RELEASE = 22
+RELEASE = 23
 
 def get_version():
     return MAJOR, MINOR, RELEASE
