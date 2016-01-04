@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 from . import filebytes
 from . import kernel
 from . import rofd
@@ -37,14 +39,14 @@ class Fileobj (rofd.Fileobj):
         super(Fileobj, self).__init__(f, offset, length)
         self.__dirty = False
         self.__diff = {}
-        self.__sbuf = {}
+        self.__bbuf = {}
 
     def __str__(self):
         l = []
         l.append("diff size " +
             util.get_size_repr(len(self.__diff)))
-        l.append("sbuf size " +
-            util.get_size_repr(len(self.__sbuf)))
+        l.append("bbuf size " +
+            util.get_size_repr(len(self.__bbuf)))
         return self.add_string(
             super(Fileobj, self).__str__(), '\n'.join(l))
 
@@ -54,17 +56,25 @@ class Fileobj (rofd.Fileobj):
     def is_dirty(self):
         return self.__dirty
 
+    def __get_block_size(self):
+        siz = self.get_align()
+        if siz:
+            return siz
+        else:
+            return 512 # force 512 bytes block
+
     def sync(self):
-        offset = self.get_mapping_offset()
-        for x in sorted(self.__sbuf.keys()):
-            self.fd.seek(offset + x)
-            self.fd.write(self.__sbuf[x])
-        self.__sbuf = {}
+        siz = self.__get_block_size()
+        for lba in sorted(self.__bbuf.keys()):
+            self.fd.seek(lba * siz)
+            buf = filebytes.join(self.__bbuf[lba])
+            self.fd.write(buf)
+        self.__bbuf = {}
         kernel.fsync(self.fd)
 
     def utime(self):
         super(Fileobj, self).utime()
-        self.__sbuf = {}
+        self.__bbuf = {}
 
     def read(self, x, n):
         b = super(Fileobj, self).read(x, n)
@@ -89,8 +99,8 @@ class Fileobj (rofd.Fileobj):
         for i, c in enumerate(l):
             b = filebytes.input_to_bytes((c,))
             self.__diff[x + i] = b
-            self.__sbuf[x + i] = b
-        self.__dirty = not not self.__sbuf
+            self.__add_block_buffer(x + i, b)
+        self.__dirty = not not self.__bbuf
 
         if rec:
             rbuf = l[:]
@@ -98,3 +108,17 @@ class Fileobj (rofd.Fileobj):
                 ref.replace(x, rbuf, False)
                 return x
             self.add_undo(ufn, rfn)
+
+    def __add_block_buffer(self, x, b):
+        siz = self.__get_block_size()
+        x += self.get_mapping_offset() # abs offset
+        lba = x // siz
+        pos = x % siz
+
+        if lba in self.__bbuf:
+            self.__bbuf[lba][pos] = b
+        else:
+            self.fd.seek(lba * siz)
+            buf = self.fd.read(siz)
+            self.__bbuf[lba] = filebytes.split(buf)
+            self.__bbuf[lba][pos] = b

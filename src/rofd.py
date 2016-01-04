@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2015, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -101,6 +101,9 @@ class Fileobj (fileobj.Fileobj):
         else:
             self.__size = size - self.get_mapping_offset()
         assert self.__size > 0
+
+    def get_align(self):
+        return self.__align
 
     def set_align(self, align):
         if align > 1:
