@@ -38,6 +38,7 @@ fileobj ([v0.7.23](https://github.com/kusumi/fileobj/releases/tag/v0.7.23))
         $ python --version
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
+        $ sudo python ./script/check.py
         $ fileobj --version
         v0.7.23
         $ fileobj
@@ -49,6 +50,7 @@ fileobj ([v0.7.23](https://github.com/kusumi/fileobj/releases/tag/v0.7.23))
         $ python3 --version
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
+        $ sudo python3 ./script/check.py
         $ fileobj --version
         v0.7.23
         $ fileobj
