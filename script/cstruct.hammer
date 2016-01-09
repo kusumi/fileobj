@@ -2,6 +2,7 @@
 # usage:
 #     :cstruct <cstruct_name>
 #     :cstruct <path_to_cstruct_file> <cstruct_name>
+#     :cstruct <cstruct_name1> <cstruct_name2> ... <cstruct_nameN>
 
 struct uuid {
 	u32 time_low;

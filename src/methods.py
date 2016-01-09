@@ -1426,6 +1426,7 @@ def force_save_buffer(self, amp, ope, args, raw):
     __save_buffer(self, args, True)
 
 def __save_buffer(self, args, force):
+    # returns -1 if not written
     f, overwrite = __get_save_path(self, args, force)
     if f is None:
         return -1
@@ -1442,6 +1443,7 @@ def __save_buffer(self, args, force):
         self.co.lrepaintf()
     except Exception as e:
         self.co.flash(e)
+        return -1
 
 def __overwrite_buffer(self, f, buf):
     assert os.path.isfile(f) # existing file
@@ -1515,6 +1517,7 @@ def __block_read(self):
     return filebytes.join(l)
 
 def __save_partial(self, args, fn, force):
+    # returns -1 if not written
     f, overwrite = __get_save_partial_path(self, args, force)
     if f is None:
         return -1
@@ -1534,6 +1537,7 @@ def __save_partial(self, args, fn, force):
             self.co.show(msg)
     except Exception as e:
         self.co.flash(e)
+        return -1
 
 def __get_save_partial_path(self, args, force):
     if len(args) > 1:

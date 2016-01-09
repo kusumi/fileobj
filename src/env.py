@@ -103,6 +103,7 @@ def __iter_env_name():
     yield "FILEOBJ_ROFD_READ_QUEUE_SIZE"
     yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
     yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
+    yield "FILEOBJ_PSEUDO_SECTOR_SIZE"
     yield "FILEOBJ_KEY_TAB"
     yield "FILEOBJ_KEY_ENTER"
     yield "FILEOBJ_KEY_ESCAPE"
@@ -498,6 +499,9 @@ def __get_setting_netbsd_sizeof_disklabel():
 
 def __get_setting_dragonflybsd_sizeof_partinfo():
     return test_gt_zero("FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO", -1)
+
+def __get_setting_pseudo_sector_size():
+    return test_gt_zero("FILEOBJ_PSEUDO_SECTOR_SIZE", 512)
 
 def __get_setting_key_tab():
     return __get_setting_key("FILEOBJ_KEY_TAB")
