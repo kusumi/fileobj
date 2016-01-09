@@ -1,4 +1,4 @@
-fileobj ([v0.6.33](https://github.com/kusumi/fileobj/releases/tag/v0.6.33))
+fileobj ([v0.6.34](https://github.com/kusumi/fileobj/releases/tag/v0.6.34))
 =======
 
 ## About
@@ -40,7 +40,7 @@ fileobj ([v0.6.33](https://github.com/kusumi/fileobj/releases/tag/v0.6.33))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.6.33
+        v0.6.34
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
@@ -106,6 +106,76 @@ fileobj ([v0.6.33](https://github.com/kusumi/fileobj/releases/tag/v0.6.33))
          4005e8 51525354 55565758 595a3031 32333435  QRSTUVWXYZ012345
          4005f8 36373839 00                          6789.           
         $ fileobj pid10337@0x4005c8:0x35
+
++ Map binary data (USB device descriptor of USB Root Hub on Linux) to C struct defined in *${HOME}/.fileobj/cstruct*
+
+        $ cd /path/to/fileobj/source
+        $ cp ./script/cstruct.usb ~/.fileobj/cstruct
+        $ cd
+        $ fileobj ./usb_device_descriptor.bin
+          :cstruct usb_device_descriptor<ENTER>
+          :wq ./usb_device_descriptor.out<ENTER>
+        $ od -tx1 -Ax ./usb_device_descriptor.bin
+        000000 12 01 00 03 09 00 03 09 6b 1d 03 00 06 02 03 02
+        000010 01 01
+        000012
+        $ cat ./usb_device_descriptor.out
+        struct usb_device_descriptor {
+            struct usb_descriptor_header {
+                u8 bLength; 18 \x12 [.]
+                u8 bDescriptorType; 1 \x01 [.]
+            } hdr;
+            u16le bcdUSB; 768 \x00\x03 [..]
+            u8 bDeviceClass; 9 \x09 [.]
+            u8 bDeviceSubClass; 0 \x00 [.]
+            u8 bDeviceProtocol; 3 \x03 [.]
+            u8 bMaxPacketSize0; 9 \x09 [.]
+            u16le idVendor; 7531 \x6B\x1D [k.]
+            u16le idProduct; 3 \x03\x00 [..]
+            u16le bcdDevice; 518 \x06\x02 [..]
+            u8 iManufacturer; 3 \x03 [.]
+            u8 iProduct; 2 \x02 [.]
+            u8 iSerialNumber; 1 \x01 [.]
+            u8 bNumConfigurations; 1 \x01 [.]
+        };
+
++ or use env variable *FILEOBJ\_EXT\_CSTRUCT_PATH* to use customized path for C struct definitions
+
+        $ export FILEOBJ_EXT_CSTRUCT_PATH=/path/to/fileobj/source/script/cstruct.usb
+        $ fileobj ./usb_device_descriptor.bin
+          :cstruct usb_device_descriptor<ENTER>
+          :wq ./usb_device_descriptor.out<ENTER>
+        $ ...
+
++ Map binary data (USB device descriptor of USB Root Hub on Linux) to multiple C structs
+
+        $ fileobj ./usb_device_descriptor.bin
+          :cstruct usb_descriptor_header usb_device_descriptor<ENTER>
+          :wq ./usb_device_descriptor.out<ENTER>
+        $ cat ./usb_device_descriptor.out
+        struct usb_descriptor_header {
+            u8 bLength; 18 \x12 [.]
+            u8 bDescriptorType; 1 \x01 [.]
+        };
+        
+        struct usb_device_descriptor {
+            struct usb_descriptor_header {
+                u8 bLength; 18 \x12 [.]
+                u8 bDescriptorType; 1 \x01 [.]
+            } hdr;
+            u16le bcdUSB; 768 \x00\x03 [..]
+            u8 bDeviceClass; 9 \x09 [.]
+            u8 bDeviceSubClass; 0 \x00 [.]
+            u8 bDeviceProtocol; 3 \x03 [.]
+            u8 bMaxPacketSize0; 9 \x09 [.]
+            u16le idVendor; 7531 \x6B\x1D [k.]
+            u16le idProduct; 3 \x03\x00 [..]
+            u16le bcdDevice; 518 \x06\x02 [..]
+            u8 iManufacturer; 3 \x03 [.]
+            u8 iProduct; 2 \x02 [.]
+            u8 iSerialNumber; 1 \x01 [.]
+            u8 bNumConfigurations; 1 \x01 [.]
+        };
 
 ## List of commands
 
