@@ -790,4 +790,4 @@ def get_builtin(name):
         import __builtin__ as builtin
     else:
         import builtins as builtin
-    return getattr(builtin, name)
+    return getattr(builtin, name, None)
