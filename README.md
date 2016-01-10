@@ -1,4 +1,4 @@
-fileobj ([v0.7.24](https://github.com/kusumi/fileobj/releases/tag/v0.7.24))
+fileobj ([v0.7.25](https://github.com/kusumi/fileobj/releases/tag/v0.7.25))
 =======
 
 ## About
@@ -9,25 +9,17 @@ fileobj ([v0.7.24](https://github.com/kusumi/fileobj/releases/tag/v0.7.24))
 
 + Repository is available at GitHub [https://github.com/kusumi/fileobj/tree/v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
 
-## Prerequisites
+## Supported Python versions
 
-+ Python 2.6 or above
+|<=Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|Python 3.5|
+|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
+|-           |o         |o         |o         |o         |o         |o         |o         |o         |
 
-    + Python 3 is supported since [v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
+## Supported OS
 
-    + Python 2.5 support is dropped in [v0.7](https://github.com/kusumi/fileobj/tree/v0.7), use [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) for Python 2.5
-
-    + [v0.6](https://github.com/kusumi/fileobj/tree/v0.6) and [v0.7](https://github.com/kusumi/fileobj/tree/v0.7) are basically the same at this point except for supported Python versions mentioned above
-
-|    |<=Python 2.4|Python 2.5|Python 2.6|Python 2.7|Python 3.0|Python 3.1|Python 3.2|Python 3.3|Python 3.4|Python 3.5|
-|:---|:-----------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
-|v0.6|-           |o         |o         |o         |-         |-         |-         |-         |-         |-         |
-|v0.7|-           |-         |o         |o         |o         |o         |o         |o         |o         |o         |
-
-|    |Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Windows|*nix|
-|:---|:----|:-----|:------|:------|:-----------|:------|:---|
-|v0.6|o    |o     |o      |o      |o           |-      |?   |
-|v0.7|o    |o     |o      |o      |o           |-      |?   |
+|Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Windows|*nix|
+|:----|:-----|:------|:------|:-----------|:------|:---|
+|o    |o     |o      |o      |o           |-      |?   |
 
 ## Install
 
@@ -40,7 +32,7 @@ fileobj ([v0.7.24](https://github.com/kusumi/fileobj/releases/tag/v0.7.24))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.7.24
+        v0.7.25
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
@@ -52,7 +44,7 @@ fileobj ([v0.7.24](https://github.com/kusumi/fileobj/releases/tag/v0.7.24))
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ sudo python3 ./script/check.py
         $ fileobj --version
-        v0.7.24
+        v0.7.25
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation
