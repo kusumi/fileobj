@@ -25,6 +25,7 @@ from __future__ import division
 from __future__ import with_statement
 import os
 import platform
+import sys
 import time
 
 from . import filebytes
@@ -39,15 +40,16 @@ from . import util
 from . import version
 
 HANDLED  = None
+REWIND   = "REWIND"
 CONTINUE = "CONTINUE"
 RETURN   = "RETURN"
 QUIT     = "QUIT"
 
 def _cleanup(fn):
-    def _(self, amp, ope, args, raw):
+    def _(self, amp, opc, args, raw):
         try:
             und = self.co.get_undo_size()
-            return fn(self, amp, ope, args, raw)
+            return fn(self, amp, opc, args, raw)
         except fileobj.FileobjError as e:
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
@@ -63,7 +65,7 @@ def __use_single_operation(self, x):
         ram = kernel.get_free_ram()
         return ram != -1 and x > int(ram * setting.ram_thresh_ratio)
 
-def __read_int(self, pos):
+def __read_chr(self, pos):
     return filebytes.ord(self.co.read(pos, 1))
 
 def test_insert_raise(self):
@@ -108,75 +110,75 @@ def __call_context(self, fn, i=0):
     fn(i)
     self.co.lrepaintf()
 
-def go_up(self, amp=None, ope=None, args=None, raw=None):
+def go_up(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_up(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_down(self, amp=None, ope=None, args=None, raw=None):
+def go_down(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_down(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_left(self, amp=None, ope=None, args=None, raw=None):
+def go_left(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_left(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_right(self, amp=None, ope=None, args=None, raw=None):
+def go_right(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_right(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_pprev(self, amp=None, ope=None, args=None, raw=None):
+def go_pprev(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_pprev(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_hpprev(self, amp=None, ope=None, args=None, raw=None):
+def go_hpprev(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_hpprev(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_pnext(self, amp=None, ope=None, args=None, raw=None):
+def go_pnext(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_pnext(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_hpnext(self, amp=None, ope=None, args=None, raw=None):
+def go_hpnext(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_hpnext(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_head(self, amp=None, ope=None, args=None, raw=None):
+def go_head(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_head(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_tail(self, amp=None, ope=None, args=None, raw=None):
+def go_tail(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_tail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_lhead(self, amp=None, ope=None, args=None, raw=None):
+def go_lhead(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_lhead() == -1:
         self.co.lrepaintf()
 
-def go_ltail(self, amp=None, ope=None, args=None, raw=None):
+def go_ltail(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_ltail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_up_lhead(self, amp=None, ope=None, args=None, raw=None):
-    go_up(self, amp, ope, args, raw)
-    go_lhead(self, amp, ope, args, raw)
+def go_up_lhead(self, amp=None, opc=None, args=None, raw=None):
+    go_up(self, amp, opc, args, raw)
+    go_lhead(self, amp, opc, args, raw)
 
-def go_down_lhead(self, amp=None, ope=None, args=None, raw=None):
-    go_down(self, amp, ope, args, raw)
-    go_lhead(self, amp, ope, args, raw)
+def go_down_lhead(self, amp=None, opc=None, args=None, raw=None):
+    go_down(self, amp, opc, args, raw)
+    go_lhead(self, amp, opc, args, raw)
 
-def go_phead(self, amp=None, ope=None, args=None, raw=None):
+def go_phead(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_phead(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_pcenter(self, amp=None, ope=None, args=None, raw=None):
+def go_pcenter(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_pcenter() == -1:
         self.co.lrepaintf()
 
-def go_ptail(self, amp=None, ope=None, args=None, raw=None):
+def go_ptail(self, amp=None, opc=None, args=None, raw=None):
     if self.co.go_ptail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_to(self, amp=None, ope=None, args=None, raw=None):
+def go_to(self, amp=None, opc=None, args=None, raw=None):
     if amp is None:
         pos = 0
     else:
@@ -191,26 +193,26 @@ def __is_zero(b):
 def __is_non_zero(b):
     return b != filebytes.ZERO
 
-def go_next_char(self, amp, ope, args, raw):
+def go_next_char(self, amp, opc, args, raw):
     __go_next_matched(self, get_int(amp), __isprint)
 
-def go_next_zero(self, amp, ope, args, raw):
+def go_next_zero(self, amp, opc, args, raw):
     __go_next_matched(self, get_int(amp), __is_zero)
 
-def go_next_nonzero(self, amp, ope, args, raw):
+def go_next_nonzero(self, amp, opc, args, raw):
     __go_next_matched(self, get_int(amp), __is_non_zero)
 
-def go_prev_char(self, amp, ope, args, raw):
+def go_prev_char(self, amp, opc, args, raw):
     __go_prev_matched(self, get_int(amp), __isprint)
 
-def go_prev_zero(self, amp, ope, args, raw):
+def go_prev_zero(self, amp, opc, args, raw):
     __go_prev_matched(self, get_int(amp), __is_zero)
 
-def go_prev_nonzero(self, amp, ope, args, raw):
+def go_prev_nonzero(self, amp, opc, args, raw):
     __go_prev_matched(self, get_int(amp), __is_non_zero)
 
 def __go_next_matched(self, cnt, fn):
-    n = kernel.PAGE_SIZE
+    n = self.co.get_buffer_size()
     pos = self.co.get_pos()
     while True:
         pos += 1
@@ -235,7 +237,7 @@ def __go_next_matched(self, cnt, fn):
             return
 
 def __go_prev_matched(self, cnt, fn):
-    n = kernel.PAGE_SIZE
+    n = self.co.get_buffer_size()
     pos = self.co.get_pos()
     while True:
         if pos < n:
@@ -259,12 +261,12 @@ def __go_prev_matched(self, cnt, fn):
             self.co.flash("Search interrupted")
             return
 
-def start_read_delayed_input(self, amp, ope, args, raw):
+def start_read_delayed_input(self, amp, opc, args, raw):
     self.co.start_read_delayed_input(
         literal.bracket2_beg.seq[0], literal.bracket2_end.seq[0])
-    self.co.show(ope[0])
+    self.co.show(opc[0])
 
-def end_read_delayed_input(self, amp, ope, args, raw):
+def end_read_delayed_input(self, amp, opc, args, raw):
     s = self.co.end_read_delayed_input()
     self.co.show('')
     self.ope.clear()
@@ -280,94 +282,100 @@ def end_read_delayed_input(self, amp, ope, args, raw):
             return
     return CONTINUE
 
-def goto_first_buffer(self, amp, ope, args, raw):
+def goto_first_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
         self.co.goto_first_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_last_buffer(self, amp, ope, args, raw):
+def goto_last_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
         self.co.goto_last_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_next_buffer(self, amp, ope, args, raw):
+def goto_next_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
         self.co.goto_next_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_prev_buffer(self, amp, ope, args, raw):
+def goto_prev_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
         self.co.goto_prev_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def resize_container(self, amp, ope, args, raw):
+def resize_container(self, amp, opc, args, raw):
     self.co.resize()
     self.co.repaint()
 
-def refresh_container(self, amp, ope, args, raw):
+def refresh_container(self, amp, opc, args, raw):
     self.co.refresh()
     self.co.repaint()
 
-def goto_next_workspace(self, amp, ope, args, raw):
+def goto_next_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
         self.co.goto_next_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_prev_workspace(self, amp, ope, args, raw):
+def goto_prev_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
         self.co.goto_prev_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_top_workspace(self, amp, ope, args, raw):
+def goto_top_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
         self.co.goto_top_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_bottom_workspace(self, amp, ope, args, raw):
+def goto_bottom_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
         self.co.goto_bottom_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def add_workspace(self, amp, ope, args, raw):
+def add_workspace(self, amp, opc, args, raw):
     self.co.add_workspace()
     self.co.repaint()
 
-def split_workspace(self, amp, ope, args, raw):
+def split_workspace(self, amp, opc, args, raw):
     self.co.add_workspace()
     if args:
-        open_buffer(self, amp, ope, args, raw)
+        open_buffer(self, amp, opc, args, raw)
     self.co.repaint()
 
-def inc_workspace_height(self, amp, ope, args, raw):
-    if self.co.adjust_workspace(get_int(amp)) != -1:
-        self.co.repaint()
-    else:
-        self.co.flash()
+def inc_workspace_height(self, amp, opc, args, raw):
+    ret = self.co.adjust_workspace(get_int(amp))
+    __parse_adjust_workspace(self, ret)
 
-def dec_workspace_height(self, amp, ope, args, raw):
-    if self.co.adjust_workspace(-get_int(amp)) != -1:
-        self.co.repaint()
-    else:
-        self.co.flash()
+def dec_workspace_height(self, amp, opc, args, raw):
+    ret = self.co.adjust_workspace(-get_int(amp))
+    __parse_adjust_workspace(self, ret)
 
-def remove_workspace(self, amp, ope, args, raw):
+def __parse_adjust_workspace(self, ret):
+    if ret is None:
+        self.co.repaint()
+    elif ret == -1:
+        self.co.flash()
+    elif ret > 0: # bytes_per_window
+        self.co.flash("{0}[B] fixed size window".format(ret))
+    else:
+        assert 0
+
+def remove_workspace(self, amp, opc, args, raw):
     if self.co.remove_workspace() != -1:
         self.co.repaint()
     return RETURN
 
-def remove_other_workspace(self, amp, ope, args, raw):
+def remove_other_workspace(self, amp, opc, args, raw):
     if self.co.remove_other_workspace() != -1:
         self.co.repaint()
 
@@ -416,13 +424,31 @@ def __set_radix_arg(self, args, name):
     else:
         self.co.flash("Invalid arg: {0}".format(x))
 
-def __set_width(self, args):
+def __set_bytes_per_line(self, args):
     prev = self.co.get_bytes_per_line()
     if len(args) == 1:
         self.co.show(prev)
     elif self.co.set_bytes_per_line(args[1]) == -1:
         self.co.flash("Invalid arg: " + args[1])
     elif self.co.get_bytes_per_line() != prev:
+        screen.clear()
+        self.co.build()
+        self.co.repaint()
+
+def __set_bytes_per_window(self, args):
+    prev = self.co.get_bytes_per_window()
+    if len(args) == 1:
+        self.co.show(prev)
+    elif self.co.set_bytes_per_window(args[1]) == -1:
+        try:
+            if int(args[1]) > prev:
+                self.co.flash("{0} is too large, "
+                    "consider :set bytes_per_line first".format(args[1]))
+            else:
+                self.co.flash("Invalid arg: {0} ???".format(args[1]))
+        except ValueError:
+            self.co.flash("Invalid arg: {0}".format(args[1]))
+    elif self.co.get_bytes_per_window() != prev:
         screen.clear()
         self.co.build()
         self.co.repaint()
@@ -440,9 +466,10 @@ _set_methods = {
     literal.s_set_nosi.seq:    __set_nosi,
     literal.s_set_address.seq: __set_address,
     literal.s_set_status.seq:  __set_status,
-    literal.s_set_width.seq:   __set_width, }
+    literal.s_set_bpl.seq:     __set_bytes_per_line,
+    literal.s_set_bpw.seq:     __set_bytes_per_window, }
 
-def set_option(self, amp, ope, args, raw):
+def set_option(self, amp, opc, args, raw):
     if not args:
         self.co.flash("No arg")
         return
@@ -463,99 +490,161 @@ def set_option(self, amp, ope, args, raw):
     else:
         self.co.flash("Unknown option: " + args[0])
 
-def show_current(self, amp, ope, args, raw):
+def show_current(self, amp, opc, args, raw):
     self.co.show("{0} {1} at {2}".format(
         self.co.get_short_path(),
         util.get_size_repr(self.co.get_size()),
         util.get_size_repr(self.co.get_pos())))
 
-def show_current_sector(self, amp, ope, args, raw):
+def show_current_sector(self, amp, opc, args, raw):
     sector_size = self.co.get_sector_size()
     if sector_size == -1:
-        show_current(self, amp, ope, args, raw)
+        show_current(self, amp, opc, args, raw)
     else:
         self.co.show("{0} {1}[sectors] at {2}".format(
             self.co.get_short_path(),
             self.co.get_size() // sector_size,
             self.co.get_pos() // sector_size))
 
-def show_self(self, amp, ope, args, raw):
+def show_self(self, amp, opc, args, raw):
     self.co.show(self)
 
-def show_pwd(self, amp, ope, args, raw):
+def show_pwd(self, amp, opc, args, raw):
     self.co.show(os.getcwd())
 
-def show_date(self, amp, ope, args, raw):
+def show_date(self, amp, opc, args, raw):
     self.co.show(time.ctime())
 
-def show_platform(self, amp, ope, args, raw):
+def show_kernel_module(self, amp, opc, args, raw):
+    self.co.show(str(kernel.get_kernel_module()))
+
+def show_fileobj_class(self, amp, opc, args, raw):
+    self.co.show(str(self.co.get_type()))
+
+def show_buffer_size(self, amp, opc, args, raw):
+    self.co.show(self.co.get_buffer_size())
+
+def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
         util.get_os_name(), util.get_os_release()))
 
-def show_hostname(self, amp, ope, args, raw):
+def show_hostname(self, amp, opc, args, raw):
     self.co.show(platform.node())
 
-def show_term(self, amp, ope, args, raw):
+def show_term(self, amp, opc, args, raw):
     self.co.show(kernel.get_term_info())
 
-def show_lang(self, amp, ope, args, raw):
+def show_lang(self, amp, opc, args, raw):
     self.co.show(kernel.get_lang_info())
 
-def show_version(self, amp, ope, args, raw):
+def show_version(self, amp, opc, args, raw):
     self.co.show(version.__version__)
 
-def show_sector_size(self, amp, ope, args, raw):
+def show_sector_size(self, amp, opc, args, raw):
     x = self.co.get_sector_size()
     if x != -1:
         self.co.show(util.get_size_repr(x))
     else:
         self.co.flash()
 
-def show_args(self, amp, ope, args, raw):
+def show_argv(self, amp, opc, args, raw):
+    self.co.show(str(sys.argv))
+
+def show_args(self, amp, opc, args, raw):
     l = list(self.co.get_buffer_short_paths())
     x = self.co.get_short_path()
     l[l.index(x)] = "[{0}]".format(x)
     self.co.show(' '.join(l))
 
-@_cleanup
-def inc_number(self, amp, ope, args, raw):
-    __do_replace_number(self, get_int(amp), ope, 1)
+def show_md5(self, amp, opc, args, raw):
+    __show_md5(self, 0, self.co.get_size())
+
+def range_show_md5(self, amp, opc, args, raw):
+    beg, siz = __get_range(self)
+    __show_md5(self, beg, beg + siz)
+
+def block_show_md5(self, amp, opc, args, raw):
+    beg, end, mapx, siz, cnt = __get_block(self)
+    pos = beg
+    l = []
+    for i in util.get_xrange(cnt):
+        b = self.co.read(pos, siz)
+        assert len(b) == siz, (pos, siz)
+        l.append(b)
+        if screen.test_signal():
+            self.co.flash("Interrupted ({0})".format(pos))
+            return
+        pos += mapx
+        if pos >= end:
+            break
+    __get_md5(self, l)
+
+def __show_md5(self, beg, end):
+    siz = self.co.get_buffer_size()
+    pos = beg
+    l = []
+    while True:
+        b = self.co.read(pos, siz)
+        if not b: # visual on empty buffer comes here
+            break
+        if pos + len(b) > end:
+            n = pos + len(b) - end
+            b = b[:-n]
+        l.append(b)
+        if screen.test_signal():
+            self.co.flash("Interrupted ({0})".format(pos))
+            return
+        pos += len(b)
+        if pos >= end:
+            break
+    __get_md5(self, l)
+
+def __get_md5(self, l):
+    b = filebytes.join(l)
+    if b:
+        self.co.show(util.get_md5(b))
+    else:
+        self.co.flash("No input")
 
 @_cleanup
-def range_inc_number(self, amp, ope, args, raw):
+def inc_number(self, amp, opc, args, raw):
+    __do_replace_number(self, get_int(amp), opc, 1)
+
+@_cleanup
+def range_inc_number(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    __do_replace_number(self, get_int(amp), ope, siz)
+    __do_replace_number(self, get_int(amp), opc, siz)
 
 @_cleanup
-def block_inc_number(self, amp, ope, args, raw):
+def block_inc_number(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
         self.co.set_pos(beg)
-        __do_replace_number(self, get_int(amp), ope, siz)
+        __do_replace_number(self, get_int(amp), opc, siz)
     else:
         self.co.flash()
 
 @_cleanup
-def dec_number(self, amp, ope, args, raw):
-    __do_replace_number(self, -get_int(amp), ope, 1)
+def dec_number(self, amp, opc, args, raw):
+    __do_replace_number(self, -get_int(amp), opc, 1)
 
 @_cleanup
-def range_dec_number(self, amp, ope, args, raw):
+def range_dec_number(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    __do_replace_number(self, -get_int(amp), ope, siz)
+    __do_replace_number(self, -get_int(amp), opc, siz)
 
 @_cleanup
-def block_dec_number(self, amp, ope, args, raw):
+def block_dec_number(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
         self.co.set_pos(beg)
-        __do_replace_number(self, -get_int(amp), ope, siz)
+        __do_replace_number(self, -get_int(amp), opc, siz)
     else:
         self.co.flash()
 
-def __do_replace_number(self, amp, ope, siz):
+def __do_replace_number(self, amp, opc, siz):
     def fn(_):
         if siz > 8:
             self.co.flash("Only <= 8 bytes allowed")
@@ -575,10 +664,10 @@ def __do_replace_number(self, amp, ope, siz):
     __exec(self, fn)
 
 _did_search_forward = True
-def search_forward(self, amp, ope, args, raw):
-    __do_search(self, ope, True)
-def search_backward(self, amp, ope, args, raw):
-    __do_search(self, ope, False)
+def search_forward(self, amp, opc, args, raw):
+    __do_search(self, opc, True)
+def search_backward(self, amp, opc, args, raw):
+    __do_search(self, opc, False)
 
 def __do_search(self, s, is_forward):
     global _did_search_forward
@@ -590,9 +679,9 @@ def __do_search(self, s, is_forward):
     _did_search_forward = is_forward
     __search(self, self.co.get_pos(), s, is_forward)
 
-def search_next_forward(self, amp, ope, args, raw):
+def search_next_forward(self, amp, opc, args, raw):
     __do_search_next(self, '/')
-def search_next_backward(self, amp, ope, args, raw):
+def search_next_backward(self, amp, opc, args, raw):
     __do_search_next(self, '?')
 
 def __do_search_next(self, key):
@@ -644,20 +733,20 @@ def __search(self, pos, s, is_forward):
     self.co.lrepaintf()
 
 @_cleanup
-def delete(self, amp, ope, args, raw):
+def delete(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
     def fn(_):
         buf = self.co.read_current(amp)
         self.co.delete_current(amp)
         if not _:
-            self.co.init_yank_buffer(buf)
+            self.co.set_delete_buffer(buf)
         else:
-            self.co.right_add_yank_buffer(buf)
+            self.co.right_add_delete_buffer(buf)
     __exec(self, fn)
 
 @_cleanup
-def backspace(self, amp, ope, args, raw):
+def backspace(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
     def fn(_):
@@ -666,24 +755,24 @@ def backspace(self, amp, ope, args, raw):
         buf = self.co.read_current(amp)
         self.co.delete_current(amp)
         if not _:
-            self.co.init_yank_buffer(buf)
+            self.co.set_delete_buffer(buf, False)
         else:
-            self.co.left_add_yank_buffer(buf)
+            self.co.left_add_delete_buffer(buf)
     __exec(self, fn)
 
-def delete_till_end(self, amp, ope, args, raw):
+def delete_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
     if x > 0:
-        delete(self, x, ope, args, raw)
+        delete(self, x, opc, args, raw)
 
 @_cleanup
-def range_delete(self, amp, ope, args, raw):
+def range_delete(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    delete(self, siz, ope, [], raw)
+    delete(self, siz, opc, [], raw)
 
 @_cleanup
-def block_delete(self, amp, ope, args, raw):
+def block_delete(self, amp, opc, args, raw):
     test_delete_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
     self.co.set_pos(beg)
@@ -703,14 +792,14 @@ def block_delete(self, amp, ope, args, raw):
                 return
         buf = filebytes.join(buf)
         if not _:
-            self.co.init_yank_buffer(buf)
+            self.co.set_delete_buffer(buf)
         else:
-            self.co.right_add_yank_buffer(buf)
+            self.co.right_add_delete_buffer(buf)
         self.co.merge_undo(i + 1)
     __exec(self, fn)
 
 @_cleanup
-def toggle(self, amp, ope, args, raw):
+def toggle(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     amp = get_int(amp)
@@ -760,13 +849,13 @@ def __buffered_toggle(self, pos, amp):
     return 1
 
 @_cleanup
-def range_toggle(self, amp, ope, args, raw):
+def range_toggle(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    toggle(self, siz, ope, [], raw)
+    toggle(self, siz, opc, [], raw)
 
 @_cleanup
-def block_toggle(self, amp, ope, args, raw):
+def block_toggle(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
@@ -786,7 +875,7 @@ def block_toggle(self, amp, ope, args, raw):
     __exec(self, fn)
 
 @_cleanup
-def range_replace(self, amp, ope, args, raw):
+def range_replace(self, amp, opc, args, raw):
     test_replace_raise(self)
     beg, siz = __get_range(self)
     l = tuple(args for x in range(siz))
@@ -798,7 +887,7 @@ def range_replace(self, amp, ope, args, raw):
     __exec(self, fn)
 
 @_cleanup
-def block_replace(self, amp, ope, args, raw):
+def block_replace(self, amp, opc, args, raw):
     test_replace_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
     l = tuple(args for x in range(siz))
@@ -820,11 +909,11 @@ def block_replace(self, amp, ope, args, raw):
     __exec(self, fn)
 
 @_cleanup
-def rotate_right(self, amp, ope, args, raw):
+def rotate_right(self, amp, opc, args, raw):
     test_empty_raise(self)
-    __do_rotate_right(self, amp, ope, self.co.get_size() - self.co.get_pos())
+    __do_rotate_right(self, amp, opc, self.co.get_size() - self.co.get_pos())
 
-def __do_rotate_right(self, amp, ope, siz):
+def __do_rotate_right(self, amp, opc, siz):
     test_replace_raise(self)
     test_empty_raise(self)
     shift = get_int(amp)
@@ -852,9 +941,9 @@ def __single_rotate_right(self, shift, beg, end):
     pos = beg
     car_shift = 8 - shift
     if setting.use_circular_bit_shift:
-        car = __read_int(self, end) << car_shift
+        car = __read_chr(self, end) << car_shift
     while pos <= end:
-        x = __read_int(self, pos)
+        x = __read_chr(self, pos)
         u = (car & 0xFF) | (x >> shift)
         self.co.replace(pos, (u,))
         car = x << car_shift
@@ -898,13 +987,13 @@ def __do_buffered_rotate_right(self, shift, beg, end, buf, car):
     return 1, car
 
 @_cleanup
-def range_rotate_right(self, amp, ope, args, raw):
+def range_rotate_right(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    __do_rotate_right(self, amp, ope, siz)
+    __do_rotate_right(self, amp, opc, siz)
 
 @_cleanup
-def block_rotate_right(self, amp, ope, args, raw):
+def block_rotate_right(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     shift = get_int(amp)
@@ -925,7 +1014,7 @@ def block_rotate_right(self, amp, ope, args, raw):
         car = 0
         car_shift = 8 - shift
         if setting.use_circular_bit_shift:
-            car = __read_int(self, pos_end) << car_shift
+            car = __read_chr(self, pos_end) << car_shift
         for i in util.get_xrange(cnt):
             buf = filebytes.split(self.co.read(pos, siz))
             assert len(buf) == siz
@@ -942,11 +1031,11 @@ def block_rotate_right(self, amp, ope, args, raw):
     __exec(self, fn)
 
 @_cleanup
-def rotate_left(self, amp, ope, args, raw):
+def rotate_left(self, amp, opc, args, raw):
     test_empty_raise(self)
-    __do_rotate_left(self, amp, ope, self.co.get_pos() + 1)
+    __do_rotate_left(self, amp, opc, self.co.get_pos() + 1)
 
-def __do_rotate_left(self, amp, ope, siz):
+def __do_rotate_left(self, amp, opc, siz):
     test_replace_raise(self)
     test_empty_raise(self)
     shift = get_int(amp)
@@ -974,9 +1063,9 @@ def __single_rotate_left(self, shift, beg, end):
     pos = beg
     car_shift = 8 - shift
     if setting.use_circular_bit_shift:
-        car = __read_int(self, end) >> car_shift
+        car = __read_chr(self, end) >> car_shift
     while pos >= end:
-        x = __read_int(self, pos)
+        x = __read_chr(self, pos)
         u = ((x << shift) & 0xFF) | car
         self.co.replace(pos, (u,))
         car = x >> car_shift
@@ -1019,13 +1108,13 @@ def __do_buffered_rotate_left(self, shift, beg, end, buf, car):
     return 1, car
 
 @_cleanup
-def range_rotate_left(self, amp, ope, args, raw):
+def range_rotate_left(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg + siz - 1)
-    __do_rotate_left(self, amp, ope, siz)
+    __do_rotate_left(self, amp, opc, siz)
 
 @_cleanup
-def block_rotate_left(self, amp, ope, args, raw):
+def block_rotate_left(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     shift = get_int(amp)
@@ -1046,7 +1135,7 @@ def block_rotate_left(self, amp, ope, args, raw):
         car = 0
         car_shift = 8 - shift
         if setting.use_circular_bit_shift:
-            car = __read_int(self, pos_end) >> car_shift
+            car = __read_chr(self, pos_end) >> car_shift
         for i in util.get_xrange(cnt):
             buf = filebytes.split(self.co.read(pos - siz + 1, siz))
             assert len(buf) == siz
@@ -1063,7 +1152,88 @@ def block_rotate_left(self, amp, ope, args, raw):
     __exec(self, fn)
 
 @_cleanup
-def repeat(self, amp, ope, args, raw):
+def swap_bytes(self, amp, opc, args, raw):
+    siz = get_int(amp)
+    if siz == 1:
+        siz = 2 # default 2 for no amp
+    __swap_bytes(self, siz)
+
+@_cleanup
+def range_swap_bytes(self, amp, opc, args, raw):
+    beg, siz = __get_range(self)
+    self.co.set_pos(beg)
+    __swap_bytes(self, siz)
+
+def __swap_bytes(self, siz):
+    test_replace_raise(self)
+    test_empty_raise(self)
+    def fn(_):
+        buf = self.co.read_current(siz)
+        l = __swap_buffer_to_input(self, buf)
+        self.co.replace_current(l)
+        self.co.add_pos(len(l))
+    __exec(self, fn)
+
+def __swap_buffer_to_input(self, buf):
+    l = []
+    for x in filebytes.riter(buf):
+        l.append(filebytes.ord(x))
+    return l
+
+@_cleanup
+def block_swap_bytes(self, amp, opc, args, raw):
+    test_replace_raise(self)
+    test_empty_raise(self)
+    beg, end, mapx, siz, cnt = __get_block(self)
+    self.co.set_pos(beg)
+
+    def fn(_):
+        und = self.co.get_undo_size()
+        pos = self.co.get_pos()
+        pos_end = pos + end - beg
+        if pos_end > self.co.get_max_pos():
+            self.co.flash("Not enough room")
+            return
+        ret = __block_read_swap_buffer(self, pos, mapx, siz, cnt)
+        if ret == -1:
+            self.co.rollback_restore_until(und)
+            return
+        ret = __block_replace_swap_buffer(self, pos, mapx, siz, cnt, ret)
+        if ret == -1:
+            self.co.rollback_restore_until(und)
+            return
+        self.co.merge_undo(ret)
+        self.co.set_pos(pos_end + 1)
+    __exec(self, fn)
+
+def __block_read_swap_buffer(self, pos, mapx, siz, cnt):
+    buf = filebytes.BLANK
+    for i in util.get_xrange(cnt):
+        b = self.co.read(pos, siz)
+        assert len(b) == siz
+        buf += b
+        pos += mapx
+        if pos > self.co.get_max_pos():
+            break
+        if screen.test_signal():
+            self.co.flash("Read swap buffer interrupted "
+                "({0}/{1},{2})".format(i, cnt, len(buf)))
+            return -1
+    return __swap_buffer_to_input(self, buf)
+
+def __block_replace_swap_buffer(self, pos, mapx, siz, cnt, l):
+    for i in util.get_xrange(cnt):
+        self.co.replace(pos, l[:siz])
+        l = l[siz:]
+        pos += mapx
+        if screen.test_signal():
+            self.co.flash("Replace swap buffer interrupted "
+                "({0}/{1},{2})".format(i, cnt, len(l)))
+            return -1
+    return cnt
+
+@_cleanup
+def repeat(self, amp, opc, args, raw):
     pxfn = self.co.get_xprev_context()
     if not pxfn:
         self.co.flash("No previous command")
@@ -1087,15 +1257,15 @@ def repeat(self, amp, ope, args, raw):
             __call_context(self, xfn)
             self.co.set_prev_context(fn, xfn)
 
-def undo(self, amp, ope, args, raw):
+def undo(self, amp, opc, args, raw):
     __undo(self, amp, self.co.undo,
         "Already at oldest change", "Undo interrupted")
 
-def undo_all(self, amp, ope, args, raw):
+def undo_all(self, amp, opc, args, raw):
     siz = self.co.get_undo_size()
-    undo(self, siz if siz else 1, ope, args, raw)
+    undo(self, siz if siz else 1, opc, args, raw)
 
-def redo(self, amp, ope, args, raw):
+def redo(self, amp, opc, args, raw):
     __undo(self, amp, self.co.redo,
         "Already at newest change", "Redo interrupted")
 
@@ -1111,8 +1281,8 @@ def __undo(self, amp, fn, msg_notfound, msg_interrupt):
         self.co.set_pos(ret)
     self.co.lrepaintf()
 
-def set_mark(self, amp, ope, args, raw):
-    key = ope[1]
+def set_mark(self, amp, opc, args, raw):
+    key = opc[1]
     pos = self.co.get_pos()
     s = "Mark '{0}' at {1}[B]".format(key, pos)
     if key.isupper():
@@ -1122,8 +1292,8 @@ def set_mark(self, amp, ope, args, raw):
         self.co.set_mark(key, pos)
         self.co.show("{0} for {1}".format(s, self.co.get_path()))
 
-def get_mark(self, amp, ope, args, raw):
-    key = ope[1]
+def get_mark(self, amp, opc, args, raw):
+    key = opc[1]
     if key.isupper():
         f, pos = self.co.get_uniq_mark(key)
     else:
@@ -1140,7 +1310,7 @@ def get_mark(self, amp, ope, args, raw):
         else:
             self.co.flash("{0} for {1}".format(s, f))
 
-def delete_mark(self, amp, ope, args, raw):
+def delete_mark(self, amp, opc, args, raw):
     if not args:
         self.co.flash("Argument required")
         return
@@ -1148,22 +1318,22 @@ def delete_mark(self, amp, ope, args, raw):
         for k in arg:
             self.co.delete_mark(k)
 
-def clear_marks(self, amp, ope, args, raw):
+def clear_marks(self, amp, opc, args, raw):
     """Does not clear uniq marks"""
     self.co.clear_marks(lambda k: not k.isupper())
 
-def start_record(self, amp, ope, args, raw):
-    if ope != literal.q.str:
-        self.co.start_record(ope[1])
+def start_record(self, amp, opc, args, raw):
+    if opc != literal.q.str:
+        self.co.start_record(opc[1])
         self.co.push_banner("recording")
     else:
         self.co.end_record()
         self.co.pop_banner()
 
-def replay_record(self, amp, ope, args, raw):
-    assert len(ope) > 1
+def replay_record(self, amp, opc, args, raw):
+    assert len(opc) > 1
     for x in util.get_xrange(get_int(amp)):
-        self.co.replay_record(ope[1])
+        self.co.replay_record(opc[1])
 
 def __get_and_ops(mask):
     return lambda b: filebytes.ord(b) & mask
@@ -1178,13 +1348,13 @@ _bit_ops = {
     literal.bit_xor.key: __get_xor_ops, }
 
 @_cleanup
-def logical_bit_operation(self, amp, ope, arg, raw):
+def logical_bit_operation(self, amp, opc, arg, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     amp = get_int(amp)
-    mask = (int(ope[1], 16) << 4) | int(ope[2], 16)
+    mask = (int(opc[1], 16) << 4) | int(opc[2], 16)
     assert 0 <= mask <= 255
-    bops = _bit_ops.get(ope[0])(mask)
+    bops = _bit_ops.get(opc[0])(mask)
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
@@ -1226,18 +1396,18 @@ def __buffered_logical_bit_operation(self, pos, amp, fn):
     return 1
 
 @_cleanup
-def range_logical_bit_operation(self, amp, ope, args, raw):
+def range_logical_bit_operation(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    logical_bit_operation(self, siz, ope, [], raw)
+    logical_bit_operation(self, siz, opc, [], raw)
 
 @_cleanup
-def block_logical_bit_operation(self, amp, ope, args, raw):
+def block_logical_bit_operation(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
-    mask = (int(ope[1], 16) << 4) | int(ope[2], 16)
+    mask = (int(opc[1], 16) << 4) | int(opc[2], 16)
     assert 0 <= mask <= 255
-    bops = _bit_ops.get(ope[0])(mask)
+    bops = _bit_ops.get(opc[0])(mask)
     beg, end, mapx, siz, cnt = __get_block(self)
     self.co.set_pos(beg)
     def fn(_):
@@ -1254,27 +1424,31 @@ def block_logical_bit_operation(self, amp, ope, args, raw):
         self.co.set_pos(pos - mapx + siz)
     __exec(self, fn)
 
-def yank(self, amp, ope, args, raw):
+def start_register(self, amp, opc, args, raw):
+    self.co.start_register(opc[1])
+    return REWIND
+
+def yank(self, amp, opc, args, raw):
     try:
         b = self.co.read(self.co.get_pos(), get_int(amp))
     except Exception as e:
         self.co.flash(e)
     else:
-        self.co.init_yank_buffer(b)
+        self.co.set_yank_buffer(b)
         s = util.get_size_repr(self.co.get_yank_buffer_size())
         self.co.show(s + " yanked")
 
-def yank_till_end(self, amp, ope, args, raw):
+def yank_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
     if x > 0:
-        yank(self, x, ope, args, raw)
+        yank(self, x, opc, args, raw)
 
-def range_yank(self, amp, ope, args, raw):
+def range_yank(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    yank(self, siz, ope, [], raw)
+    yank(self, siz, opc, [], raw)
 
-def block_yank(self, amp, ope, args, raw):
+def block_yank(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     l = []
     try:
@@ -1289,18 +1463,18 @@ def block_yank(self, amp, ope, args, raw):
     except Exception as e:
         self.co.flash(e)
     else:
-        self.co.init_yank_buffer(filebytes.join(l))
+        self.co.set_yank_buffer(filebytes.join(l))
         s = util.get_size_repr(self.co.get_yank_buffer_size())
         self.co.show(s + " yanked")
 
 @_cleanup
-def put(self, amp, ope, args, raw):
-    return __put(self, amp, ope, 0)
+def put(self, amp, opc, args, raw):
+    return __put(self, amp, opc, 0)
 @_cleanup
-def put_after(self, amp, ope, args, raw):
-    return __put(self, amp, ope, 1)
+def put_after(self, amp, opc, args, raw):
+    return __put(self, amp, opc, 1)
 
-def __put(self, amp, ope, mov):
+def __put(self, amp, opc, mov):
     test_insert_raise(self)
     if not self.co.get_yank_buffer_size():
         self.co.flash("Nothing to put")
@@ -1320,13 +1494,13 @@ def __put(self, amp, ope, mov):
     __exec(self, fn)
 
 @_cleanup
-def put_over(self, amp, ope, args, raw):
-    __put_over(self, amp, ope, 0)
+def put_over(self, amp, opc, args, raw):
+    __put_over(self, amp, opc, 0)
 @_cleanup
-def put_over_after(self, amp, ope, args, raw):
-    __put_over(self, amp, ope, 1)
+def put_over_after(self, amp, opc, args, raw):
+    __put_over(self, amp, opc, 1)
 
-def __put_over(self, amp, ope, mov):
+def __put_over(self, amp, opc, mov):
     test_replace_raise(self)
     if not self.co.get_yank_buffer_size():
         self.co.flash("Nothing to put")
@@ -1342,40 +1516,40 @@ def __put_over(self, amp, ope, mov):
     __exec(self, fn)
 
 @_cleanup
-def range_put(self, amp, ope, args, raw):
+def range_put(self, amp, opc, args, raw):
     test_insert_raise(self)
     test_delete_raise(self)
     try:
-        self.co.discard_workspace()
+        self.co.disconnect_workspace()
         self.co.discard_eof()
         buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
-        range_delete(self, amp, ope, args, raw)
+        range_delete(self, amp, opc, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
         self.co.restore_eof()
-        self.co.restore_workspace()
+        self.co.reconnect_workspace()
         self.co.lrepaintf()
 
 @_cleanup
-def block_put(self, amp, ope, args, raw):
+def block_put(self, amp, opc, args, raw):
     test_insert_raise(self)
     test_delete_raise(self)
     try:
-        self.co.discard_workspace()
+        self.co.disconnect_workspace()
         self.co.discard_eof()
         buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
-        block_delete(self, amp, ope, args, raw)
+        block_delete(self, amp, opc, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
         self.co.restore_eof()
-        self.co.restore_workspace()
+        self.co.reconnect_workspace()
         self.co.lrepaintf()
 
-def open_buffer(self, amp, ope, args, raw):
+def open_buffer(self, amp, opc, args, raw):
     if len(args) > 1:
         self.co.flash("Only one file name allowed")
     elif not args:
@@ -1389,20 +1563,20 @@ def open_buffer(self, amp, ope, args, raw):
         elif self.co.has_buffer(f):
             self.co.goto_buffer(f)
             self.co.lrepaintf()
-            show_current(self, amp, ope, args, raw)
+            show_current(self, amp, opc, args, raw)
         else:
             self.co.add_buffer(ff)
             self.co.lrepaintf()
             return RETURN
 
-def open_extension(self, amp, ope, args, raw):
+def open_extension(self, amp, opc, args, raw):
     for li in literal.get_ext_literals():
-        if li.str == ope:
+        if li.str == opc:
             self.co.add_extension(li.fn, args)
             self.co.lrepaint()
             return RETURN
 
-def close_buffer(self, amp, ope, args, raw):
+def close_buffer(self, amp, opc, args, raw):
     if len(args) > 1:
         self.co.flash("Only one file name allowed")
     else:
@@ -1419,10 +1593,10 @@ def close_buffer(self, amp, ope, args, raw):
             self.co.lrepaint()
             return RETURN
 
-def save_buffer(self, amp, ope, args, raw):
+def save_buffer(self, amp, opc, args, raw):
     __save_buffer(self, args, False)
 
-def force_save_buffer(self, amp, ope, args, raw):
+def force_save_buffer(self, amp, opc, args, raw):
     __save_buffer(self, args, True)
 
 def __save_buffer(self, args, force):
@@ -1490,20 +1664,20 @@ def __get_save_path(self, args, force):
             return f, False # write new external file
     return None, False
 
-def range_save_buffer(self, amp, ope, args, raw):
+def range_save_buffer(self, amp, opc, args, raw):
     __save_partial(self, args, __range_read, False)
 
-def range_force_save_buffer(self, amp, ope, args, raw):
+def range_force_save_buffer(self, amp, opc, args, raw):
     __save_partial(self, args, __range_read, True)
 
 def __range_read(self):
     beg, siz = __get_range(self)
     return self.co.read(beg, siz)
 
-def block_save_buffer(self, amp, ope, args, raw):
+def block_save_buffer(self, amp, opc, args, raw):
     __save_partial(self, args, __block_read, False)
 
-def block_force_save_buffer(self, amp, ope, args, raw):
+def block_force_save_buffer(self, amp, opc, args, raw):
     __save_partial(self, args, __block_read, True)
 
 def __block_read(self):
@@ -1563,7 +1737,7 @@ def __get_save_partial_path(self, args, force):
             return f, False # write new external file
     return None, False
 
-def quit(self, amp, ope, args, raw):
+def quit(self, amp, opc, args, raw):
     if len(self.co) > 1:
         if self.co.remove_workspace() != -1:
             self.co.repaint()
@@ -1581,7 +1755,7 @@ def quit(self, amp, ope, args, raw):
             self.co.lrepaintf()
         self.co.flash("No write since last change: " + f)
 
-def force_quit(self, amp, ope, args, raw):
+def force_quit(self, amp, opc, args, raw):
     if len(self.co) > 1:
         if self.co.remove_workspace() != -1:
             self.co.repaint()
@@ -1589,16 +1763,16 @@ def force_quit(self, amp, ope, args, raw):
     else:
         return QUIT
 
-def save_buffer_quit(self, amp, ope, args, raw):
+def save_buffer_quit(self, amp, opc, args, raw):
     if __save_buffer(self, args, False) != -1:
-        return quit(self, amp, ope, args, raw)
+        return quit(self, amp, opc, args, raw)
 
-def xsave_buffer_quit(self, amp, ope, args, raw):
+def xsave_buffer_quit(self, amp, opc, args, raw):
     if self.co.is_dirty():
-        return save_buffer_quit(self, amp, ope, [], raw)
+        return save_buffer_quit(self, amp, opc, [], raw)
     else:
-        return quit(self, amp, ope, args, raw)
+        return quit(self, amp, opc, args, raw)
 
-def escape(self, amp, ope, args, raw):
+def escape(self, amp, opc, args, raw):
     self.co.clear_delayed_input()
     self.co.show('')

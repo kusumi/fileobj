@@ -27,11 +27,12 @@ import os
 import sys
 
 def __iter_env_name():
-    yield "FILEOBJ_USE_TEST"
+    yield "FILEOBJ_USE_TEST_NODEP"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
+    yield "FILEOBJ_STDOUT_VERBOSE"
     yield "FILEOBJ_USE_STDIN_CBREAK"
     yield "FILEOBJ_USE_FILE_PATH_ATTR"
     yield "FILEOBJ_USE_TRACE"
@@ -71,6 +72,9 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SINGLE_OPERATION"
     yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
+    yield "FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
+    yield "FILEOBJ_USE_FULL_STATUS_WINDOW"
+    yield "FILEOBJ_USE_STATUS_WINDOW_FRAME"
     yield "FILEOBJ_USE_HIGHLIGHT_SEARCH"
     yield "FILEOBJ_HIGHLIGHT_SEARCH_ATTR"
     yield "FILEOBJ_USE_POSITION_PERCENTAGE"
@@ -83,13 +87,17 @@ def __iter_env_name():
     yield "FILEOBJ_USE_WRAPSCAN"
     yield "FILEOBJ_USE_IGNORECASE"
     yield "FILEOBJ_USE_SIPREFIX"
-    yield "FILEOBJ_WIDTH"
+    yield "FILEOBJ_BYTES_PER_LINE"
+    yield "FILEOBJ_BYTES_PER_WINDOW"
+    yield "FILEOBJ_TERMINAL_HEIGHT"
+    yield "FILEOBJ_TERMINAL_WIDTH"
     yield "FILEOBJ_USE_MAGIC_SCAN"
     yield "FILEOBJ_USE_ALLOC_RECOVER"
     yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
     yield "FILEOBJ_USE_ADAPTIVE_FILEOPS"
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
+    yield "FILEOBJ_USE_TEST_MMAP_RESIZE"
     yield "FILEOBJ_MMAP_THRESH"
     yield "FILEOBJ_PTRACE_DELAY"
     yield "FILEOBJ_USE_VM_NON_LINUX"
@@ -101,8 +109,13 @@ def __iter_env_name():
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
     yield "FILEOBJ_ROFD_READ_QUEUE_SIZE"
+    yield "FILEOBJ_USE_XNIX"
+    yield "FILEOBJ_OS_UNAME"
+    yield "FILEOBJ_USE_BSD_CAVEAT"
     yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
     yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
+    yield "FILEOBJ_USE_BUFFER_SIZE_HEURISTICS"
+    yield "FILEOBJ_GENERAL_BUFFER_SIZE"
     yield "FILEOBJ_PSEUDO_SECTOR_SIZE"
     yield "FILEOBJ_KEY_TAB"
     yield "FILEOBJ_KEY_ENTER"
@@ -113,29 +126,43 @@ def __iter_env_name():
     yield "FILEOBJ_KEY_LEFT"
     yield "FILEOBJ_KEY_RIGHT"
     yield "FILEOBJ_KEY_BACKSPACE"
-    yield "FILEOBJ_KEY_BACKSPACE2"
     yield "FILEOBJ_KEY_DELETE"
     yield "FILEOBJ_KEY_RESIZE"
 
+# use this instead of os.getenv(),
+# since setting expects None for not existing envs
+def getenv(envname):
+    return os.getenv(envname)
+
 def test_bool(envname, default):
-    e = os.getenv(envname)
+    e = getenv(envname)
     if e is None:
         return default
     else:
         return e.lower() != "false"
 
 def test_name(envname, default):
-    e = os.getenv(envname)
+    e = getenv(envname)
     if e is None:
         return default
     else:
         return e
 
 def test_gt_zero(envname, default):
-    e = os.getenv(envname)
+    e = getenv(envname)
     if e is None:
         return default
     ret = __env_gt_zero(e)
+    if ret is None:
+        return default
+    else:
+        return ret
+
+def test_ge_zero(envname, default):
+    e = getenv(envname)
+    if e is None:
+        return default
+    ret = __env_ge_zero(e)
     if ret is None:
         return default
     else:
@@ -165,8 +192,8 @@ def __env_to_ratio(e):
     except Exception:
         pass
 
-def __get_setting_use_test():
-    return test_bool("FILEOBJ_USE_TEST", True)
+def __get_setting_use_test_nodep():
+    return test_bool("FILEOBJ_USE_TEST_NODEP", True)
 
 def __get_setting_use_debug():
     return test_bool("FILEOBJ_USE_DEBUG", False)
@@ -179,6 +206,9 @@ def __get_setting_use_getch():
 
 def __get_setting_use_stdout():
     return test_bool("FILEOBJ_USE_STDOUT", False)
+
+def __get_setting_stdout_verbose():
+    return test_ge_zero("FILEOBJ_STDOUT_VERBOSE", 1)
 
 def __get_setting_use_stdin_cbreak():
     return test_bool("FILEOBJ_USE_STDIN_CBREAK", True)
@@ -193,7 +223,7 @@ def __get_setting_use_trace_symlink():
     return test_bool("FILEOBJ_USE_TRACE_SYMLINK", False)
 
 def __get_setting_trace_word_size():
-    e = os.getenv("FILEOBJ_TRACE_WORD_SIZE")
+    e = getenv("FILEOBJ_TRACE_WORD_SIZE")
     _ = 2
     if e is None:
         return _
@@ -204,51 +234,51 @@ def __get_setting_trace_word_size():
         return _
 
 def __get_setting_trace_path():
-    return os.getenv("FILEOBJ_TRACE_PATH")
+    return getenv("FILEOBJ_TRACE_PATH")
 
 def __get_setting_trace_base():
     return test_name("FILEOBJ_TRACE_BASE", "trace")
 
 def __get_setting_trace_dir():
-    return os.getenv("FILEOBJ_TRACE_DIR")
+    return getenv("FILEOBJ_TRACE_DIR")
 
 def __get_setting_stream_path():
-    return os.getenv("FILEOBJ_STREAM_PATH")
+    return getenv("FILEOBJ_STREAM_PATH")
 
 def __get_setting_stream_base():
-    return os.getenv("FILEOBJ_STREAM_BASE")
+    return getenv("FILEOBJ_STREAM_BASE")
 
 def __get_setting_stream_dir():
-    return os.getenv("FILEOBJ_STREAM_DIR")
+    return getenv("FILEOBJ_STREAM_DIR")
 
 def __get_setting_userdir_path():
-    return os.getenv("FILEOBJ_USERDIR_PATH")
+    return getenv("FILEOBJ_USERDIR_PATH")
 
 def __get_setting_userdir_base():
     return test_name("FILEOBJ_USERDIR_BASE", ".fileobj")
 
 def __get_setting_userdir_dir():
-    e = os.getenv("FILEOBJ_USERDIR_DIR")
+    e = getenv("FILEOBJ_USERDIR_DIR")
     if e is None:
         return __get_home()
     else:
         return e
 
 def __get_setting_procfs_mount_point():
-    return test_name("FILEOBJ_PROCFS_MOUNT_POINT", os.path.sep + "proc")
+    return test_name("FILEOBJ_PROCFS_MOUNT_POINT", "")
 
 def __get_setting_use_readonly():
     return test_bool("FILEOBJ_USE_READONLY", False)
 
 def __get_setting_color_fg():
-    e = os.getenv("FILEOBJ_COLOR_FG")
+    e = getenv("FILEOBJ_COLOR_FG")
     if e is None:
         return None
     else:
         return e.lower()
 
 def __get_setting_color_bg():
-    e = os.getenv("FILEOBJ_COLOR_BG")
+    e = getenv("FILEOBJ_COLOR_BG")
     if e is None:
         return None
     else:
@@ -261,13 +291,13 @@ def __get_setting_log_level():
     return test_name("FILEOBJ_LOG_LEVEL", "WARNING")
 
 def __get_setting_log_path():
-    return os.getenv("FILEOBJ_LOG_PATH")
+    return getenv("FILEOBJ_LOG_PATH")
 
 def __get_setting_log_base():
     return test_name("FILEOBJ_LOG_BASE", "log")
 
 def __get_setting_log_dir():
-    return os.getenv("FILEOBJ_LOG_DIR")
+    return getenv("FILEOBJ_LOG_DIR")
 
 def __get_setting_use_history():
     return test_bool("FILEOBJ_USE_HISTORY", True)
@@ -276,25 +306,25 @@ def __get_setting_max_history():
     return test_gt_zero("FILEOBJ_MAX_HISTORY", 100)
 
 def __get_setting_history_path():
-    return os.getenv("FILEOBJ_HISTORY_PATH")
+    return getenv("FILEOBJ_HISTORY_PATH")
 
 def __get_setting_history_base():
     return test_name("FILEOBJ_HISTORY_BASE", "history")
 
 def __get_setting_history_dir():
-    return os.getenv("FILEOBJ_HISTORY_DIR")
+    return getenv("FILEOBJ_HISTORY_DIR")
 
 def __get_setting_use_marks():
     return test_bool("FILEOBJ_USE_MARKS", True)
 
 def __get_setting_marks_path():
-    return os.getenv("FILEOBJ_MARKS_PATH")
+    return getenv("FILEOBJ_MARKS_PATH")
 
 def __get_setting_marks_base():
     return test_name("FILEOBJ_MARKS_BASE", "marks")
 
 def __get_setting_marks_dir():
-    return os.getenv("FILEOBJ_MARKS_DIR")
+    return getenv("FILEOBJ_MARKS_DIR")
 
 def __get_setting_barrier_size():
     return test_gt_zero("FILEOBJ_BARRIER_SIZE", 8192)
@@ -312,7 +342,7 @@ def __get_setting_use_single_operation():
     return test_bool("FILEOBJ_USE_SINGLE_OPERATION", False)
 
 def __get_setting_ram_thresh_ratio():
-    e = os.getenv("FILEOBJ_RAM_THRESH_RATIO")
+    e = getenv("FILEOBJ_RAM_THRESH_RATIO")
     _ = __env_to_ratio(50)
     if e is None:
         return _
@@ -325,11 +355,20 @@ def __get_setting_ram_thresh_ratio():
 def __get_setting_use_even_size_window():
     return test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
+def __get_setting_use_downward_window_adjust():
+    return test_bool("FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST", True)
+
+def __get_setting_use_full_status_window():
+    return test_bool("FILEOBJ_USE_FULL_STATUS_WINDOW", True)
+
+def __get_setting_use_status_window_frame():
+    return test_bool("FILEOBJ_USE_STATUS_WINDOW_FRAME", True)
+
 def __get_setting_use_highlight_search():
     return test_bool("FILEOBJ_USE_HIGHLIGHT_SEARCH", True)
 
 def __get_setting_highlight_search_attr():
-    e = os.getenv("FILEOBJ_HIGHLIGHT_SEARCH_ATTR")
+    e = getenv("FILEOBJ_HIGHLIGHT_SEARCH_ATTR")
     if e is None:
         return "bold",
     ret = []
@@ -354,7 +393,7 @@ def __get_setting_status_num_radix():
     return __get_setting_radix("FILEOBJ_STATUS_NUM_RADIX", 10)
 
 def __get_setting_radix(envname, default):
-    e = os.getenv(envname)
+    e = getenv(envname)
     if e is None:
         return default
     try:
@@ -366,7 +405,7 @@ def __get_setting_radix(envname, default):
     return default
 
 def __get_setting_editmode():
-    e = os.getenv("FILEOBJ_EDITMODE")
+    e = getenv("FILEOBJ_EDITMODE")
     if e is None:
         return 'B'
     elif e[0].upper() == 'A':
@@ -375,7 +414,7 @@ def __get_setting_editmode():
         return 'B'
 
 def __get_setting_endianness():
-    e = os.getenv("FILEOBJ_ENDIANNESS")
+    e = getenv("FILEOBJ_ENDIANNESS")
     if e is None:
         return None
     elif e.lower() == "little":
@@ -394,12 +433,25 @@ def __get_setting_use_ignorecase():
 def __get_setting_use_siprefix():
     return test_bool("FILEOBJ_USE_SIPREFIX", False)
 
-def __get_setting_width():
-    e = os.getenv("FILEOBJ_WIDTH")
+def __get_setting_bytes_per_line():
+    e = getenv("FILEOBJ_BYTES_PER_LINE")
     if e is None:
         return None
     else:
-        return e.lower()
+        return e.lower() # return str even if e is \d+
+
+def __get_setting_bytes_per_window():
+    e = getenv("FILEOBJ_BYTES_PER_WINDOW")
+    if e is None:
+        return None
+    else:
+        return e.lower() # return str even if e is \d+
+
+def __get_setting_terminal_height():
+    return test_gt_zero("FILEOBJ_TERMINAL_HEIGHT", -1)
+
+def __get_setting_terminal_width():
+    return test_gt_zero("FILEOBJ_TERMINAL_WIDTH", -1)
 
 def __get_setting_use_magic_scan():
     return test_bool("FILEOBJ_USE_MAGIC_SCAN", True)
@@ -419,19 +471,14 @@ def __get_setting_use_adaptive_fileops():
 def __get_setting_use_auto_fileops_cleanup():
     return test_bool("FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True)
 
+def __get_setting_use_test_mmap_resize():
+    return test_bool("FILEOBJ_USE_TEST_MMAP_RESIZE", True)
+
 def __get_setting_mmap_thresh():
-    e = os.getenv("FILEOBJ_MMAP_THRESH")
-    _ = __get_page_size()
-    if e is None:
-        return _
-    x = __env_ge_zero(e)
-    if x is None:
-        return _
-    else:
-        return x
+    return test_ge_zero("FILEOBJ_MMAP_THRESH", __get_page_size())
 
 def __get_setting_ptrace_delay():
-    e = os.getenv("FILEOBJ_PTRACE_DELAY")
+    e = getenv("FILEOBJ_PTRACE_DELAY")
     _ = __env_to_ratio(5) # 5/100 = 50 msec
     if e is None:
         return _
@@ -458,7 +505,7 @@ def __get_setting_robuf_chunk_size():
     return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", __get_page_size())
 
 def __get_setting_robuf_search_thresh_ratio():
-    e = os.getenv("FILEOBJ_ROBUF_SEARCH_THRESH_RATIO")
+    e = getenv("FILEOBJ_ROBUF_SEARCH_THRESH_RATIO")
     if e is None:
         return None
     else:
@@ -468,7 +515,7 @@ def __get_setting_rwbuf_chunk_balance_interval():
     return test_gt_zero("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 20)
 
 def __get_setting_rwbuf_chunk_size_low():
-    e = os.getenv("FILEOBJ_RWBUF_CHUNK_SIZE_LOW")
+    e = getenv("FILEOBJ_RWBUF_CHUNK_SIZE_LOW")
     chunk_size = __get_setting_robuf_chunk_size()
     _ = chunk_size // 5
     if e is None:
@@ -480,7 +527,7 @@ def __get_setting_rwbuf_chunk_size_low():
         return x
 
 def __get_setting_rwbuf_chunk_size_high():
-    e = os.getenv("FILEOBJ_RWBUF_CHUNK_SIZE_HIGH")
+    e = getenv("FILEOBJ_RWBUF_CHUNK_SIZE_HIGH")
     chunk_size = __get_setting_robuf_chunk_size()
     _ = chunk_size * 5
     if e is None:
@@ -494,11 +541,26 @@ def __get_setting_rwbuf_chunk_size_high():
 def __get_setting_rofd_read_queue_size():
     return test_gt_zero("FILEOBJ_ROFD_READ_QUEUE_SIZE", 1)
 
+def __get_setting_use_xnix():
+    return test_bool("FILEOBJ_USE_XNIX", False)
+
+def __get_setting_os_uname():
+    return getenv("FILEOBJ_OS_UNAME")
+
+def __get_setting_use_bsd_caveat():
+    return test_bool("FILEOBJ_USE_BSD_CAVEAT", False)
+
 def __get_setting_netbsd_sizeof_disklabel():
     return test_gt_zero("FILEOBJ_NETBSD_SIZEOF_DISKLABEL", -1)
 
 def __get_setting_dragonflybsd_sizeof_partinfo():
     return test_gt_zero("FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO", -1)
+
+def __get_setting_use_buffer_size_heuristics():
+    return test_bool("FILEOBJ_USE_BUFFER_SIZE_HEURISTICS", True)
+
+def __get_setting_general_buffer_size():
+    return test_gt_zero("FILEOBJ_GENERAL_BUFFER_SIZE", -1)
 
 def __get_setting_pseudo_sector_size():
     return test_gt_zero("FILEOBJ_PSEUDO_SECTOR_SIZE", 512)
@@ -530,9 +592,6 @@ def __get_setting_key_right():
 def __get_setting_key_backspace():
     return __get_setting_key("FILEOBJ_KEY_BACKSPACE")
 
-def __get_setting_key_backspace2():
-    return __get_setting_key("FILEOBJ_KEY_BACKSPACE2")
-
 def __get_setting_key_delete():
     return __get_setting_key("FILEOBJ_KEY_DELETE")
 
@@ -540,7 +599,7 @@ def __get_setting_key_resize():
     return __get_setting_key("FILEOBJ_KEY_RESIZE")
 
 def __get_setting_key(envname):
-    e = os.getenv(envname)
+    e = getenv(envname)
     if e is None:
         return None
     try:
@@ -571,12 +630,23 @@ def print_env():
 
 def iter_env_name():
     for x in sorted(__iter_env_name()):
+        assert not x.startswith("FILEOBJ_EXT_"), x
         yield x
 
 def iter_defined_env():
+    envs = list(iter_env_name())
+    for l in __iter_os_environ():
+        if l[0] in envs:
+            yield l
+
+def iter_defined_ext_env():
+    for l in __iter_os_environ():
+        if l[0].startswith("FILEOBJ_EXT_"):
+            yield l
+
+def __iter_os_environ():
     for k in sorted(os.environ):
-        if k.startswith("FILEOBJ_"):
-            yield k, os.environ[k]
+        yield k, os.environ[k]
 
 def iter_setting():
     this = sys.modules[__name__]

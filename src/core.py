@@ -48,16 +48,25 @@ def __cleanup(arg):
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
-    __log_result(arg, log.error)
-    __log_result(arg, lambda s: util.printf(s, True))
+    __log_error(arg)
+    __print_error(arg)
     log.info("Cleanup")
     log.cleanup()
 
-def __log_result(arg, fn):
-    if arg.e:
-        fn(arg.e)
+def __log_error(arg):
+    if not arg.e:
+        return -1
+    log.error(arg.e)
     for s in arg.tb:
-        fn(s)
+        log.error(s)
+
+def __print_error(arg):
+    if not arg.e:
+        return -1
+    util.printe(arg.e)
+    if not isinstance(arg.e, util.QuietError):
+        for s in arg.tb:
+            util.printe(s)
 
 def __sigint_handler(sig, frame):
     screen.sti()
@@ -66,10 +75,15 @@ def __sigterm_handler(sig, frame):
     sys.exit(1)
 
 def dispatch(optargs=None):
+    if setting.use_debug: # FILEOBJ_USE_DEBUG=
+        suppress_help = "<This is supposed to be suppressed>"
+    else:
+        suppress_help = optparse.SUPPRESS_HELP
     colors = '|'.join(list(screen.iter_color_name()))
-    usage = "Usage: %prog [options] [file paths ...]\n" + \
-        "For more information run " + util.get_program_name() + \
-        " and type :help<ENTER>"
+
+    usage = "Usage: %prog [options] [file paths ...]\n" \
+        "For more information run {0} and type :help<ENTER>".format(
+        util.get_program_name())
     parser = optparse.OptionParser(version=version.__version__, usage=usage)
 
     parser.add_option("-R",
@@ -97,10 +111,24 @@ def dispatch(optargs=None):
         action="store_true",
         default=False,
         help="Open each buffer in different window")
-    parser.add_option("--width",
-        default=setting.width,
-        metavar="<width>",
-        help="Set window width [[0-9]+|max|min|auto]")
+    parser.add_option("--bytes_per_line",
+        default=setting.bytes_per_line,
+        metavar="<bytes_per_line>",
+        help="Set bytes_per_line [[0-9]+|max|min|auto]")
+    parser.add_option("--bytes_per_window",
+        default=setting.bytes_per_window,
+        metavar="<bytes_per_window>",
+        help="Set bytes_per_window [[0-9]+|even|auto]")
+    parser.add_option("--terminal_height",
+        type="int",
+        default=setting.terminal_height,
+        metavar="<terminal_height>",
+        help="Manually set terminal height [[0-9]+]")
+    parser.add_option("--terminal_width",
+        type="int",
+        default=setting.terminal_width,
+        metavar="<terminal_width>",
+        help="Manually set terminal width [[0-9]+]")
     parser.add_option("--fg",
         default=setting.color_fg,
         metavar="<color>",
@@ -109,6 +137,11 @@ def dispatch(optargs=None):
         default=setting.color_bg,
         metavar="<color>",
         help="Set background color [{0}]".format(colors))
+    parser.add_option("--simple",
+        action="store_true",
+        default=(not setting.use_full_status_window and
+            not setting.use_status_window_frame),
+        help="Use simplified status window")
     parser.add_option("--command",
         action="store_true",
         default=False,
@@ -120,27 +153,29 @@ def dispatch(optargs=None):
     parser.add_option("--executable",
         action="store_true",
         default=False,
-        help=optparse.SUPPRESS_HELP)
+        help=suppress_help)
     parser.add_option("--debug",
         action="store_true",
         default=setting.use_debug,
-        help=optparse.SUPPRESS_HELP)
+        help=suppress_help)
     parser.add_option("--env",
         action="store_true",
         default=False,
-        help=optparse.SUPPRESS_HELP)
+        help=suppress_help)
     parser.add_option("--history",
         default=None,
-        help=optparse.SUPPRESS_HELP)
+        metavar="<path>",
+        help=suppress_help)
     parser.add_option("--marks",
         default=None,
-        help=optparse.SUPPRESS_HELP)
+        metavar="<path>",
+        help=suppress_help)
 
     for s in allocator.iter_module_name():
         parser.add_option("--" + s,
             action="store_true",
             default=False,
-            help=optparse.SUPPRESS_HELP)
+            help=suppress_help)
 
     opts, args = parser.parse_args(optargs)
     if opts.debug:
@@ -187,34 +222,63 @@ def dispatch(optargs=None):
         wspnum = len(args)
     if wspnum < 1:
         wspnum = 1
+    setting.terminal_height = opts.terminal_height
+    setting.terminal_width = opts.terminal_width
+    if opts.simple:
+        setting.use_full_status_window = False
+        setting.use_status_window_frame = False
 
     for o in parser.option_list:
         if isinstance(o.dest, str):
             a = getattr(opts, o.dest, None)
             log.debug("Option {0} -> {1}".format(o.dest, a))
 
+    msg = ''
+    if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
+        msg = "BSD caveat enabled on {0}".format(util.get_os_name())
+        log.error(msg)
+
     if ret == -1:
-        log.error("Failed to make user directory")
+        msg = "Failed to make user directory {0}".format(
+            setting.get_userdir_path())
+        log.error(msg)
+
     log.debug(sys.argv)
-    log.debug("Free ram " +
-        util.get_size_repr(kernel.get_free_ram()) + "/" +
-        util.get_size_repr(kernel.get_total_ram()))
+    log.debug("Free ram {0}/{1}".format(
+        util.get_size_repr(kernel.get_free_ram()),
+        util.get_size_repr(kernel.get_total_ram())))
 
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)
 
     try:
         co = None
+        if not kernel.is_detected():
+            msg = "{0}, consider setting the following variable e.g.\n" \
+                "$ export FILEOBJ_USE_XNIX=\n" \
+                "to manually declare running on Unix-like OS".format(
+                kernel.get_status_string())
+            raise util.QuietError(msg)
+
         assert literal.init() != -1
-        assert screen.init(opts.fg, opts.bg) != -1
+        if screen.init(opts.fg, opts.bg) == -1:
+            msg = "Unable to retrieve terminal size, consider using " \
+                "--terminal_height and --terminal_width options " \
+                "to manually specify terminal size"
+            raise util.QuietError(msg)
         assert console.init() != -1
+
         co = container.Container()
-        if not co.init(args, wspnum, opts.width):
-            if setting.use_debug:
-                d = util.get_import_exceptions()
-                assert not d, d
-            co.repaint()
-            co.dispatch()
+        if co.init(args, wspnum,
+            opts.bytes_per_line, opts.bytes_per_window, msg) == -1:
+            msg = "Terminal ({0},{1}) does not have enough room".format(
+                screen.get_size_y(), screen.get_size_x())
+            raise util.QuietError(msg)
+        if setting.use_debug:
+            d = util.get_import_exceptions()
+            assert not d, d
+        co.repaint()
+        co.dispatch()
     except Exception as e:
         tb = sys.exc_info()[2]
         targs.e = e

@@ -34,12 +34,12 @@ class Operand (object):
     def __init__(self):
         self.__history = history.History(None)
         self.__prev = util.Namespace(
-            key=kbd.ERROR, ope='', arg='', raw=[])
+            key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
 
     def init(self, rl, fl, sl):
         # args must be sorted
-        self.__regs = rl
+        self.__regxs = rl
         self.__fasts = fl
         self.__slows = sl
         self.__cand = {
@@ -66,8 +66,17 @@ class Operand (object):
         self.__pos = 0
         self.__amp = []
         self.__buf = []
-        self.__ope = []
+        self.__opc = []
         self.__arg = [] # list of strings
+        assert len(self.__buf) == self.__pos
+
+    def rewind(self):
+        end = self.__pos
+        beg = end - len(self.__opc)
+        l = self.__amp + self.__buf[:beg] + self.__buf[end:]
+        self.clear()
+        for x in l:
+            self.process_incoming(x)
 
     def get_prev_history(self, c):
         return self.__history.get_latest(c)
@@ -139,12 +148,12 @@ class Operand (object):
     def __parse_buffer(self):
         self.__arg = []
         if not _is_slow(self.__buf):
-            self.__ope = self.__buf
+            self.__opc = self.__buf
         else:
             l = _to_string(self.__buf).split(' ')
             for i, s in enumerate(l):
                 if i == 0:
-                    self.__ope = [ord(x) for x in s]
+                    self.__opc = [ord(x) for x in s]
                 elif s:
                     self.__arg.append(s)
 
@@ -194,17 +203,17 @@ class Operand (object):
                 amp = util.MIN_INT
         else:
             amp = None
-        if kbd.isprints(self.__ope):
-            ope = _to_string(self.__ope)
+        if kbd.isprints(self.__opc):
+            opc = _to_string(self.__opc)
         else:
-            ope = ''
+            opc = ''
         if _is_slow(self.__buf):
             msg = ''
         else:
             msg = None
         return  li, \
                 amp, \
-                ope, \
+                opc, \
                 self.__arg[:], \
                 self.__buf[:], \
                 msg, \
@@ -289,7 +298,7 @@ class Operand (object):
             self.__clear_candidate()
             return True
         elif kbd.isprint(x):
-            if len(self.__ope) < self.__get_max_cursor():
+            if len(self.__opc) < self.__get_max_cursor():
                 self.__add_buffer(x)
             return False
         else:
@@ -299,13 +308,13 @@ class Operand (object):
         prev_key = self.__prev.key
         if prev_key != kbd.TAB and x == kbd.TAB:
             self.__parse_buffer()
-            self.__prev.ope = _to_string(self.__ope)
+            self.__prev.opc = _to_string(self.__opc)
             self.__prev.arg = self.__arg[:]
         elif prev_key not in _arrows and x in _arrows:
             self.__parse_buffer()
             self.__prev.raw = self.__buf[:]
         elif prev_key == kbd.TAB and x != kbd.TAB:
-            self.__prev.ope = ''
+            self.__prev.opc = ''
             self.__prev.arg = ''
         elif prev_key in _arrows and x not in _arrows:
             self.__prev.raw = []
@@ -315,16 +324,16 @@ class Operand (object):
         if not self.__at_tail_cursor() or \
             self.__buf[self.__get_tail_cursor() - 1] == 0x20: # ' '
             return False
-        ope = self.__prev.ope
+        opc = self.__prev.opc
         arg = self.__prev.arg
         if not arg:
-            s = self.__cand[None].get(ope)
+            s = self.__cand[None].get(opc)
             if s:
                 self.__set_string(s)
-        elif len(arg) == 1 and ope in self.__cand:
-            s = self.__cand[ope].get(arg[0])
+        elif len(arg) == 1 and opc in self.__cand:
+            s = self.__cand[opc].get(arg[0])
             if s:
-                self.__set_string(ope + " " + s)
+                self.__set_string(opc + " " + s)
         return False
 
     def __delete_slow(self):
@@ -355,7 +364,7 @@ class Operand (object):
     def __match_fast(self):
         beg = 0
         end = len(self.__fasts) - 1
-        seq = tuple(self.__ope)
+        seq = tuple(self.__opc)
         while True:
             i = (beg + end) // 2
             o = self.__fasts[i]
@@ -370,7 +379,7 @@ class Operand (object):
             if beg > end:
                 break
 
-        for o in self.__regs:
+        for o in self.__regxs:
             if o.match(seq):
                 return o
             elif o.match_incomplete(seq):
@@ -381,9 +390,9 @@ class Operand (object):
     def __match_slow(self):
         l = []
         for o in self.__slows:
-            if o.match(self.__ope):
+            if o.match(self.__opc):
                 return o
-            elif o.match_incomplete(self.__ope):
+            elif o.match_incomplete(self.__opc):
                 l.append(o)
         if len(l) == 1:
             s = l[0].str + " " + ' '.join(self.__arg)

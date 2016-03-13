@@ -38,6 +38,8 @@ _panel
     Frame
         virtual.NullFrame
         FocusableFrame
+        StatusFrame
+            NullStatusFrame
     Canvas
         virtual._canvas
             virtual.BinaryCanvas
@@ -51,10 +53,15 @@ _panel
                 visual.ExtBinaryCanvas
             extension.ExtTextCanvas
         StatusCanvas
+            FullStatusCanvas
+            SingleStatusCanvas
 """
 
 class _panel (object):
     def __init__(self, siz, pos):
+        if not siz and not pos:
+            siz = get_min_size(self)
+            pos = get_min_position(self)
         self.scr = screen.alloc(
             siz[0], siz[1], pos[0], pos[1], self)
 
@@ -86,12 +93,6 @@ class _panel (object):
             self.scr.mvwin(*pos)
 
 class Frame (_panel):
-    def __init__(self, siz, pos):
-        if not siz and not pos:
-            siz = get_min_frame_size()
-            pos = get_min_frame_position()
-        super(Frame, self).__init__(siz, pos)
-
     def repaint(self, focus):
         self.box(focus)
         self.refresh()
@@ -106,6 +107,13 @@ class FocusableFrame (Frame):
             self.scr.border(*[screen.A_FOCUS for x in range(8)])
         else:
             self.scr.box()
+
+class StatusFrame (Frame):
+    pass
+
+class NullStatusFrame (StatusFrame):
+    def box(self, focus):
+        return
 
 class default_addon (object):
     def get_cell(self):
@@ -133,9 +141,6 @@ class text_addon (object):
 
 class Canvas (_panel):
     def __init__(self, siz, pos):
-        if not siz and not pos:
-            siz = get_min_canvas_size()
-            pos = get_min_canvas_position()
         super(Canvas, self).__init__(siz, pos)
         self.__cell = self.get_cell() # size, distance
         self.offset = util.Pair(*self.get_offset())
@@ -563,36 +568,30 @@ class StatusCanvas (Canvas, default_addon):
             10: "{0:d}",
             8 : "0{0:o}", }
 
-    def set_buffer(self, fileops):
-        super(StatusCanvas, self).set_buffer(fileops)
-        if self.fileops is not None:
-            a = ''
-            if setting.use_debug:
-                a += "<{0}> <{1}> {2} ".format(
-                    util.get_python_executable_string(),
-                    version.__version__,
-                    self.fileops.get_type())
-                if screen.use_alt_chgat():
-                    a += "<*> "
-            a += self.__get_buffer_name()
-            offset = self.fileops.get_mapping_offset()
-            length = self.fileops.get_mapping_length()
-            fmt = self.__nstr[setting.status_num_radix]
-            if offset or length:
-                a += " @"
-                a += fmt.format(offset)
-                if length:
-                    a += ":"
-                    a += fmt.format(length)
-            if self.fileops.is_readonly():
-                a += " [RO]"
-            b = self.fileops.get_magic()
-            if b:
-                b += ' '
-            def fn():
-                yield 0, a
-                yield 1, b
-            self.iter_buffer_template = fn
+    def get_first_template(self):
+        s = ''
+        if setting.use_debug:
+            s += "<{0}> <{1}> <{2}> {3} ".format(
+                util.get_python_executable_string(),
+                util.get_program_path(),
+                version.__version__,
+                self.fileops.get_type())
+            if screen.use_alt_chgat():
+                s += "<*> "
+        s += self.__get_buffer_name()
+
+        offset = self.fileops.get_mapping_offset()
+        length = self.fileops.get_mapping_length()
+        fmt = self.__nstr[setting.status_num_radix]
+        if offset or length:
+            s += " @"
+            s += fmt.format(offset)
+            if length:
+                s += ":"
+                s += fmt.format(length)
+        if self.fileops.is_readonly():
+            s += " [RO]"
+        return s
 
     def __get_buffer_name(self):
         f = self.fileops.get_short_path()
@@ -607,6 +606,33 @@ class StatusCanvas (Canvas, default_addon):
         else:
             return util.NO_NAME
 
+    def get_current(self):
+        pos = self.fileops.get_pos()
+        siz = self.fileops.get_size()
+        fmt = self.__nstr[setting.status_num_radix]
+        l = fmt.format(siz), fmt.format(pos)
+
+        if setting.use_position_percentage:
+            per = "{0:.1f}".format(self.fileops.get_pos_percentage())
+            if per.endswith(".0"):
+                per = per[:-2]
+            return "{0}[B] {1:>4}% {2}".format(l[0], per, l[1])
+        else:
+            return "{0}[B] {1}".format(*l)
+
+class FullStatusCanvas (StatusCanvas):
+    def set_buffer(self, fileops):
+        super(FullStatusCanvas, self).set_buffer(fileops)
+        if self.fileops is not None:
+            a = self.get_first_template()
+            b = self.fileops.get_magic()
+            if b:
+                b += ' '
+            def fn():
+                yield 0, a
+                yield 1, b
+            self.iter_buffer_template = fn
+
     def iter_buffer_template(self):
         yield 0, ''
         yield 1, ''
@@ -619,19 +645,8 @@ class StatusCanvas (Canvas, default_addon):
         yield i, s
 
         i, s = util.iter_next(g)
-        pos = self.fileops.get_pos()
-        siz = self.fileops.get_size()
-        fmt = self.__nstr[setting.status_num_radix]
-        l = fmt.format(siz), fmt.format(pos)
-
-        if setting.use_position_percentage:
-            per = "{0:.1f}".format(self.fileops.get_pos_percentage())
-            if per.endswith(".0"):
-                per = per[:-2]
-            s += "{0}[B] {1:>4}% {2}".format(l[0], per, l[1])
-        else:
-            s += "{0}[B] {1}".format(*l)
-        x = self.fileops.read(pos, 1)
+        s += self.get_current()
+        x = self.fileops.read(self.fileops.get_pos(), 1)
         if x:
             n = filebytes.ord(x)
             s += " hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(
@@ -641,19 +656,77 @@ class StatusCanvas (Canvas, default_addon):
     def sync_cursor(self):
         self.repaint(False)
 
-def get_min_frame_size():
-    return 1 + get_margin(2), 1 + get_margin(2)
+class SingleStatusCanvas (StatusCanvas):
+    def set_buffer(self, fileops):
+        super(SingleStatusCanvas, self).set_buffer(fileops)
+        if self.fileops is not None:
+            a = self.get_first_template()
+            def fn():
+                yield 0, a
+            self.iter_buffer_template = fn
 
-def get_min_canvas_size():
-    y, x = get_min_frame_size()
-    return y - get_margin(2), x - get_margin(2)
+    def iter_buffer_template(self):
+        yield 0, ''
 
-def get_min_frame_position():
-    return 0, 0
+    def iter_buffer(self):
+        g = self.iter_buffer_template()
+        i, s = util.iter_next(g)
+        if self.fileops.is_dirty():
+            s += " [+]"
+        s += ' '
+        s += self.get_current()
+        yield i, s
 
-def get_min_canvas_position():
-    y, x = get_min_frame_position()
-    return y + get_margin(), x + get_margin()
+    def sync_cursor(self):
+        self.repaint(False)
 
-def get_margin(x=1):
-    return 1 * x
+def get_status_frame_class():
+    if setting.use_status_window_frame:
+        return StatusFrame
+    else:
+        return NullStatusFrame
+
+def get_status_canvas_class():
+    if setting.use_full_status_window:
+        return FullStatusCanvas
+    else:
+        return SingleStatusCanvas
+
+_MIN_SIZE_Y = 1
+_MIN_SIZE_X = 1
+_FRAME_MARGIN_Y = 1
+_FRAME_MARGIN_X = 1
+
+def get_min_size(cls):
+    if not util.is_class(cls):
+        cls = util.get_class(cls)
+    if util.is_subclass(cls, Frame):
+        y = _MIN_SIZE_Y + _FRAME_MARGIN_Y * 2
+        x = _MIN_SIZE_X + _FRAME_MARGIN_X * 2
+    elif util.is_subclass(cls, Canvas):
+        y = _MIN_SIZE_Y
+        x = _MIN_SIZE_X
+    else:
+        assert 0, cls
+    if not setting.use_status_window_frame and \
+        util.is_subclass(cls, StatusFrame):
+        y -= _FRAME_MARGIN_Y * 2
+        x -= _FRAME_MARGIN_X * 2
+    return y, x
+
+def get_min_position(cls):
+    if not util.is_class(cls):
+        cls = util.get_class(cls)
+    if util.is_subclass(cls, Frame):
+        y = 0
+        x = 0
+    elif util.is_subclass(cls, Canvas):
+        y = _FRAME_MARGIN_Y
+        x = _FRAME_MARGIN_X
+    else:
+        assert 0, cls
+    if not setting.use_status_window_frame and \
+        util.is_subclass(cls, StatusCanvas):
+        y -= _FRAME_MARGIN_Y
+        x -= _FRAME_MARGIN_X
+    return y, x

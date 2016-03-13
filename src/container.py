@@ -24,6 +24,7 @@
 from __future__ import division
 import collections
 import os
+import string
 
 from . import allocator
 from . import console
@@ -42,15 +43,19 @@ from . import util
 from . import void
 from . import workspace
 
+DEF_REG = '"'
+
 class Container (object):
     def __init__(self):
+        self.__bpw = -1
         self.__workspaces = []
         self.__workspace_delta = {}
         self.__fileobjs = []
         self.__consoles = {}
         self.__records = {}
         self.__records_key = ''
-        self.__yank_buffer = []
+        self.__register = DEF_REG
+        self.__init_yank_buffer()
         self.__delayed_input = []
         self.__stream = collections.deque()
         self.__operand = operand.Operand()
@@ -66,7 +71,7 @@ class Container (object):
     def __len__(self):
         return len(self.__workspaces)
 
-    def init(self, args, wspnum, width):
+    def init(self, args, wspnum, optbpl, optbpw, msg=''):
         assert not self.__fileobjs
         for x in args:
             o = self.__alloc_buffer(x)
@@ -89,25 +94,32 @@ class Container (object):
                     setting.address_num_width = x
                     break
 
-        self.__workspaces.append(workspace.Workspace(width))
+        self.__workspaces.append(workspace.Workspace(optbpl))
         wsp = self.__workspaces[0]
         self.__set_workspace(wsp)
         for i, o in enumerate(self.__fileobjs):
             wsp.add_buffer(i, fileops.Fileops(o), self.__get_console())
 
+        # bytes_per_window must be set after the first workspace
+        # is registered but before the next one is registered
+        if self.set_bytes_per_window(optbpw) == -1:
+            self.set_bytes_per_window("auto")
+
         for i in range(1, wspnum):
             o = self.__cur_workspace.clone()
             o.goto_buffer(i % len(self.__fileobjs))
             self.__workspaces.append(o)
-            if self.__build(True):
+            if self.__do_build(True) == workspace.BUILD_FAILED:
                 self.__remove_workspace(o)
                 break
+        if msg:
+            self.flash(msg)
         return self.build()
 
     def cleanup(self):
         while self.__fileobjs:
             o = self.__fileobjs.pop()
-            self.__store_marks(o)
+            self.__store_ondisk_marks(o)
             o.cleanup()
         self.__marks.flush()
         self.__operand.cleanup()
@@ -155,20 +167,22 @@ class Container (object):
             self.__consoles[cls] = cls(self, self.__operand)
         return self.__consoles[cls]
 
-    def discard_workspace(self):
+    def disconnect_workspace(self):
         for o in self.__workspaces:
-            o.discard_window()
+            o.disconnect_window()
 
-    def restore_workspace(self):
+    def reconnect_workspace(self):
         for o in self.__workspaces:
-            o.restore_window()
+            o.reconnect_window()
 
-    def __load_marks(self, o):
+    def __load_ondisk_marks(self, o):
+        # load marks read from ~/.fileobj/marks
         d = self.__marks.get(o.get_path())
         if d:
             o.set_marks(d)
 
-    def __store_marks(self, o):
+    def __store_ondisk_marks(self, o):
+        # store marks to later write to ~/.fileobj/marks
         d = o.get_marks()
         self.__marks.set(o.get_path(), d)
 
@@ -176,8 +190,8 @@ class Container (object):
         if not self.has_buffer(f):
             o = self.alloc_fileobj(f)
             if o:
-                if not reload:
-                    self.__load_marks(o)
+                if not reload: # NOT reloading
+                    self.__load_ondisk_marks(o)
                 return o
             if not self.has_buffer(''):
                 return self.alloc_fileobj('') # never fail
@@ -203,7 +217,7 @@ class Container (object):
             args.append(self.get_pos())
             fo = self.__get_buffer(self.get_path())
             ret = fn(self, fileops.Fileops(fo), args)
-            if isinstance(ret, (list, tuple)):
+            if util.is_seq(ret):
                 ret = '\n'.join(ret)
         except extension.ExtError as e:
             ret = util.e_to_string(e)
@@ -229,13 +243,13 @@ class Container (object):
             for wsp in self.__workspaces:
                 wsp.remove_buffer(self.__fileobjs.index(o))
             if reload:
-                d = dict(o.get_marks()) # FIX_ME dirty
+                fileattr.stash_save(f) # before cleanup
             o.cleanup()
             self.__fileobjs.remove(o)
             if reload:
+                fileattr.stash_restore(f) # before allocation
                 ff = self.add_buffer(f)
                 assert ff == f, (ff, f)
-                self.__get_buffer(ff).set_marks(d)
             if not self.__fileobjs:
                 self.add_buffer('')
         else:
@@ -306,15 +320,21 @@ class Container (object):
 
     def build(self):
         if len(self):
-            if self.__build(True):
+            if self.__do_build(True) == workspace.BUILD_FAILED:
                 self.__clear_workspace_delta()
-                ret = self.__build(True) # retry
-                if ret:
+                if self.__do_build(True) == workspace.BUILD_FAILED: # retry
                     self.flash("Not enough room")
-                    return ret
-            if setting.use_even_size_window:
+                    return -1
+            if setting.use_even_size_window or self.__bpw != -1:
                 screen.clear()
-            return self.__build(False)
+            if self.__do_build(False) == workspace.BUILD_FAILED:
+                return -1
+
+    def __do_build(self, dry):
+        if self.__bpw == -1:
+            return self.__build(dry)
+        else:
+            return self.__build_fixed(dry)
 
     def __build(self, dry):
         l = console.get_position_y()
@@ -323,7 +343,7 @@ class Container (object):
             y = 0
             for o in self.__workspaces:
                 ret = self.__build_workspace(o, h, y, dry)
-                if ret:
+                if ret == workspace.BUILD_FAILED:
                     return ret
                 y += h
         else:
@@ -337,7 +357,7 @@ class Container (object):
                     h += 1
                     r -= 1
                 ret = self.__build_workspace(o, h, y, dry)
-                if ret:
+                if ret == workspace.BUILD_FAILED:
                     return ret
                 y += h
 
@@ -350,34 +370,75 @@ class Container (object):
         else:
             return wsp.build(hei, beg)
 
+    def __build_fixed(self, dry):
+        lpw = self.get_lines_per_window()
+        y = 0
+        for o in self.__workspaces:
+            ret = self.__build_fixed_workspace(o, lpw, y, dry)
+            if ret == workspace.BUILD_FAILED:
+                return ret
+            y += ret
+
+    def __build_fixed_workspace(self, wsp, lpw, beg, dry):
+        if dry:
+            return wsp.build_fixed_dryrun(lpw, beg)
+        else:
+            return wsp.build_fixed(lpw, beg)
+
     def adjust_workspace(self, n):
+        if self.__bpw != -1:
+            return self.get_bytes_per_window()
         if len(self) == 1 or not n:
             return -1
         current = self.__cur_workspace
-        # assume second adjust won't fail if first adjust doesn't
-        if current == self.__workspaces[-1]:
-            prev = self.__get_prev_workspace()
-            if n > 0:
-                if self.__add_workspace_delta(prev, -n, 0) != -1:
-                    self.__add_workspace_delta(current, n, -n)
-            else:
-                if self.__add_workspace_delta(current, n, -n) != -1:
-                    self.__add_workspace_delta(prev, -n, 0)
+        if current == self.__workspaces[0]: # first
+            if self.__adjust_workspace_downward(current, n) == -1:
+                return -1
+        elif current == self.__workspaces[-1]: # last
+            if self.__adjust_workspace_upward(current, n) == -1:
+                return -1
+        elif setting.use_downward_window_adjust:
+            if self.__adjust_workspace_downward(current, n) == -1:
+                return -1
         else:
-            next = self.__get_next_workspace()
-            if n > 0:
-                if self.__add_workspace_delta(next, -n, n) != -1:
-                    self.__add_workspace_delta(current, n, 0)
-            else:
-                if self.__add_workspace_delta(current, n, 0) != -1:
-                    self.__add_workspace_delta(next, -n, n)
+            if self.__adjust_workspace_upward(current, n) == -1:
+                return -1
         self.build()
 
+    def __adjust_workspace_downward(self, o, n):
+        next = self.__get_next_workspace(o)
+        if n > 0:
+            while self.__add_workspace_delta(next, -n, n) == -1:
+                n -= 1
+                if n == 0:
+                    return -1
+            self.__add_workspace_delta(o, n, 0)
+        else:
+            while self.__add_workspace_delta(o, n, 0) == -1:
+                n += 1
+                if n == 0:
+                    return -1
+            self.__add_workspace_delta(next, -n, n)
+
+    def __adjust_workspace_upward(self, o, n):
+        prev = self.__get_prev_workspace(o)
+        if n > 0:
+            while self.__add_workspace_delta(prev, -n, 0) == -1:
+                n -= 1
+                if n == 0:
+                    return -1
+            self.__add_workspace_delta(o, n, -n)
+        else:
+            while self.__add_workspace_delta(o, n, -n) == -1:
+                n += 1
+                if n == 0:
+                    return -1
+            self.__add_workspace_delta(prev, -n, 0)
+
     def __add_workspace_delta(self, wsp, h, b):
-        ret = wsp.build_dryrun_delta(h, b)
-        if ret:
+        if wsp.build_dryrun_delta(h, b) == workspace.BUILD_FAILED:
             self.flash("Not enough room")
-            return ret
+            return -1
         if wsp in self.__workspace_delta:
             self.__workspace_delta[wsp][0] += h
             self.__workspace_delta[wsp][1] += b
@@ -454,17 +515,17 @@ class Container (object):
         self.__cur_workspace = o
         return self.__get_workspace_index()
 
-    def __get_next_workspace(self):
+    def __get_next_workspace(self, o=None):
         assert len(self)
-        i = self.__get_workspace_index()
+        i = self.__get_workspace_index(o)
         if i >= len(self) - 1:
             return self.__workspaces[0]
         else:
             return self.__workspaces[i + 1]
 
-    def __get_prev_workspace(self):
+    def __get_prev_workspace(self, o=None):
         assert len(self)
-        i = self.__get_workspace_index()
+        i = self.__get_workspace_index(o)
         if i <= 0:
             return self.__workspaces[len(self) - 1]
         else:
@@ -542,6 +603,10 @@ class Container (object):
         self.__prev_context = fn
         self.__xprev_context = xfn
 
+    def buffer_string_input(self, s):
+        l = [ord(x) for x in s]
+        self.buffer_input(l)
+
     def buffer_input(self, l):
         self.__stream.extend(l)
 
@@ -583,6 +648,19 @@ class Container (object):
             if pos != -1:
                 return o.get_path(), pos
         return None, -1
+
+    def get_registers(self):
+        d = {}
+        for reg, l in self.__yank_buffer.items():
+            d[reg] = filebytes.join(l)
+        return d
+
+    def start_register(self, k):
+        assert k != ''
+        self.__register = k
+
+    def clear_register(self):
+        self.__register = DEF_REG
 
     def get_records(self):
         return dict(self.__records)
@@ -642,28 +720,142 @@ class Container (object):
         self.__delayed_input = []
         self.show('')
 
-    def init_yank_buffer(self, buf):
+    def __init_yank_buffer(self):
+        self.__yank_buffer = {}
+        self.__yank_buffer[DEF_REG] = []
+        for s in string.digits:
+            self.__yank_buffer[s] = []
+        for s in string.ascii_lowercase:
+            self.__yank_buffer[s] = []
+
+    def __rotate_delete_buffer(self):
+        for x in range(9, 1, -1): # 9 to 2
+            dst = str(x)
+            src = str(x - 1)
+            self.__yank_buffer[dst] = self.__yank_buffer[src]
+        self.__yank_buffer['1'] = []
+
+    def set_yank_buffer(self, buf):
         assert isinstance(buf, filebytes.TYPE)
-        self.__yank_buffer = [buf]
+        l = self.__set_yank_buffer(buf, -1)
+        self.__yank_buffer[DEF_REG] = l
+        self.__yank_buffer['0'] = l
 
-    def left_add_yank_buffer(self, buf):
+    def set_delete_buffer(self, buf, add_right=True):
         assert isinstance(buf, filebytes.TYPE)
-        self.__yank_buffer.insert(0, buf)
+        self.__rotate_delete_buffer()
+        l = self.__set_yank_buffer(buf, add_right)
+        self.__yank_buffer[DEF_REG] = l
+        self.__yank_buffer['1'] = l
 
-    def right_add_yank_buffer(self, buf):
+    def __set_yank_buffer(self, buf, add_right):
+        l = [buf]
+        if not self.__register.isupper():
+            self.__yank_buffer[self.__register] = l
+        else: # append for upper case
+            if add_right == -1:
+                self.__add_yank_buffer(buf)
+            elif add_right is True:
+                self.right_add_delete_buffer(buf)
+            else:
+                self.left_add_delete_buffer(buf)
+        return l
+
+    def __add_yank_buffer(self, buf):
         assert isinstance(buf, filebytes.TYPE)
-        self.__yank_buffer.append(buf)
+        l = self.__scan_yank_buffer()
+        l.append(buf)
+        # don't touch register['1']
 
-    def get_yank_buffer_size(self):
-        return sum(len(x) for x in self.__yank_buffer)
+    def left_add_delete_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
+        l = self.__scan_yank_buffer()
+        l.insert(0, buf)
+        _ = self.__yank_buffer['1']
+        if _ != l:
+            _.insert(0, buf)
 
-    def get_yank_buffer(self):
-        return filebytes.join(self.__yank_buffer)
+    def right_add_delete_buffer(self, buf):
+        assert isinstance(buf, filebytes.TYPE)
+        l = self.__scan_yank_buffer()
+        l.append(buf)
+        _ = self.__yank_buffer['1']
+        if _ != l:
+            _.append(buf)
+
+    def __scan_yank_buffer(self):
+        if not self.__register.isupper():
+            l = self.__yank_buffer[self.__register]
+        else: # append for upper case
+            reg = self.__register.lower()
+            if reg in self.__yank_buffer:
+                l = [x for x in self.__yank_buffer[reg]]
+            else:
+                l = []
+            self.__yank_buffer[reg] = l
+        return l
+
+    def get_yank_buffer_size(self, reg=None):
+        if reg is None:
+            reg = self.__register
+        if reg in self.__yank_buffer:
+            return sum(len(x) for x in self.__yank_buffer[reg])
+        else:
+            return 0
+
+    def get_yank_buffer(self, reg=None):
+        if reg is None:
+            reg = self.__register
+        if reg in self.__yank_buffer:
+            return filebytes.join(self.__yank_buffer[reg])
+        else:
+            return filebytes.BLANK
 
     def set_bytes_per_line(self, arg):
-        ret = self.__cur_workspace.find_bytes_per_line(arg)
+        ret = self.__cur_workspace.set_bytes_per_line(arg)
         if ret == -1:
             return -1
         for o in self.__workspaces:
-            o.set_bytes_per_line(ret)
-            assert o.get_bytes_per_line() == ret
+            if o is not self.__cur_workspace:
+                o.set_bytes_per_line(ret)
+                assert o.get_bytes_per_line() == ret
+
+    def get_lines_per_window(self):
+        if self.__bpw == -1:
+            return -1
+        bpl = self.get_bytes_per_line()
+        return (self.__bpw + bpl - 1) // bpl
+
+    def get_bytes_per_window(self):
+        if self.__bpw == -1:
+            return -1
+        bpl = self.get_bytes_per_line()
+        lpw = self.get_lines_per_window()
+        return bpl * lpw
+
+    def set_bytes_per_window(self, arg):
+        ret = self.__find_bytes_per_window(arg)
+        if ret != -1:
+            prev = self.__bpw
+            self.__bpw = ret
+            if self.__do_build(True) == workspace.BUILD_FAILED:
+                self.__bpw = prev
+                return -1
+            else:
+                return self.get_bytes_per_window()
+        else:
+            return -1
+
+    def __find_bytes_per_window(self, arg):
+        if not arg:
+            arg = "auto"
+        if arg == "auto":
+            return -1
+        elif arg == "even":
+            setting.use_even_size_window = True
+            return -1
+        else:
+            try:
+                return int(arg)
+            except ValueError:
+                return -1

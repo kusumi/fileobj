@@ -104,7 +104,7 @@ def __init_class():
                 name = "{0}{1}{2}".format(sign, size * 8, suffix)
                 __create_builtin_class(name, size)
 
-    if fileobj.setting.use_ext_cstruct_libc:
+    if fileobj.setting.ext_use_cstruct_libc:
         for name, func_name, fn in fileobj.libc.iter_defined_type():
             __create_builtin_class(name, fn())
 
@@ -216,20 +216,16 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    fileobj.setting.add("ext_cstruct_path",
-        os.getenv("FILEOBJ_EXT_CSTRUCT_PATH"))
-    fileobj.setting.add("ext_cstruct_base",
-        fileobj.env.test_name("FILEOBJ_EXT_CSTRUCT_BASE", "cstruct"))
-    fileobj.setting.add("ext_cstruct_dir",
-        os.getenv("FILEOBJ_EXT_CSTRUCT_DIR"))
-    fileobj.setting.add("use_ext_cstruct_libc",
-        fileobj.env.test_bool("FILEOBJ_USE_EXT_CSTRUCT_LIBC", True))
+    fileobj.setting.ext_add("cstruct_path")
+    fileobj.setting.ext_add_name("cstruct_base", "cstruct")
+    fileobj.setting.ext_add("cstruct_dir")
+    fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
 
 def cleanup():
-    fileobj.setting.delete("ext_cstruct_path")
-    fileobj.setting.delete("ext_cstruct_base")
-    fileobj.setting.delete("ext_cstruct_dir")
-    fileobj.setting.delete("use_ext_cstruct_libc")
+    fileobj.setting.ext_delete("cstruct_path")
+    fileobj.setting.ext_delete("cstruct_base")
+    fileobj.setting.ext_delete("cstruct_dir")
+    fileobj.setting.ext_delete("use_cstruct_libc")
 
 init()

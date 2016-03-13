@@ -30,21 +30,20 @@ def get_text(co, fo, args):
         fileobj.literal.get_ext_literals()]
     if not l:
         return "No extension"
-    f = "{{0:>2}} {{1:<{0}}} {{2:<{1}}} {{3:<{2}}} {{4}}".format(
+    f = "{{0:>2}} {{1:<{0}}} {{2:<{1}}} {{3}}".format(
         max([len(x[0]) for x in l]),
-        max([len(x[1]) for x in l]),
-        max([len(x[2]) for x in l]),)
-    return [f.format(i + 1, x[0], x[1], x[2], x[3]) for i, x in enumerate(l)]
+        max([len(x[1]) for x in l]),)
+    return [f.format(i + 1, x[0], x[1], x[2]) for i, x in enumerate(l)]
 
 def __test_module(co, fo, li):
-    x = [li.str, repr(li), repr(li.fn), '']
+    x = [li.str, repr(li), '']
     if li.fn != get_text:
         try:
             li.fn(co, fo, [0])
         except fileobj.extension.ExtError:
             pass
         except Exception as e:
-            x[3] = fileobj.util.e_to_string(e)
+            x[2] = fileobj.util.e_to_string(e)
     return x
 
 def get_description():

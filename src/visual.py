@@ -334,25 +334,32 @@ class _console (console.Console):
         self.add_method(literal.s_self       , this,    "_buffer_input")
         self.add_method(literal.s_pwd        , this,    "_buffer_input")
         self.add_method(literal.s_date       , this,    "_buffer_input")
+        self.add_method(literal.s_kmod       , this,    "_buffer_input")
+        self.add_method(literal.s_fcls       , this,    "_buffer_input")
+        self.add_method(literal.s_bufsiz     , this,    "_buffer_input")
         self.add_method(literal.s_platform   , this,    "_buffer_input")
         self.add_method(literal.s_hostname   , this,    "_buffer_input")
         self.add_method(literal.s_term       , this,    "_buffer_input")
         self.add_method(literal.s_lang       , this,    "_buffer_input")
         self.add_method(literal.s_version    , this,    "_buffer_input")
         self.add_method(literal.s_sector     , this,    "_buffer_input")
+        self.add_method(literal.s_argv       , this,    "_buffer_input")
         self.add_method(literal.s_args       , this,    "_buffer_input")
+        self.add_method(literal.s_md5        , this,    "_show_md5")
         self.add_method(literal.ctrla        , this,    "_inc_number")
         self.add_method(literal.ctrlx        , this,    "_dec_number")
         #self.add_method(literal.period      , methods, "repeat")
         self.add_method(literal.toggle       , this,    "_toggle")
         self.add_method(literal.ror          , this,    "_rotate_right")
         self.add_method(literal.rol          , this,    "_rotate_left")
+        self.add_method(literal.bswap        , this,    "_swap_bytes")
         self.add_method(literal.delete       , this,    "_delete")
         self.add_method(literal.X            , this,    "_delete")
         self.add_method(literal.D            , this,    "_delete")
         #self.add_method(literal.u           , methods, "undo")
         #self.add_method(literal.U           , methods, "undo_all")
         #self.add_method(literal.ctrlr       , methods, "redo")
+        self.add_method(literal.reg_reg      , methods, "start_register")
         self.add_method(literal.m_reg        , this,    "_buffer_input")
         self.add_method(literal.backtick_reg , this,    "_buffer_input")
         self.add_method(literal.s_delmarks   , this,    "_buffer_input")
@@ -379,7 +386,7 @@ class _console (console.Console):
         self.add_method(literal.s_rsearch    , methods, "search_backward")
         self.add_method(literal.n            , methods, "search_next_forward")
         self.add_method(literal.N            , methods, "search_next_backward")
-        self.add_method(literal.escape       , this,    "_exit_visual")
+        self.add_method(literal.escape       , this,    "_escape_visual")
         #self.add_method(literal.i           , this,    "_enter_edit_insert")
         #self.add_method(literal.I           , this,    "_enter_edit_insert_head")
         #self.add_method(literal.a           , this,    "_enter_edit_append")
@@ -407,19 +414,19 @@ class Console (_console):
 class ExtConsole (_console):
     pass
 
-def _buffer_input(self, amp, ope, args, raw):
+def _buffer_input(self, amp, opc, args, raw):
     if raw[0] in literal.get_slow_ords():
         raw.append(kbd.ENTER)
     self.co.buffer_input(raw)
     return _exit_visual(self)
 
-def _enter_visual(self, amp, ope, args, raw):
+def _enter_visual(self, amp, opc, args, raw):
     return __enter_visual(self, VISUAL)
 
-def _enter_line_visual(self, amp, ope, args, raw):
+def _enter_line_visual(self, amp, opc, args, raw):
     return __enter_visual(self, VISUAL_LINE)
 
-def _enter_block_visual(self, amp, ope, args, raw):
+def _enter_block_visual(self, amp, opc, args, raw):
     return __enter_visual(self, VISUAL_BLOCK)
 
 def __enter_visual(self, visual_type):
@@ -429,73 +436,85 @@ def __enter_visual(self, visual_type):
         self.co.set_region_type(visual_type)
         return self.set_console(util.get_class(self))
 
-def _exit_visual(self, amp=None, ope=None, args=None, raw=None):
+def _escape_visual(self, amp, opc, args, raw):
+    methods.escape(self, amp, opc, args, raw)
+    return _exit_visual(self)
+
+def _exit_visual(self, amp=None, opc=None, args=None, raw=None):
     self.co.cleanup_region()
     return self.set_console(None)
 
 def _(a, b):
     def _exit(fn):
-        def _method(self, amp, ope, args, raw):
+        def _method(self, amp, opc, args, raw):
             _fn = b if _in_block_visual(self) else a
-            _fn(self, amp, ope, args, raw)
-            return fn(self, amp, ope, args, raw)
+            _fn(self, amp, opc, args, raw)
+            return fn(self, amp, opc, args, raw)
         return _method
     return _exit
 
 def _in_block_visual(self):
     return self.co.get_region_type() == VISUAL_BLOCK
 
+@_(methods.range_show_md5, methods.block_show_md5)
+def _show_md5(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
 @_(methods.range_inc_number, methods.block_inc_number)
-def _inc_number(self, amp, ope, args, raw):
+def _inc_number(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_dec_number, methods.block_dec_number)
-def _dec_number(self, amp, ope, args, raw):
+def _dec_number(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_toggle, methods.block_toggle)
-def _toggle(self, amp, ope, args, raw):
+def _toggle(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_rotate_right, methods.block_rotate_right)
-def _rotate_right(self, amp, ope, args, raw):
+def _rotate_right(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_rotate_left, methods.block_rotate_left)
-def _rotate_left(self, amp, ope, args, raw):
+def _rotate_left(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_swap_bytes, methods.block_swap_bytes)
+def _swap_bytes(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_delete, methods.block_delete)
-def _delete(self, amp, ope, args, raw):
+def _delete(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_logical_bit_operation, methods.block_logical_bit_operation)
-def _logical_bit_operation(self, amp, ope, args, raw):
+def _logical_bit_operation(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_yank, methods.block_yank)
-def _yank(self, amp, ope, args, raw):
+def _yank(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_put, methods.block_put)
-def _put(self, amp, ope, args, raw):
+def _put(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_save_buffer, methods.block_save_buffer)
-def _save_buffer(self, amp, ope, args, raw):
+def _save_buffer(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_force_save_buffer, methods.block_force_save_buffer)
-def _force_save_buffer(self, amp, ope, args, raw):
+def _force_save_buffer(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_delete, methods.block_delete)
-def _enter_edit_replace(self, amp, ope, args, raw):
+def _enter_edit_replace(self, amp, opc, args, raw):
     self.co.cleanup_region()
     arg = edit.Arg(amp=methods.get_int(amp))
     return self.set_console(edit.get_replace_class(), arg)
 
-def _do_edit_replace(self, amp, ope, args, raw):
+def _do_edit_replace(self, amp, opc, args, raw):
     if _in_block_visual(self):
         cls = edit.get_block_replace_class()
     else:

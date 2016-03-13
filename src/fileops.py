@@ -270,7 +270,7 @@ class Fileops (object):
             return siz
 
     def __get_normalized_input(self, arg):
-        if isinstance(arg, (list, tuple)):
+        if util.is_seq(arg):
             if isinstance(arg[0], str):
                 arg = ''.join(arg)
             elif isinstance(arg[0], filebytes.TYPE):

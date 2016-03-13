@@ -81,11 +81,25 @@ def update_size():
         x, y = shutil.get_terminal_size() # portable ???
     else:
         y, x = kernel.get_terminal_size()
-    if -1 not in (y, x):
+    y = __override_size(y, setting.terminal_height)
+    x = __override_size(x, setting.terminal_width)
+    if y > 0 and x > 0:
         _size.set(y, x)
     else:
         clear_size()
         return -1
+
+def __override_size(term_size, cfg_size):
+    if cfg_size == -1:
+        return term_size
+    if term_size == -1:
+        return cfg_size
+    assert term_size > 0, term_size
+    assert cfg_size > 0, cfg_size
+    if cfg_size > term_size:
+        return term_size
+    else:
+        return cfg_size
 
 def clear_size():
     _size.set(0, 0)

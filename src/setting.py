@@ -139,6 +139,39 @@ def iter_setting():
     for k in iter_setting_name():
         yield k, getattr(this, k)
 
+def ext_add(k):
+    s, e = __ext_get(k)
+    return __ext_add(s, env.getenv(e))
+
+def ext_add_bool(k, v):
+    s, e = __ext_get(k)
+    return __ext_add(s, env.test_bool(e, v))
+
+def ext_add_name(k, v):
+    s, e = __ext_get(k)
+    return __ext_add(s, env.test_name(e, v))
+
+def ext_add_gt_zero(k, v):
+    s, e = __ext_get(k)
+    return __ext_add(s, env.test_gt_zero(e, v))
+
+def ext_delete(k):
+    s, e = __ext_get(k)
+    return __ext_delete(s)
+
+def __ext_add(k, v):
+    # assert k not in _attr, k
+    return add(k, v)
+
+def __ext_delete(k):
+    # assert k in _attr, k
+    return delete(k)
+
+def __ext_get(k):
+    s = "ext_" + k
+    e = "FILEOBJ_EXT_" + k.upper()
+    return s, e
+
 _attr = {}
 _snap = dict(_attr)
 this = sys.modules[__name__]

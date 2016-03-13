@@ -75,6 +75,10 @@ class Console (object):
         return -1
 
     def add_method(self, li, module, name):
+        assert li.is_top_level(), li.str
+        self.__add_method(li, module, name)
+
+    def __add_method(self, li, module, name):
         assert li.seq not in self.__fn, li
         if module is not self:
             fn = getattr(module, name)
@@ -82,7 +86,7 @@ class Console (object):
         self.__fn[li.seq] = getattr(self, name)
         for o in li.children:
             if o.desc and o.desc == li.desc:
-                self.add_method(o, module, name)
+                self.__add_method(o, module, name)
 
     def handle_signal():
         return kbd.ERROR
@@ -131,7 +135,7 @@ class Console (object):
             elif x == kbd.QUIT:
                 return -1
 
-            li, amp, ope, arg, raw, msg, cursor = \
+            li, amp, opc, arg, raw, msg, cursor = \
                 self.ope.process_incoming(x)
             if li:
                 set_message(msg)
@@ -141,11 +145,14 @@ class Console (object):
 
             fn = self.__fn.get(li.seq)
             if fn:
-                ret = fn(amp, ope, arg, raw)
+                ret = fn(amp, opc, arg, raw)
             else:
                 ret = self.handle_invalid_literal(li)
             if ret == methods.HANDLED:
                 self.ope.clear()
+                self.co.clear_register()
+            elif ret == methods.REWIND:
+                self.ope.rewind()
             elif ret == methods.CONTINUE:
                 continue
             elif ret == methods.RETURN:
@@ -179,6 +186,9 @@ def cleanup(e, tb):
             del l[-1]
         if trace.write(setting.get_trace_path(), l, e, tb):
             log.error("Failed to write trace")
+
+def cleanup_no_trace():
+    cleanup(None, [])
 
 def getch():
     if setting.use_getch:
@@ -238,7 +248,7 @@ def set_banner(o):
         _banner[0] = ''
 
 def __format_banner(o):
-    return "-- " + (str(o).upper()) + " --"
+    return "-- {0} --".format(str(o).upper())
 
 def push_banner(s):
     if s:

@@ -1,0 +1,23 @@
+v0.7.26
+=======
+- Minor bug fixes
+- Cleanups
+- Add --simple
+- Add --terminal_height,--terminal_width
+- Add --bytes_per_window
+- Add :set bytes_per_window
+- Rename --width to --bytes_per_line
+- Rename :set width to :set bytes_per_line
+- Add basic registers {0-9a-zA-Z"} support (experimental)
+- Add :registers
+- Add :kmod
+- Add :fcls
+- Add :bufsiz
+- Add :argv
+- Add :md5
+- Add sb for bytes swap
+- Improve window height adjustment
+- Add Darwin support (experimental)
+- Add FILEOBJ_USE_XNIX
+- Add FILEOBJ_USE_BSD_CAVEAT
+- Improve *nix support in general

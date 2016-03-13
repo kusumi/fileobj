@@ -21,18 +21,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import string
+
+import fileobj.filebytes
 import fileobj.kbd
+import fileobj.setting
 
 def get_text(co, fo, args):
     sl = []
-    d = co.get_records()
+    d = co.get_registers()
     for k in sorted(d.keys()):
-        v = d[k]
-        l = []
-        for x in v:
-            l.append(chr(x) if fileobj.kbd.isprint(x) else x)
-        sl.append("'{0}' {1}".format(k, l))
+        b = d[k]
+        assert isinstance(b, fileobj.filebytes.TYPE)
+        if b:
+            s = fileobj.filebytes.repr(b)
+            if len(s) > fileobj.setting.ext_registers_max_string:
+                s = s[:fileobj.setting.ext_registers_max_string] + "..."
+        elif k == '"' or (k in string.digits): # always show " and 0-9
+            s = "(not used)"
+        else:
+            s = ""
+        if s:
+            sl.append("\"{0} {1}".format(k, s))
     if sl:
         return sl
     else:
-        return "No record"
+        return "No register" # should never come here
+
+def init():
+    fileobj.setting.ext_add_gt_zero("registers_max_string", 1024)
+
+def cleanup():
+    fileobj.setting.ext_delete("registers_max_string")
+
+init()

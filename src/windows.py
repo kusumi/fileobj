@@ -110,6 +110,9 @@ def __get_mmap_page_size():
     except Exception:
         return -1
 
+def get_buffer_size():
+    return get_page_size()
+
 def set_non_blocking(fd):
     return -1
 
@@ -137,11 +140,23 @@ def is_blkdev(f):
 def is_blkdev_supported():
     return False
 
+def mmap_full(fileno, readonly=False):
+    return None
+
+def mmap_partial(fileno, offset, length, readonly=False):
+    return None
+
 def has_mmap():
     return False
 
 def has_mremap():
     return False
+
+def test_mmap_resize():
+    return False, None
+
+def try_mmap_resize(osiz, nsiz):
+    return -1
 
 def has_pid_access(pid):
     return False
@@ -188,8 +203,11 @@ def ptrace_poke(pid, addr, data):
 def get_ptrace_word_size():
     assert 0, "Not implemented"
 
+def waitpid(pid, opts):
+    return os.waitpid(pid, opts)
+
 def parse_waitpid_result(status):
     return ''
 
 def init():
-    pass
+    return

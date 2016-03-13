@@ -184,6 +184,19 @@ class Fileobj (object):
     def get_mapping_length(self):
         return self.__attr.length
 
+    def get_buffer_size(self):
+        ret = kernel.get_buffer_size()
+        if setting.use_buffer_size_heuristics:
+            siz = self.get_size()
+            if ret >= siz:
+                return ret
+            elif siz > util.MiB: # ret < siz
+                return util.MiB
+            else:
+                return ret
+        else:
+            return ret
+
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
         bufsiz = kernel.get_size_safe(f)
@@ -268,9 +281,10 @@ class Fileobj (object):
 
     def creat(self, f):
         with kernel.fcreat(f) as fd:
+            siz = self.get_buffer_size()
             pos = 0
             while True:
-                b = self.read(pos, kernel.PAGE_SIZE)
+                b = self.read(pos, siz)
                 if not b:
                     break
                 fd.write(b)

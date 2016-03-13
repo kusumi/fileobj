@@ -23,12 +23,16 @@
 
 MAJOR = 0
 MINOR = 7
-RELEASE = 25
+RELEASE = 26
 
 def get_version():
     return MAJOR, MINOR, RELEASE
 
 def get_version_string():
     return "v{0}.{1}.{2}".format(*get_version())
+
+_readme_url = "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md"
+def get_readme_url():
+    return _readme_url.format(MAJOR, MINOR)
 
 __version__ = get_version_string()

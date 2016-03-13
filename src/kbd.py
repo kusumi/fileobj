@@ -63,97 +63,69 @@ def to_chr_repr(c):
     else:
         return '.'
 
+def _KEY_DEAD(x):
+    return DEAD | (x << 16)
+DEAD       = 0xDEAD
+DUMMY      = _KEY_DEAD(0x100)
+
+#                  stdout                VTxxx              others
+_keys = [
+    ("TAB",        curses.ascii.TAB,     curses.ascii.TAB,  curses.ascii.TAB),
+    ("ENTER",      curses.ascii.LF,      curses.ascii.LF,   curses.ascii.LF),
+    ("ESCAPE",     curses.ascii.ESC,     curses.ascii.ESC,  curses.ascii.ESC),
+    ("SPACE",      curses.ascii.SP,      curses.ascii.SP,   curses.ascii.SP),
+    ("DOWN",       curses.KEY_DOWN,      curses.KEY_DOWN,   curses.KEY_DOWN),
+    ("UP",         curses.KEY_UP,        curses.KEY_UP,     curses.KEY_UP),
+    ("LEFT",       curses.KEY_LEFT,      curses.KEY_LEFT,   curses.KEY_LEFT),
+    ("RIGHT",      curses.KEY_RIGHT,     curses.KEY_RIGHT,  curses.KEY_RIGHT),
+    ("BACKSPACE",  curses.KEY_BACKSPACE, curses.ascii.BS,   curses.KEY_BACKSPACE),
+    ("DELETE",     curses.KEY_DC,        curses.ascii.DEL,  curses.KEY_DC),
+    ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE)]
+if setting.use_bsd_caveat:
+    _keys.append(
+    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL), # FIX_ME added for FreeBSD
+    )
+
 def iter_kbd_name():
-    yield "TAB"
-    yield "ENTER"
-    yield "ESCAPE"
-    yield "SPACE"
-    yield "DOWN"
-    yield "UP"
-    yield "LEFT"
-    yield "RIGHT"
-    yield "BACKSPACE"
-    yield "BACKSPACE2" # FIX_ME added for FreeBSD
-    yield "DELETE"
-    yield "RESIZE"
+    for l in _keys:
+        yield l[0]
 
 def get_code(term, use_stdout):
     if use_stdout:
-        return  curses.ascii.TAB, \
-                curses.ascii.LF, \
-                curses.ascii.ESC, \
-                curses.ascii.SP, \
-                curses.KEY_DOWN, \
-                curses.KEY_UP, \
-                curses.KEY_LEFT, \
-                curses.KEY_RIGHT, \
-                curses.KEY_BACKSPACE, \
-                curses.ascii.DEL, \
-                curses.KEY_DC, \
-                KEY_DEAD(0x100),
+        x = 1
     elif term.startswith("vt"):
-        return  curses.ascii.TAB, \
-                curses.ascii.LF, \
-                curses.ascii.ESC, \
-                curses.ascii.SP, \
-                curses.KEY_DOWN, \
-                curses.KEY_UP, \
-                curses.KEY_LEFT, \
-                curses.KEY_RIGHT, \
-                curses.ascii.BS, \
-                KEY_DEAD(0x100), \
-                curses.ascii.DEL, \
-                curses.KEY_RESIZE,
+        x = 2
     else:
-        return  curses.ascii.TAB, \
-                curses.ascii.LF, \
-                curses.ascii.ESC, \
-                curses.ascii.SP, \
-                curses.KEY_DOWN, \
-                curses.KEY_UP, \
-                curses.KEY_LEFT, \
-                curses.KEY_RIGHT, \
-                curses.KEY_BACKSPACE, \
-                curses.ascii.DEL, \
-                curses.KEY_DC, \
-                curses.KEY_RESIZE,
-
-def KEY_DEAD(x):
-    return DEAD | (x << 16)
+        x = 3
+    return tuple(l[x] for l in _keys)
 
 ERROR      = curses.ERR
-DEAD       = 0xDEAD
-CONTINUE   = KEY_DEAD(0)
-INTERRUPT  = KEY_DEAD(1)
-QUIT       = KEY_DEAD(2)
-
-TAB        = KEY_DEAD(3)
-ENTER      = KEY_DEAD(4)
-ESCAPE     = KEY_DEAD(5)
-SPACE      = KEY_DEAD(6)
-DOWN       = KEY_DEAD(7)
-UP         = KEY_DEAD(8)
-LEFT       = KEY_DEAD(9)
-RIGHT      = KEY_DEAD(10)
-BACKSPACE  = KEY_DEAD(11)
-BACKSPACE2 = KEY_DEAD(12)
-DELETE     = KEY_DEAD(13)
-RESIZE     = KEY_DEAD(14)
-
-def get_backspaces():
-    return BACKSPACE, BACKSPACE2
-
-def get_arrows():
-    return DOWN, UP, LEFT, RIGHT
+CONTINUE   = _KEY_DEAD(0)
+INTERRUPT  = _KEY_DEAD(1)
+QUIT       = _KEY_DEAD(2)
 
 def init(term):
+    bs = []
+    ar = []
     l = get_code(term, setting.use_stdout)
+
     for i, s in enumerate(iter_kbd_name()):
-        config = getattr(setting, "key_" + s.lower())
+        name = "key_" + s.lower()
+        config = getattr(setting, name, None)
         if config is not None:
-            setattr(this, s, config)
+            v = config
         else:
-            setattr(this, s, l[i])
+            v = l[i]
+        setattr(this, s, v)
+        if s.startswith("BACKSPACE"):
+            bs.append(v)
+        if s in ("DOWN", "UP", "LEFT", "RIGHT"):
+            ar.append(v)
+
+    bs = tuple(bs)
+    setattr(this, "get_backspaces", lambda: bs)
+    ar = tuple(ar)
+    setattr(this, "get_arrows", lambda: ar)
 
 this = sys.modules[__name__]
 init(kernel.get_term_info())

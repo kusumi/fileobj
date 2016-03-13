@@ -119,13 +119,27 @@ def stat_type(f):
     if not os.path.exists(f):
         return -1
     x = os.stat(f).st_mode
-    return \
-        stat.S_ISREG(x), \
-        stat.S_ISDIR(x), \
-        stat.S_ISBLK(x), \
-        stat.S_ISCHR(x), \
-        stat.S_ISFIFO(x), \
-        stat.S_ISSOCK(x), \
+    return util.Namespace(
+        is_file=stat.S_ISREG(x),
+        is_dir=stat.S_ISDIR(x),
+        is_blkdev=stat.S_ISBLK(x),
+        is_chrdev=stat.S_ISCHR(x),
+        is_fifo=stat.S_ISFIFO(x),
+        is_sock=stat.S_ISSOCK(x))
+
+def stat_is_blkdev(f):
+    t = stat_type(f)
+    if t != -1:
+        return t.is_blkdev
+    else:
+        return False
+
+def stat_is_blkdev_or_chrdev(f):
+    t = stat_type(f)
+    if t != -1:
+        return t.is_blkdev or t.is_chrdev
+    else:
+        return False
 
 def get_page_size():
     ret = __get_resource_page_size()
@@ -156,6 +170,51 @@ def __get_mmap_page_size():
         return mmap.PAGESIZE
     except Exception:
         return -1
+
+def get_buffer_size():
+    return get_page_size()
+
+def mmap_full(fileno, readonly=False):
+    prot = __get_mmap_prot(readonly)
+    return mmap.mmap(fileno, 0, mmap.MAP_SHARED, prot)
+
+def mmap_partial(fileno, offset, length, readonly=False):
+    prot = __get_mmap_prot(readonly)
+    assert offset % mmap.ALLOCATIONGRANULARITY == 0, offset
+    return mmap.mmap(fileno, length, mmap.MAP_SHARED, prot, offset=offset)
+
+def __get_mmap_prot(readonly):
+    if readonly:
+        return mmap.PROT_READ
+    else:
+        return mmap.PROT_READ | mmap.PROT_WRITE
+
+def test_mmap_resize():
+    try:
+        ll = ((1024, 2048), (1024, 512), (4096, 17123), (5678, 1024))
+        for l in ll:
+            nsiz = __try_mmap_resize(*l)
+            if nsiz != l[1]:
+                return False, "Bad size {0} != {1}".format(nsiz, l[1])
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def try_mmap_resize(osiz, nsiz):
+    try:
+        return __try_mmap_resize(osiz, nsiz)
+    except Exception:
+        return -1
+
+def __try_mmap_resize(osiz, nsiz):
+    fd = util.open_temp_file()
+    fd.write(filebytes.ZERO * osiz)
+    fsync(fd)
+    m = mmap_full(fd.fileno())
+    m.resize(nsiz)
+    nsiz = len(m[:])
+    m.close()
+    return nsiz
 
 def set_non_blocking(fd):
     try:
@@ -194,6 +253,9 @@ def set_tc(fd):
 
 def set_cbreak(fd):
     tty.setcbreak(fd)
+
+def waitpid(pid, opts):
+    return os.waitpid(pid, opts)
 
 def parse_waitpid_result(status):
     l = []
@@ -295,15 +357,18 @@ def get_pid_name_from_fs(pid, *entries):
 def get_procfs_entry(s):
     if isinstance(s, int): # /proc/<pid>
         s = str(s)
-    if not os.path.isdir(_mount):
+    if not os.path.isdir(_procfs_mnt):
         return ''
-    e = os.path.join(_mount, s)
+    e = os.path.join(_procfs_mnt, s)
     if not os.path.exists(e):
         return ''
     return e
 
-def get_procfs_mount_point():
-    return get_fs_mount_point("proc", "procfs")
+def get_procfs_mount_point(label=''):
+    l = ["proc", "procfs"] # default labels
+    if label:
+        l.insert(0, label) # give higher priority
+    return get_fs_mount_point(*l)
 
 def get_fs_mount_point(*labels):
     try:
@@ -319,11 +384,12 @@ def get_fs_mount_point(*labels):
                     return os.path.abspath(where)
     return ''
 
-_mount = setting.procfs_mount_point
-if not os.path.isdir(_mount):
-    try:
-        _mount = get_procfs_mount_point()
-    except Exception:
-        _mount = ''
-        if setting.use_debug:
-            raise
+_procfs_mnt = ''
+
+def init_procfs(label=''):
+    global _procfs_mnt
+    _procfs_mnt = setting.procfs_mount_point
+    if not os.path.isdir(_procfs_mnt):
+        _procfs_mnt = get_procfs_mount_point(label)
+    if not os.path.isdir(_procfs_mnt):
+        return -1

@@ -99,19 +99,18 @@ class Console (console.Console):
                     self.co.put_barrier()
                     break
                 k, v = zip(*l)
-                if MOTION in k or \
-                    x == kbd.INTERRUPT:
+                if (MOTION in k) or x == kbd.INTERRUPT:
                     arg.amp = 1
                 self.co.set_pos(self.co.put_barrier())
                 self.co.test_access()
                 if len(l) == 1:
                     self.__sync(arg.amp, k[0], v[0], arg)
                 else:
-                    self.co.discard_workspace()
+                    self.co.disconnect_workspace()
                     for x in range(arg.amp):
                         for i in range(len(l)):
                             self.__sync(1, k[i], v[i], arg)
-                    self.co.restore_workspace()
+                    self.co.reconnect_workspace()
                 self.go_left()
                 break
             if setting.use_debug:

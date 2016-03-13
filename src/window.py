@@ -25,15 +25,16 @@ from __future__ import division
 
 from . import panel
 from . import screen
+from . import util
 
 class Window (object):
     def __init__(self, canvas, frame):
         self.__frame = frame(
-            panel.get_min_frame_size(),
-            panel.get_min_frame_position())
+            panel.get_min_size(frame),
+            panel.get_min_position(frame))
         self.__canvas = canvas(
-            self.__get_canvas_size(),
-            self.__get_canvas_position())
+            panel.get_min_size(canvas),
+            panel.get_min_position(canvas))
 
     def __getattr__(self, name):
         if name == "_Window__canvas":
@@ -41,16 +42,18 @@ class Window (object):
         return getattr(self.__canvas, name)
 
     def __get_canvas_size(self):
-        y, x = [l[1] - l[0] for l in
-            zip(panel.get_min_frame_size(),
-                panel.get_min_canvas_size())]
-        return self.get_size_y() + y, self.get_size_x() + x
+        lf = panel.get_min_size(self.__frame)
+        lc = panel.get_min_size(self.__canvas)
+        y = self.get_size_y() - _get_diff_y(lf, lc)
+        x = self.get_size_x() - _get_diff_x(lf, lc)
+        return y, x
 
     def __get_canvas_position(self):
-        y, x = [l[1] - l[0] for l in
-            zip(panel.get_min_frame_position(),
-                panel.get_min_canvas_position())]
-        return self.get_position_y() + y, self.get_position_x() + x
+        lf = panel.get_min_position(self.__frame)
+        lc = panel.get_min_position(self.__canvas)
+        y = self.get_position_y() - _get_diff_y(lf, lc)
+        x = self.get_position_x() - _get_diff_x(lf, lc)
+        return y, x
 
     def set_buffer(self, fileops):
         self.__canvas.set_buffer(fileops)
@@ -80,25 +83,56 @@ class Window (object):
             self.__get_canvas_size(),
             self.__get_canvas_position())
 
-def get_min_height():
-    # need at least two lines for binary/text canvas
-    return 2 + panel.get_margin(2) + get_status_window_height()
+def _get_diff_y(a, b):
+    return a[0] - b[0]
 
-def get_status_window_height():
-    # need two lines for status canvas
-    return 2 + panel.get_margin(2)
+def _get_diff_x(a, b):
+    return a[1] - b[1]
+
+def get_min_binary_window_height(lpw=1):
+    # need at least 2(lines_per_window==1) lines
+    lf = panel.get_min_size(panel.Frame)
+    lc = panel.get_min_size(panel.BinaryCanvas)
+    return lpw + 1 + _get_diff_y(lf, lc)
+
+def get_min_text_window_height(lpw=1):
+    # need at least 2(lines_per_window==1) lines
+    lf = panel.get_min_size(panel.Frame)
+    lc = panel.get_min_size(panel.TextCanvas)
+    return lpw + 1 + _get_diff_y(lf, lc)
+
+def get_status_window_height(scls, fcls):
+    assert util.is_subclass(scls, panel.StatusCanvas)
+    assert util.is_subclass(fcls, panel.StatusFrame)
+    lf = panel.get_min_size(fcls)
+    lc = panel.get_min_size(scls)
+    if util.is_subclass(scls, panel.FullStatusCanvas):
+        height = 2
+    elif util.is_subclass(scls, panel.SingleStatusCanvas):
+        height = 1
+    else:
+        assert 0, scls
+    return height + _get_diff_y(lf, lc)
 
 def get_width(cls, bytes_per_line):
-    canvas = cls(None, None)
-    return canvas.offset.x + canvas.get_cell_edge(bytes_per_line) + \
-        panel.get_margin(2)
+    assert util.is_subclass(cls, panel.Canvas)
+    lf = panel.get_min_size(panel.Frame)
+    lc = panel.get_min_size(cls)
+    o = cls(None, None)
+    ret = o.offset.x
+    ret += o.get_cell_edge(bytes_per_line)
+    ret += _get_diff_x(lf, lc)
+    return ret
 
 def get_max_bytes_per_line():
-    bcanvas = panel.BinaryCanvas(None, None)
-    tcanvas = panel.TextCanvas(None, None)
-    ret = screen.get_size_x() - panel.get_margin(4)
-    ret -= (bcanvas.offset.x + tcanvas.offset.x)
-    ret //= (bcanvas.get_cell()[0] + tcanvas.get_cell()[0])
+    bc = panel.BinaryCanvas(None, None)
+    tc = panel.TextCanvas(None, None)
+    lf = panel.get_min_size(panel.Frame)
+    ret = screen.get_size_x()
+    ret -= _get_diff_x(lf, panel.get_min_size(bc))
+    ret -= _get_diff_x(lf, panel.get_min_size(tc))
+    ret -= (bc.offset.x + tc.offset.x)
+    ret //= (bc.get_cell()[0] + tc.get_cell()[0])
     if ret < 1:
         return -1
     else:

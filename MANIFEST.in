@@ -1,2 +1,2 @@
 recursive-include script *
-include COPYING CONTRIBUTORS README.md
+include COPYING CONTRIBUTORS CHANGES README.md

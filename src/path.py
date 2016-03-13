@@ -29,17 +29,17 @@ from . import util
 # no os.path.relpath till Python 2.6
 _has_relpath = util.is_python_version_or_ht(2, 6, 0)
 
-_t_noent, \
-_t_noperm, \
-_t_link, \
-_t_file, \
-_t_dir, \
-_t_blkdev, \
-_t_chrdev, \
-_t_fifo, \
-_t_sock, \
-_t_unknown, \
-_t_error = [2 ** x for x in range(11)]
+_t_noent   = 1 << 0
+_t_noperm  = 1 << 1
+_t_link    = 1 << 2
+_t_file    = 1 << 3
+_t_dir     = 1 << 4
+_t_blkdev  = 1 << 5
+_t_chrdev  = 1 << 6
+_t_fifo    = 1 << 7
+_t_sock    = 1 << 8
+_t_unknown = 1 << 9
+_t_error   = 1 << 10
 
 _sep = os.path.sep
 _cwd = os.getcwd()
@@ -185,18 +185,18 @@ def _get_type_real(f):
             a = util.is_readable(s)
 
     ret = 0
-    l = kernel.stat_type(f)
-    if l[0]:
+    t = kernel.stat_type(f)
+    if t.is_file:
         ret |= _t_file
-    if l[1]:
+    if t.is_dir:
         ret |= _t_dir
-    if l[2]:
+    if t.is_blkdev:
         ret |= _t_blkdev
-    if l[3]:
+    if t.is_chrdev:
         ret |= _t_chrdev
-    if l[4]:
+    if t.is_fifo:
         ret |= _t_fifo
-    if l[5]:
+    if t.is_sock:
         ret |= _t_sock
     if not ret:
         return _t_unknown
@@ -238,6 +238,8 @@ def is_canonical_type(o):
         return True
 
 def get_path_failure_message(o, allow_link=True):
+    if not kernel.is_detected():
+        return "Failure: " + kernel.get_status_string()
     f = o.path
     if o.is_dir:
         return f + " is a directory"

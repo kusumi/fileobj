@@ -49,6 +49,7 @@ class Literal (object):
         self.seq = tuple(seq)
         self.desc = desc
         self.ref = None
+        self.ali = None
         self.children = []
 
     def __str__(self):
@@ -79,6 +80,9 @@ class Literal (object):
             self.ref.children.remove(self)
         self.ref = None
 
+    def is_top_level(self):
+        return self.ali is None
+
     def refer(self, ref):
         self.cleanup()
         self.ref = ref
@@ -88,6 +92,7 @@ class Literal (object):
 
     def alias(self, ref):
         assert self.desc == ref.desc
+        self.ali = ref
         return self.refer(ref)
 
     def match(self, l):
@@ -240,6 +245,7 @@ period        = FastLiteral(".", None, "Repeat last change")
 toggle        = FastLiteral("~", None, "Switch case of the [count] characters under and after the cursor")
 ror           = FastLiteral(">>", None, "Rotate [count] bits to right")
 rol           = FastLiteral("<<", None, "Rotate [count] bits to left")
+bswap         = FastLiteral("sb", None, "Swap byte order of [count] characters")
 delete        = FastLiteral("<DELETE>", (kbd.DELETE,), "Delete [count] characters under and after the cursor")
 x             = FastLiteral("x", None, "Delete [count] characters under and after the cursor")
 X             = FastLiteral("X", None, "Delete [count] characters before the cursor")
@@ -270,6 +276,11 @@ ctrlv         = FastLiteral("<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual
 escape        = FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode")
 resize        = FastLiteral('<RESIZE>', (kbd.RESIZE,), '')
 
+if setting.use_bsd_caveat:
+    bspace2   = FastLiteral("<BACKSPACE>", (kbd.BACKSPACE2,), "Go [count] characters to the left")
+    ctrlv     = FastLiteral("<CTRL>v<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode") # the first <CTRL>v is ignored
+
+reg_reg       = RegexLiteral(2, "\"[0-9a-zA-Z\"]", r"^\"[0-9a-zA-Z\"]", "Use register {0-9a-zA-Z\"} for next delete, yank or put (use uppercase character to append with delete and yank)")
 m_reg         = RegexLiteral(2, "m[0-9a-zA-Z]", r"^m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers")
 backtick_reg  = RegexLiteral(2, "`[0-9a-zA-Z]", r"^`[0-9a-zA-Z]", "Go to marked position")
 q             = FastLiteral("q", None, "Stop recording")
@@ -292,13 +303,18 @@ s_set         = SlowLiteral(":set", None, "Set option")
 s_self        = SlowLiteral(":self", None, "Print current console instance string")
 s_pwd         = SlowLiteral(":pwd", None, "Print the current directory name")
 s_date        = SlowLiteral(":date", None, "Print date")
+s_kmod        = SlowLiteral(":kmod", None, "Print Python module name for the platform OS")
+s_fcls        = SlowLiteral(":fcls", None, "Print Python class name of the current buffer")
+s_bufsiz      = SlowLiteral(":bufsiz", None, "Print temporary buffer size")
 s_platform    = SlowLiteral(":platform", None, "Print platform")
 s_hostname    = SlowLiteral(":hostname", None, "Print hostname")
 s_term        = SlowLiteral(":term", None, "Print terminal type")
 s_lang        = SlowLiteral(":lang", None, "Print locale type")
 s_sector      = SlowLiteral(":sector", None, "Print sector size for block device")
 s_version     = SlowLiteral(":version", None, "Print version")
+s_argv        = SlowLiteral(":argv", None, "Print arguments of this application")
 s_args        = SlowLiteral(":args", None, "Print buffer list with the current buffer in brackets")
+s_md5         = SlowLiteral(":md5", None, "Print md5 message digest of the current buffer")
 s_delmarks    = SlowLiteral(":delmarks", None, "Delete the specified marks")
 s_delmarksneg = SlowLiteral(":delmarks!", None, "Delete all marks for the current buffer except for uppercase marks")
 s_split       = SlowLiteral(":split", None, "Split current window")
@@ -325,7 +341,8 @@ s_set_si      = ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)")
 s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)")
 s_set_address = ArgLiteral("address", None, "Set address radix to arg [16|10|8]")
 s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to arg [16|10|8]")
-s_set_width   = ArgLiteral("width", None, "Set window width to arg [[0-9]+|max|min|auto]")
+s_set_bpl     = ArgLiteral("bytes_per_line", None, "Set bytes_per_line to arg [[0-9]+|max|min|auto]")
+s_set_bpw     = ArgLiteral("bytes_per_window", None, "Set bytes_per_window to arg [[0-9]+|auto]")
 
 def get_slow_strings():
     return tuple(":/?")
@@ -429,6 +446,8 @@ def init():
     bspace.alias(
         h.alias(left)
     )
+    if setting.use_bsd_caveat:
+        bspace2.alias(bspace)
     space.alias(
         l.alias(right)
     )
@@ -517,7 +536,9 @@ def init():
     s_set_status.refer(
         s_set_address.refer(s_set)
     )
-    s_set_width.refer(s_set)
+    s_set_bpw.refer(
+        s_set_bpl.refer(s_set)
+    )
 
     def fn(l, o, cls):
         for li in sorted(o.children):
@@ -531,10 +552,13 @@ def init():
     _literals[None] = tuple(sorted(get_literals()))
 
 def cleanup():
+    if not _tree_root.children:
+        return -1
+
     for s, o in util.iter_dir_items(this):
-        if is_Literal(o):
+        if this.is_Literal(o):
             o.cleanup()
-        if is_ExtLiteral(o):
+        if this.is_ExtLiteral(o):
             delattr(this, s)
     _literals.clear()
 

@@ -107,6 +107,9 @@ def stat_type(f):
 def get_page_size():
     return unix.get_page_size()
 
+def get_buffer_size():
+    return unix.get_buffer_size()
+
 def set_non_blocking(fd):
     return unix.set_non_blocking(fd)
 
@@ -139,20 +142,28 @@ def get_free_ram():
     return linux.get_free_ram()
 
 def is_blkdev(f):
-    l = stat_type(f)
-    if l != -1:
-        return l[2] or l[3] # blk or chr
-    else:
-        return False
+    return unix.stat_is_blkdev_or_chrdev(f)
 
 def is_blkdev_supported():
     return True
+
+def mmap_full(fileno, readonly=False):
+    return unix.mmap_full(fileno, readonly)
+
+def mmap_partial(fileno, offset, length, readonly=False):
+    return unix.mmap_partial(fileno, offset, length, readonly)
 
 def has_mmap():
     return True
 
 def has_mremap():
     return False
+
+def test_mmap_resize():
+    return unix.test_mmap_resize()
+
+def try_mmap_resize(osiz, nsiz):
+    return unix.try_mmap_resize(osiz, nsiz)
 
 def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
@@ -200,8 +211,12 @@ ptrace_poke = ptrace_poketext
 def get_ptrace_word_size():
     return libc.get_ptrace_data_size()
 
+def waitpid(pid, opts):
+    return unix.waitpid(pid, opts)
+
 def parse_waitpid_result(status):
     return unix.parse_waitpid_result(status)
 
 def init():
+    unix.init_procfs("linprocfs")
     libc.init_ptrace("int")

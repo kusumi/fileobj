@@ -82,7 +82,8 @@ class _window (object):
         return
 
     def addstr(self, y, x, s, attr=A_DEFAULT):
-        util.printf(self.__mkstr(y, x, s))
+        if setting.stdout_verbose > 0:
+            util.printf(self.__mkstr(y, x, s))
 
     def clrtoeol(self):
         return

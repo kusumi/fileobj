@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
-import mmap
 
 from . import fileobj
 from . import kernel
@@ -55,7 +54,7 @@ class Fileobj (fileobj.Fileobj):
     _insert  = False
     _replace = False
     _delete  = False
-    _enabled = kernel.is_unix() and kernel.has_mmap()
+    _enabled = kernel.has_mmap()
     _partial = _has_mmap_offset
 
     def __init__(self, f, offset=0, length=0):
@@ -66,8 +65,8 @@ class Fileobj (fileobj.Fileobj):
     def __str__(self):
         l = []
         l.append(str(self.map))
-        l.append("mmap.tell {0}".format(self.map.tell()))
-        l.append("mmap.size {0}".format(self.map.size()))
+        l.append("map.tell {0}".format(self.map.tell()))
+        l.append("map.size {0}".format(self.map.size()))
         l.append("size {0}".format(self.get_size()))
         return '\n'.join(l)
 
@@ -105,25 +104,18 @@ class Fileobj (fileobj.Fileobj):
     def __is_using_mmap_offset(self, offset):
         return self.test_partial() and offset > 0
 
-    def __get_mmap_prot(self):
-        if self.is_readonly():
-            return mmap.PROT_READ
-        else:
-            return mmap.PROT_READ | mmap.PROT_WRITE
-
     def __do_mmap(self, fileno, length):
-        return mmap.mmap(fileno, length,
-            mmap.MAP_SHARED, self.__get_mmap_prot())
+        return kernel.mmap_partial(
+            fileno, 0, length, self.is_readonly())
 
     def __do_mmap_at(self, fileno, offset, length):
-        start = util.align_head(offset, kernel.PAGE_SIZE)
+        start = util.align_head(offset, kernel.get_page_size())
         delta = offset - start
-        assert start % mmap.ALLOCATIONGRANULARITY == 0, start
         self.__set_delta(delta, offset)
         if length:
             length += delta
-        return mmap.mmap(fileno, length,
-            mmap.MAP_SHARED, self.__get_mmap_prot(), offset=start)
+        return kernel.mmap_partial(
+            fileno, start, length, self.is_readonly())
 
     def __set_delta(self, delta, offset):
         self.__offset_delta = delta
@@ -158,7 +150,7 @@ class Fileobj (fileobj.Fileobj):
         return ret
 
     def __find(self, x, s, end):
-        n = kernel.PAGE_SIZE
+        n = self.get_buffer_size()
         while True:
             if end != -1 and x >= end:
                 return fileobj.NOTFOUND
@@ -186,10 +178,11 @@ class Fileobj (fileobj.Fileobj):
         return ret
 
     def __rfind(self, x, s, end):
+        bufsiz = self.get_buffer_size()
         while True:
             if end != -1 and x <= end:
                 return fileobj.NOTFOUND
-            n = kernel.PAGE_SIZE
+            n = bufsiz
             i = x + 1 - n
             if i < 0:
                 i = 0

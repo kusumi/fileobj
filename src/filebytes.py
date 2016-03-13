@@ -60,6 +60,12 @@ def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
 
+def __repr_2k(b):
+    return __builtin_repr(b)[1:-1] # cut ' and '
+
+def __repr_3k(b):
+    return __builtin_repr(b)[2:-1] # cut b' and '
+
 def join(l):
     return BLANK.join(l)
 
@@ -78,8 +84,10 @@ def rstrip(b):
         b = b[:i]
     return b.rstrip()
 
+__builtin_ord = util.get_builtin("ord")
+__builtin_repr = util.get_builtin("repr")
+
 if util.is_python2():
-    __builtin_ord = util.get_builtin("ord")
     TYPE = str
     ZERO = "\x00"
     BLANK = ''
@@ -87,6 +95,7 @@ if util.is_python2():
     split = __split_2k
     iter = __iter_2k
     riter = __riter_2k
+    repr = __repr_2k
 else:
     TYPE = bytes
     ZERO = _("\x00")
@@ -95,3 +104,4 @@ else:
     split = __split_3k
     iter = __iter_3k
     riter = __riter_3k
+    repr = __repr_3k

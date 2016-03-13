@@ -14,10 +14,10 @@ if __name__ == '__main__':
     src.nodep.test()
 
     from distutils.core import setup
-    from src.version import __version__
+    import src.version
 
     setup(name      = "fileobj",
-        version     = __version__,
+        version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
         url         = "http://sourceforge.net/projects/fileobj",
         description = "Hex Editor for Linux/BSD",
@@ -25,3 +25,7 @@ if __name__ == '__main__':
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],
         package_dir = {"fileobj" : "src", "fileobj.ext" : "src/ext",})
+
+    if sys.argv[1] == "install":
+        print(">>> Complete")
+        print(">>> README is available at " + src.version.get_readme_url())

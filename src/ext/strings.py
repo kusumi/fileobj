@@ -46,10 +46,7 @@ def get_text(co, fo, args):
                 n += 1
             else:
                 if n >= fileobj.setting.ext_strings_thresh:
-                    s = b[i - n:i]
-                    # cut "b'" and "'" for Python 3.x bytes type
-                    if fileobj.filebytes.TYPE is not str:
-                        s = "{0}".format(s)[2:-1]
+                    s = fileobj.filebytes.repr(b[i - n:i])
                     l.append((pos + i - n, s))
                     if len(l) >= fileobj.setting.ext_strings_count:
                         break
@@ -71,16 +68,13 @@ def get_text(co, fo, args):
     return sl
 
 def init():
-    fileobj.setting.add("ext_strings_range",
-        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_RANGE", 1024))
-    fileobj.setting.add("ext_strings_count",
-        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_COUNT", 1024))
-    fileobj.setting.add("ext_strings_thresh",
-        fileobj.env.test_gt_zero("FILEOBJ_EXT_STRINGS_THRESH", 3))
+    fileobj.setting.ext_add_gt_zero("strings_range", 1024)
+    fileobj.setting.ext_add_gt_zero("strings_count", 1024)
+    fileobj.setting.ext_add_gt_zero("strings_thresh", 3)
 
 def cleanup():
-    fileobj.setting.delete("ext_strings_range")
-    fileobj.setting.delete("ext_strings_count")
-    fileobj.setting.delete("ext_strings_thresh")
+    fileobj.setting.ext_delete("strings_range")
+    fileobj.setting.ext_delete("strings_count")
+    fileobj.setting.ext_delete("strings_thresh")
 
 init()

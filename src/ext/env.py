@@ -24,10 +24,12 @@
 import fileobj.env
 
 def get_text(co, fo, args):
-    envs = list(fileobj.env.iter_defined_env())
+    env1 = list(fileobj.env.iter_defined_env())
+    env2 = list(fileobj.env.iter_defined_ext_env())
+    envs = sorted(env1 + env2)
     if not len(envs):
         return "No env"
-    n = max([len(x[0]) for x in envs])
+    n = max([len(x[0]) for x in sorted(envs)])
     f = "{{0:<{0}}} \"{{1}}\"".format(n)
     l = []
     for x in envs:

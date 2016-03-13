@@ -33,11 +33,15 @@ from . import visual
 from . import void
 from . import window
 
+BUILD_FAILED = -1
+
 class Workspace (object):
-    def __init__(self, width):
+    def __init__(self, optbpl):
         self.__bpl = 1
-        if self.set_bytes_per_line(width) == -1:
+        if self.set_bytes_per_line(optbpl) == -1:
             self.set_bytes_per_line("auto")
+        self.__scanvas = panel.get_status_canvas_class()
+        self.__sframe = panel.get_status_frame_class()
         self.__windows = ()
         self.__fileopss = []
         self.__consoles = []
@@ -87,17 +91,19 @@ class Workspace (object):
             cls = util.get_class(con)
         else:
             cls = get_default_console()
-        self.__windows = \
-            self.__get_virtual_window(cls), \
+        l = self.__get_virtual_window(cls), \
             self.__get_binary_window(cls), \
             self.__get_text_window(cls), \
             self.__get_status_window(cls)
-        return self.__windows
+        self.__windows = l
+        return l
 
-    def discard_window(self):
+    def disconnect_window(self):
+        # only leave virtual window to disable repaint
         self.__windows = self.__windows[0],
 
-    def restore_window(self):
+    def reconnect_window(self):
+        # bring back windows of current console
         self.__set_window(self.__cur_console)
 
     def clone(self):
@@ -154,36 +160,71 @@ class Workspace (object):
         for o in self.__fileopss:
             yield o
 
-    def build_dryrun(self, hei, beg):
-        min_y = window.get_min_height()
-        std_y = screen.get_size_y()
-        if min_y > std_y or min_y > hei or hei > std_y:
-            return -1
-        if self.is_gt_max_width():
-            return -1
+    def __get_status_window_height(self):
+        return window.get_status_window_height(self.__scanvas, self.__sframe)
 
     def build_dryrun_delta(self, hei_delta, beg_delta):
-        return self.build_dryrun(
-            self.__def_twindow.get_size_y() +
-            self.__def_swindow.get_size_y() + hei_delta,
-            self.__def_bwindow.get_position_y() + beg_delta)
+        hei = self.__def_twindow.get_size_y() + self.__def_swindow.get_size_y()
+        beg = self.__def_bwindow.get_position_y()
+        return self.build_dryrun(hei + hei_delta, beg + beg_delta)
+
+    def build_dryrun(self, hei, beg):
+        sta_hei = self.__get_status_window_height()
+        min_hei = window.get_min_binary_window_height() + sta_hei
+        scr_hei = screen.get_size_y()
+        return self.__build_test_workspace(hei, beg, min_hei, scr_hei)
 
     def build(self, hei, beg):
-        h = window.get_status_window_height()
+        sta_hei = self.__get_status_window_height()
+        self.__build_workspace(hei, beg, sta_hei)
+        return hei
+
+    def build_fixed_dryrun(self, lpw, beg):
+        sta_hei = self.__get_status_window_height()
+        hei = window.get_min_binary_window_height(lpw) + sta_hei
+        min_hei = window.get_min_binary_window_height() + sta_hei
+        scr_hei = screen.get_size_y()
+        return self.__build_test_workspace(hei, beg, min_hei, scr_hei)
+
+    def build_fixed(self, lpw, beg):
+        sta_hei = self.__get_status_window_height()
+        hei = window.get_min_binary_window_height(lpw) + sta_hei
+        self.__build_workspace(hei, beg, sta_hei)
+        return hei
+
+    def __build_test_workspace(self, hei, beg, min_hei, scr_hei):
+        if hei <= 0:
+            return BUILD_FAILED
+        if beg < 0:
+            return BUILD_FAILED
+        if scr_hei < min_hei: # screen height < minimum workspace height
+            return BUILD_FAILED
+        if hei < min_hei: # height < minimum workspace height
+            return BUILD_FAILED
+        if hei > scr_hei: # height > screen height
+            return BUILD_FAILED
+        if beg + hei >= scr_hei: # this workspace exceeds screen size
+            return BUILD_FAILED
+        if self.is_gt_max_width(): # test width
+            return BUILD_FAILED
+        assert hei != BUILD_FAILED
+        return hei
+
+    def __build_workspace(self, hei, beg, sta_hei):
         def __build_virtual_window(o):
-            siz = hei - h, self.__guess_virtual_window_width()
+            siz = hei - sta_hei, self.__guess_virtual_window_width()
             pos = beg, 0
             self.__build_window(o, siz, pos)
         def __build_binary_window(o):
-            siz = hei - h, self.__guess_binary_window_width()
+            siz = hei - sta_hei, self.__guess_binary_window_width()
             pos = beg, 0
             self.__build_window(o, siz, pos)
         def __build_text_window(o):
-            siz = hei - h, self.__guess_text_window_width()
+            siz = hei - sta_hei, self.__guess_text_window_width()
             pos = beg, self.__def_bwindow.get_size_x()
             self.__build_window(o, siz, pos)
         def __build_status_window(o):
-            siz = h, self.__guess_status_window_width()
+            siz = sta_hei, self.__guess_status_window_width()
             pos = beg + self.__def_bwindow.get_size_y(), 0
             self.__build_window(o, siz, pos)
         self.__build_virtual_window = __build_virtual_window
@@ -292,7 +333,7 @@ class Workspace (object):
 
     def __register_status_window(self, cls):
         if cls is get_default_console():
-            o = window.Window(panel.StatusCanvas, panel.Frame)
+            o = window.Window(self.__scanvas, self.__sframe)
         elif cls is void.ExtConsole:
             o = self.__def_swindow
         elif cls is visual.Console:
@@ -421,13 +462,14 @@ class Workspace (object):
         return self.__bpl
 
     def set_bytes_per_line(self, arg):
-        ret = self.find_bytes_per_line(arg)
+        ret = self.__find_bytes_per_line(arg)
         if ret != -1:
             self.__bpl = ret
+            return self.__bpl
         else:
             return -1
 
-    def find_bytes_per_line(self, arg):
+    def __find_bytes_per_line(self, arg):
         if not arg:
             arg = "auto"
         if arg == "min":

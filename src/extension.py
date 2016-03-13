@@ -118,3 +118,10 @@ def get_path(o):
         return o.get_short_path()
     else:
         return f
+
+def get_verbose_path(o):
+    f = get_path(o)
+    if not f:
+        return util.NO_NAME
+    else:
+        return f

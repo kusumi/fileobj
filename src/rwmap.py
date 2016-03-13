@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import mmap
 import os
 import shutil
 
@@ -36,7 +35,7 @@ class Fileobj (rrmap.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
-    _enabled = kernel.is_unix() and kernel.has_mremap()
+    _enabled = kernel.has_mremap()
     _partial = False
 
     def __init__(self, f, offset=0, length=0):
@@ -77,7 +76,7 @@ class Fileobj (rrmap.Fileobj):
         self.__anon = None
 
     def mmap(self, fileno):
-        return mmap.mmap(fileno, 0)
+        return kernel.mmap_full(fileno)
 
     def __init_anon(self):
         assert not self.__anon

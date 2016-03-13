@@ -22,9 +22,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.literal
+import fileobj.version
 
 def get_text(co, fo, args):
-    return fileobj.literal.get_lines(fileobj.literal.get_literals())
+    url = fileobj.version.get_readme_url()
+    l = ["README is available at {0}".format(url)]
+    l.append('')
+    l.extend(fileobj.literal.get_lines(
+        fileobj.literal.get_literals()))
+    return l
 
 def get_description():
     return "Show list of commands"

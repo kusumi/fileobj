@@ -83,25 +83,32 @@ class _console (console.Console):
         self.add_method(literal.s_self       , methods, "show_self")
         self.add_method(literal.s_pwd        , methods, "show_pwd")
         self.add_method(literal.s_date       , methods, "show_date")
+        self.add_method(literal.s_kmod       , methods, "show_kernel_module")
+        self.add_method(literal.s_fcls       , methods, "show_fileobj_class")
+        self.add_method(literal.s_bufsiz     , methods, "show_buffer_size")
         self.add_method(literal.s_platform   , methods, "show_platform")
         self.add_method(literal.s_hostname   , methods, "show_hostname")
         self.add_method(literal.s_term       , methods, "show_term")
         self.add_method(literal.s_lang       , methods, "show_lang")
         self.add_method(literal.s_version    , methods, "show_version")
         self.add_method(literal.s_sector     , methods, "show_sector_size")
+        self.add_method(literal.s_argv       , methods, "show_argv")
         self.add_method(literal.s_args       , methods, "show_args")
+        self.add_method(literal.s_md5        , methods, "show_md5")
         self.add_method(literal.ctrla        , methods, "inc_number")
         self.add_method(literal.ctrlx        , methods, "dec_number")
         self.add_method(literal.period       , methods, "repeat")
         self.add_method(literal.toggle       , methods, "toggle")
         self.add_method(literal.ror          , methods, "rotate_right")
         self.add_method(literal.rol          , methods, "rotate_left")
+        self.add_method(literal.bswap        , methods, "swap_bytes")
         self.add_method(literal.delete       , methods, "delete")
         self.add_method(literal.X            , methods, "backspace")
         self.add_method(literal.D            , methods, "delete_till_end")
         self.add_method(literal.u            , methods, "undo")
         self.add_method(literal.U            , methods, "undo_all")
         self.add_method(literal.ctrlr        , methods, "redo")
+        self.add_method(literal.reg_reg      , methods, "start_register")
         self.add_method(literal.m_reg        , methods, "set_mark")
         self.add_method(literal.backtick_reg , methods, "get_mark")
         self.add_method(literal.s_delmarks   , methods, "delete_mark")
@@ -155,38 +162,38 @@ class Console (_console):
 class ExtConsole (_console):
     pass
 
-def _enter_edit_insert(self, amp, ope, args, raw):
+def _enter_edit_insert(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp))
     return self.set_console(edit.get_insert_class(), arg)
 
-def _enter_edit_insert_head(self, amp, ope, args, raw):
+def _enter_edit_insert_head(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp), delta=-self.co.get_pos())
     return self.set_console(edit.get_insert_class(), arg)
 
-def _enter_edit_append(self, amp, ope, args, raw):
+def _enter_edit_append(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp), delta=1)
     return self.set_console(edit.get_insert_class(), arg)
 
-def _enter_edit_append_tail(self, amp, ope, args, raw):
+def _enter_edit_append_tail(self, amp, opc, args, raw):
     delta = self.co.get_max_pos() - self.co.get_pos() + 1
     arg = edit.Arg(amp=methods.get_int(amp), delta=delta)
     return self.set_console(edit.get_insert_class(), arg)
 
-def _enter_edit_replace(self, amp, ope, args, raw):
+def _enter_edit_replace(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp))
     return self.set_console(edit.get_replace_class(), arg)
 
-def _do_edit_replace(self, amp, ope, args, raw):
+def _do_edit_replace(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp), limit=edit.get_input_limit())
     return self.set_console(edit.get_replace_class(), arg)
 
-def _enter_visual(self, amp, ope, args, raw):
+def _enter_visual(self, amp, opc, args, raw):
     return __enter_visual(self, visual.VISUAL)
 
-def _enter_line_visual(self, amp, ope, args, raw):
+def _enter_line_visual(self, amp, opc, args, raw):
     return __enter_visual(self, visual.VISUAL_LINE)
 
-def _enter_block_visual(self, amp, ope, args, raw):
+def _enter_block_visual(self, amp, opc, args, raw):
     return __enter_visual(self, visual.VISUAL_BLOCK)
 
 def __enter_visual(self, visual_type):

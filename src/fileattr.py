@@ -70,3 +70,13 @@ def rename(old, new):
         return -1
     _attrd[new] = _attrd[old]
     return remove(old)
+
+def stash_save(name, tmp_name=None):
+    attr = _attrd[name]
+    assert attr, name
+    _attrd[tmp_name] = attr
+
+def stash_restore(name, tmp_name=None):
+    attr = _attrd[tmp_name]
+    assert attr, tmp_name
+    _attrd[name] = attr

@@ -31,18 +31,31 @@ def __test(version, name):
     version = tuple(version[:3])
     if not name:
         name = platform.system()
-    name = name.lower()
 
     s = "Using Python %s" % '.'.join([str(x) for x in version])
     if version < (2, 6, 0):
         raise Exception("%s\nPython 2.6 or above is required" % s)
-    elif "windows" in name:
+    elif name == "Windows" and not __is_cygwin(name):
         raise Exception("Windows is not supported")
     import curses
     del curses
 
+def __is_cygwin(name):
+    if name.startswith("CYGWIN"):
+        return True
+    if not name.startswith("Windows"):
+        return False
+    try:
+        import subprocess
+        p = subprocess.Popen(["uname"], stdout=subprocess.PIPE)
+        s = p.communicate()[0]
+        return s.startswith("CYGWIN")
+    except Exception:
+        return False
+
 def test():
-    if __ignore_test():
+    s = os.getenv("FILEOBJ_USE_TEST_NODEP", "")
+    if s.lower() == "false":
         return -1
     try:
         __test(None, None)
@@ -50,13 +63,6 @@ def test():
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)
         sys.exit(1)
-
-def __ignore_test():
-    e = os.getenv("FILEOBJ_USE_TEST")
-    if isinstance(e, str) and e.lower() == "false":
-        return True
-    else:
-        return False
 
 if __name__ == '__main__':
     test()

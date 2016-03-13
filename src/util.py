@@ -25,6 +25,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 import contextlib
+import hashlib
 import inspect
 import os
 import platform
@@ -42,9 +43,13 @@ from . import setting
 from . import version
 
 NO_NAME = "[No Name]"
+UNKNOWN = "Unknown"
 
 class GenericError (Exception):
     """Exception -> BaseException -> object in Python 2.5 or >"""
+    pass
+
+class QuietError (GenericError):
     pass
 
 class Namespace (object):
@@ -194,19 +199,22 @@ def rfind_string(src, sub, start=0):
     return src.rfind(sub, 0, start)
 
 def get_os_name():
+    # this should be used only for debugging
+    if setting.os_uname:
+        return setting.os_uname
     # e.g. 'Linux'
     ret = platform.system()
-    return ret if ret else "Unknown"
+    return ret if ret else UNKNOWN
 
 def get_os_release():
     # e.g. '2.6.32-504.1.3.el6.x86_64'
     ret = platform.release()
-    return ret if ret else "Unknown"
+    return ret if ret else UNKNOWN
 
 def get_cpu_name():
     # e.g. 'x86_64'
     ret = platform.processor()
-    return ret if ret else "Unknown"
+    return ret if ret else UNKNOWN
 
 def raise_no_impl(s):
     raise NotImplementedError("No " + s)
@@ -631,6 +639,12 @@ def get_stamp(prefix=''):
         get_python_executable_string(),
         os.getpid())
 
+def get_md5(b):
+    if isinstance(b, str):
+        b = _(b)
+    if b:
+        return hashlib.md5(b).hexdigest()
+
 def execute(*l):
     """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE)
@@ -662,12 +676,14 @@ def __bytes_to_str_3k(b):
     return codecs.latin_1_decode(b)[0]
 
 if is_python2():
+    import __builtin__ as _builtin
     MAX_INT = sys.maxint
     iter_next = __iter_next_2k
     get_xrange = __get_xrange_2k
     str_to_bytes = __str_to_bytes_2k
     bytes_to_str = __bytes_to_str_2k
 else:
+    import builtins as _builtin
     import codecs
     MAX_INT = sys.maxsize
     iter_next = __iter_next_3k
@@ -743,23 +759,38 @@ def iter_traceback(tb=None):
 def get_traceback(tb=None):
     return tuple(iter_traceback(tb))
 
-def printf(o, error=False):
-    fd = sys.stderr if error else sys.stdout
-    print(obj_to_string(o), file=fd)
+def __fprintf(o, error, verbose):
+    if error:
+        fd = sys.stderr
+    else:
+        fd = sys.stdout
+    s = obj_to_string(o, verbose)
+    print(s, file=fd)
 
-def obj_to_string(o):
+def printf(o):
+    __fprintf(o, False, True)
+
+def printe(o):
+    __fprintf(o, True, True)
+
+def obj_to_string(o, verbose=True):
     if isinstance(o, Exception):
-        return e_to_string(o)
+        return e_to_string(o, verbose)
     else:
         return str(o)
 
 def e_to_string(e, verbose=True):
     # debug or verbose=True shows class name
     s = str(e)
+    if isinstance(e, QuietError):
+        return s
     if setting.use_debug or verbose:
-        return get_class_name(e) + ": " + s
+        return "{0}: {1}".format(get_class_name(e), s)
     else:
         return s
+
+def is_seq(o):
+    return isinstance(o, (list, tuple))
 
 def is_class(cls):
     return inspect.isclass(cls)
@@ -784,8 +815,4 @@ def get_class_name(o):
         return get_class(o).__name__
 
 def get_builtin(name):
-    if is_python2():
-        import __builtin__ as builtin
-    else:
-        import builtins as builtin
-    return getattr(builtin, name, None)
+    return getattr(_builtin, name, None)

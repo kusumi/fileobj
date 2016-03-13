@@ -116,7 +116,7 @@ class Fileobj (fileobj.Fileobj):
         self.__ra_window = beg, end
 
     def find(self, x, s, end):
-        n = kernel.PAGE_SIZE
+        n = self.get_buffer_size()
         while True:
             if end != -1 and x >= end:
                 return fileobj.NOTFOUND
@@ -131,10 +131,11 @@ class Fileobj (fileobj.Fileobj):
                 return fileobj.INTERRUPT
 
     def rfind(self, x, s, end):
+        bufsiz = self.get_buffer_size()
         while True:
             if end != -1 and x <= end:
                 return fileobj.NOTFOUND
-            n = kernel.PAGE_SIZE
+            n = bufsiz
             i = x + 1 - n
             if i < 0:
                 i = 0

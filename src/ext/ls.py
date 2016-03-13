@@ -22,18 +22,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
+import os
 
 import fileobj.extension
 
 def get_text(co, fo, args):
     l = list(co.iter_buffer())
     assert l
-    title = '', "buffer", "size", "class"
+    title = '', " ", "buffer", "size", "class"
 
-    l1 = [len(fileobj.extension.get_path(o)) for o in l]
-    l1.append(len(title[1]))
+    l1 = [len(fileobj.extension.get_verbose_path(o)) for o in l]
+    l1.append(len(title[2]))
     l2 = [len(str(o.get_size())) for o in l]
-    l2.append(len(title[2]))
+    l2.append(len(title[3]))
 
     n = len(l)
     x = 0
@@ -41,9 +42,11 @@ def get_text(co, fo, args):
         n //= 10
         x += 1
 
-    f = "{{0:{0}}} {{1:<{1}}} {{2:{2}}} {{3}}".format(x, max(l1), max(l2))
+    f = "{{0:{0}}} {{1}} {{2:<{1}}} {{3:{2}}} {{4}}".format(
+        x, max(l1), max(l2))
     sl = [f.format(*title)]
     for i, o in enumerate(l):
-        sl.append(f.format(i + 1, fileobj.extension.get_path(o),
+        c = " " if os.path.exists(o.get_path()) else "!"
+        sl.append(f.format(i + 1, c, fileobj.extension.get_verbose_path(o),
             o.get_size(), o.get_type()))
     return sl
