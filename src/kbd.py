@@ -80,11 +80,10 @@ _keys = [
     ("RIGHT",      curses.KEY_RIGHT,     curses.KEY_RIGHT,  curses.KEY_RIGHT),
     ("BACKSPACE",  curses.KEY_BACKSPACE, curses.ascii.BS,   curses.KEY_BACKSPACE),
     ("DELETE",     curses.KEY_DC,        curses.ascii.DEL,  curses.KEY_DC),
-    ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE)]
+    ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE),]
 if setting.use_bsd_caveat:
     _keys.append(
-    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL), # FIX_ME added for FreeBSD
-    )
+    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),) # FIX_ME added for FreeBSD
 
 def iter_kbd_name():
     for l in _keys:

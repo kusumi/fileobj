@@ -1,4 +1,4 @@
-fileobj ([v0.7.26](https://github.com/kusumi/fileobj/releases/tag/v0.7.26))
+fileobj ([v0.7.27](https://github.com/kusumi/fileobj/releases/tag/v0.7.27))
 =======
 
 ## About
@@ -34,7 +34,7 @@ fileobj ([v0.7.26](https://github.com/kusumi/fileobj/releases/tag/v0.7.26))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.7.26
+        v0.7.27
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
@@ -46,7 +46,7 @@ fileobj ([v0.7.26](https://github.com/kusumi/fileobj/releases/tag/v0.7.26))
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ sudo python3 ./script/check.py
         $ fileobj --version
-        v0.7.26
+        v0.7.27
         $ fileobj
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation
@@ -329,9 +329,9 @@ fileobj ([v0.7.26](https://github.com/kusumi/fileobj/releases/tag/v0.7.26))
           --terminal_width=<terminal_width>
                                 Manually set terminal width [[0-9]+]
           --fg=<color>          Set foreground color
-                                [black|red|green|yellow|blue|magenta|cyan|white]
+                                [black|blue|cyan|green|magenta|red|white|yellow]
           --bg=<color>          Set background color
-                                [black|red|green|yellow|blue|magenta|cyan|white]
+                                [black|blue|cyan|green|magenta|red|white|yellow]
           --simple              Use simplified status window
           --command             Print command list and exit
           --sitepkg             Print site package directory and exit
@@ -355,7 +355,7 @@ fileobj ([v0.7.26](https://github.com/kusumi/fileobj/releases/tag/v0.7.26))
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
 
-+ Entering block visual mode may require *<CTRL>v<CTRL>v* instead of *<CTRL>v*
++ Entering block visual mode may require *CTRL-v CTRL-v* instead of *CTRL-v*
 
 ## Note for Darwin
 

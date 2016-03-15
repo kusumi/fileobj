@@ -37,12 +37,12 @@ enabled = setting.use_pid_path and \
     kernel.is_pid_path_supported()
 
 class methods (object):
-    def get_string(self, s):
+    def get_string(self):
         l = []
         l.append("pid {0}".format(self.pid))
         l.append("name " + self.name)
         l.append("word size {0}".format(self.word))
-        return self.add_string(s, '\n'.join(l))
+        return '\n'.join(l)
 
     def init_vm(self):
         self.word = ptrace.get_word_size()

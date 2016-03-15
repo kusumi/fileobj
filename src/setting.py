@@ -155,6 +155,10 @@ def ext_add_gt_zero(k, v):
     s, e = __ext_get(k)
     return __ext_add(s, env.test_gt_zero(e, v))
 
+def ext_add_ge_zero(k, v):
+    s, e = __ext_get(k)
+    return __ext_add(s, env.test_ge_zero(e, v))
+
 def ext_delete(k):
     s, e = __ext_get(k)
     return __ext_delete(s)

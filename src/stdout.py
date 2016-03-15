@@ -185,7 +185,12 @@ class _window (object):
 def init(fg, bg):
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
-        A_FOCUS, A_COLOR
+        A_DEFAULT, \
+        A_BOLD, \
+        A_STANDOUT, \
+        A_UNDERLINE, \
+        A_FOCUS, \
+        A_COLOR
 
 def cleanup():
     while _windows:

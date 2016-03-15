@@ -29,14 +29,14 @@ enabled = kernel.is_xnix() and \
     kernel.is_blkdev_supported()
 
 class methods (object):
-    def get_string(self, s):
+    def get_string(self):
         l = []
         l.append("device size " +
             util.get_size_repr(self.get_size()))
         l.append("sector size " +
             util.get_size_repr(self.get_sector_size()))
         l.append("label " + self.blk_label)
-        return self.add_string(s, '\n'.join(l))
+        return '\n'.join(l)
 
     def init_blk(self):
         b = kernel.get_blkdev_info(self.get_path())

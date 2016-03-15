@@ -222,8 +222,10 @@ def dispatch(optargs=None):
         wspnum = len(args)
     if wspnum < 1:
         wspnum = 1
-    setting.terminal_height = opts.terminal_height
-    setting.terminal_width = opts.terminal_width
+    if opts.terminal_height > 0:
+        setting.terminal_height = opts.terminal_height
+    if opts.terminal_width > 0:
+        setting.terminal_width = opts.terminal_width
     if opts.simple:
         setting.use_full_status_window = False
         setting.use_status_window_frame = False

@@ -363,9 +363,6 @@ class Fileobj (object):
     def get_no_support_string(self, s):
         return s + " not supported"
 
-    def add_string(self, a, b):
-        return a + "\n\n" + b
-
     def has_undo(self):
         return self.get_undo_size() > 0
     def has_redo(self):

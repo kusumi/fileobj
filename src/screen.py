@@ -36,20 +36,32 @@ _std = None
 _size = util.Pair()
 _signaled = False
 
-A_DEFAULT   = _screen.A_DEFAULT
-A_BOLD      = _screen.A_BOLD
-A_STANDOUT  = _screen.A_STANDOUT
-A_UNDERLINE = _screen.A_UNDERLINE
-A_FOCUS     = _screen.A_FOCUS
-A_COLOR     = _screen.A_COLOR
+A_DEFAULT   = 0
+A_BOLD      = 0
+A_STANDOUT  = 0
+A_UNDERLINE = 0
+A_FOCUS     = 0
+A_COLOR     = 0
 
 def init(fg='', bg=''):
-    global _std, A_FOCUS, A_COLOR
+    global _std, \
+        A_DEFAULT, \
+        A_BOLD, \
+        A_STANDOUT, \
+        A_UNDERLINE, \
+        A_FOCUS, \
+        A_COLOR
     if update_size() == -1:
         return -1
     if _std:
         return -1
-    _std, A_FOCUS, A_COLOR = _screen.init(fg, bg)
+    _std, \
+    A_DEFAULT, \
+    A_BOLD, \
+    A_STANDOUT, \
+    A_UNDERLINE, \
+    A_FOCUS, \
+    A_COLOR = _screen.init(fg, bg)
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR)
     _std.refresh()
@@ -90,7 +102,7 @@ def update_size():
         return -1
 
 def __override_size(term_size, cfg_size):
-    if cfg_size == -1:
+    if cfg_size <= 0: # config could be 0 or -2
         return term_size
     if term_size == -1:
         return cfg_size

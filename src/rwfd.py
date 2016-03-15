@@ -48,8 +48,9 @@ class Fileobj (rofd.Fileobj):
             util.get_size_repr(len(self.__diff)))
         l.append("bbuf size " +
             util.get_size_repr(len(self.__bbuf)))
-        return self.add_string(
-            super(Fileobj, self).__str__(), '\n'.join(l))
+        return super(Fileobj, self).__str__() + \
+            "\n\n" + \
+            '\n'.join(l)
 
     def clear_dirty(self):
         self.__dirty = False

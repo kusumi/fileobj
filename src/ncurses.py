@@ -24,38 +24,28 @@
 import curses
 
 from . import log
+from . import util
 
-A_DEFAULT   = curses.A_NORMAL
-A_BOLD      = curses.A_BOLD
-A_STANDOUT  = curses.A_STANDOUT
-A_UNDERLINE = curses.A_UNDERLINE
-A_FOCUS     = 0 # default
-A_COLOR     = 0 # not curses.A_COLOR
 _has_chgat  = True
 
 def init(fg, bg):
-    global _has_chgat, A_FOCUS
+    global _has_chgat
     std = curses.initscr()
-    if fg or bg:
-        if __init_curses_color(fg, bg) == -1:
-            log.error("Failed to init color")
-    curses.noecho()
-    curses.cbreak()
-    try:
-        # vt100 fails here but just ignore
-        curses.curs_set(0)
-    except Exception as e:
-        log.debug(e)
-    try:
-        # fails on Python 2.5 and some os
-        std.chgat(0, 0, 1, A_DEFAULT)
-        std.chgat(0, 0, 1, A_COLOR)
-        std.erase()
-    except Exception as e:
-        log.debug(e)
+    color = __init_curses_color(fg, bg)
+    if color == -1:
+        log.error("Failed to init curses color")
+    if __init_curses_io() == -1:
+        log.debug("Failed to init curses io")
+    if __test_curses_chgat(std) == -1:
+        log.debug("Failed to test curses chgat")
         _has_chgat = False
-    A_FOCUS = curses.ACS_CKBOARD
-    return std, A_FOCUS, A_COLOR
+    return std, \
+        curses.A_NORMAL, \
+        curses.A_BOLD, \
+        curses.A_STANDOUT, \
+        curses.A_UNDERLINE, \
+        curses.ACS_CKBOARD, \
+        color
 
 def cleanup():
     assert not curses.isendwin()
@@ -63,24 +53,33 @@ def cleanup():
     curses.nocbreak()
     curses.endwin()
 
+def __init_curses_io():
+    curses.noecho()
+    curses.cbreak()
+    try:
+        # vt100 fails here but just ignore
+        curses.curs_set(0)
+    except Exception as e:
+        log.debug(e)
+        return -1
+
 def __init_curses_color(fg, bg):
-    global A_COLOR
+    if fg is None and bg is None:
+        return 0
     if not curses.has_colors():
         return -1
-    fg, bg = __get_curses_color_string(fg, bg)
+    fg, bg = __find_curses_color(fg, bg)
     try:
         pair = 1
         curses.start_color()
-        curses.init_pair(pair,
-            getattr(curses, fg),
-            getattr(curses, bg))
-        A_COLOR = curses.color_pair(pair)
+        curses.init_pair(pair, fg, bg)
+        return curses.color_pair(pair)
     except Exception as e:
         log.error(e)
         return -1
 
-def __get_curses_color_string(fg, bg):
-    d = dict([(s, "COLOR_" + s.upper()) for s in iter_color_name()])
+def __find_curses_color(fg, bg):
+    d = dict([l for l in iter_color_pair()])
     white = d.get("white")
     black = d.get("black")
     fg = d.get(fg, white)
@@ -92,6 +91,16 @@ def __get_curses_color_string(fg, bg):
     else: # other/other -> white/other
         return white, bg
 
+def __test_curses_chgat(std):
+    try:
+        # fails on Python 2.5 and some os
+        std.chgat(0, 0, 1, curses.A_NORMAL)
+        std.chgat(0, 0, 1, curses.A_BOLD)
+        std.erase()
+    except Exception as e:
+        log.debug(e)
+        return -1
+
 def flash():
     curses.flash()
 
@@ -101,12 +110,14 @@ def newwin(leny, lenx, begy, begx, ref=None):
 def has_chgat():
     return _has_chgat
 
+_prefix = "COLOR_"
+
+def iter_color_pair():
+    for k, v in sorted(util.iter_dir_items(curses)):
+        if k.startswith(_prefix) and isinstance(v, int):
+            s = k[len(_prefix):].lower()
+            yield s, v
+
 def iter_color_name():
-    yield "black"
-    yield "red"
-    yield "green"
-    yield "yellow"
-    yield "blue"
-    yield "magenta"
-    yield "cyan"
-    yield "white"
+    for k, v in iter_color_pair():
+        yield k
