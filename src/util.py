@@ -138,6 +138,17 @@ def is_running_inbox():
 def is_running_outbox():
     return not is_running_inbox()
 
+def is_in_screen():
+    return "STY" in os.environ
+
+def is_in_tmux():
+    return "TMUX" in os.environ
+
+def is_in_terminal_multiplexer():
+    return \
+        is_in_screen() or \
+        is_in_tmux() # or ...
+
 _Xregex = re.compile(r"\\X[{0}]{{1,}}$".format(string.hexdigits))
 _xregex = re.compile(r"\\x([{0}]{{1,2}})".format(string.hexdigits))
 

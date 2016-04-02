@@ -24,6 +24,7 @@
 import collections
 import sys
 
+from . import filebytes
 from . import kbd
 from . import kernel
 from . import log
@@ -67,7 +68,7 @@ class _window (object):
 
     def __mkstr(self, y, x, s):
         return "{0} ({1:2}, {2:3}) {3}".format(
-            repr(self.__ref), y, x, repr(s))
+            repr(self.__ref), y, x, filebytes.repr(s))
 
     def keypad(self, yes):
         return

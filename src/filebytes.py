@@ -60,11 +60,15 @@ def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
 
+# repr is to get rid of extra stuff that comes with builtin repr
 def __repr_2k(b):
     return __builtin_repr(b)[1:-1] # cut ' and '
 
 def __repr_3k(b):
-    return __builtin_repr(b)[2:-1] # cut b' and '
+    if isinstance(b, TYPE):
+        return __builtin_repr(b)[2:-1] # cut b' and '
+    else:
+        return __repr_2k(b)
 
 def join(l):
     return BLANK.join(l)

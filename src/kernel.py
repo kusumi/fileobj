@@ -28,6 +28,7 @@ import os
 import re
 
 from . import env
+from . import filebytes
 from . import log
 from . import setting
 from . import util
@@ -176,11 +177,11 @@ def get_blkdev_info(f):
     with fopen(f) as fd:
         l = o.get_blkdev_info(fd)
         b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
-        log.info("Block device {0} ({1}, {2}, {3})".format(
+        log.info("Block device {0} ({1}, {2}, '{3}')".format(
             b.name,
             util.get_size_repr(b.size),
             util.get_size_repr(b.sector_size),
-            repr(b.label)))
+            filebytes.repr(b.label)))
         return b
 
 def get_size(f):

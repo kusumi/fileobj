@@ -43,7 +43,8 @@ class _visual_addon (object):
             self.__chgat_single = self.__alt_chgat_single
             self.__chgat_head = self.__alt_chgat_head
             self.__chgat_tail = self.__alt_chgat_tail
-            self.__chgat_body = self.__alt_chgat_body
+            self.__chgat_inside = self.__alt_chgat_inside
+            self.__chgat_outside = self.__alt_chgat_outside
 
     def update_visual(self, full):
         type = self.fileops.get_region_type()
@@ -59,7 +60,7 @@ class _visual_addon (object):
             self.chgat_posstr(ppos, 0)
         else:
             full = True
-        self.chgat_posstr(pos, screen.A_BOLD)
+        self.chgat_posstr(pos, self.attr_posstr)
 
         beg = self.fileops.get_region_origin()
         end = pos
@@ -108,9 +109,9 @@ class _visual_addon (object):
                 elif tail:
                     self.__chgat_tail(y, x, end, lcur)
                 elif beg < lcur < end:
-                    self.__chgat_body(y, x, lcur, screen.A_STANDOUT)
+                    self.__chgat_inside(y, x, lcur)
                 else:
-                    self.__chgat_body(y, x, lcur, screen.A_DEFAULT)
+                    self.__chgat_outside(y, x, lcur)
             lcur = lnext
             y += 1
 
@@ -121,7 +122,7 @@ class _visual_addon (object):
             self.chgat_posstr(ppos, 0)
         else:
             full = True
-        self.chgat_posstr(pos, screen.A_BOLD)
+        self.chgat_posstr(pos, self.attr_posstr)
 
         beg = self.fileops.get_region_origin()
         end = pos
@@ -162,17 +163,17 @@ class _visual_addon (object):
                 if lbeg <= lcur <= lend:
                     self.__chgat_single(y, x, lcur + d1, lcur + d2, lcur)
                 elif lppos <= lcur < lbeg and lpos == lbeg and lppos < lpos:
-                    self.__chgat_body(y, x, lcur, screen.A_DEFAULT) # down
+                    self.__chgat_outside(y, x, lcur) # down
                 elif lend < lcur <= lppos and lpos == lend and lpos < lppos:
-                    self.__chgat_body(y, x, lcur, screen.A_DEFAULT) # up
+                    self.__chgat_outside(y, x, lcur) # up
             lcur += mapx
             y += 1
 
     def __chgat_head(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(self.bufmap.x) - pos
-        self.chgat(y, x, pos, screen.A_DEFAULT)
-        self.chgat(y, x + pos, siz, screen.A_STANDOUT)
+        self.chgat(y, x, pos)
+        self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_head(self, y, x, beg, offset):
         """Alternative for Python 2.5"""
@@ -182,14 +183,14 @@ class _visual_addon (object):
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos], screen.A_DEFAULT)
-        self.printl(y, x + pos, s[pos:], screen.A_STANDOUT)
+        self.printl(y, x, s[:pos])
+        self.printl(y, x + pos, s[pos:], self.attr_visual)
 
     def __chgat_tail(self, y, x, end, offset):
         pos = self.get_cell_edge(end - offset + 1)
         siz = self.get_cell_edge(self.bufmap.x) - pos
-        self.chgat(y, x, pos, screen.A_STANDOUT)
-        self.chgat(y, x + pos, siz, screen.A_DEFAULT)
+        self.chgat(y, x, pos, self.attr_visual)
+        self.chgat(y, x + pos, siz)
 
     def __alt_chgat_tail(self, y, x, end, offset):
         """Alternative for Python 2.5"""
@@ -199,15 +200,15 @@ class _visual_addon (object):
         d = pos - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos], screen.A_STANDOUT)
-        self.printl(y, x + pos, s[pos:], screen.A_DEFAULT)
+        self.printl(y, x, s[:pos], self.attr_visual)
+        self.printl(y, x + pos, s[pos:])
 
     def __chgat_single(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(end - beg + 1)
         wid = self.get_cell_edge(self.bufmap.x)
-        self.chgat(y, x, wid, screen.A_DEFAULT)
-        self.chgat(y, x + pos, siz, screen.A_STANDOUT)
+        self.chgat(y, x, wid)
+        self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single(self, y, x, beg, end, offset):
         """Alternative for Python 2.5"""
@@ -219,13 +220,25 @@ class _visual_addon (object):
         d = end - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos], screen.A_DEFAULT)
-        self.printl(y, x + pos, s[pos:end], screen.A_STANDOUT)
-        self.printl(y, x + end, s[end:], screen.A_DEFAULT)
+        self.printl(y, x, s[:pos])
+        self.printl(y, x + pos, s[pos:end], self.attr_visual)
+        self.printl(y, x + end, s[end:])
+
+    def __chgat_inside(self, y, x, offset):
+        self.__chgat_body(y, x, offset, self.attr_visual)
+
+    def __chgat_outside(self, y, x, offset):
+        self.__chgat_body(y, x, offset, screen.A_DEFAULT)
 
     def __chgat_body(self, y, x, offset, attr):
         siz = self.get_cell_edge(self.bufmap.x)
         self.chgat(y, x, siz, attr)
+
+    def __alt_chgat_inside(self, y, x, offset):
+        self.__alt_chgat_body(y, x, offset, self.attr_visual)
+
+    def __alt_chgat_outside(self, y, x, offset):
+        self.__alt_chgat_body(y, x, offset, screen.A_DEFAULT)
 
     def __alt_chgat_body(self, y, x, offset, attr):
         """Alternative for Python 2.5"""

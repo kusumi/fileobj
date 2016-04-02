@@ -44,10 +44,10 @@ class Fileobj (rofd.Fileobj):
 
     def __str__(self):
         l = []
-        l.append("diff size " +
-            util.get_size_repr(len(self.__diff)))
-        l.append("bbuf size " +
-            util.get_size_repr(len(self.__bbuf)))
+        l.append("diff size {0}".format(
+            util.get_size_repr(len(self.__diff))))
+        l.append("bbuf size {0}".format(
+            util.get_size_repr(len(self.__bbuf))))
         return super(Fileobj, self).__str__() + \
             "\n\n" + \
             '\n'.join(l)

@@ -54,16 +54,11 @@ def _cleanup(fn):
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
             self.co.flash(e)
+        except MemoryError as e: # do the same
+            self.co.merge_undo_until(und)
+            self.co.lrepaintf()
+            self.co.flash(e)
     return _
-
-def __use_single_operation(self, x):
-    if x > self.co.get_size():
-        x = self.co.get_size()
-    if setting.use_single_operation:
-        return True
-    else:
-        ram = kernel.get_free_ram()
-        return ram != -1 and x > int(ram * setting.ram_thresh_ratio)
 
 def __read_chr(self, pos):
     return filebytes.ord(self.co.read(pos, 1))
@@ -723,9 +718,9 @@ def __search(self, pos, s, is_forward):
             x = self.co.get_max_pos()
         ret = fn(x, b, pos)
     if ret == fileobj.NOTFOUND:
-        self.co.flash("Search {0} failed".format(repr(word)))
+        self.co.flash("Search '{0}' failed".format(filebytes.repr(word)))
     elif ret == fileobj.INTERRUPT:
-        self.co.flash("Search {0} interrupted".format(repr(word)))
+        self.co.flash("Search '{0}' interrupted".format(filebytes.repr(word)))
     elif ret < 0:
         self.co.flash("Search error {0}".format(ret))
     elif ret != self.co.get_pos():
@@ -806,7 +801,7 @@ def toggle(self, amp, opc, args, raw):
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
-        if __use_single_operation(self, amp):
+        if setting.use_single_operation:
             ret = __single_toggle(self, pos, amp)
         else:
             ret = __buffered_toggle(self, pos, amp)
@@ -926,7 +921,7 @@ def __do_rotate_right(self, amp, opc, siz):
         if end > self.co.get_max_pos():
             end = self.co.get_max_pos()
         und = self.co.get_undo_size()
-        if __use_single_operation(self, end - beg):
+        if setting.use_single_operation:
             ret = __single_rotate_right(self, shift, beg, end)
         else:
             ret = __buffered_rotate_right(self, shift, beg, end)
@@ -1048,7 +1043,7 @@ def __do_rotate_left(self, amp, opc, siz):
         if end < 0:
             end = 0
         und = self.co.get_undo_size()
-        if __use_single_operation(self, beg - end):
+        if setting.use_single_operation:
             ret = __single_rotate_left(self, shift, beg, end)
         else:
             ret = __buffered_rotate_left(self, shift, beg, end)
@@ -1325,7 +1320,7 @@ def clear_marks(self, amp, opc, args, raw):
 def start_record(self, amp, opc, args, raw):
     if opc != literal.q.str:
         self.co.start_record(opc[1])
-        self.co.push_banner("recording")
+        self.co.push_banner("recording @{0}".format(opc[1]))
     else:
         self.co.end_record()
         self.co.pop_banner()
@@ -1358,7 +1353,7 @@ def logical_bit_operation(self, amp, opc, arg, raw):
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
-        if __use_single_operation(self, amp):
+        if setting.use_single_operation:
             ret = __single_logical_bit_operation(self, pos, amp, bops)
         else:
             ret = __buffered_logical_bit_operation(self, pos, amp, bops)
@@ -1380,7 +1375,7 @@ def __single_logical_bit_operation(self, pos, amp, fn):
             break
         if screen.test_signal():
             self.co.flash(
-                "Single logical bit operation interrupted ({0}/{1})".format(
+                "Single bitwise operation interrupted ({0}/{1})".format(
                 x, amp))
             return -1
     return amp
@@ -1390,7 +1385,7 @@ def __buffered_logical_bit_operation(self, pos, amp, fn):
     for b in filebytes.iter(self.co.read(pos, amp)):
         l.append(fn(b))
         if screen.test_signal():
-            self.co.flash("Buffered logical bit operation interrupted")
+            self.co.flash("Buffered bitwise operation interrupted")
             return 0
     self.co.replace(pos, l)
     return 1
@@ -1606,7 +1601,7 @@ def __save_buffer(self, args, force):
         return -1
     try:
         if overwrite:
-            buf = self.co.readall()
+            buf = self.co.readall() # could fail via MemoryError
             msg, new = __overwrite_buffer(self, f, buf)
         else:
             msg, new = self.co.flush(f)
@@ -1695,16 +1690,16 @@ def __save_partial(self, args, fn, force):
     f, overwrite = __get_save_partial_path(self, args, force)
     if f is None:
         return -1
-    buf = fn(self)
-    if not buf:
-        return -1
     try:
+        buf = fn(self) # could fail via MemoryError
+        if not buf:
+            return -1
         if overwrite:
             msg, new = __overwrite_buffer(self, f, buf)
         else:
             assert not os.path.exists(f)
             o = self.co.alloc_fileobj(f) # should not fail
-            o.insert(0, buf)
+            o.insert(0, buf) # FIX_ME too slow
             msg, new = o.flush()
             assert new, new
         if msg:

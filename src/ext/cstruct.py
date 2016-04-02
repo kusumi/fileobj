@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import os
 import re
 import sys
@@ -43,7 +44,7 @@ class _node (object):
         self.type = type
     def get_size(self):
         return 0
-    def get_expr(self, buf, name, indent):
+    def get_repr(self, buf, name, indent):
         return []
 
 class _builtin (_node):
@@ -51,22 +52,35 @@ class _builtin (_node):
         super(_builtin, self).__init__(
             fileobj.util.get_class_name(self))
 
-    def get_expr(self, buf, name, indent):
+    def get_repr(self, buf, name, indent):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
-            n = self.to_int(buf)
+            v = self.__get_value_expr(buf)
             a = ''.join(["\\x{0:02X}".format(x)
                 for x in fileobj.filebytes.ords(buf)])
             b = ''.join([fileobj.kbd.to_chr_repr(x) for x in buf])
-            s += " {0} {1} [{2}]".format(n, a, b)
+            s += " {0} {1} [{2}]".format(v, a, b)
         return [s]
+
+    def __get_value_expr(self, buf):
+        n = self.to_int(buf)
+        m = _builtin_xtype_regex.match(self.type)
+        if m:
+            siz = builtin_int(m.group(1))
+            siz //= 4 # string size in hex
+            fmt = "0x{0:0" + str(siz) + "X}"
+            return fmt.format(n)
+        else:
+            return str(n)
 
 _toplevel_regex = re.compile(
     r"\s*struct\s+(\S+)\s*{([\s\S]+?)}\s*;")
 _struct_member_regex = re.compile(
     r"^(\S+)\[([0-9]+)\]$")
 _builtin_type_regex = re.compile(
-    r"^(u|s)(8|16|32|64)(le|be)$")
+    r"^(u|s|x)(8|16|32|64)(le|be)$")
+_builtin_xtype_regex = re.compile(
+    r"^x(8|16|32|64)") # only to detect x, but not be|le
 
 # FIX_ME
 # This is necessary as this module uses int()
@@ -77,7 +91,7 @@ _classes = []
 def __create_builtin_class(name, size):
     def get_size(self):
         return size
-    sign = name[0] != 'u'
+    sign = (name[0] == 's')
     m = _builtin_type_regex.match(name)
     if not m:
         def to_int(self, b):
@@ -99,7 +113,7 @@ def __create_builtin_class(name, size):
 def __init_class():
     for x in range(4):
         size = 2 ** x
-        for sign in "us":
+        for sign in "usx":
             for suffix in ("", "le", "be"):
                 name = "{0}{1}{2}".format(sign, size * 8, suffix)
                 __create_builtin_class(name, size)
@@ -107,6 +121,25 @@ def __init_class():
     if fileobj.setting.ext_use_cstruct_libc:
         for name, func_name, fn in fileobj.libc.iter_defined_type():
             __create_builtin_class(name, fn())
+
+# A node for this class can't be added on import
+class _string (_node):
+    def __init__(self, size):
+        self.__size = size
+        super(_string, self).__init__(
+            _string_type(self.__size))
+
+    def get_size(self):
+        return self.__size
+
+    def get_repr(self, buf, name, indent):
+        i = buf.find(fileobj.filebytes.ZERO)
+        b = fileobj.filebytes.repr(buf[:i])
+        s = "{0}string {1}; \"{2}\"".format(I(indent), name, b)
+        return [s]
+
+def _string_type(n):
+    return "string{0}".format(n)
 
 class _struct (_node):
     def __init__(self, type, defs):
@@ -116,16 +149,16 @@ class _struct (_node):
             o = get_node(type)
             if not o:
                 fileobj.extension.fail(type + " not defined yet")
-            self.__member.append(fileobj.util.Namespace(node=o, name=name))
+            self.__member.append((o, name))
 
     def get_size(self):
-        return sum(o.node.get_size() for o in self.__member)
+        return sum(_[0].get_size() for _ in self.__member)
 
-    def get_expr(self, buf, name, indent):
+    def get_repr(self, buf, name, indent):
         l = ["{0}struct {1} {{".format(I(indent), self.type)]
-        for o in self.__member:
-            n = o.node.get_size()
-            l.extend(o.node.get_expr(buf[:n], o.name, indent+1))
+        for _ in self.__member:
+            n = _[0].get_size()
+            l.extend(_[0].get_repr(buf[:n], _[1], indent+1))
             buf = buf[n:]
         x = " " + name
         l.append("{0}}}{1};".format(I(indent), x.rstrip()))
@@ -140,13 +173,31 @@ class _struct (_node):
                 if len(l) != 2:
                     fileobj.extension.fail("Invalid syntax: {0}".format(l))
                 type, name = l
-                m = _struct_member_regex.match(name)
-                if m:
-                    n = builtin_int(m.group(2))
-                    for i in range(n):
-                        yield type, "{0}[{1}]".format(m.group(1), i)
+                if type == "string":
+                    yield self.__scan_string_type(type, name)
                 else:
-                    yield type, name
+                    # anything but string, including struct
+                    m = _struct_member_regex.match(name)
+                    if m:
+                        var = m.group(1)
+                        num = builtin_int(m.group(2))
+                        for i in range(num):
+                            yield type, "{0}[{1}]".format(var, i)
+                    else:
+                        yield type, name
+
+    def __scan_string_type(self, type, name):
+        m = _struct_member_regex.match(name)
+        if m:
+            var = m.group(1)
+            num = builtin_int(m.group(2))
+        else:
+            var = name
+            num = 1 # force "[1]"
+        type = _string_type(num)
+        if not get_node(type):
+            add_node(_string(num))
+        return type, "{0}[{1}]".format(var, num)
 
 _nodes = []
 def init_node():
@@ -157,9 +208,6 @@ def get_node(s):
     for o in _nodes:
         if o.type == s:
             return o
-    l = [o for o in _nodes if s and o.type.startswith(s)]
-    if len(l) == 1:
-        return l[0]
 
 def add_node(o):
     while True:
@@ -191,7 +239,8 @@ def get_text(co, fo, args):
         l = fileobj.kernel.fopen_text(f).readlines()
     except Exception as e:
         return str(e)
-    l = [x.strip() for x in l if not x.startswith('#')]
+    l = [x.strip() for x in l] # strip whitespaces and tabs first
+    l = [x for x in l if not x.startswith('#')] # then ignore comments
     s = ''.join([x for x in l if x])
     s = re.sub(r"\s{1,}", ' ', s)
 
@@ -209,7 +258,7 @@ def get_text(co, fo, args):
         o = get_node(x)
         if o:
             buf = fo.read(pos, o.get_size())
-            l.extend(o.get_expr(buf, '', 0))
+            l.extend(o.get_repr(buf, '', 0))
         else:
             l.append("struct {0} is not defined in {1}".format(x, f))
         l.append('')

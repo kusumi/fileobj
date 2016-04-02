@@ -136,6 +136,9 @@ def has_chgat():
 def use_alt_chgat():
     return setting.use_alt_chgat or not has_chgat()
 
+def use_color():
+    return A_COLOR != 0
+
 def iter_color_name():
     for s in _screen.iter_color_name():
         yield s

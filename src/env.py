@@ -27,7 +27,6 @@ import os
 import sys
 
 def __iter_env_name():
-    yield "FILEOBJ_USE_TEST_NODEP"
     yield "FILEOBJ_USE_DEBUG"
     yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_GETCH"
@@ -70,13 +69,15 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ALT_CHGAT"
     yield "FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "FILEOBJ_USE_SINGLE_OPERATION"
-    yield "FILEOBJ_RAM_THRESH_RATIO"
     yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
     yield "FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
     yield "FILEOBJ_USE_FULL_STATUS_WINDOW"
     yield "FILEOBJ_USE_STATUS_WINDOW_FRAME"
     yield "FILEOBJ_USE_HIGHLIGHT_SEARCH"
-    yield "FILEOBJ_HIGHLIGHT_SEARCH_ATTR"
+    yield "FILEOBJ_SCREEN_ATTR_POSSTR"
+    yield "FILEOBJ_SCREEN_ATTR_CURSOR"
+    yield "FILEOBJ_SCREEN_ATTR_SEARCH"
+    yield "FILEOBJ_SCREEN_ATTR_VISUAL"
     yield "FILEOBJ_USE_POSITION_PERCENTAGE"
     yield "FILEOBJ_USE_ADDRESS_NUM_OFFSET"
     yield "FILEOBJ_ADDRESS_NUM_WIDTH"
@@ -99,7 +100,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
     yield "FILEOBJ_USE_TEST_MMAP_RESIZE"
     yield "FILEOBJ_MMAP_THRESH"
-    yield "FILEOBJ_PTRACE_DELAY"
     yield "FILEOBJ_USE_VM_NON_LINUX"
     yield "FILEOBJ_USE_RRVM_RAW"
     yield "FILEOBJ_USE_PS_AUX"
@@ -112,6 +112,8 @@ def __iter_env_name():
     yield "FILEOBJ_USE_XNIX"
     yield "FILEOBJ_OS_UNAME"
     yield "FILEOBJ_USE_BSD_CAVEAT"
+    yield "FILEOBJ_USE_TMUX_CAVEAT"
+    yield "FILEOBJ_USE_PUTTY_CAVEAT"
     yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
     yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
     yield "FILEOBJ_USE_BUFFER_SIZE_HEURISTICS"
@@ -191,9 +193,6 @@ def __env_to_ratio(e):
             return x / 100
     except Exception:
         pass
-
-def __get_setting_use_test_nodep():
-    return test_bool("FILEOBJ_USE_TEST_NODEP", True)
 
 def __get_setting_use_debug():
     return test_bool("FILEOBJ_USE_DEBUG", False)
@@ -341,17 +340,6 @@ def __get_setting_use_circular_bit_shift():
 def __get_setting_use_single_operation():
     return test_bool("FILEOBJ_USE_SINGLE_OPERATION", False)
 
-def __get_setting_ram_thresh_ratio():
-    e = getenv("FILEOBJ_RAM_THRESH_RATIO")
-    _ = __env_to_ratio(50)
-    if e is None:
-        return _
-    x = __env_to_ratio(e)
-    if x is None:
-        return _
-    else:
-        return x
-
 def __get_setting_use_even_size_window():
     return test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
@@ -367,15 +355,27 @@ def __get_setting_use_status_window_frame():
 def __get_setting_use_highlight_search():
     return test_bool("FILEOBJ_USE_HIGHLIGHT_SEARCH", True)
 
-def __get_setting_highlight_search_attr():
-    e = getenv("FILEOBJ_HIGHLIGHT_SEARCH_ATTR")
+def __get_setting_screen_attr_posstr():
+    return __get_screen_attr("FILEOBJ_SCREEN_ATTR_POSSTR")
+
+def __get_setting_screen_attr_cursor():
+    return __get_screen_attr("FILEOBJ_SCREEN_ATTR_CURSOR")
+
+def __get_setting_screen_attr_search():
+    return __get_screen_attr("FILEOBJ_SCREEN_ATTR_SEARCH")
+
+def __get_setting_screen_attr_visual():
+    return __get_screen_attr("FILEOBJ_SCREEN_ATTR_VISUAL")
+
+def __get_screen_attr(envname):
+    e = getenv(envname)
     if e is None:
-        return "bold",
+        return list()
     ret = []
     for x in e.split(","):
         if x:
             ret.append(x.lower())
-    return tuple(ret)
+    return ret
 
 def __get_setting_use_position_percentage():
     return test_bool("FILEOBJ_USE_POSITION_PERCENTAGE", True)
@@ -477,21 +477,6 @@ def __get_setting_use_test_mmap_resize():
 def __get_setting_mmap_thresh():
     return test_ge_zero("FILEOBJ_MMAP_THRESH", __get_page_size())
 
-def __get_setting_ptrace_delay():
-    e = getenv("FILEOBJ_PTRACE_DELAY")
-    _ = __env_to_ratio(5) # 5/100 = 50 msec
-    if e is None:
-        return _
-    try:
-        t = int(e) // 10 # assume e[msec]
-    except Exception:
-        return _
-    x = __env_to_ratio(t)
-    if x is None:
-        return _
-    else:
-        return x
-
 def __get_setting_use_vm_non_linux():
     return test_bool("FILEOBJ_USE_VM_NON_LINUX", False)
 
@@ -549,6 +534,12 @@ def __get_setting_os_uname():
 
 def __get_setting_use_bsd_caveat():
     return test_bool("FILEOBJ_USE_BSD_CAVEAT", False)
+
+def __get_setting_use_tmux_caveat():
+    return test_bool("FILEOBJ_USE_TMUX_CAVEAT", False)
+
+def __get_setting_use_putty_caveat():
+    return test_bool("FILEOBJ_USE_PUTTY_CAVEAT", False)
 
 def __get_setting_netbsd_sizeof_disklabel():
     return test_gt_zero("FILEOBJ_NETBSD_SIZEOF_DISKLABEL", -1)

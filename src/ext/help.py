@@ -25,8 +25,7 @@ import fileobj.literal
 import fileobj.version
 
 def get_text(co, fo, args):
-    url = fileobj.version.get_readme_url()
-    l = ["README is available at {0}".format(url)]
+    l = [fileobj.version.get_readme_url()]
     l.append('')
     l.extend(fileobj.literal.get_lines(
         fileobj.literal.get_literals()))

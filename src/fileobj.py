@@ -202,7 +202,7 @@ class Fileobj (object):
         bufsiz = kernel.get_size_safe(f)
         if bufsiz == -1:
             if os.path.isfile(f):
-                log.error("Failed to stat " + f + ", using 0/0")
+                log.error("Failed to stat {0}, using 0/0".format(f))
             return 0, 0
 
         if offset <= 0:

@@ -11,14 +11,14 @@ struct usb_descriptor_header {
 
 struct usb_device_descriptor {
 	struct usb_descriptor_header hdr;
-	u16le bcdUSB;
+	x16le bcdUSB;
 	u8  bDeviceClass;
 	u8  bDeviceSubClass;
 	u8  bDeviceProtocol;
 	u8  bMaxPacketSize0;
-	u16le idVendor;
-	u16le idProduct;
-	u16le bcdDevice;
+	x16le idVendor;
+	x16le idProduct;
+	x16le bcdDevice;
 	u8  iManufacturer;
 	u8  iProduct;
 	u8  iSerialNumber;

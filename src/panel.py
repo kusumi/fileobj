@@ -294,14 +294,28 @@ class DisplayCanvas (Canvas):
             self.chgat_posstr = self.alt_chgat_posstr
             self.chgat_cursor = self.alt_chgat_cursor
             self.chgat_search = self.alt_chgat_search
-        attr = screen.A_DEFAULT
-        for s in setting.highlight_search_attr:
-            name = "A_" + s.upper()
-            if hasattr(screen, name):
-                attr |= getattr(screen, name)
-        if attr == screen.A_DEFAULT:
-            attr = screen.A_BOLD
-        self.__attr_search = attr
+        self.__init_highlight_attrs()
+
+    def __init_highlight_attrs(self):
+        # A_STANDOUT may disappear
+        if setting.use_tmux_caveat and \
+            util.is_in_terminal_multiplexer() and \
+            screen.use_color():
+            setting.screen_attr_cursor.append("bold")
+            setting.screen_attr_visual.append("bold")
+        # A_BOLD may disappear
+        if setting.use_putty_caveat:
+            setting.screen_attr_posstr.append("standout")
+            setting.screen_attr_search.append("underline")
+        # initialize attributes
+        self.attr_posstr = _parse_attr(
+            setting.screen_attr_posstr, screen.A_BOLD)
+        self.attr_cursor = _parse_attr(
+            setting.screen_attr_cursor, screen.A_STANDOUT)
+        self.attr_search = _parse_attr(
+            setting.screen_attr_search, screen.A_BOLD)
+        self.attr_visual = _parse_attr(
+            setting.screen_attr_visual, screen.A_STANDOUT)
 
     def iter_buffer(self):
         b = self.read_page()
@@ -314,8 +328,8 @@ class DisplayCanvas (Canvas):
         self.fill_posstr()
         super(DisplayCanvas, self).fill(low)
         pos = self.fileops.get_pos()
-        self.chgat_posstr(pos, screen.A_BOLD)
-        self.chgat_cursor(pos, screen.A_STANDOUT, low)
+        self.chgat_posstr(pos, self.attr_posstr)
+        self.chgat_cursor(pos, self.attr_cursor, low)
         self.update_search(pos)
 
     def update_highlight(self):
@@ -324,8 +338,8 @@ class DisplayCanvas (Canvas):
         self.chgat_posstr(ppos, 0)
         self.chgat_cursor(ppos, 0, False)
         pos = self.fileops.get_pos()
-        self.chgat_posstr(pos, screen.A_BOLD)
-        self.chgat_cursor(pos, screen.A_STANDOUT, False)
+        self.chgat_posstr(pos, self.attr_posstr)
+        self.chgat_cursor(pos, self.attr_cursor, False)
         self.range_update_search(pos, ppos, pos)
         self.refresh()
 
@@ -355,14 +369,14 @@ class DisplayCanvas (Canvas):
     def fill_posstr(self):
         return
 
-    def __get_search_word(self):
+    def __get_update_search_word(self):
         if setting.use_highlight_search:
             s = self.fileops.get_search_word()
             if s:
                 return s
 
     def update_search(self, pos):
-        s = self.__get_search_word()
+        s = self.__get_update_search_word()
         if not s:
             return -1
         beg = self.get_page_offset()
@@ -370,7 +384,7 @@ class DisplayCanvas (Canvas):
         self.__update_search(pos, beg, end, s)
 
     def range_update_search(self, pos, beg, end):
-        s = self.__get_search_word()
+        s = self.__get_update_search_word()
         if not s:
             return -1
         if beg > end:
@@ -380,12 +394,12 @@ class DisplayCanvas (Canvas):
         self.__update_search(pos, beg, end, s)
 
     def __update_search(self, pos, beg, end, s):
-        attr_cursor = self.__attr_search | screen.A_STANDOUT
+        attr_cursor = self.attr_search | self.attr_cursor
         for i in self.__iter_search_word(beg, end, s):
             for j in range(len(s)):
                 x = i + j
                 here = (x == pos)
-                self.chgat_search(x, attr_cursor, self.__attr_search, here)
+                self.chgat_search(x, attr_cursor, self.attr_search, here)
 
     def __iter_search_word(self, beg, end, s):
         if beg < 0:
@@ -431,7 +445,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         d = pos % self.bufmap.x
         self.chgat(0, self.offset.x + self.get_cell_width(d),
             self.get_cell_edge(1), screen.A_UNDERLINE | attr)
-        self.chgat(y, 0, self.offset.x, attr)
+        self.chgat(y, 0, self.offset.x - 1, attr)
 
     def alt_chgat_posstr(self, pos, attr):
         """Alternative for Python 2.5"""
@@ -439,7 +453,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         d = pos % self.bufmap.x
         self.printl(0, self.offset.x + self.get_cell_width(d),
             self.__get_column_posstr(d), screen.A_UNDERLINE | attr)
-        s = self.__get_line_posstr(self.get_line_offset(pos))
+        s = self.__get_line_posstr(self.get_line_offset(pos))[:-1]
         self.printl(y, 0, s, attr)
 
     def chgat_cursor(self, pos, attr, low):
@@ -730,3 +744,16 @@ def get_min_position(cls):
         y -= _FRAME_MARGIN_Y
         x -= _FRAME_MARGIN_X
     return y, x
+
+def _parse_attr(config, default):
+    assert isinstance(config, list), list
+    attr = zero = screen.A_DEFAULT
+    for s in config:
+        name = "A_" + s.upper()
+        if hasattr(screen, name):
+            attr |= getattr(screen, name)
+    # return default if config had nothing
+    if attr == zero:
+        return default
+    else:
+        return attr

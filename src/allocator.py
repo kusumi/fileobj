@@ -168,10 +168,10 @@ class Allocator (object):
                     raise AllocatorError(str(e))
 
     def __alloc_fileobj(self, f, offset, length, cls):
-        log.info("Trying {0} for {1}".format(cls, repr(f)))
+        log.info("Trying {0} for '{1}'".format(cls, f))
         ret = cls(f, offset, length)
         ret.set_magic()
-        log.info("Using {0} for {1}".format(cls, repr(f)))
+        log.info("Using {0} for '{1}'".format(cls, f))
         return ret
 
 def iter_module_name():

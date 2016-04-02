@@ -1,3 +1,16 @@
+v0.7.28
+=======
+- Minor bug fixes
+- Cleanups
+- Support string type in :cstruct in addition to char[]
+  (helps omit bunch of \0 shown when using char[] as C string)
+- Support x8,x16,x32,x64 types in :cstruct to indicate unsigned hexadecimal output
+- Add :hammervol extension
+- Add FILEOBJ_USE_TMUX_CAVEAT
+- Add FILEOBJ_USE_PUTTY_CAVEAT
+- Improve terminal multiplexer and PuTTY support
+- Improve README.md
+
 v0.7.27
 =======
 - Minor bug fix

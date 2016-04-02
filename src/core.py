@@ -97,7 +97,7 @@ def dispatch(optargs=None):
     parser.add_option("-d",
         action="store_true",
         default=False,
-        help="Show buffer address starting from @offset")
+        help="Show buffer address starting from offset attribute of the file path")
     parser.add_option("-x",
         action="store_true",
         default=False,
@@ -114,29 +114,29 @@ def dispatch(optargs=None):
     parser.add_option("--bytes_per_line",
         default=setting.bytes_per_line,
         metavar="<bytes_per_line>",
-        help="Set bytes_per_line [[0-9]+|max|min|auto]")
+        help=literal.s_set_bpl.desc)
     parser.add_option("--bytes_per_window",
         default=setting.bytes_per_window,
         metavar="<bytes_per_window>",
-        help="Set bytes_per_window [[0-9]+|even|auto]")
+        help=literal.s_set_bpw.desc)
     parser.add_option("--terminal_height",
         type="int",
         default=setting.terminal_height,
         metavar="<terminal_height>",
-        help="Manually set terminal height [[0-9]+]")
+        help="Manually set terminal height to arg [[0-9]+]")
     parser.add_option("--terminal_width",
         type="int",
         default=setting.terminal_width,
         metavar="<terminal_width>",
-        help="Manually set terminal width [[0-9]+]")
+        help="Manually set terminal width to arg [[0-9]+]")
     parser.add_option("--fg",
         default=setting.color_fg,
         metavar="<color>",
-        help="Set foreground color [{0}]".format(colors))
+        help="Set foreground color to arg [{0}]".format(colors))
     parser.add_option("--bg",
         default=setting.color_bg,
         metavar="<color>",
-        help="Set background color [{0}]".format(colors))
+        help="Set background color to arg [{0}]".format(colors))
     parser.add_option("--simple",
         action="store_true",
         default=(not setting.use_full_status_window and

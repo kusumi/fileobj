@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import time
 
 from . import filebytes
 from . import fileobj
@@ -80,9 +79,6 @@ class methods (object):
             ret = kernel.parse_waitpid_result(status)
             log.debug("Wait pid {0}: {1}".format(pid, ret))
 
-    def __delay(self):
-        time.sleep(setting.ptrace_delay)
-
     def test_vm(self):
         if not kernel.has_pid_access(self.pid):
             raise fileobj.FileobjError(
@@ -114,7 +110,6 @@ class methods (object):
             return self.__peek_vm(addr, size)
         except Exception as e:
             log.error("{0}, retrying".format(e))
-            self.__delay()
             return self.__peek_vm(addr, size)
         finally:
             self.__detach_vm()
@@ -143,7 +138,6 @@ class methods (object):
             return self.__poke_vm(addr, buf)
         except Exception as e:
             log.error("{0}, retrying".format(e))
-            self.__delay()
             return self.__poke_vm(addr, buf)
         finally:
             self.__detach_vm()

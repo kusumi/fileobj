@@ -44,8 +44,9 @@ def get_text(co, fo, args):
     cfg = fileobj.filebytes.ords(b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
-        fail("Invalid vendor id: " +
-            repr(struct.pack(fileobj.util.U1F * 2, vend[1], vend[0])))
+        fail("Invalid vendor id: '{0}'".format(
+            fileobj.filebytes.repr(
+                struct.pack(fileobj.util.U1F * 2, vend[1], vend[0]))))
 
     type = cfg[0x0E] & 0x7F
     if type not in (PCI_HDR_DEV, PCI_HDR_PPB, PCI_HDR_PCB):

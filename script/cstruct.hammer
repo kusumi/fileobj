@@ -14,53 +14,52 @@ struct uuid {
 };
 
 struct hammer_blockmap {
-	u64 phys_offset;
-	u64 first_offset;
-	u64 next_offset;
-	u64 alloc_offset;
+	x64le phys_offset_;
+	x64le first_offset;
+	x64le next_offset_;
+	x64le alloc_offset;
 	u32 reserved01;
-	u32 entry_crc;
+	x32le entry_crc;
 };
 
 struct hammer_volume_ondisk {
-	u64 vol_signature;
+	x64le vol_signature;
 
-	s64 vol_bot_beg;
-	s64 vol_mem_beg;
-	s64 vol_buf_beg;
-	s64 vol_buf_end;
-	s64 vol_locked;
+	x64le vol_bot_beg;
+	x64le vol_mem_beg;
+	x64le vol_buf_beg;
+	x64le vol_buf_end;
+	s64 vol0_reserved00;
 
 	struct uuid vol_fsid;
 	struct uuid vol_fstype;
-	char vol_name[64];
+	string vol_name[64];
 
-	s32 vol_no;
-	s32 vol_count;
+	s32le vol_no;
+	s32le vol_count;
 
-	u32 vol_version;
-	u32 vol_crc;
-	u32 vol_flags;
-	u32 vol_rootvol;
+	u32le vol_version;
+	x32le vol_crc;
+	x32le vol_flags;
+	u32le vol_rootvol;
 
 	s32 vol_reserved04;
 	s32 vol_reserved05;
 	u32 vol_reserved06;
 	u32 vol_reserved07;
 
-	s32 vol_blocksize;
-	s32 vol_reserved08;
-	s64 vol_nblocks;
+	s64 vol_reserved08;
+	s64 vol_reserved09;
 
-	s64 vol0_stat_bigblocks;
-	s64 vol0_stat_freebigblocks;
-	s64 vol0_stat_bytes;
-	s64 vol0_stat_inodes;
-	s64 vol0_stat_records;
-	u64 vol0_btree_root;
-	u64 vol0_next_tid;
+	s64le vol0_stat_bigblocks;
+	s64le vol0_stat_freebigblocks;
+	s64 vol0_reserved11;
+	s64le vol0_stat_inodes;
+	s64 vol0_reserved10;
+	x64le vol0_btree_root;
+	u64le vol0_next_tid;
 	u64 vol0_unused03;
 
 	struct hammer_blockmap vol0_blockmap[16];
-	u64 vol0_undo_array[128];
+	x64le vol0_undo_array[128];
 };

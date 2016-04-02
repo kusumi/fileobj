@@ -738,6 +738,7 @@ class Container (object):
     def set_yank_buffer(self, buf):
         assert isinstance(buf, filebytes.TYPE)
         l = self.__set_yank_buffer(buf, -1)
+        # these two must be in a set
         self.__yank_buffer[DEF_REG] = l
         self.__yank_buffer['0'] = l
 
@@ -745,6 +746,7 @@ class Container (object):
         assert isinstance(buf, filebytes.TYPE)
         self.__rotate_delete_buffer()
         l = self.__set_yank_buffer(buf, add_right)
+        # these two must be in a set
         self.__yank_buffer[DEF_REG] = l
         self.__yank_buffer['1'] = l
 

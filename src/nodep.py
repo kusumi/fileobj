@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
 import platform
 import sys
 
@@ -54,14 +53,12 @@ def __is_cygwin(name):
         return False
 
 def test():
-    s = os.getenv("FILEOBJ_USE_TEST_NODEP", "")
-    if s.lower() == "false":
-        return -1
     try:
         __test(None, None)
     except Exception:
         e = sys.exc_info()[1]
-        sys.stderr.write("%s\n" % e)
+        for s in str(e).split("\n"):
+            sys.stderr.write("### %s\n" % s)
         sys.exit(1)
 
 if __name__ == '__main__':
