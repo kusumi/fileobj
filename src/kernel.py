@@ -431,10 +431,7 @@ def __has_mremap():
         return False
     if o.has_mremap():
         return True
-    elif setting.use_test_mmap_resize:
-        return o.test_mmap_resize()[0] # should fail if above is False
-    else:
-        return False
+    return o.test_mmap_resize()[0] # should fail if above is False
 
 def test_mmap_resize():
     """Return True,None if resizable otherwise False,str"""

@@ -123,22 +123,22 @@ class Workspace (object):
         i = self.__fileopss.index(o)
         if self.__cur_fileops == o:
             if i == len(self.__fileopss) - 1:
-                self.goto_prev_buffer()
+                self.switch_to_prev_buffer()
             else:
-                self.goto_next_buffer()
+                self.switch_to_next_buffer()
         self.__fileopss.remove(self.__fileopss[i])
         self.__consoles.remove(self.__consoles[i])
 
-    def goto_buffer(self, i):
+    def switch_to_buffer(self, i):
         self.__set_buffer(self.__fileopss[i])
 
-    def goto_first_buffer(self):
+    def switch_to_first_buffer(self):
         self.__set_buffer(self.__fileopss[0])
 
-    def goto_last_buffer(self):
+    def switch_to_last_buffer(self):
         self.__set_buffer(self.__fileopss[-1])
 
-    def goto_next_buffer(self):
+    def switch_to_next_buffer(self):
         if len(self.__fileopss) > 1:
             i = self.__fileopss.index(self.__cur_fileops)
             if i >= len(self.__fileopss) - 1:
@@ -147,7 +147,7 @@ class Workspace (object):
                 o = self.__fileopss[i + 1]
             self.__set_buffer(o)
 
-    def goto_prev_buffer(self):
+    def switch_to_prev_buffer(self):
         if len(self.__fileopss) > 1:
             i = self.__fileopss.index(self.__cur_fileops)
             if i <= 0:

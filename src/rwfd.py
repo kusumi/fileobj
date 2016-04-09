@@ -26,7 +26,6 @@ from __future__ import division
 from . import filebytes
 from . import kernel
 from . import rofd
-from . import setting
 from . import util
 
 class Fileobj (rofd.Fileobj):
@@ -63,7 +62,7 @@ class Fileobj (rofd.Fileobj):
         if siz:
             return siz
         else:
-            return setting.pseudo_sector_size
+            return kernel.get_page_size()
 
     def sync(self):
         siz = self.__get_block_size()

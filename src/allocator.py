@@ -148,7 +148,7 @@ class Allocator (object):
         size = kernel.get_size_safe(f)
         if size == -1:
             log.error("Failed to stat " + f)
-        elif size < setting.mmap_thresh:
+        elif size < setting.alloc_mmap_thresh:
             if self.__is_ro_class(cls):
                 cls = self.robuf
             else:
@@ -156,7 +156,7 @@ class Allocator (object):
         return cls
 
     def __alloc(self, f, offset, length, cls):
-        if not setting.use_alloc_recover:
+        if not setting.use_alloc_degenerate:
             return self.__alloc_fileobj(f, offset, length, cls)
         while cls:
             try:

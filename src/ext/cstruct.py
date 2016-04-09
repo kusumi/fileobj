@@ -231,7 +231,7 @@ def get_text(co, fo, args):
     else:
         f = fileobj.setting.get_path("ext_cstruct")
         if fileobj.path.is_noent(f):
-            return "Need " + f + " with struct definition"
+            return "Need {0} with struct definition".format(f)
         if not os.path.isfile(f):
             return "Can not read " + f
 

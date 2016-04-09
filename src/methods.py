@@ -105,75 +105,129 @@ def __call_context(self, fn, i=0):
     fn(i)
     self.co.lrepaintf()
 
-def go_up(self, amp=None, opc=None, args=None, raw=None):
+def cursor_up(self, amp, opc, args, raw):
+    go_up(self, amp)
+
+def cursor_down(self, amp, opc, args, raw):
+    go_down(self, amp)
+
+def cursor_left(self, amp, opc, args, raw):
+    go_left(self, amp)
+
+def cursor_right(self, amp, opc, args, raw):
+    go_right(self, amp)
+
+def cursor_pprev(self, amp, opc, args, raw):
+    go_pprev(self, amp)
+
+def cursor_hpprev(self, amp, opc, args, raw):
+    go_hpprev(self, amp)
+
+def cursor_pnext(self, amp, opc, args, raw):
+    go_pnext(self, amp)
+
+def cursor_hpnext(self, amp, opc, args, raw):
+    go_hpnext(self, amp)
+
+def cursor_head(self, amp, opc, args, raw):
+    go_head(self, amp)
+
+def cursor_tail(self, amp, opc, args, raw):
+    go_tail(self, amp)
+
+def cursor_lhead(self, amp, opc, args, raw):
+    go_lhead(self, amp)
+
+def cursor_ltail(self, amp, opc, args, raw):
+    go_ltail(self, amp)
+
+def cursor_up_lhead(self, amp, opc, args, raw):
+    go_up_lhead(self, amp)
+
+def cursor_down_lhead(self, amp, opc, args, raw):
+    go_down_lhead(self, amp)
+
+def cursor_phead(self, amp, opc, args, raw):
+    go_phead(self, amp)
+
+def cursor_pcenter(self, amp, opc, args, raw):
+    go_pcenter(self, amp)
+
+def cursor_ptail(self, amp, opc, args, raw):
+    go_ptail(self, amp)
+
+def cursor_to(self, amp, opc, args, raw):
+    go_to(self, amp)
+
+def go_up(self, amp=None):
     if self.co.go_up(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_down(self, amp=None, opc=None, args=None, raw=None):
+def go_down(self, amp=None):
     if self.co.go_down(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_left(self, amp=None, opc=None, args=None, raw=None):
+def go_left(self, amp=None):
     if self.co.go_left(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_right(self, amp=None, opc=None, args=None, raw=None):
+def go_right(self, amp=None):
     if self.co.go_right(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_pprev(self, amp=None, opc=None, args=None, raw=None):
+def go_pprev(self, amp=None):
     if self.co.go_pprev(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_hpprev(self, amp=None, opc=None, args=None, raw=None):
+def go_hpprev(self, amp=None):
     if self.co.go_hpprev(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_pnext(self, amp=None, opc=None, args=None, raw=None):
+def go_pnext(self, amp=None):
     if self.co.go_pnext(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_hpnext(self, amp=None, opc=None, args=None, raw=None):
+def go_hpnext(self, amp=None):
     if self.co.go_hpnext(get_int(amp)) == -1:
         self.co.lrepaintf()
 
-def go_head(self, amp=None, opc=None, args=None, raw=None):
+def go_head(self, amp=None):
     if self.co.go_head(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_tail(self, amp=None, opc=None, args=None, raw=None):
+def go_tail(self, amp=None):
     if self.co.go_tail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_lhead(self, amp=None, opc=None, args=None, raw=None):
+def go_lhead(self, amp=None):
     if self.co.go_lhead() == -1:
         self.co.lrepaintf()
 
-def go_ltail(self, amp=None, opc=None, args=None, raw=None):
+def go_ltail(self, amp=None):
     if self.co.go_ltail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_up_lhead(self, amp=None, opc=None, args=None, raw=None):
-    go_up(self, amp, opc, args, raw)
-    go_lhead(self, amp, opc, args, raw)
+def go_up_lhead(self, amp=None):
+    go_up(self, amp)
+    go_lhead(self, amp)
 
-def go_down_lhead(self, amp=None, opc=None, args=None, raw=None):
-    go_down(self, amp, opc, args, raw)
-    go_lhead(self, amp, opc, args, raw)
+def go_down_lhead(self, amp=None):
+    go_down(self, amp)
+    go_lhead(self, amp)
 
-def go_phead(self, amp=None, opc=None, args=None, raw=None):
+def go_phead(self, amp=None):
     if self.co.go_phead(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_pcenter(self, amp=None, opc=None, args=None, raw=None):
+def go_pcenter(self, amp=None):
     if self.co.go_pcenter() == -1:
         self.co.lrepaintf()
 
-def go_ptail(self, amp=None, opc=None, args=None, raw=None):
+def go_ptail(self, amp=None):
     if self.co.go_ptail(get_int(amp) - 1) == -1:
         self.co.lrepaintf()
 
-def go_to(self, amp=None, opc=None, args=None, raw=None):
+def go_to(self, amp=None):
     if amp is None:
         pos = 0
     else:
@@ -188,25 +242,25 @@ def __is_zero(b):
 def __is_non_zero(b):
     return b != filebytes.ZERO
 
-def go_next_char(self, amp, opc, args, raw):
-    __go_next_matched(self, get_int(amp), __isprint)
+def cursor_next_char(self, amp, opc, args, raw):
+    __cursor_next_matched(self, get_int(amp), __isprint)
 
-def go_next_zero(self, amp, opc, args, raw):
-    __go_next_matched(self, get_int(amp), __is_zero)
+def cursor_next_zero(self, amp, opc, args, raw):
+    __cursor_next_matched(self, get_int(amp), __is_zero)
 
-def go_next_nonzero(self, amp, opc, args, raw):
-    __go_next_matched(self, get_int(amp), __is_non_zero)
+def cursor_next_nonzero(self, amp, opc, args, raw):
+    __cursor_next_matched(self, get_int(amp), __is_non_zero)
 
-def go_prev_char(self, amp, opc, args, raw):
-    __go_prev_matched(self, get_int(amp), __isprint)
+def cursor_prev_char(self, amp, opc, args, raw):
+    __cursor_prev_matched(self, get_int(amp), __isprint)
 
-def go_prev_zero(self, amp, opc, args, raw):
-    __go_prev_matched(self, get_int(amp), __is_zero)
+def cursor_prev_zero(self, amp, opc, args, raw):
+    __cursor_prev_matched(self, get_int(amp), __is_zero)
 
-def go_prev_nonzero(self, amp, opc, args, raw):
-    __go_prev_matched(self, get_int(amp), __is_non_zero)
+def cursor_prev_nonzero(self, amp, opc, args, raw):
+    __cursor_prev_matched(self, get_int(amp), __is_non_zero)
 
-def __go_next_matched(self, cnt, fn):
+def __cursor_next_matched(self, cnt, fn):
     n = self.co.get_buffer_size()
     pos = self.co.get_pos()
     while True:
@@ -231,7 +285,7 @@ def __go_next_matched(self, cnt, fn):
             self.co.flash("Search interrupted")
             return
 
-def __go_prev_matched(self, cnt, fn):
+def __cursor_prev_matched(self, cnt, fn):
     n = self.co.get_buffer_size()
     pos = self.co.get_pos()
     while True:
@@ -277,27 +331,27 @@ def end_read_delayed_input(self, amp, opc, args, raw):
             return
     return CONTINUE
 
-def goto_first_buffer(self, amp, opc, args, raw):
+def switch_to_first_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
-        self.co.goto_first_buffer()
+        self.co.switch_to_first_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_last_buffer(self, amp, opc, args, raw):
+def switch_to_last_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
-        self.co.goto_last_buffer()
+        self.co.switch_to_last_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_next_buffer(self, amp, opc, args, raw):
+def switch_to_next_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
-        self.co.goto_next_buffer()
+        self.co.switch_to_next_buffer()
         self.co.lrepaintf()
         return RETURN
 
-def goto_prev_buffer(self, amp, opc, args, raw):
+def switch_to_prev_buffer(self, amp, opc, args, raw):
     if self.co.get_buffer_count() > 1:
-        self.co.goto_prev_buffer()
+        self.co.switch_to_prev_buffer()
         self.co.lrepaintf()
         return RETURN
 
@@ -309,31 +363,31 @@ def refresh_container(self, amp, opc, args, raw):
     self.co.refresh()
     self.co.repaint()
 
-def goto_next_workspace(self, amp, opc, args, raw):
+def switch_to_next_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
-        self.co.goto_next_workspace()
+        self.co.switch_to_next_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_prev_workspace(self, amp, opc, args, raw):
+def switch_to_prev_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
-        self.co.goto_prev_workspace()
+        self.co.switch_to_prev_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_top_workspace(self, amp, opc, args, raw):
+def switch_to_top_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
-        self.co.goto_top_workspace()
+        self.co.switch_to_top_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
-def goto_bottom_workspace(self, amp, opc, args, raw):
+def switch_to_bottom_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
         self.co.wbrepaint(False)
-        self.co.goto_bottom_workspace()
+        self.co.switch_to_bottom_workspace()
         self.co.wbrepaint(True)
         return RETURN
 
@@ -1295,7 +1349,7 @@ def get_mark(self, amp, opc, args, raw):
         f, pos = self.co.get_path(), self.co.get_mark(key)
     if f is not None and pos != -1:
         if self.co.get_path() != f:
-            self.co.goto_buffer(f)
+            self.co.switch_to_buffer(f)
             self.co.lrepaintf()
         go_to(self, pos)
     else:
@@ -1556,7 +1610,7 @@ def open_buffer(self, amp, opc, args, raw):
         if ret:
             self.co.flash(ret)
         elif self.co.has_buffer(f):
-            self.co.goto_buffer(f)
+            self.co.switch_to_buffer(f)
             self.co.lrepaintf()
             show_current(self, amp, opc, args, raw)
         else:
@@ -1601,7 +1655,7 @@ def __save_buffer(self, args, force):
         return -1
     try:
         if overwrite:
-            buf = self.co.readall() # could fail via MemoryError
+            buf = self.co.readall()
             msg, new = __overwrite_buffer(self, f, buf)
         else:
             msg, new = self.co.flush(f)
@@ -1691,7 +1745,7 @@ def __save_partial(self, args, fn, force):
     if f is None:
         return -1
     try:
-        buf = fn(self) # could fail via MemoryError
+        buf = fn(self)
         if not buf:
             return -1
         if overwrite:
@@ -1746,7 +1800,7 @@ def quit(self, amp, opc, args, raw):
         f = self.co.get_path()
         if not self.co.has_buffer(f, fn):
             f = l[0]
-            self.co.goto_buffer(f)
+            self.co.switch_to_buffer(f)
             self.co.lrepaintf()
         self.co.flash("No write since last change: " + f)
 

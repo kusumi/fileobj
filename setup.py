@@ -37,16 +37,16 @@ if __name__ == '__main__':
     from distutils.core import setup
     import src.version
 
+    # Two warnings expected on sdist.
+    # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
+    # warning: sdist: standard file not found: should have one of README, README.txt
+
     setup(name      = "fileobj",
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
-        url         = "https://sourceforge.net/projects/fileobj",
+        url         = "https://sourceforge.net/projects/fileobj/",
         description = "Hex Editor for Linux/BSD",
         license     = "BSD License (2-clause)",
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],
         package_dir = {"fileobj" : "src", "fileobj.ext" : "src/ext",})
-
-    if sys.argv[1] == "install":
-        print(">>> Complete")
-        print(">>> README is available at " + src.version.get_readme_url())

@@ -543,8 +543,8 @@ __mktmp_no_delete = tempfile.mkstemp
 
 def open_temp_file(binary=True, delete=True):
     mode = 'w+b' if binary else 'w+'
-    dir = setting.get_userdir_path()
-    if not dir:
+    dir = setting.user_dir
+    if not os.path.isdir(dir):
         dir = '.'
     if is_python_version_or_ht(2, 6):
         try:

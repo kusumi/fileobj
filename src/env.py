@@ -37,33 +37,13 @@ def __iter_env_name():
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_USE_TRACE_SYMLINK"
     yield "FILEOBJ_TRACE_WORD_SIZE"
-    yield "FILEOBJ_TRACE_PATH"
-    yield "FILEOBJ_TRACE_BASE"
-    yield "FILEOBJ_TRACE_DIR"
-    yield "FILEOBJ_STREAM_PATH"
-    yield "FILEOBJ_STREAM_BASE"
-    yield "FILEOBJ_STREAM_DIR"
-    yield "FILEOBJ_USERDIR_PATH"
-    yield "FILEOBJ_USERDIR_BASE"
-    yield "FILEOBJ_USERDIR_DIR"
     yield "FILEOBJ_PROCFS_MOUNT_POINT"
     yield "FILEOBJ_USE_READONLY"
     yield "FILEOBJ_COLOR_FG"
     yield "FILEOBJ_COLOR_BG"
     yield "FILEOBJ_USE_LOG"
     yield "FILEOBJ_LOG_LEVEL"
-    yield "FILEOBJ_LOG_PATH"
-    yield "FILEOBJ_LOG_BASE"
-    yield "FILEOBJ_LOG_DIR"
-    yield "FILEOBJ_USE_HISTORY"
     yield "FILEOBJ_MAX_HISTORY"
-    yield "FILEOBJ_HISTORY_PATH"
-    yield "FILEOBJ_HISTORY_BASE"
-    yield "FILEOBJ_HISTORY_DIR"
-    yield "FILEOBJ_USE_MARKS"
-    yield "FILEOBJ_MARKS_PATH"
-    yield "FILEOBJ_MARKS_BASE"
-    yield "FILEOBJ_MARKS_DIR"
     yield "FILEOBJ_BARRIER_SIZE"
     yield "FILEOBJ_BARRIER_EXTEND"
     yield "FILEOBJ_USE_ALT_CHGAT"
@@ -73,12 +53,10 @@ def __iter_env_name():
     yield "FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
     yield "FILEOBJ_USE_FULL_STATUS_WINDOW"
     yield "FILEOBJ_USE_STATUS_WINDOW_FRAME"
-    yield "FILEOBJ_USE_HIGHLIGHT_SEARCH"
     yield "FILEOBJ_SCREEN_ATTR_POSSTR"
     yield "FILEOBJ_SCREEN_ATTR_CURSOR"
     yield "FILEOBJ_SCREEN_ATTR_SEARCH"
     yield "FILEOBJ_SCREEN_ATTR_VISUAL"
-    yield "FILEOBJ_USE_POSITION_PERCENTAGE"
     yield "FILEOBJ_USE_ADDRESS_NUM_OFFSET"
     yield "FILEOBJ_ADDRESS_NUM_WIDTH"
     yield "FILEOBJ_ADDRESS_NUM_RADIX"
@@ -93,18 +71,16 @@ def __iter_env_name():
     yield "FILEOBJ_TERMINAL_HEIGHT"
     yield "FILEOBJ_TERMINAL_WIDTH"
     yield "FILEOBJ_USE_MAGIC_SCAN"
-    yield "FILEOBJ_USE_ALLOC_RECOVER"
+    yield "FILEOBJ_USE_ALLOC_DEGENERATE"
     yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
     yield "FILEOBJ_USE_ADAPTIVE_FILEOPS"
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
-    yield "FILEOBJ_USE_TEST_MMAP_RESIZE"
-    yield "FILEOBJ_MMAP_THRESH"
+    yield "FILEOBJ_ALLOC_MMAP_THRESH"
     yield "FILEOBJ_USE_VM_NON_LINUX"
     yield "FILEOBJ_USE_RRVM_RAW"
     yield "FILEOBJ_USE_PS_AUX"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
-    yield "FILEOBJ_ROBUF_SEARCH_THRESH_RATIO"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
@@ -116,9 +92,13 @@ def __iter_env_name():
     yield "FILEOBJ_USE_PUTTY_CAVEAT"
     yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
     yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
-    yield "FILEOBJ_USE_BUFFER_SIZE_HEURISTICS"
     yield "FILEOBJ_GENERAL_BUFFER_SIZE"
-    yield "FILEOBJ_PSEUDO_SECTOR_SIZE"
+    yield "FILEOBJ_USER_DIR"
+    yield "FILEOBJ_FILE_TRACE_NAME"
+    yield "FILEOBJ_FILE_STREAM_NAME"
+    yield "FILEOBJ_FILE_LOG_NAME"
+    yield "FILEOBJ_FILE_HISTORY_NAME"
+    yield "FILEOBJ_FILE_MARKS_NAME"
     yield "FILEOBJ_KEY_TAB"
     yield "FILEOBJ_KEY_ENTER"
     yield "FILEOBJ_KEY_ESCAPE"
@@ -186,14 +166,6 @@ def __env_ge_zero(e):
     except Exception:
         pass
 
-def __env_to_ratio(e):
-    try:
-        x = int(e)
-        if 0 <= x <= 100:
-            return x / 100
-    except Exception:
-        pass
-
 def __get_setting_use_debug():
     return test_bool("FILEOBJ_USE_DEBUG", False)
 
@@ -232,37 +204,6 @@ def __get_setting_trace_word_size():
     else:
         return _
 
-def __get_setting_trace_path():
-    return getenv("FILEOBJ_TRACE_PATH")
-
-def __get_setting_trace_base():
-    return test_name("FILEOBJ_TRACE_BASE", "trace")
-
-def __get_setting_trace_dir():
-    return getenv("FILEOBJ_TRACE_DIR")
-
-def __get_setting_stream_path():
-    return getenv("FILEOBJ_STREAM_PATH")
-
-def __get_setting_stream_base():
-    return getenv("FILEOBJ_STREAM_BASE")
-
-def __get_setting_stream_dir():
-    return getenv("FILEOBJ_STREAM_DIR")
-
-def __get_setting_userdir_path():
-    return getenv("FILEOBJ_USERDIR_PATH")
-
-def __get_setting_userdir_base():
-    return test_name("FILEOBJ_USERDIR_BASE", ".fileobj")
-
-def __get_setting_userdir_dir():
-    e = getenv("FILEOBJ_USERDIR_DIR")
-    if e is None:
-        return __get_home()
-    else:
-        return e
-
 def __get_setting_procfs_mount_point():
     return test_name("FILEOBJ_PROCFS_MOUNT_POINT", "")
 
@@ -289,41 +230,8 @@ def __get_setting_use_log():
 def __get_setting_log_level():
     return test_name("FILEOBJ_LOG_LEVEL", "WARNING")
 
-def __get_setting_log_path():
-    return getenv("FILEOBJ_LOG_PATH")
-
-def __get_setting_log_base():
-    return test_name("FILEOBJ_LOG_BASE", "log")
-
-def __get_setting_log_dir():
-    return getenv("FILEOBJ_LOG_DIR")
-
-def __get_setting_use_history():
-    return test_bool("FILEOBJ_USE_HISTORY", True)
-
 def __get_setting_max_history():
-    return test_gt_zero("FILEOBJ_MAX_HISTORY", 100)
-
-def __get_setting_history_path():
-    return getenv("FILEOBJ_HISTORY_PATH")
-
-def __get_setting_history_base():
-    return test_name("FILEOBJ_HISTORY_BASE", "history")
-
-def __get_setting_history_dir():
-    return getenv("FILEOBJ_HISTORY_DIR")
-
-def __get_setting_use_marks():
-    return test_bool("FILEOBJ_USE_MARKS", True)
-
-def __get_setting_marks_path():
-    return getenv("FILEOBJ_MARKS_PATH")
-
-def __get_setting_marks_base():
-    return test_name("FILEOBJ_MARKS_BASE", "marks")
-
-def __get_setting_marks_dir():
-    return getenv("FILEOBJ_MARKS_DIR")
+    return test_gt_zero("FILEOBJ_MAX_HISTORY", 1000)
 
 def __get_setting_barrier_size():
     return test_gt_zero("FILEOBJ_BARRIER_SIZE", 8192)
@@ -352,9 +260,6 @@ def __get_setting_use_full_status_window():
 def __get_setting_use_status_window_frame():
     return test_bool("FILEOBJ_USE_STATUS_WINDOW_FRAME", True)
 
-def __get_setting_use_highlight_search():
-    return test_bool("FILEOBJ_USE_HIGHLIGHT_SEARCH", True)
-
 def __get_setting_screen_attr_posstr():
     return __get_screen_attr("FILEOBJ_SCREEN_ATTR_POSSTR")
 
@@ -376,9 +281,6 @@ def __get_screen_attr(envname):
         if x:
             ret.append(x.lower())
     return ret
-
-def __get_setting_use_position_percentage():
-    return test_bool("FILEOBJ_USE_POSITION_PERCENTAGE", True)
 
 def __get_setting_use_address_num_offset():
     return test_bool("FILEOBJ_USE_ADDRESS_NUM_OFFSET", False)
@@ -456,8 +358,8 @@ def __get_setting_terminal_width():
 def __get_setting_use_magic_scan():
     return test_bool("FILEOBJ_USE_MAGIC_SCAN", True)
 
-def __get_setting_use_alloc_recover():
-    return test_bool("FILEOBJ_USE_ALLOC_RECOVER", True)
+def __get_setting_use_alloc_degenerate():
+    return test_bool("FILEOBJ_USE_ALLOC_DEGENERATE", True)
 
 def __get_setting_use_alloc_noent_rwbuf():
     return test_bool("FILEOBJ_USE_ALLOC_NOENT_RWBUF", True)
@@ -471,11 +373,8 @@ def __get_setting_use_adaptive_fileops():
 def __get_setting_use_auto_fileops_cleanup():
     return test_bool("FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True)
 
-def __get_setting_use_test_mmap_resize():
-    return test_bool("FILEOBJ_USE_TEST_MMAP_RESIZE", True)
-
-def __get_setting_mmap_thresh():
-    return test_ge_zero("FILEOBJ_MMAP_THRESH", __get_page_size())
+def __get_setting_alloc_mmap_thresh():
+    return test_ge_zero("FILEOBJ_ALLOC_MMAP_THRESH", PSEUDO_PAGE_SIZE)
 
 def __get_setting_use_vm_non_linux():
     return test_bool("FILEOBJ_USE_VM_NON_LINUX", False)
@@ -487,14 +386,7 @@ def __get_setting_use_ps_aux():
     return test_bool("FILEOBJ_USE_PS_AUX", True)
 
 def __get_setting_robuf_chunk_size():
-    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", __get_page_size())
-
-def __get_setting_robuf_search_thresh_ratio():
-    e = getenv("FILEOBJ_ROBUF_SEARCH_THRESH_RATIO")
-    if e is None:
-        return None
-    else:
-        return __env_to_ratio(e)
+    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", PSEUDO_PAGE_SIZE)
 
 def __get_setting_rwbuf_chunk_balance_interval():
     return test_gt_zero("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 20)
@@ -547,14 +439,27 @@ def __get_setting_netbsd_sizeof_disklabel():
 def __get_setting_dragonflybsd_sizeof_partinfo():
     return test_gt_zero("FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO", -1)
 
-def __get_setting_use_buffer_size_heuristics():
-    return test_bool("FILEOBJ_USE_BUFFER_SIZE_HEURISTICS", True)
-
 def __get_setting_general_buffer_size():
     return test_gt_zero("FILEOBJ_GENERAL_BUFFER_SIZE", -1)
 
-def __get_setting_pseudo_sector_size():
-    return test_gt_zero("FILEOBJ_PSEUDO_SECTOR_SIZE", 512)
+def __get_setting_user_dir():
+    d = os.path.join(__get_home(), ".fileobj")
+    return test_name("FILEOBJ_USER_DIR", d)
+
+def __get_setting_file_trace_name():
+    return test_name("FILEOBJ_FILE_TRACE_NAME", "trace")
+
+def __get_setting_file_stream_name():
+    return getenv("FILEOBJ_FILE_STREAM_NAME")
+
+def __get_setting_file_log_name():
+    return test_name("FILEOBJ_FILE_LOG_NAME", "log")
+
+def __get_setting_file_history_name():
+    return test_name("FILEOBJ_FILE_HISTORY_NAME", "history")
+
+def __get_setting_file_marks_name():
+    return test_name("FILEOBJ_FILE_MARKS_NAME", "marks")
 
 def __get_setting_key_tab():
     return __get_setting_key("FILEOBJ_KEY_TAB")
@@ -605,13 +510,6 @@ def __get_setting_key(envname):
     except Exception:
         return None
 
-PSEUDO_PAGE_SIZE = 4096 # pretend 4 KiB
-def  __get_page_size():
-    try:
-        return os.sysconf("SC_PAGE_SIZE") # FIX_ME
-    except Exception:
-        return PSEUDO_PAGE_SIZE
-
 def __get_home():
     return os.path.expanduser("~")
 
@@ -645,3 +543,8 @@ def iter_setting():
         name = x[len("FILEOBJ_"):].lower()
         fn = getattr(this, "__get_setting_" + name)
         yield name, fn()
+
+try:
+    PSEUDO_PAGE_SIZE = os.sysconf("SC_PAGE_SIZE") # FIX_ME
+except Exception:
+    PSEUDO_PAGE_SIZE = 4096 # pretend 4 KiB

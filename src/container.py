@@ -107,7 +107,7 @@ class Container (object):
 
         for i in range(1, wspnum):
             o = self.__cur_workspace.clone()
-            o.goto_buffer(i % len(self.__fileobjs))
+            o.switch_to_buffer(i % len(self.__fileobjs))
             self.__workspaces.append(o)
             if self.__do_build(True) == workspace.BUILD_FAILED:
                 self.__remove_workspace(o)
@@ -209,7 +209,7 @@ class Container (object):
             if o:
                 return self.__add_buffer(o, self.__get_console())
         else:
-            self.__cur_workspace.goto_buffer(
+            self.__cur_workspace.switch_to_buffer(
                 self.__get_buffer_index(f))
 
     def add_extension(self, fn, args):
@@ -234,7 +234,7 @@ class Container (object):
         self.__fileobjs.insert(i, o)
         for wsp in self.__workspaces:
             wsp.add_buffer(i, fileops.Fileops(o), con)
-        self.__cur_workspace.goto_buffer(i)
+        self.__cur_workspace.switch_to_buffer(i)
         return o.get_path()
 
     def remove_buffer(self, f, reload=False):
@@ -255,10 +255,10 @@ class Container (object):
         else:
             return -1
 
-    def goto_buffer(self, f):
+    def switch_to_buffer(self, f):
         i = self.__get_buffer_index(f)
         if i != -1:
-            self.__cur_workspace.goto_buffer(i)
+            self.__cur_workspace.switch_to_buffer(i)
         else:
             return -1
 
@@ -457,7 +457,7 @@ class Container (object):
             self.__workspaces.index(cur_workspace), new_workspace)
         self.__set_workspace(new_workspace)
         if self.build() != -1:
-            new_workspace.goto_buffer(i)
+            new_workspace.switch_to_buffer(i)
             return self.__get_workspace_index()
         else:
             self.__remove_workspace(new_workspace)
@@ -468,9 +468,9 @@ class Container (object):
         if len(self) > 1:
             o = self.__cur_workspace
             if self.__workspaces.index(o) == len(self) - 1:
-                self.goto_prev_workspace()
+                self.switch_to_prev_workspace()
             else:
-                self.goto_next_workspace()
+                self.switch_to_next_workspace()
             self.__remove_workspace(o)
             self.build()
             return self.__get_workspace_index()
@@ -496,14 +496,14 @@ class Container (object):
         self.__clear_workspace_delta()
         self.__workspaces.remove(o)
 
-    def goto_next_workspace(self):
+    def switch_to_next_workspace(self):
         return self.__set_workspace(self.__get_next_workspace())
-    def goto_prev_workspace(self):
+    def switch_to_prev_workspace(self):
         return self.__set_workspace(self.__get_prev_workspace())
 
-    def goto_top_workspace(self):
+    def switch_to_top_workspace(self):
         return self.__set_workspace(self.__workspaces[0])
-    def goto_bottom_workspace(self):
+    def switch_to_bottom_workspace(self):
         return self.__set_workspace(self.__workspaces[len(self) - 1])
 
     def __get_workspace_index(self, o=None):
@@ -618,11 +618,11 @@ class Container (object):
                 if l:
                     self.buffer_input(l)
                 else:
-                    self.flash("Failed to read from " + f)
+                    self.flash("Failed to read " + f)
             except Exception as e:
                 self.flash(e)
         elif f:
-            self.flash("Can not read from " + f)
+            self.flash("Can not read " + f)
 
     def __read_stream(self):
         if screen.test_signal():

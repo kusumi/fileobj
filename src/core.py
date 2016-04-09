@@ -93,7 +93,7 @@ def dispatch(optargs=None):
     parser.add_option("-B",
         action="store_true",
         default=False,
-        help="Buffer allocation mode")
+        help="Use malloc based buffer for regular files, which may put pressure on the system depending on the file size")
     parser.add_option("-d",
         action="store_true",
         default=False,
@@ -241,8 +241,7 @@ def dispatch(optargs=None):
         log.error(msg)
 
     if ret == -1:
-        msg = "Failed to make user directory {0}".format(
-            setting.get_userdir_path())
+        msg = "Failed to make user directory {0}".format(setting.user_dir)
         log.error(msg)
 
     log.debug(sys.argv)

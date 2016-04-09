@@ -26,6 +26,7 @@ import os
 from . import filebytes
 from . import kernel
 from . import romap
+from . import setting
 from . import util
 
 class Fileobj (romap.Fileobj):
@@ -113,6 +114,12 @@ class Fileobj (romap.Fileobj):
         msg = "use -B option to enable " + s
         if kernel.has_mremap():
             return "Can not {0}, {1}".format(s, msg)
+        elif setting.use_debug:
+            try:
+                self.map.resize(self.get_size())
+                assert 0, "mmap resize should fail"
+            except Exception as e:
+                return "{0}, {1}".format(repr(e), msg)
         else:
             return "{0} has no mremap(2), {1}".format(
                 util.get_os_name(), msg)

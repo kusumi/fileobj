@@ -39,7 +39,7 @@ class Marks (object):
             f = setting.get_marks_path()
         self.__path = path.Path(f)
         self.__data = {}
-        if setting.use_marks:
+        if _is_valid_path(self.__path):
             self.__read_marks()
 
     def __iter__(self):
@@ -47,7 +47,7 @@ class Marks (object):
             yield f, dict(self.__data.get(f))
 
     def flush(self):
-        if setting.use_marks:
+        if _is_valid_path(self.__path):
             self.__write_marks()
 
     def __read_marks(self):
@@ -77,10 +77,8 @@ class Marks (object):
             yield ff, d
 
     def __write_marks(self):
+        assert _is_valid_path(self.__path)
         f = self.__path.path
-        if not self.__path.is_file and not self.__path.is_noent:
-            log.error("Can not write to " + f)
-            return -1
         try:
             fsync = kernel.fsync
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
@@ -104,6 +102,9 @@ class Marks (object):
 
     def set(self, f, d):
         self.__data[f] = d
+
+def _is_valid_path(o):
+    return o.is_file or o.is_noent
 
 def _string_to_data(s):
     m = re.match(r"^(\S)(\d+)$", s)

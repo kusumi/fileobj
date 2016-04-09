@@ -81,16 +81,15 @@ class Fileobj (fileobj.Fileobj):
         return setting.robuf_chunk_size
 
     def set_search_thresh(self):
-        r = setting.robuf_search_thresh_ratio
-        if r is None: # heuristic
-            if len(self.cbuf) > 10000:
-                r = 0.01
-            elif len(self.cbuf) > 1000:
-                r = 0.02
-            elif len(self.cbuf) > 20:
-                r = 0.1
-            else:
-                r = 0.5
+        # heuristic
+        if len(self.cbuf) > 10000:
+            r = 0.01
+        elif len(self.cbuf) > 1000:
+            r = 0.02
+        elif len(self.cbuf) > 20:
+            r = 0.1
+        else:
+            r = 0.5
         self.__thresh = int(self.get_size() * r)
         log.debug("{0} has search thresh at {1}[B]/{2}[B]".format(
             self.get_short_path(),

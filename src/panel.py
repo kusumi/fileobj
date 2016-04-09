@@ -369,14 +369,8 @@ class DisplayCanvas (Canvas):
     def fill_posstr(self):
         return
 
-    def __get_update_search_word(self):
-        if setting.use_highlight_search:
-            s = self.fileops.get_search_word()
-            if s:
-                return s
-
     def update_search(self, pos):
-        s = self.__get_update_search_word()
+        s = self.fileops.get_search_word()
         if not s:
             return -1
         beg = self.get_page_offset()
@@ -384,7 +378,7 @@ class DisplayCanvas (Canvas):
         self.__update_search(pos, beg, end, s)
 
     def range_update_search(self, pos, beg, end):
-        s = self.__get_update_search_word()
+        s = self.fileops.get_search_word()
         if not s:
             return -1
         if beg > end:
@@ -620,19 +614,20 @@ class StatusCanvas (Canvas, default_addon):
         else:
             return util.NO_NAME
 
-    def get_current(self):
-        pos = self.fileops.get_pos()
-        siz = self.fileops.get_size()
-        fmt = self.__nstr[setting.status_num_radix]
-        l = fmt.format(siz), fmt.format(pos)
-
-        if setting.use_position_percentage:
-            per = "{0:.1f}".format(self.fileops.get_pos_percentage())
-            if per.endswith(".0"):
-                per = per[:-2]
-            return "{0}[B] {1:>4}% {2}".format(l[0], per, l[1])
+    def get_status_common1(self):
+        if self.fileops.is_dirty():
+            return " [+]"
         else:
-            return "{0}[B] {1}".format(*l)
+            return ""
+
+    def get_status_common2(self):
+        fmt = self.__nstr[setting.status_num_radix]
+        siz = fmt.format(self.fileops.get_size())
+        pos = fmt.format(self.fileops.get_pos())
+        per = "{0:.1f}".format(self.fileops.get_pos_percentage())
+        if per.endswith(".0"):
+            per = per[:-2]
+        return "{0}[B] {1:>4}% {2}".format(siz, per, pos)
 
 class FullStatusCanvas (StatusCanvas):
     def set_buffer(self, fileops):
@@ -654,12 +649,11 @@ class FullStatusCanvas (StatusCanvas):
     def iter_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
-        if self.fileops.is_dirty():
-            s += " [+]"
+        s += self.get_status_common1()
         yield i, s
 
         i, s = util.iter_next(g)
-        s += self.get_current()
+        s += self.get_status_common2()
         x = self.fileops.read(self.fileops.get_pos(), 1)
         if x:
             n = filebytes.ord(x)
@@ -685,10 +679,9 @@ class SingleStatusCanvas (StatusCanvas):
     def iter_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
-        if self.fileops.is_dirty():
-            s += " [+]"
+        s += self.get_status_common1()
         s += ' '
-        s += self.get_current()
+        s += self.get_status_common2()
         yield i, s
 
     def sync_cursor(self):

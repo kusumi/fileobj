@@ -102,14 +102,14 @@ class History (object):
         assert "#" not in prefix
         self.__path = path.Path(f)
         self.__data = dict([(k, _data(k)) for k in prefix])
-        if setting.use_history:
+        if _is_valid_path(self.__path):
             self.__read_history()
 
     def __iter__(self):
         return iter(self.__data.items())
 
     def flush(self):
-        if setting.use_history:
+        if _is_valid_path(self.__path):
             self.__write_history()
 
     def __read_history(self):
@@ -131,10 +131,8 @@ class History (object):
             log.error("Failed to read {0}, {1}".format(f, e))
 
     def __write_history(self):
+        assert _is_valid_path(self.__path)
         f = self.__path.path
-        if not self.__path.is_file and not self.__path.is_noent:
-            log.error("Can not write to " + f)
-            return -1
         try:
             fsync = kernel.fsync
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
@@ -166,6 +164,9 @@ class History (object):
 
     def get_newer(self, k, word):
         return self.__data[k].get_newer(word)
+
+def _is_valid_path(o):
+    return o.is_file or o.is_noent
 
 def _string_to_data(s):
     return s.split(' ', 1)

@@ -1,15 +1,15 @@
-fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
+fileobj ([v0.7.29](https://github.com/kusumi/fileobj/releases/tag/v0.7.29))
 =======
 
 ## About
 
-+ [http://sourceforge.net/projects/fileobj/](http://sourceforge.net/projects/fileobj/)
++ https://sourceforge.net/projects/fileobj/
 
 + fileobj is a portable hex editor with vi like interface. This software is written in Python and works on Python 2.6 or above. This software supports Linux distributions and BSDs in general. Other Unix-like operating systems with ncurses are experimentally supported. This software provides basic vi commands for binary editing. Features include insert, replace, delete data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, multiple buffers support, multiple windows support, block device (raw disk) support, mapping binary data to C struct, etc.
 
-+ Repository is available at GitHub [https://github.com/kusumi/fileobj/tree/v0.7](https://github.com/kusumi/fileobj/tree/v0.7)
++ Repository is available at https://github.com/kusumi/fileobj/tree/v0.7
 
-+ See CHANGES for changes
++ See [CHANGES](https://github.com/kusumi/fileobj/blob/v0.7/CHANGES) for changes
 
 ## Supported Python versions
 
@@ -23,9 +23,13 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
 |:----|:-----|:------|:------|:-----------|:---------------|:------|:---------------|
 |o    |o     |o      |o      |o           |o (experimental)|-      |? (experimental)|
 
+## Prerequisites
+
++ ncurses
+
 ## Install
 
-+ Uninstall previous version if exists
++ Uninstalling older version(s) first is recommended if exists
 
 + Run *setup.py* using Python 2
 
@@ -34,8 +38,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.7.28
-        $ fileobj
+        v0.7.29
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
 
@@ -46,10 +49,13 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ sudo python3 ./script/check.py
         $ fileobj --version
-        v0.7.28
-        $ fileobj
+        v0.7.29
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation
+
++ Running *./script/check.py* is optional which only checks possible conflict with already installed older version(s)
+
++ Binary package for older version is available on FreeBSD and DragonFlyBSD, see *Note for BSDs*
 
 ## Uninstall
 
@@ -58,6 +64,8 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
 ## Examples
 
 + Note that some commands can take *[count]* prefix, see *List of commands* section for details
+
++ Note that *offset 0* means the first byte of the buffer (*offset 1* is the second byte)
 
 + Print the help message and exit
 
@@ -76,7 +84,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ fileobj
           (command):q<ENTER>
 
-+ Run the program and abandon input that has been typed
++ Run the program and discard input that has been typed after the previous command
 
         $ fileobj
           (command)ttttttttt<ESC>
@@ -131,7 +139,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           or
           (command)<RIGHT>
 
-+ Open a file *./a.out* and move the cursor to the first byte of the buffer
++ Open a file *./a.out* and move the cursor to offset 0 of the buffer
 
         $ fileobj ./a.out
           (command)(move the cursor)
@@ -142,7 +150,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ fileobj ./a.out
           (command)G
 
-+ Open a file *./a.out* and move the cursor to offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* and move the cursor to offset 1024
 
         $ fileobj ./a.out
           (command)1024go
@@ -208,7 +216,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ fileobj ./a.out
           (command)CTRL-u
 
-+ Open a file *./a.out* and move the cursor to offset 0x10000 (the first byte is offset 0)
++ Open a file *./a.out* and move the cursor to offset 0x10000
 
         $ fileobj ./a.out
           (command)[0x10000]go
@@ -236,7 +244,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           (command)x
           (command)256.
 
-+ Open a file *./a.out* and delete 256 bytes at offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* and delete 256 bytes at offset 1024
 
         $ fileobj ./a.out
           (command)1024go
@@ -245,7 +253,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           then
           (command)256x
 
-+ Open a file *./a.out* and delete 256 bytes before offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* and delete 256 bytes before offset 1024
 
         $ fileobj ./a.out
           (command)1024go
@@ -278,7 +286,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         $ fileobj ./a.out
           (command)256y
 
-+ Open a file *./a.out* and yank 256 bytes at offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* and yank 256 bytes at offset 1024
 
         $ fileobj ./a.out
           (command)1024go
@@ -431,7 +439,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           or
           (command)/ABC<ENTER>
 
-+ Open a file *./a.out* from offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* from offset 1024
 
         $ fileobj ./a.out@1024
         or
@@ -439,7 +447,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
         or
         $ fileobj ./a.out@02000
 
-+ Open a file *./a.out* and read 512 bytes from offset 1024 (the first byte is offset 0)
++ Open a file *./a.out* and read 512 bytes from offset 1024
 
         $ fileobj ./a.out@1024:512
         or
@@ -631,34 +639,29 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
 
         $ fileobj ./a.img
           (command)R7f454c46<ESC>
-          (command):wq ./a.img<ENTER>
           or
           (command)R7f<ESC>
           (command):set ascii<ENTER>
           (command)l
           (command)RELF<ESC>
-          (command):wq ./a.img<ENTER>
 
-+ Open above *./a.img* and rotate the whole buffer 1 bit to right and then restore and save
++ Open above *./a.img* and rotate the whole buffer 1 bit to right and then restore
 
         $ fileobj ./a.img
           (command)>>
           (command)G
           (command)<<
-          (command):wq<ENTER>
 
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to right and save
++ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to right
 
         $ fileobj ./a.img
           (command)8>>
-          (command):wq<ENTER>
 
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to left and save
++ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to left
 
         $ fileobj ./a.img
           (command)G
           (command)8<<
-          (command):wq<ENTER>
 
 + Open a loop device */dev/loop0* on Linux
 
@@ -676,7 +679,6 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           (command)v
           (command)G
           (command)r00
-          (command):wq<ENTER>
 
 + Open a block device */dev/sdb* and move the cursor to offset 320 MiB
 
@@ -936,7 +938,8 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
           --version             show program's version number and exit
           -h, --help            show this help message and exit
           -R                    Read only mode
-          -B                    Buffer allocation mode
+          -B                    Use malloc based buffer for regular files, which may
+                                put pressure on the system depending on the file size
           -d                    Show buffer address starting from offset attribute of
                                 the file path
           -x                    Show buffer size and current position in hexadecimal
@@ -978,7 +981,7 @@ fileobj ([v0.7.28](https://github.com/kusumi/fileobj/releases/tag/v0.7.28))
 
 ## Note for BSDs
 
-+ Binary package for older version is available on FreeBSD
++ Binary package for older version is available on [FreeBSD](https://www.freebsd.org/cgi/ports.cgi?query=fileobj&stype=name)
 
         $ uname
         FreeBSD

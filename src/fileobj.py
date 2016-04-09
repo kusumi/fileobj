@@ -185,15 +185,13 @@ class Fileobj (object):
         return self.__attr.length
 
     def get_buffer_size(self):
+        # heuristic
         ret = kernel.get_buffer_size()
-        if setting.use_buffer_size_heuristics:
-            siz = self.get_size()
-            if ret >= siz:
-                return ret
-            elif siz > util.MiB: # ret < siz
-                return util.MiB
-            else:
-                return ret
+        siz = self.get_size()
+        if ret >= siz:
+            return ret
+        elif siz > util.MiB: # ret < siz
+            return util.MiB
         else:
             return ret
 

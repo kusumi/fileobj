@@ -42,48 +42,28 @@ def get_marks_path():
     return get_path("marks")
 
 def get_path(s):
-    f = getattr(this, s + "_path")
-    b = getattr(this, s + "_base")
-    d = getattr(this, s + "_dir")
-    if f:
-        return f
-    if b and d:
-        return os.path.join(d, b)
-    elif not b:
+    d = this.user_dir
+    b = getattr(this, "file_{0}_name".format(s))
+    if d is None:
         return ''
-    else:
-        d = get_userdir_path()
-        if d:
-            return os.path.join(d, b)
-        else:
-            return ''
-
-def get_userdir_path():
-    if this.userdir_path:
-        return this.userdir_path
-    elif this.userdir_base and this.userdir_dir:
-        return os.path.join(this.userdir_dir, this.userdir_base)
-    else:
+    if b is None:
         return ''
+    return os.path.join(d, b)
 
 def init_user():
-    f = get_userdir_path()
-    if not f:
+    d = this.user_dir
+    if not d:
         return -1
-    elif os.path.isdir(f):
-        if os.access(f, os.R_OK | os.W_OK):
-            this.userdir_path = f
+    elif os.path.isdir(d):
+        if os.access(d, os.R_OK | os.W_OK):
             return 0 # already exists
         else:
-            this.userdir_base = None
             return -1 # no permission
     else:
         try:
-            os.makedirs(f)
-            this.userdir_path = f
+            os.makedirs(d)
             return 1 # mkdir success
         except Exception:
-            this.userdir_base = None
             return -1
 
 def init():
