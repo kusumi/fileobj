@@ -51,9 +51,8 @@ class _window (object):
         if not _windows:
             kernel.get_tc(_stdin)
             log.debug("Save tty attr")
-            if setting.use_stdin_cbreak:
-                kernel.set_cbreak(_stdin)
-                log.debug("Set tty cbreak")
+            kernel.set_cbreak(_stdin)
+            log.debug("Set tty cbreak")
         _windows.append(self)
         self.__ib = collections.deque()
         self.__ob = collections.deque()

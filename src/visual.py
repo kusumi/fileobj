@@ -391,8 +391,8 @@ class _console (console.Console):
         self.add_method(literal.o            , this,    "_put")
         self.add_method(literal.s_w          , this,    "_save_buffer")
         self.add_method(literal.s_wneg       , this,    "_force_save_buffer")
-        #self.add_method(literal.s_wq        , methods, "save_buffer_quit")
-        #self.add_method(literal.s_x         , methods, "xsave_buffer_quit")
+        self.add_method(literal.s_wq         , this,    "_save_buffer_quit")
+        #self.add_method(literal.s_x         , None,    None)
         self.add_method(literal.s_q          , this,    "_buffer_input")
         self.add_method(literal.s_qneg       , this,    "_buffer_input")
         self.add_method(literal.s_fsearch    , methods, "search_forward")
@@ -400,10 +400,10 @@ class _console (console.Console):
         self.add_method(literal.n            , methods, "search_next_forward")
         self.add_method(literal.N            , methods, "search_next_backward")
         self.add_method(literal.escape       , this,    "_escape_visual")
-        #self.add_method(literal.i           , this,    "_enter_edit_insert")
-        #self.add_method(literal.I           , this,    "_enter_edit_insert_head")
-        #self.add_method(literal.a           , this,    "_enter_edit_append")
-        #self.add_method(literal.A           , this,    "_enter_edit_append_tail")
+        #self.add_method(literal.i           , None,    None)
+        #self.add_method(literal.I           , None,    None)
+        #self.add_method(literal.a           , None,    None)
+        #self.add_method(literal.A           , None,    None)
         self.add_method(literal.R            , this,    "_enter_edit_replace")
         self.add_method(literal.r            , this,    "_do_edit_replace")
         self.add_method(literal.v            , this,    "_enter_visual")
@@ -461,7 +461,11 @@ def _(a, b):
     def _exit(fn):
         def _method(self, amp, opc, args, raw):
             _fn = b if _in_block_visual(self) else a
-            _fn(self, amp, opc, args, raw)
+            ret = _fn(self, amp, opc, args, raw)
+            if ret == methods.QUIT:
+                return methods.QUIT
+            assert ret != methods.REWIND
+            assert ret != methods.CONTINUE
             return fn(self, amp, opc, args, raw)
         return _method
     return _exit
@@ -519,6 +523,10 @@ def _save_buffer(self, amp, opc, args, raw):
 
 @_(methods.range_force_save_buffer, methods.block_force_save_buffer)
 def _force_save_buffer(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_save_buffer_quit, methods.block_save_buffer_quit)
+def _save_buffer_quit(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_delete, methods.block_delete)

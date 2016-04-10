@@ -49,9 +49,8 @@ def write(trace_path, l, e, tb):
         sf = uniq_path + ".sh"
         __write_trace(tf, l)
         __write_script(sf, tf, e, tb)
-        if setting.use_trace_symlink:
-            __creat_symlink(tf, trace_base + ".bin")
-            __creat_symlink(sf, trace_base + ".sh")
+        __creat_symlink(tf, trace_base + ".bin")
+        __creat_symlink(sf, trace_base + ".sh")
     except Exception as e:
         log.error(e)
 
@@ -76,9 +75,9 @@ def __write_script(sf, tf, e, tb):
         log.debug("Wrote text to {0}".format(fd))
 
 def __get_cmdline(tf):
-    ret = ["FILEOBJ_STREAM_PATH=" + tf]
+    ret = ["FILEOBJ_FILE_STREAM_NAME=" + os.path.basename(tf)]
     for k, v in env.iter_defined_env():
-        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_STREAM_PATH"):
+        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_FILE_STREAM_NAME"):
             ret.append(k + "=" + v)
     ret.extend(sys.argv)
     return ' '.join(ret)

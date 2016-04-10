@@ -24,7 +24,6 @@
 from . import libc
 from . import log
 from . import netbsd
-from . import setting
 from . import unix
 from . import util
 
@@ -160,7 +159,7 @@ def get_pid_name(pid):
         return ret
 
 def is_pid_path_supported():
-    return setting.use_vm_non_linux and libc.has_ptrace()
+    return False
 
 def ptrace_peektext(pid, addr):
     return libc.ptrace(PT_READ_I, pid, addr, None)

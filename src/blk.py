@@ -25,8 +25,7 @@ from . import fileobj
 from . import kernel
 from . import util
 
-enabled = kernel.is_xnix() and \
-    kernel.is_blkdev_supported()
+enabled = kernel.is_blkdev_supported()
 
 class methods (object):
     def get_string(self):

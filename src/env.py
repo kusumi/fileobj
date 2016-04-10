@@ -32,10 +32,8 @@ def __iter_env_name():
     yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
     yield "FILEOBJ_STDOUT_VERBOSE"
-    yield "FILEOBJ_USE_STDIN_CBREAK"
     yield "FILEOBJ_USE_FILE_PATH_ATTR"
     yield "FILEOBJ_USE_TRACE"
-    yield "FILEOBJ_USE_TRACE_SYMLINK"
     yield "FILEOBJ_TRACE_WORD_SIZE"
     yield "FILEOBJ_PROCFS_MOUNT_POINT"
     yield "FILEOBJ_USE_READONLY"
@@ -77,14 +75,12 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ADAPTIVE_FILEOPS"
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
     yield "FILEOBJ_ALLOC_MMAP_THRESH"
-    yield "FILEOBJ_USE_VM_NON_LINUX"
-    yield "FILEOBJ_USE_RRVM_RAW"
+    yield "FILEOBJ_USE_RRVM_SYNC_ON_EDIT"
     yield "FILEOBJ_USE_PS_AUX"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
-    yield "FILEOBJ_ROFD_READ_QUEUE_SIZE"
     yield "FILEOBJ_USE_XNIX"
     yield "FILEOBJ_OS_UNAME"
     yield "FILEOBJ_USE_BSD_CAVEAT"
@@ -181,17 +177,11 @@ def __get_setting_use_stdout():
 def __get_setting_stdout_verbose():
     return test_ge_zero("FILEOBJ_STDOUT_VERBOSE", 1)
 
-def __get_setting_use_stdin_cbreak():
-    return test_bool("FILEOBJ_USE_STDIN_CBREAK", True)
-
 def __get_setting_use_file_path_attr():
     return test_bool("FILEOBJ_USE_FILE_PATH_ATTR", True)
 
 def __get_setting_use_trace():
     return test_bool("FILEOBJ_USE_TRACE", False)
-
-def __get_setting_use_trace_symlink():
-    return test_bool("FILEOBJ_USE_TRACE_SYMLINK", False)
 
 def __get_setting_trace_word_size():
     e = getenv("FILEOBJ_TRACE_WORD_SIZE")
@@ -376,11 +366,8 @@ def __get_setting_use_auto_fileops_cleanup():
 def __get_setting_alloc_mmap_thresh():
     return test_ge_zero("FILEOBJ_ALLOC_MMAP_THRESH", PSEUDO_PAGE_SIZE)
 
-def __get_setting_use_vm_non_linux():
-    return test_bool("FILEOBJ_USE_VM_NON_LINUX", False)
-
-def __get_setting_use_rrvm_raw():
-    return test_bool("FILEOBJ_USE_RRVM_RAW", False)
+def __get_setting_use_rrvm_sync_on_edit():
+    return test_bool("FILEOBJ_USE_RRVM_SYNC_ON_EDIT", False)
 
 def __get_setting_use_ps_aux():
     return test_bool("FILEOBJ_USE_PS_AUX", True)
@@ -389,7 +376,7 @@ def __get_setting_robuf_chunk_size():
     return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", PSEUDO_PAGE_SIZE)
 
 def __get_setting_rwbuf_chunk_balance_interval():
-    return test_gt_zero("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 20)
+    return test_gt_zero("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 100)
 
 def __get_setting_rwbuf_chunk_size_low():
     e = getenv("FILEOBJ_RWBUF_CHUNK_SIZE_LOW")
@@ -414,9 +401,6 @@ def __get_setting_rwbuf_chunk_size_high():
         return _
     else:
         return x
-
-def __get_setting_rofd_read_queue_size():
-    return test_gt_zero("FILEOBJ_ROFD_READ_QUEUE_SIZE", 1)
 
 def __get_setting_use_xnix():
     return test_bool("FILEOBJ_USE_XNIX", False)

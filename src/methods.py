@@ -1822,6 +1822,14 @@ def xsave_buffer_quit(self, amp, opc, args, raw):
     else:
         return quit(self, amp, opc, args, raw)
 
+def range_save_buffer_quit(self, amp, opc, args, raw):
+    if __save_partial(self, args, __range_read, False) != -1:
+        return quit(self, amp, opc, args, raw)
+
+def block_save_buffer_quit(self, amp, opc, args, raw):
+    if __save_partial(self, args, __block_read, False) != -1:
+        return quit(self, amp, opc, args, raw)
+
 def escape(self, amp, opc, args, raw):
     self.co.clear_delayed_input()
     self.co.show('')

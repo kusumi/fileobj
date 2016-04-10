@@ -28,7 +28,6 @@ from . import fileobj
 from . import kernel
 from . import log
 from . import screen
-from . import setting
 from . import util
 
 class Fileobj (fileobj.Fileobj):
@@ -181,9 +180,11 @@ class Fileobj (fileobj.Fileobj):
             o = util.Namespace(beg=beg, end=beg + len(b), buf=b)
             self.__ra_count[end - beg] += 1
             self.__ra_queue.appendleft(o)
-            if len(self.__ra_queue) > setting.rofd_read_queue_size:
+            if len(self.__ra_queue) > _ra_queue_size:
                 self.__ra_queue.pop()
 
         self.__count[n] += 1
         x -= o.beg
         return o.buf[x : x + n]
+
+_ra_queue_size = 5

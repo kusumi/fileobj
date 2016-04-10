@@ -1,4 +1,4 @@
-fileobj ([v0.7.29](https://github.com/kusumi/fileobj/releases/tag/v0.7.29))
+fileobj ([v0.7.30](https://github.com/kusumi/fileobj/releases/tag/v0.7.30))
 =======
 
 ## About
@@ -38,7 +38,7 @@ fileobj ([v0.7.29](https://github.com/kusumi/fileobj/releases/tag/v0.7.29))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.7.29
+        v0.7.30
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
 
@@ -49,7 +49,7 @@ fileobj ([v0.7.29](https://github.com/kusumi/fileobj/releases/tag/v0.7.29))
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ sudo python3 ./script/check.py
         $ fileobj --version
-        v0.7.29
+        v0.7.30
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation
 
@@ -117,7 +117,7 @@ fileobj ([v0.7.29](https://github.com/kusumi/fileobj/releases/tag/v0.7.29))
 
 + Open an empty buffer and save it as *./a.out*
 
-        $ fileobj ./a.out
+        $ fileobj
           (command):w ./a.out<ENTER>
 
 + Open a file *./a.out* and move the cursor

@@ -32,7 +32,6 @@ from . import setting
 from . import util
 
 enabled = setting.use_pid_path and \
-    kernel.is_xnix() and \
     kernel.is_pid_path_supported()
 
 class methods (object):
