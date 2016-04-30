@@ -655,6 +655,73 @@ def __get_md5(self, l):
     else:
         self.co.flash("No input")
 
+def cmp_buffer(self, amp, opc, args, raw):
+    __cmp_buffer(self, lambda a, b: a != b)
+
+def cmp_buffer_neg(self, amp, opc, args, raw):
+    __cmp_buffer(self, lambda a, b: a == b)
+
+def __cmp_buffer(self, fn):
+    if len(self.co) != 2:
+        self.co.flash("Need two (and only two) windows")
+        return
+    if self.co.get_buffer_count() < 2:
+        self.co.flash("Need two or more buffers")
+        return
+
+    f1 = self.co.get_path()
+    x1 = self.co.get_size()
+    self.co.switch_to_next_workspace()
+    f2 = self.co.get_path()
+    x2 = self.co.get_size()
+    self.co.switch_to_next_workspace()
+    assert self.co.get_path() == f1
+    if f1 == f2:
+        self.co.flash("Need different buffers in two windows")
+        return
+    if x1 == 0:
+        self.co.flash(f1 + " is an empty buffer")
+        return
+    if x2 == 0:
+        self.co.flash(f2 + " is an empty buffer")
+        return
+
+    # FIX_ME too slow
+    pos = 0
+    siz = kernel.get_buffer_size()
+    while True:
+        b1 = self.co.read(pos, siz)
+        self.co.switch_to_next_workspace()
+        b2 = self.co.read(pos, siz)
+        self.co.switch_to_next_workspace()
+        assert self.co.get_path() == f1
+        if not b1 or not b2:
+            break
+        for x in util.get_xrange(min(len(b1), len(b2))):
+            if fn(b1[x], b2[x]):
+                __cmp_go_to(self, pos + x)
+                return
+        if len(b1) != len(b2):
+            break
+        pos += len(b1)
+    if x1 == x2:
+        if not fn(1, 1):
+            self.co.show("Two buffers are the same")
+        else:
+            self.co.show("Two buffers are not the same")
+    else:
+        __cmp_go_to(self, min(x1, x2))
+
+def __cmp_go_to(self, pos):
+    f = self.co.get_path()
+    self.co.go_to(pos)
+    self.co.switch_to_next_workspace()
+    self.co.go_to(pos)
+    self.co.switch_to_next_workspace()
+    assert self.co.get_path() == f
+    self.co.show(pos)
+    self.co.lrepaint()
+
 @_cleanup
 def inc_number(self, amp, opc, args, raw):
     __do_replace_number(self, get_int(amp), opc, 1)

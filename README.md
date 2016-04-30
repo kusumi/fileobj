@@ -1,4 +1,4 @@
-fileobj ([v0.7.30](https://github.com/kusumi/fileobj/releases/tag/v0.7.30))
+fileobj ([v0.7.31](https://github.com/kusumi/fileobj/releases/tag/v0.7.31))
 =======
 
 ## About
@@ -38,7 +38,7 @@ fileobj ([v0.7.30](https://github.com/kusumi/fileobj/releases/tag/v0.7.30))
         $ sudo python ./setup.py install --force --record ./install.out
         $ sudo python ./script/check.py
         $ fileobj --version
-        v0.7.30
+        v0.7.31
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation
 
@@ -49,7 +49,7 @@ fileobj ([v0.7.30](https://github.com/kusumi/fileobj/releases/tag/v0.7.30))
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ sudo python3 ./script/check.py
         $ fileobj --version
-        v0.7.30
+        v0.7.31
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation
 
@@ -826,6 +826,8 @@ fileobj ([v0.7.30](https://github.com/kusumi/fileobj/releases/tag/v0.7.30))
         :bufsiz                  Print temporary buffer size
         :close                   Close current window
         <CTRL>wc                 Close current window
+        :cmp                     Compare two buffers and go to the first non matching byte
+        :cmp!                    Compare two buffers and go to the first matching byte
         :date                    Print date
         :delmarks                Delete the specified marks
         :delmarks!               Delete all marks for the current buffer except for uppercase marks

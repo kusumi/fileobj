@@ -359,6 +359,8 @@ class _console (console.Console):
         self.add_method(literal.s_argv       , this,    "_buffer_input")
         self.add_method(literal.s_args       , this,    "_buffer_input")
         self.add_method(literal.s_md5        , this,    "_show_md5")
+        self.add_method(literal.s_cmp        , this,    "_buffer_input")
+        self.add_method(literal.s_cmpneg     , this,    "_buffer_input")
         self.add_method(literal.ctrla        , this,    "_inc_number")
         self.add_method(literal.ctrlx        , this,    "_dec_number")
         self.add_method(literal.period       , this,    "_buffer_input")

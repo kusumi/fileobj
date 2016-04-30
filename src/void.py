@@ -95,6 +95,8 @@ class _console (console.Console):
         self.add_method(literal.s_argv       , methods, "show_argv")
         self.add_method(literal.s_args       , methods, "show_args")
         self.add_method(literal.s_md5        , methods, "show_md5")
+        self.add_method(literal.s_cmp        , methods, "cmp_buffer")
+        self.add_method(literal.s_cmpneg     , methods, "cmp_buffer_neg")
         self.add_method(literal.ctrla        , methods, "inc_number")
         self.add_method(literal.ctrlx        , methods, "dec_number")
         self.add_method(literal.period       , methods, "repeat")
