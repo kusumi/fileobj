@@ -42,8 +42,14 @@ def get_marks_path():
     return get_path("marks")
 
 def get_path(s):
+    return __get_path("file_{0}_name".format(s))
+
+def get_ext_path(s):
+    return __get_path("ext_file_{0}_name".format(s))
+
+def __get_path(s):
+    b = getattr(this, s) # "(ext_)file_xxx_name"
     d = this.user_dir
-    b = getattr(this, "file_{0}_name".format(s))
     if d is None:
         return ''
     if b is None:

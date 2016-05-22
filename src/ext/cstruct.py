@@ -229,7 +229,7 @@ def get_text(co, fo, args):
         if not args:
             return "No struct name"
     else:
-        f = fileobj.setting.get_path("ext_cstruct")
+        f = fileobj.setting.get_ext_path("cstruct")
         if fileobj.path.is_noent(f):
             return "Need {0} with struct definition".format(f)
         if not os.path.isfile(f):
@@ -265,16 +265,12 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    fileobj.setting.ext_add("cstruct_path")
-    fileobj.setting.ext_add_name("cstruct_base", "cstruct")
-    fileobj.setting.ext_add("cstruct_dir")
+    fileobj.setting.ext_add("file_cstruct_name")
     fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
 
 def cleanup():
-    fileobj.setting.ext_delete("cstruct_path")
-    fileobj.setting.ext_delete("cstruct_base")
-    fileobj.setting.ext_delete("cstruct_dir")
+    fileobj.setting.ext_delete("file_cstruct_name")
     fileobj.setting.ext_delete("use_cstruct_libc")
 
 init()

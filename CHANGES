@@ -1,3 +1,7 @@
+v0.7.32
+=======
+- Fix :cstruct bug
+
 v0.7.31
 =======
 - Add :cmp
