@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -599,7 +599,7 @@ def is_writable(f):
 
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
-    if not setting.use_file_path_attr:
+    if not setting.use_path_attr:
         return f, 0, 0
     if '@' in f:
         i = f.rindex('@')

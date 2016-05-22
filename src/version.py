@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,18 +21,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# RELEASE is basically always 1.
+# It was added only to sync with RPM versioning.
+# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
+
 MAJOR = 0
-MINOR = 7
-RELEASE = 32
+MINOR1 = 7
+MINOR2 = 33
+RELEASE = 1
 
 def get_version():
-    return MAJOR, MINOR, RELEASE
+    return MAJOR, MINOR1, MINOR2
 
 def get_version_string():
     return "v{0}.{1}.{2}".format(*get_version())
 
 _readme_url = "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md"
 def get_readme_url():
-    return _readme_url.format(MAJOR, MINOR)
+    return _readme_url.format(MAJOR, MINOR1)
 
 __version__ = get_version_string()

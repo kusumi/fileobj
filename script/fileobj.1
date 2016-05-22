@@ -1,0 +1,147 @@
+.TH FILEOBJ 1 "May 20, 2016" "FILEOBJ 0.7.33"
+.nh
+.ad l
+.SH NAME
+fileobj \- Hex Editor
+.SH SYNOPSIS
+\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
+.SH DESCRIPTION
+fileobj is a portable hex editor with vi like interface.
+This software is written in Python and runs with Python 2.6 or above.
+This software supports Linux distributions and BSDs in general.
+Other Unix\-like operating systems with ncurses are experimentally supported.
+This software provides basic vi commands for binary editing.
+Features include inserting, replacing, deleting data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, support for multiple buffers and windows, block device editting, ptrace based userspace editting, mapping data to C style struct, etc.
+.SH OPTIONS
+.PP
+\fB\-\-version\fP
+.RS 4
+Print program's version number and exit.
+.RE
+.PP
+\fB\-h\fP, \fB\-\-help\fP
+.RS 4
+Print this help message and exit.
+.RE
+.PP
+\fB\-R\fP
+.RS 4
+Use read\-only mode.
+.RE
+.PP
+\fB\-B\fP
+.RS 4
+Use \fBmalloc\fP(3) based buffer for regular files, which may put pressure on the system depending on the file size.
+Regular files use \fBmmap\fP(2) based buffer by default, and relies on \fBmremap\fP(2) when resizing (i.e. insert or delete bytes) the buffer.
+This option is used when the system doesn't support \fBmremap\fP(2), but need to resize the buffer for regular files.
+Linux kernel has \fBmremap\fP(2), but many of the BSDs do not.
+.RE
+.PP
+\fB\-d\fP
+.RS 4
+Enable a window to show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
+Using \fI@offset:length\fP or \fI@offset\-(offset+length)\fP syntax right after the path allows partial buffer loading.
+See \fIDOCUMENTATION\fP section of \fBfileobj\fP(1) for details of the syntax.
+.RE
+.PP
+\fB\-x\fP
+.RS 4
+Enable a window to show the buffer size and current position in hexadecimal.
+.RE
+.PP
+\fB\-o\fP \fI<num>\fP
+.RS 4
+Start the program with each buffer given by paths loaded in \fI<num>\fP windows, as long as the terminal has enough size to store the number of windows specified.
+.RE
+.PP
+\fB\-O\fP
+.RS 4
+Start the program with each buffer given by paths loaded in different windows, as long as the terminal has enough size to store the number of windows specified.
+.RE
+.PP
+\fB\-\-bytes_per_line\fP=\fI<bytes_per_line>\fP
+.RS 4
+Specify number of bytes printed per line.
+The program prints \fI<bytes_per_line>\fP bytes for each line as long as the terminal has enough width to store bytes.
+Available formats for \fI<bytes_per_line>\fP are digits, "max", "min" and "auto".
+If this option isn't specified, the program assumes "auto" is specified.
+Using "auto" sets the value to the maximum 2^N that fits in the terminal width.
+.RE
+.PP
+\fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP
+.RS 4
+Specify number of bytes printed per window, based on the current number of bytes per line.
+The program prints \fI<bytes_per_window>\fP bytes for each window as long as the terminal has enough size to store bytes.
+Available formats for \fI<bytes_per_window>\fP are digits, "even" and "auto".
+Specifying "even" doesn't specify the size of window, but makes all windows have the same size.
+If this option isn't specified, the program assumes "auto" is specified.
+Using "auto" sets the value to the maximum available that fits in the terminal size, based on the current number of bytes per line.
+.RE
+.PP
+\fB\-\-terminal_height\fP=\fI<terminal_height>\fP
+.RS 4
+Specify the terminal height.
+The program uses \fI<terminal_height>\fP lines as long as the terminal has enough height to store lines.
+This option is usually unnecessary as the program is able to retrieve the terminal height by default.
+.RE
+.PP
+\fB\-\-terminal_width\fP=\fI<terminal_width>\fP
+.RS 4
+Specify the terminal width.
+The program uses \fI<terminal_width>\fP bytes for each line as long as the terminal has enough width to store the bytes.
+This option is usually unnecessary as the program is able to retrieve the terminal width by default.
+.RE
+.PP
+\fB\-\-fg\fP=\fI<color>\fP
+.RS 4
+Specify foreground color of the terminal.
+Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
+If neither this option nor \fB\-\-bg\fP option are specified, the program assumes "black" is specified.
+.RE
+.PP
+\fB\-\-bg\fP=\fI<color>\fP
+.RS 4
+Specify background color of the terminal.
+Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
+If neither this option nor \fB\-\-fg\fP option are specified, the program assumes "white" is specified.
+.RE
+.PP
+\fB\-\-simple\fP
+.RS 4
+Use simplified status window format.
+.RE
+.PP
+\fB\-\-command\fP
+.RS 4
+Print the list of available editor commands and exit.
+.RE
+.PP
+\fB\-\-sitepkg\fP
+.RS 4
+Print Python's site\-package directory being used by the program and exit.
+.RE
+.SH COMMANDS
+See \fIDOCUMENTATION\fP section of \fBfileobj\fP(1) for details of available editor commands.
+Also see \fB\-\-command\fP option in \fIOPTIONS\fP section of \fBfileobj\fP(1).
+.SH FILES
+These are automatically generated by the program.
+Some editor commands need a configuration file under \fI~/.fileobj/\fP.
+.TP
+\fI~/.fileobj/\fP
+.TP
+\fI~/.fileobj/history\fP
+.TP
+\fI~/.fileobj/log\fP
+.TP
+\fI~/.fileobj/marks\fP
+.SH RESOURCE
+\fIhttps://sourceforge.net/projects/fileobj/\fP
+.SH REPOSITORY
+\fIhttps://github.com/kusumi/fileobj/tree/v0.7/\fP
+.SH DOCUMENTATION
+\fIhttps://github.com/kusumi/fileobj/blob/v0.7/README.md\fP
+.SH COPYING
+Copyright (c) 2010\-2016, Tomohiro Kusumi.
+Free use of this software is granted under the terms of the BSD License (2\-clause).
+.SH AUTHORS
+Tomohiro Kusumi <kusumi.tomohiro@gmail.com>

@@ -1,3 +1,11 @@
+v0.7.33
+=======
+- Add script/fileobj.1
+- Add script/installman.sh
+- Add :cmpnext
+- Add :cmpnext!
+- Improve README.md
+
 v0.7.32
 =======
 - Fix :cstruct bug

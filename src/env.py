@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,11 @@ import sys
 
 def __iter_env_name():
     yield "FILEOBJ_USE_DEBUG"
-    yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
     yield "FILEOBJ_STDOUT_VERBOSE"
-    yield "FILEOBJ_USE_FILE_PATH_ATTR"
+    yield "FILEOBJ_USE_PATH_ATTR"
+    yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_TRACE_WORD_SIZE"
     yield "FILEOBJ_PROCFS_MOUNT_POINT"
@@ -165,20 +165,21 @@ def __env_ge_zero(e):
 def __get_setting_use_debug():
     return test_bool("FILEOBJ_USE_DEBUG", False)
 
-def __get_setting_use_pid_path():
-    return test_bool("FILEOBJ_USE_PID_PATH", True)
-
 def __get_setting_use_getch():
     return test_bool("FILEOBJ_USE_GETCH", True)
 
 def __get_setting_use_stdout():
     return test_bool("FILEOBJ_USE_STDOUT", False)
 
+# unittests need 0 for this, so don't remove this
 def __get_setting_stdout_verbose():
     return test_ge_zero("FILEOBJ_STDOUT_VERBOSE", 1)
 
-def __get_setting_use_file_path_attr():
-    return test_bool("FILEOBJ_USE_FILE_PATH_ATTR", True)
+def __get_setting_use_path_attr():
+    return test_bool("FILEOBJ_USE_PATH_ATTR", True)
+
+def __get_setting_use_pid_path():
+    return test_bool("FILEOBJ_USE_PID_PATH", True)
 
 def __get_setting_use_trace():
     return test_bool("FILEOBJ_USE_TRACE", False)
@@ -357,9 +358,11 @@ def __get_setting_use_alloc_noent_rwbuf():
 def __get_setting_use_array_chunk():
     return test_bool("FILEOBJ_USE_ARRAY_CHUNK", True)
 
+# unittests need False for this, so don't remove this
 def __get_setting_use_adaptive_fileops():
     return test_bool("FILEOBJ_USE_ADAPTIVE_FILEOPS", True)
 
+# unittests need False for this, so don't remove this
 def __get_setting_use_auto_fileops_cleanup():
     return test_bool("FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True)
 
@@ -529,6 +532,6 @@ def iter_setting():
         yield name, fn()
 
 try:
-    PSEUDO_PAGE_SIZE = os.sysconf("SC_PAGE_SIZE") # FIX_ME
+    PSEUDO_PAGE_SIZE = os.sysconf("SC_PAGE_SIZE") # XXX
 except Exception:
     PSEUDO_PAGE_SIZE = 4096 # pretend 4 KiB

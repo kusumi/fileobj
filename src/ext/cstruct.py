@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ _builtin_type_regex = re.compile(
 _builtin_xtype_regex = re.compile(
     r"^x(8|16|32|64)") # only to detect x, but not be|le
 
-# FIX_ME
+# XXX
 # This is necessary as this module uses int()
 # while __create_builtin_class() overwrites int.
 builtin_int = fileobj.util.get_builtin("int")
@@ -265,7 +265,7 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    fileobj.setting.ext_add("file_cstruct_name")
+    fileobj.setting.ext_add_name("file_cstruct_name", "cstruct")
     fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
 

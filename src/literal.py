@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -235,7 +235,7 @@ ctrlw_minus   = FastLiteral("<CTRL>w-", (kbd.ctrl('w'), ord('-')), "Decrease cur
 ctrlw_c       = FastLiteral("<CTRL>wc", (kbd.ctrl('w'), ord('c')), "Close current window")
 ctrlw_o       = FastLiteral("<CTRL>wo", (kbd.ctrl('w'), ord('o')), "Make the current window the only one")
 ctrlw_ctrlo   = FastLiteral("<CTRL>w<CTRL>o", (kbd.ctrl('w'), kbd.ctrl('o')), "Make the current window the only one")
-ctrlw_q       = FastLiteral("<CTRL>wq", (kbd.ctrl('w'), ord('q')), "Close current window if >1 windows exist else quit program")
+ctrlw_q       = FastLiteral("<CTRL>wq", (kbd.ctrl('w'), ord('q')), "Close current window if more than 1 windows exist else quit program")
 tab           = FastLiteral("<TAB>", (kbd.TAB,), "Change buffer to the next")
 ctrlg         = FastLiteral("<CTRL>g", (kbd.ctrl('g'),), "Print current size and position")
 g_ctrlg       = FastLiteral("g<CTRL>g", (ord('g'), kbd.ctrl('g'),), "Print current size and position in sector for block device")
@@ -261,7 +261,7 @@ p             = FastLiteral("p", None, "Put the text after the cursor [count] ti
 O             = FastLiteral("O", None, "Replace the text befor the cursor [count] times")
 o             = FastLiteral("o", None, "Replace the text after the cursor [count] times")
 ZZ            = FastLiteral("ZZ", None, "Like :wq, but write only when changes have been made")
-ZQ            = FastLiteral("ZQ", None, "Close current window if >1 windows exist else quit program without writing")
+ZQ            = FastLiteral("ZQ", None, "Close current window if more than 1 windows exist else quit program without writing")
 n             = FastLiteral("n", None, "Repeat the latest search")
 N             = FastLiteral("N", None, "Repeat the latest search toward backward")
 i             = FastLiteral("i", None, "Start insert edit mode")
@@ -317,6 +317,8 @@ s_args        = SlowLiteral(":args", None, "Print buffer list with the current b
 s_md5         = SlowLiteral(":md5", None, "Print md5 message digest of the current buffer")
 s_cmp         = SlowLiteral(":cmp", None, "Compare two buffers and go to the first non matching byte")
 s_cmpneg      = SlowLiteral(":cmp!", None, "Compare two buffers and go to the first matching byte")
+s_cmpnext     = SlowLiteral(":cmpnext", None, "Compare two buffers starting from the next byte and go to the first non matching byte")
+s_cmpnextneg  = SlowLiteral(":cmpnext!", None, "Compare two buffers starting from the next byte and go to the first matching byte")
 s_delmarks    = SlowLiteral(":delmarks", None, "Delete the specified marks")
 s_delmarksneg = SlowLiteral(":delmarks!", None, "Delete all marks for the current buffer except for uppercase marks")
 s_split       = SlowLiteral(":split", None, "Split current window")
@@ -326,8 +328,8 @@ s_w           = SlowLiteral(":w", None, "Write the whole buffer to the file")
 s_wneg        = SlowLiteral(":w!", None, "Like :w, but overwrite an existing file")
 s_wq          = SlowLiteral(":wq", None, "Write the current file and quit")
 s_x           = SlowLiteral(":x", None, "Like :wq, but write only when changes have been made")
-s_q           = SlowLiteral(":q", None, "Close current window if >1 windows exist else quit program")
-s_qneg        = SlowLiteral(":q!", None, "Close current window if >1 windows exist else quit program without writing")
+s_q           = SlowLiteral(":q", None, "Close current window if more than 1 windows exist else quit program")
+s_qneg        = SlowLiteral(":q!", None, "Close current window if more than 1 windows exist else quit program without writing")
 s_fsearch     = SearchLiteral('/', None, "Search forward")
 s_rsearch     = SearchLiteral('?', None, "Search backward")
 
@@ -341,10 +343,10 @@ s_set_ic      = ArgLiteral("ic", None, "Set ic mode (ignore the case of alphabet
 s_set_noic    = ArgLiteral("noic", None, "Unset ic mode")
 s_set_si      = ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)")
 s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)")
-s_set_address = ArgLiteral("address", None, "Set address radix to arg [16|10|8]")
-s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to arg [16|10|8]")
-s_set_bpl     = ArgLiteral("bytes_per_line", None, "Set bytes_per_line to arg [[0-9]+|max|min|auto]")
-s_set_bpw     = ArgLiteral("bytes_per_window", None, "Set bytes_per_window to arg [[0-9]+|even|auto]")
+s_set_address = ArgLiteral("address", None, "Set address radix to {16,10,8}")
+s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to {16,10,8}")
+s_set_bpl     = ArgLiteral("bytes_per_line", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}")
+s_set_bpw     = ArgLiteral("bytes_per_window", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}")
 
 def get_slow_strings():
     return tuple(":/?")

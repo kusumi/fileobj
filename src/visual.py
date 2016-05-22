@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -361,6 +361,8 @@ class _console (console.Console):
         self.add_method(literal.s_md5        , this,    "_show_md5")
         self.add_method(literal.s_cmp        , this,    "_buffer_input")
         self.add_method(literal.s_cmpneg     , this,    "_buffer_input")
+        self.add_method(literal.s_cmpnext    , this,    "_buffer_input")
+        self.add_method(literal.s_cmpnextneg , this,    "_buffer_input")
         self.add_method(literal.ctrla        , this,    "_inc_number")
         self.add_method(literal.ctrlx        , this,    "_dec_number")
         self.add_method(literal.period       , this,    "_buffer_input")

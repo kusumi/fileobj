@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -83,7 +83,7 @@ _keys = [
     ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE),]
 if setting.use_bsd_caveat:
     _keys.append(
-    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),) # FIX_ME added for FreeBSD
+    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),) # XXX added for FreeBSD
 
 def iter_kbd_name():
     for l in _keys:

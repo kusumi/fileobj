@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -656,12 +656,18 @@ def __get_md5(self, l):
         self.co.flash("No input")
 
 def cmp_buffer(self, amp, opc, args, raw):
-    __cmp_buffer(self, lambda a, b: a != b)
+    __cmp_buffer(self, 0, lambda a, b: a != b)
 
 def cmp_buffer_neg(self, amp, opc, args, raw):
-    __cmp_buffer(self, lambda a, b: a == b)
+    __cmp_buffer(self, 0, lambda a, b: a == b)
 
-def __cmp_buffer(self, fn):
+def cmp_buffer_next(self, amp, opc, args, raw):
+    __cmp_buffer(self, self.co.get_pos() + 1, lambda a, b: a != b)
+
+def cmp_buffer_next_neg(self, amp, opc, args, raw):
+    __cmp_buffer(self, self.co.get_pos() + 1, lambda a, b: a == b)
+
+def __cmp_buffer(self, pos, fn):
     if len(self.co) != 2:
         self.co.flash("Need two (and only two) windows")
         return
@@ -686,8 +692,8 @@ def __cmp_buffer(self, fn):
         self.co.flash(f2 + " is an empty buffer")
         return
 
-    # FIX_ME too slow
-    pos = 0
+    # XXX too slow
+    beg = pos
     siz = kernel.get_buffer_size()
     while True:
         b1 = self.co.read(pos, siz)
@@ -705,10 +711,12 @@ def __cmp_buffer(self, fn):
             break
         pos += len(b1)
     if x1 == x2:
-        if not fn(1, 1):
-            self.co.show("Two buffers are the same")
-        else:
-            self.co.show("Two buffers are not the same")
+        # if cmp didn't start from 0 these may be wrong
+        if beg == 0:
+            if fn(1, 1) == False: # non! cmp comes here
+                self.co.show("Two buffers are the same")
+            else:
+                self.co.show("Two buffers are not the same")
     else:
         __cmp_go_to(self, min(x1, x2))
 
@@ -1820,7 +1828,7 @@ def __save_partial(self, args, fn, force):
         else:
             assert not os.path.exists(f)
             o = self.co.alloc_fileobj(f) # should not fail
-            o.insert(0, buf) # FIX_ME too slow
+            o.insert(0, buf) # XXX too slow
             msg, new = o.flush()
             assert new, new
         if msg:

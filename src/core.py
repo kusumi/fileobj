@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ from . import marks
 from . import package
 from . import screen
 from . import setting
+from . import usage
 from . import util
 from . import version
 
@@ -79,103 +80,33 @@ def dispatch(optargs=None):
         suppress_help = "<This is supposed to be suppressed>"
     else:
         suppress_help = optparse.SUPPRESS_HELP
-    colors = '|'.join(list(screen.iter_color_name()))
+    parser = optparse.OptionParser(version=version.__version__, usage=usage.help)
 
-    usage = "Usage: %prog [options] [file paths ...]\n" \
-        "For more information run {0} and type :help<ENTER>".format(
-        util.get_program_name())
-    parser = optparse.OptionParser(version=version.__version__, usage=usage)
+    parser.add_option("-R", action="store_true", default=False, help=usage.R)
+    parser.add_option("-B", action="store_true", default=False, help=usage.B)
+    parser.add_option("-d", action="store_true", default=False, help=usage.d)
+    parser.add_option("-x", action="store_true", default=False, help=usage.x)
+    parser.add_option("-o", type="int", default=1, metavar=usage.o_metavar, help=usage.o)
+    parser.add_option("-O", action="store_true", default=False, help=usage.O)
 
-    parser.add_option("-R",
-        action="store_true",
-        default=False,
-        help="Read only mode")
-    parser.add_option("-B",
-        action="store_true",
-        default=False,
-        help="Use malloc based buffer for regular files, which may put pressure on the system depending on the file size")
-    parser.add_option("-d",
-        action="store_true",
-        default=False,
-        help="Show buffer address starting from offset attribute of the file path")
-    parser.add_option("-x",
-        action="store_true",
-        default=False,
-        help="Show buffer size and current position in hexadecimal")
-    parser.add_option("-o",
-        type="int",
-        default=1,
-        metavar="<num>",
-        help="Open <num> windows")
-    parser.add_option("-O",
-        action="store_true",
-        default=False,
-        help="Open each buffer in different window")
-    parser.add_option("--bytes_per_line",
-        default=setting.bytes_per_line,
-        metavar="<bytes_per_line>",
-        help=literal.s_set_bpl.desc)
-    parser.add_option("--bytes_per_window",
-        default=setting.bytes_per_window,
-        metavar="<bytes_per_window>",
-        help=literal.s_set_bpw.desc)
-    parser.add_option("--terminal_height",
-        type="int",
-        default=setting.terminal_height,
-        metavar="<terminal_height>",
-        help="Manually set terminal height to arg [[0-9]+]")
-    parser.add_option("--terminal_width",
-        type="int",
-        default=setting.terminal_width,
-        metavar="<terminal_width>",
-        help="Manually set terminal width to arg [[0-9]+]")
-    parser.add_option("--fg",
-        default=setting.color_fg,
-        metavar="<color>",
-        help="Set foreground color to arg [{0}]".format(colors))
-    parser.add_option("--bg",
-        default=setting.color_bg,
-        metavar="<color>",
-        help="Set background color to arg [{0}]".format(colors))
-    parser.add_option("--simple",
-        action="store_true",
-        default=(not setting.use_full_status_window and
-            not setting.use_status_window_frame),
-        help="Use simplified status window")
-    parser.add_option("--command",
-        action="store_true",
-        default=False,
-        help="Print command list and exit")
-    parser.add_option("--sitepkg",
-        action="store_true",
-        default=False,
-        help="Print site package directory and exit")
-    parser.add_option("--executable",
-        action="store_true",
-        default=False,
-        help=suppress_help)
-    parser.add_option("--debug",
-        action="store_true",
-        default=setting.use_debug,
-        help=suppress_help)
-    parser.add_option("--env",
-        action="store_true",
-        default=False,
-        help=suppress_help)
-    parser.add_option("--history",
-        default=None,
-        metavar="<path>",
-        help=suppress_help)
-    parser.add_option("--marks",
-        default=None,
-        metavar="<path>",
-        help=suppress_help)
+    parser.add_option("--bytes_per_line", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
+    parser.add_option("--bytes_per_window", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
+    parser.add_option("--terminal_height", type="int", default=setting.terminal_height, metavar=usage.terminal_height_metavar, help=usage.terminal_height)
+    parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar=usage.terminal_width_metavar, help=usage.terminal_width)
+    parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
+    parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
+    parser.add_option("--simple", action="store_true", default=(not setting.use_full_status_window and not setting.use_status_window_frame), help=usage.simple)
+    parser.add_option("--command", action="store_true", default=False, help=usage.command)
+    parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
+
+    parser.add_option("--executable", action="store_true", default=False, help=suppress_help)
+    parser.add_option("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
+    parser.add_option("--env", action="store_true", default=False, help=suppress_help)
+    parser.add_option("--history", default=None, metavar="<path>", help=suppress_help)
+    parser.add_option("--marks", default=None, metavar="<path>", help=suppress_help)
 
     for s in allocator.iter_module_name():
-        parser.add_option("--" + s,
-            action="store_true",
-            default=False,
-            help=suppress_help)
+        parser.add_option("--" + s, action="store_true", default=False, help=suppress_help)
 
     opts, args = parser.parse_args(optargs)
     if opts.debug:

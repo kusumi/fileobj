@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, TOMOHIRO KUSUMI
+# Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 import os
 import platform
 
-# FIX_ME
+# XXX
 # For now, force BSD caveat if the platform is either of the following,
 # but don't enable or change the value if it's already defined.
 if platform.system() in (
