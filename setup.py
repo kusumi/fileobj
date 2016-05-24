@@ -44,8 +44,9 @@ if __name__ == '__main__':
     setup(name      = "fileobj",
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
+        #author_email=
         url         = "https://sourceforge.net/projects/fileobj/",
-        description = "Hex Editor for Linux/BSD",
+        description = "Hex Editor",
         license     = "BSD License (2-clause)",
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],

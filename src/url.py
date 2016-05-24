@@ -21,32 +21,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# https://github.com/kusumi/fileobj/issues/2
-# https://github.com/kusumi/fileobj/pull/3
+from . import version
 
-if __name__ == '__main__':
-    import os
-    import sys
+_ = version.get_version()
 
-    import fileobj.nodep
-    fileobj.nodep.test()
+def get_project_url():
+    return "https://sourceforge.net/projects/fileobj/"
 
-    import fileobj.package
-    import fileobj.version
+def get_archive_url():
+    return "https://downloads.sourceforge.net/project/fileobj/fileobj-{0}.{1}.{2}.tar.gz".format(*_)
 
-    l = []
-    for d in fileobj.package.get_paths():
-        for x in fileobj.package.iter_module_name():
-            s = x[len(fileobj.package.get_prefix()):]
-            s = s.replace(".", "/") + ".py"
-            a = os.path.join(d, s) # installed
-            b = os.path.join("./src", s) # local
-            if os.path.isfile(a) and not os.path.isfile(b):
-                l.append(a)
-    if l:
-        for f in l:
-            sys.stderr.write("### %s has no such file %s\n" %
-                (fileobj.version.get_version_string(), f))
-        sys.stderr.write("### Uninstalling older version(s) "
-            "first is recommended if exists\n")
-        sys.exit(1)
+def get_repository_url():
+    return "https://github.com/kusumi/fileobj/tree/v{0}.{1}/".format(_[0], _[1])
+
+def get_readme_url():
+    return "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md".format(_[0], _[1])

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ! -f ./script/installman.sh ]; then
+if [ ! -f ./script/install.sh ]; then
 	echo "### Invalid directory `pwd`"
 	exit 1
 fi

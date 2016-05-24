@@ -1,3 +1,14 @@
+v0.7.34
+=======
+- Minor fixes and improvement
+- Remove v prefix from version# in sdist archive to sync with Fedora's RPM versioning in general.
+  (Git branch and tag name still use v prefix)
+- Add version.RELEASE to sync with Fedora's RPM versioning in general.
+  (version.RELEASE may or may not be used)
+- Rename script/installman.sh to script/install.sh
+- Remove script/check.py
+- Improve README.md
+
 v0.7.33
 =======
 - Add script/fileobj.1

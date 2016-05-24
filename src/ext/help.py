@@ -23,9 +23,10 @@
 
 import fileobj.literal
 import fileobj.version
+import fileobj.url
 
 def get_text(co, fo, args):
-    l = [fileobj.version.get_readme_url()]
+    l = [fileobj.url.get_readme_url()]
     l.append('')
     l.extend(fileobj.literal.get_lines(
         fileobj.literal.get_literals()))

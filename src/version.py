@@ -24,20 +24,26 @@
 # RELEASE is basically always 1.
 # It was added only to sync with RPM versioning.
 # Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
+# RPM patches within the same fileobj version may or may not increment RELEASE.
 
 MAJOR = 0
 MINOR1 = 7
-MINOR2 = 33
+MINOR2 = 34
 RELEASE = 1
 
 def get_version():
     return MAJOR, MINOR1, MINOR2
 
-def get_version_string():
-    return "v{0}.{1}.{2}".format(*get_version())
+def get_release():
+    return MAJOR, MINOR1, MINOR2, RELEASE
 
-_readme_url = "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md"
-def get_readme_url():
-    return _readme_url.format(MAJOR, MINOR1)
+def get_version_string():
+    return "{0}.{1}.{2}".format(*get_version())
+
+def get_release_string():
+    return "{0}.{1}.{2}-{3}".format(*get_release())
+
+def get_tag_string():
+    return "v" + get_version_string()
 
 __version__ = get_version_string()
