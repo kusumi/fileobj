@@ -77,6 +77,7 @@ def __system_is(s):
 def __is_xnix():
     return setting.use_xnix
 
+# this detects Cygwin, but not sure if it works against all versions
 def is_cygwin():
     if _system.startswith("CYGWIN"):
         return True

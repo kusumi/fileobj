@@ -38,10 +38,10 @@ def _(s):
 def _metavar(s):
     return "<{0}>".format(s)
 
-# For -h option
-help = _("\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...")[:-1]
+help = _("""
+\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
+""")[:-1]
 
-# These strings are brought from fileobj(1) manpage.
 R = _("""
 Use read\-only mode.
 """)

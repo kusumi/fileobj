@@ -25,6 +25,8 @@ import fileobj.extension
 import fileobj.filebytes
 import fileobj.util
 
+# Taken from sys/vfs/hammer/hammer_disk.h in 6191bf2c
+
 _ = fileobj.util.str_to_bytes
 _int = fileobj.util.le_to_int
 
@@ -47,13 +49,13 @@ def get_text(co, fo, args):
     vol_mem_beg = _int(b[16:24])
     vol_buf_beg = _int(b[24:32])
     vol_buf_end = _int(b[32:40])
-    vol_reserved00 = _int(b[40:48])
+    vol_reserved01 = _int(b[40:48])
     l.append("vol_bot_beg = 0x{0:016X}".format(vol_bot_beg))
     l.append("vol_mem_beg = 0x{0:016X}".format(vol_mem_beg))
     l.append("vol_buf_beg = 0x{0:016X}".format(vol_buf_beg))
     l.append("vol_buf_end = 0x{0:016X}".format(vol_buf_end))
     if print_rsv:
-        l.append("vol_reserved00 = 0x{0:016X}".format(vol_reserved00))
+        l.append("vol_reserved01 = 0x{0:016X}".format(vol_reserved01))
 
     vol_name = b[80:144]
     i = vol_name.find(fileobj.filebytes.ZERO)
@@ -66,12 +68,15 @@ def get_text(co, fo, args):
     vol_crc = _int(b[156:160])
     vol_flags = _int(b[160:164])
     vol_rootvol = _int(b[164:168])
-    vol_reserved04 = _int(b[168:172])
-    vol_reserved05 = _int(b[172:176])
-    vol_reserved06 = _int(b[176:180])
-    vol_reserved07 = _int(b[180:184])
-    vol_reserved08 = _int(b[184:192])
-    vol_reserved09 = _int(b[192:200])
+    vol_reserved = []
+    vol_reserved.append(_int(b[168:172]))
+    vol_reserved.append(_int(b[172:176]))
+    vol_reserved.append(_int(b[176:180]))
+    vol_reserved.append(_int(b[180:184]))
+    vol_reserved.append(_int(b[184:188]))
+    vol_reserved.append(_int(b[188:192]))
+    vol_reserved.append(_int(b[192:196]))
+    vol_reserved.append(_int(b[196:200]))
     l.append("vol_no = {0}".format(vol_no))
     l.append("vol_count = {0}".format(vol_count))
     l.append("vol_version = {0}".format(vol_version))
@@ -79,33 +84,30 @@ def get_text(co, fo, args):
     l.append("vol_flags = {0}".format(vol_flags))
     l.append("vol_rootvol = {0}".format(vol_rootvol))
     if print_rsv:
-        l.append("vol_reserved04 = 0x{0:08X}".format(vol_reserved04))
-        l.append("vol_reserved05 = 0x{0:08X}".format(vol_reserved05))
-        l.append("vol_reserved06 = 0x{0:08X}".format(vol_reserved06))
-        l.append("vol_reserved07 = 0x{0:08X}".format(vol_reserved07))
-        l.append("vol_reserved08 = 0x{0:016X}".format(vol_reserved08))
-        l.append("vol_reserved09 = 0x{0:016X}".format(vol_reserved09))
+        for x in range(8):
+            l.append("vol_reserved[{0}] = 0x{1:08X}".format(
+                x, vol_reserved[x]))
     l.append("")
 
     vol0_stat_bigblocks = _int(b[200:208])
     vol0_stat_freebigblocks = _int(b[208:216])
-    vol0_reserved11 = _int(b[216:224])
+    vol0_reserved01 = _int(b[216:224])
     vol0_stat_inodes = _int(b[224:232])
-    vol0_reserved10 = _int(b[232:240])
+    vol0_reserved02 = _int(b[232:240])
     vol0_btree_root = _int(b[240:248])
     vol0_next_tid = _int(b[248:256])
-    vol0_unused03 = _int(b[256:264])
+    vol0_reserved03 = _int(b[256:264])
     l.append("vol0_stat_bigblocks     = {0}".format(vol0_stat_bigblocks))
     l.append("vol0_stat_freebigblocks = {0}".format(vol0_stat_freebigblocks))
     if print_rsv:
-        l.append("vol0_reserved11 = 0x{0:016X}".format(vol0_reserved11))
+        l.append("vol0_reserved01 = 0x{0:016X}".format(vol0_reserved01))
     l.append("vol0_stat_inodes = {0}".format(vol0_stat_inodes))
     if print_rsv:
-        l.append("vol0_reserved10 = 0x{0:016X}".format(vol0_reserved10))
+        l.append("vol0_reserved02 = 0x{0:016X}".format(vol0_reserved02))
     l.append("vol0_btree_root = 0x{0:016X}".format(vol0_btree_root))
     l.append("vol0_next_tid = 0x{0:016X}".format(vol0_next_tid))
     if print_rsv:
-        l.append("vol0_unused03 = 0x{0:016X}".format(vol0_unused03))
+        l.append("vol0_reserved03 = 0x{0:016X}".format(vol0_reserved03))
     l.append("")
 
     offset = 264

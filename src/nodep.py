@@ -39,6 +39,7 @@ def __test(version, name):
     import curses
     del curses
 
+# copied from kernel.is_cygwin()
 def __is_cygwin(name):
     if name.startswith("CYGWIN"):
         return True

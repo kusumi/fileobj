@@ -1,4 +1,4 @@
-fileobj ([v0.7.34](https://github.com/kusumi/fileobj/releases/tag/v0.7.34))
+fileobj ([v0.7.35](https://github.com/kusumi/fileobj/releases/tag/v0.7.35))
 =======
 
 ## About
@@ -15,13 +15,13 @@ fileobj ([v0.7.34](https://github.com/kusumi/fileobj/releases/tag/v0.7.34))
 
 |<=2.5|2.6|2.7|3.0|3.1|3.2|3.3|3.4|3.5|
 |:----|:--|:--|:--|:--|:--|:--|:--|:--|
-|-    |o  |o  |o  |o  |o  |o  |o  |o  |
+|NO   |YES|YES|YES|YES|YES|YES|YES|YES|
 
 ## Supported OS
 
-|Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Darwin          |Windows|Other Unix-like |
-|:----|:-----|:------|:------|:-----------|:---------------|:------|:---------------|
-|o    |o     |o      |o      |o           |o (experimental)|-      |? (experimental)|
+|Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Darwin      |Windows|Cygwin      |Other Unix-like |
+|:----|:-----|:------|:------|:-----------|:-----------|:------|:-----------|:---------------|
+|YES  |YES   |YES    |YES    |YES         |EXPERIMENTAL|NO     |EXPERIMENTAL|DON'T KNOW      |
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ fileobj ([v0.7.34](https://github.com/kusumi/fileobj/releases/tag/v0.7.34))
         Python 2.6.6
         $ sudo python ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.34
+        v0.7.35
 
     + See [Installing Python Modules](https://docs.python.org/2/install/index.html) for custom installation.
 
@@ -47,11 +47,13 @@ fileobj ([v0.7.34](https://github.com/kusumi/fileobj/releases/tag/v0.7.34))
         Python 3.3.1
         $ sudo python3 ./setup.py install --force --record ./install.out
         $ fileobj --version
-        v0.7.34
+        v0.7.35
 
     + See [Installing Python Modules](https://docs.python.org/3/installing/index.html) for custom installation.
 
-+ Binary package for older version is available on FreeBSD and DragonFlyBSD, see *Note for BSDs*.
++ See *Note for BSDs* for binary packages available on FreeBSD and DragonFlyBSD.
+
++ See *Note for Cygwin* if Python binaries for both Windows and Cygwin are installed.
 
 + Run *./script/install.sh* to install fileobj(1) manpage under */usr/share/man/man1/*.
 
@@ -1127,3 +1129,7 @@ fileobj ([v0.7.34](https://github.com/kusumi/fileobj/releases/tag/v0.7.34))
 ## Note for Darwin
 
 + Darwin support is experimental, but consider trying notes for BSDs.
+
+## Note for Cygwin
+
++ If Python binaries for both Windows and Cygwin are installed, the shebang line of the executable script (e.g. */usr/bin/fileobj*) may have Windows path which needs to be manually changed to Cygwin path.
