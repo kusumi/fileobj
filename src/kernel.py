@@ -30,6 +30,7 @@ import re
 from . import env
 from . import filebytes
 from . import log
+from . import nodep
 from . import setting
 from . import util
 
@@ -77,17 +78,8 @@ def __system_is(s):
 def __is_xnix():
     return setting.use_xnix
 
-# this detects Cygwin, but not sure if it works against all versions
 def is_cygwin():
-    if _system.startswith("CYGWIN"):
-        return True
-    if not is_windows():
-        return False
-    try:
-        s = util.execute("uname")[0]
-        return s.startswith("CYGWIN")
-    except Exception:
-        return False
+    return nodep.is_cygwin(_system)
 
 def is_bsd():
     return \
@@ -134,6 +126,8 @@ elif is_darwin():
     from . import darwin as _kmod
 elif is_windows():
     from . import windows as _kmod
+elif is_cygwin():
+    from . import cygwin as _kmod
 elif is_xnix():
     from . import xnix as _kmod
 else:

@@ -34,13 +34,13 @@ def __test(version, name):
     s = "Using Python %s" % '.'.join([str(x) for x in version])
     if version < (2, 6, 0):
         raise Exception("%s\nPython 2.6 or above is required" % s)
-    elif name == "Windows" and not __is_cygwin(name):
+    elif name == "Windows" and not is_cygwin(name):
         raise Exception("Windows is not supported")
     import curses
     del curses
 
-# copied from kernel.is_cygwin()
-def __is_cygwin(name):
+# XXX This detects Cygwin, but not sure if it works against all versions.
+def is_cygwin(name):
     if name.startswith("CYGWIN"):
         return True
     if not name.startswith("Windows"):

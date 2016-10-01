@@ -37,3 +37,22 @@ if platform.system() in (
     "Darwin"):
     if "FILEOBJ_USE_BSD_CAVEAT" not in os.environ:
         os.environ["FILEOBJ_USE_BSD_CAVEAT"] = "forced_by_init"
+
+# XXX copied from nodep.is_cygwin()
+def __is_cygwin(name):
+    if name.startswith("CYGWIN"):
+        return True
+    if not name.startswith("Windows"):
+        return False
+    try:
+        import subprocess
+        p = subprocess.Popen(["uname"], stdout=subprocess.PIPE)
+        s = p.communicate()[0]
+        return s.startswith("CYGWIN")
+    except Exception:
+        return False
+
+# procfs doesn't appear in mount(8) result in Cygwin
+if __is_cygwin(platform.system()):
+    if "FILEOBJ_PROCFS_MOUNT_POINT" not in os.environ:
+        os.environ["FILEOBJ_PROCFS_MOUNT_POINT"] = "/proc"

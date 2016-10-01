@@ -298,7 +298,7 @@ def iter_ps(opt=None):
     if not opt:
         opt = "aux" if setting.use_ps_aux else "ax"
     try:
-        s = util.execute("ps", opt)[0]
+        s = util.execute("ps", opt).stdout
     except Exception:
         s = ''
     l = s.split('\n')
@@ -372,7 +372,7 @@ def get_procfs_mount_point(label=''):
 
 def get_fs_mount_point(*labels):
     try:
-        s = util.execute("mount")[0]
+        s = util.execute("mount").stdout
     except Exception:
         return ''
     for x in s.split('\n'):

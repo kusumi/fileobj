@@ -111,7 +111,7 @@ def get_total_ram():
     hw.physmem=1073266688
     """
     try:
-        s = util.execute("sysctl", "hw.physmem")[0]
+        s = util.execute("sysctl", "hw.physmem").stdout
         x = s.split("=")[-1]
         return int(x)
     except Exception as e:

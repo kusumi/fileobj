@@ -1,3 +1,10 @@
+v0.7.36
+=======
+- Minor fixes and improvement
+- Improve Cygwin support
+- Separate lists/examples/notes section of README.md into different script/*.md files
+- Add script/autogen.py
+
 v0.7.35
 =======
 - Minor fixes and improvement

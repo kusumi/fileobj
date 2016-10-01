@@ -28,11 +28,14 @@ _ = version.get_version()
 def get_project_url():
     return "https://sourceforge.net/projects/fileobj/"
 
-def get_archive_url():
+def get_project_archive_url():
     return "https://downloads.sourceforge.net/project/fileobj/fileobj-{0}.{1}.{2}.tar.gz".format(*_)
 
 def get_repository_url():
     return "https://github.com/kusumi/fileobj/tree/v{0}.{1}/".format(_[0], _[1])
+
+def get_repository_archive_url():
+    return "https://github.com/kusumi/fileobj/archive/v{0}.{1}.{2}.tar.gz".format(*_)
 
 def get_readme_url():
     return "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md".format(_[0], _[1])

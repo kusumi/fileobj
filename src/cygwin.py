@@ -21,22 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from . import filebytes
-from . import libc
 from . import linux
-from . import log
-from . import setting
 from . import unix
-from . import util
-
-PT_READ_I   = 1
-PT_READ_D   = 2
-PT_WRITE_I  = 4
-PT_WRITE_D  = 5
-PT_CONTINUE = 7
-PT_KILL     = 8
-PT_ATTACH   = 9
-PT_DETACH   = 10
 
 def get_term_info():
     return unix.get_term_info()
@@ -45,34 +31,7 @@ def get_lang_info():
     return unix.get_lang_info()
 
 def get_blkdev_info(fd):
-    # ioctl value depends on sizeof(disklabel)
-    if setting.netbsd_sizeof_disklabel > 0:
-        size = setting.netbsd_sizeof_disklabel
-    elif util.is_64bit_cpu(): # assume x86_64/gcc
-        size = 408
-    elif util.is_32bit_cpu(): # assume i386/gcc
-        size = 404
-    else: # forget it
-        log.error("Unsupported processor " + util.get_cpu_name())
-        return -1, -1, ''
-    try:
-        DIOCGDINFO = 0x40006465 | ((size & 0x1FFF) << 16)
-        b = unix.ioctl(fd, DIOCGDINFO, size)
-        d_typename   = b[8:24]
-        d_secsize    = util.host_to_int(b[40:44])
-        d_nsectors   = util.host_to_int(b[44:48])
-        d_ntracks    = util.host_to_int(b[48:52])
-        d_ncylinders = util.host_to_int(b[52:56])
-        d_secperunit = util.host_to_int(b[60:64])
-        x = d_nsectors * d_ntracks * d_ncylinders
-        if d_secperunit > x:
-            x = d_secperunit
-        label = util.bytes_to_str(filebytes.rstrip(d_typename))
-        return x * d_secsize, d_secsize, label
-    except Exception as e:
-        log.error("ioctl({0}, {1}) failed, {2}".format(
-            fd.name, "DIOCGDINFO", e))
-        raise
+    return linux.get_blkdev_info(fd)
 
 def stat_size(f):
     return unix.stat_size(f)
@@ -135,20 +94,10 @@ def set_cbreak(fd):
     return unix.set_cbreak(fd)
 
 def get_total_ram():
-    """
-    [root@netbsd ~]# sysctl hw.physmem
-    hw.physmem = 393039872
-    """
-    try:
-        s = util.execute("sysctl", "hw.physmem").stdout
-        x = s.split()[-1]
-        return int(x)
-    except Exception as e:
-        log.error(e)
-        return linux.get_total_ram()
+    return linux.get_meminfo("MemTotal")
 
 def get_free_ram():
-    return linux.get_free_ram()
+    return linux.get_meminfo("MemFree")
 
 def is_blkdev(f):
     return unix.stat_is_blkdev(f)
@@ -166,7 +115,7 @@ def has_mmap():
     return True
 
 def has_mremap():
-    return True
+    return False
 
 def test_mmap_resize():
     return unix.test_mmap_resize()
@@ -181,44 +130,43 @@ def has_pid(pid):
     return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
 
 def get_pid_name(pid):
-    ret = unix.get_pid_name_from_fs(pid, "cmdline")
-    if not ret:
-        return unix.get_pid_name_from_ps(pid)
-    else:
-        return ret
+    return unix.get_pid_name_from_ps(pid)
 
 def is_pid_path_supported():
     return False
 
 def ptrace_peektext(pid, addr):
-    return libc.ptrace(PT_READ_I, pid, addr, None)
+    assert 0, "Not implemented"
 
 def ptrace_peekdata(pid, addr):
-    return libc.ptrace(PT_READ_D, pid, addr, None)
+    assert 0, "Not implemented"
 
 def ptrace_poketext(pid, addr, data):
-    return libc.ptrace(PT_WRITE_I, pid, addr, data)
+    assert 0, "Not implemented"
 
 def ptrace_pokedata(pid, addr, data):
-    return libc.ptrace(PT_WRITE_D, pid, addr, data)
+    assert 0, "Not implemented"
 
 def ptrace_cont(pid):
-    return libc.ptrace(PT_CONTINUE, pid, 1, 0)
+    assert 0, "Not implemented"
 
 def ptrace_kill(pid):
-    return libc.ptrace(PT_KILL, pid, None, None)
+    assert 0, "Not implemented"
 
 def ptrace_attach(pid):
-    return libc.ptrace(PT_ATTACH, pid, None, None)
+    assert 0, "Not implemented"
 
 def ptrace_detach(pid):
-    return libc.ptrace(PT_DETACH, pid, 1, 0)
+    assert 0, "Not implemented"
 
-ptrace_peek = ptrace_peektext
-ptrace_poke = ptrace_poketext
+def ptrace_peek(pid, addr):
+    assert 0, "Not implemented"
+
+def ptrace_poke(pid, addr, data):
+    assert 0, "Not implemented"
 
 def get_ptrace_word_size():
-    return libc.get_ptrace_data_size()
+    assert 0, "Not implemented"
 
 def waitpid(pid, opts):
     return unix.waitpid(pid, opts)
@@ -228,4 +176,3 @@ def parse_waitpid_result(status):
 
 def init():
     unix.init_procfs()
-    libc.init_ptrace("int")

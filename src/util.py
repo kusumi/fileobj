@@ -657,14 +657,21 @@ def get_md5(b):
         return hashlib.md5(b).hexdigest()
 
 def execute(*l):
+    return __execute(False, l)
+
+def execute_sh(cmd):
+    return __execute(True, (cmd,))
+
+def __execute(shell, l):
     """Return stdout string, stderr string, return code"""
-    p = subprocess.Popen(l, stdout=subprocess.PIPE)
+    p = subprocess.Popen(l, stdout=subprocess.PIPE, shell=shell)
     out, err = p.communicate()
     if out is None:
         out = _('')
     if err is None:
         err = _('')
-    return bytes_to_str(out), bytes_to_str(err), p.returncode
+    l = bytes_to_str(out), bytes_to_str(err), p.returncode
+    return Namespace(stdout=l[0], stderr=l[1], retval=l[2])
 
 def __iter_next_2k(g):
     return g.next()
