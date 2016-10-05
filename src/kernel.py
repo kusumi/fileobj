@@ -293,13 +293,7 @@ def stat_type(f):
         ret = o.stat_type(f)
         if ret != -1:
             return ret
-    return util.Namespace(
-        is_file=False,
-        is_dir=False,
-        is_blkdev=False,
-        is_chrdev=False,
-        is_fifo=False,
-        is_sock=False)
+    return util.init_stat_type(None)
 
 def get_page_size():
     o = get_kernel_module()

@@ -1,4 +1,4 @@
-fileobj ([v0.7.36](https://github.com/kusumi/fileobj/releases/tag/v0.7.36))
+fileobj ([v0.7.37](https://github.com/kusumi/fileobj/releases/tag/v0.7.37))
 =======
 
 ## About
@@ -17,9 +17,9 @@ fileobj ([v0.7.36](https://github.com/kusumi/fileobj/releases/tag/v0.7.36))
 
 ## Supported operating systems
 
-|Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Darwin      |Windows|Cygwin      |Other Unix-like         |
-|:----|:-----|:------|:------|:-----------|:-----------|:------|:-----------|:-----------------------|
-|YES  |YES   |YES    |YES    |YES         |EXPERIMENTAL|NO     |EXPERIMENTAL|DON'T KNOW (NEVER TRIED)|
+|Linux|NetBSD|OpenBSD|FreeBSD|DragonFlyBSD|Darwin |Windows|Cygwin|Others    |
+|:----|:-----|:------|:------|:-----------|:------|:------|:-----|:---------|
+|YES  |YES   |YES    |YES    |YES         |LIMITED|NO     |YES   |DON'T KNOW|
 
 ## Install
 
@@ -52,7 +52,7 @@ fileobj ([v0.7.36](https://github.com/kusumi/fileobj/releases/tag/v0.7.36))
 
 ## [Reporting issues](https://github.com/kusumi/fileobj/issues)
 
-## [CHANGES](https://github.com/kusumi/fileobj/blob/v0.7/CHANGES)
+## [Changes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.changes.md)
 
 ## [Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md)
 

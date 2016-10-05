@@ -350,6 +350,7 @@ class _console (console.Console):
         self.add_method(literal.s_kmod       , this,    "_buffer_input")
         self.add_method(literal.s_fcls       , this,    "_buffer_input")
         self.add_method(literal.s_bufsiz     , this,    "_buffer_input")
+        self.add_method(literal.s_meminfo    , this,    "_buffer_input")
         self.add_method(literal.s_platform   , this,    "_buffer_input")
         self.add_method(literal.s_hostname   , this,    "_buffer_input")
         self.add_method(literal.s_term       , this,    "_buffer_input")

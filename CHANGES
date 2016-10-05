@@ -1,3 +1,9 @@
+v0.7.37
+=======
+- Minor fixes and improvement
+- Add :meminfo
+- Add script/README.changes.md
+
 v0.7.36
 =======
 - Minor fixes and improvement
@@ -14,10 +20,8 @@ v0.7.35
 v0.7.34
 =======
 - Minor fixes and improvement
-- Remove v prefix from version# in sdist archive to sync with Fedora's RPM versioning in general.
-  (Git branch and tag name still use v prefix)
-- Add version.RELEASE to sync with Fedora's RPM versioning in general.
-  (version.RELEASE may or may not be used)
+- Remove v prefix from version# in sdist archive to sync with Fedora's RPM versioning in general (Git branch and tag name still use v prefix)
+- Add version.RELEASE to sync with Fedora's RPM versioning in general (version.RELEASE may or may not be used)
 - Rename script/installman.sh to script/install.sh
 - Remove script/check.py
 - Improve README.md
@@ -57,8 +61,7 @@ v0.7.28
 =======
 - Minor bug fixes
 - Cleanups
-- Support string type in :cstruct in addition to char[]
-  (helps omit bunch of \0 shown when using char[] as C string)
+- Support string type in :cstruct in addition to char[] (helps omit bunch of \0 shown when using char[] as C string)
 - Support x8,x16,x32,x64 types in :cstruct to indicate unsigned hexadecimal output
 - Add :hammervol extension
 - Add FILEOBJ_USE_TMUX_CAVEAT

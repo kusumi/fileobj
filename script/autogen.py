@@ -23,6 +23,7 @@
 
 if __name__ == '__main__':
     import os
+    import re
     import sys
     import fileobj.util
 
@@ -95,6 +96,38 @@ if __name__ == '__main__':
         f = "./CONTRIBUTORS"
         write(f, s)
         print(f)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    try:
+        l = []
+        v = []
+        for s in open("./CHANGES"):
+            s = s.rstrip()
+            if not s:
+                continue
+            m = re.match(r"v\d+\.\d+\.\d+$", s)
+            if m:
+                if v:
+                    l.append("")
+                l.append("## {0}".format(s))
+                v.append(s)
+                continue
+            m = re.match(r"=+$", s)
+            if m:
+                continue
+            m = re.match(r"- (.+)$", s)
+            if m:
+                l.append("+ {0}".format(m.group(1)))
+                continue
+            assert 0, "Invalid line " + s
+        assert l and v
+
+        f = os.path.join(d, "README.changes.md")
+        writel(f, l)
+        print(f)
+        print(v)
     except Exception as e:
         print(e)
         sys.exit(1)

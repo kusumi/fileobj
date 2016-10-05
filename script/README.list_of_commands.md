@@ -70,6 +70,7 @@
         :kmod                    Print Python module name for the platform OS
         :lang                    Print locale type
         :md5                     Print md5 message digest of the current buffer
+        :meminfo                 Print free/total physial memory
         :only                    Make the current window the only one
         <CTRL>wo                 Make the current window the only one
         <CTRL>w<CTRL>o           Make the current window the only one

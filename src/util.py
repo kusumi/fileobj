@@ -30,6 +30,7 @@ import inspect
 import os
 import platform
 import re
+import stat
 import string
 import struct
 import subprocess
@@ -597,6 +598,21 @@ def is_readable(f):
 def is_writable(f):
     return os.access(f, os.W_OK)
 
+def init_stat_type(f):
+    try:
+        _ = os.stat(f).st_mode
+        t = "reg", "dir", "blk", "chr", "fifo", "sock"
+        l = [getattr(stat, "S_IS" + s.upper())(_) for s in t]
+    except Exception:
+        l = [False for x in range(6)]
+    return Namespace(
+        is_file=l[0],
+        is_dir=l[1],
+        is_blkdev=l[2],
+        is_chrdev=l[3],
+        is_fifo=l[4],
+        is_sock=l[5])
+
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
     if not setting.use_path_attr:
@@ -663,15 +679,16 @@ def execute_sh(cmd):
     return __execute(True, (cmd,))
 
 def __execute(shell, l):
-    """Return stdout string, stderr string, return code"""
     p = subprocess.Popen(l, stdout=subprocess.PIPE, shell=shell)
     out, err = p.communicate()
     if out is None:
         out = _('')
     if err is None:
         err = _('')
-    l = bytes_to_str(out), bytes_to_str(err), p.returncode
-    return Namespace(stdout=l[0], stderr=l[1], retval=l[2])
+    return Namespace(
+        stdout=bytes_to_str(out),
+        stderr=bytes_to_str(err),
+        retval=p.returncode)
 
 def __iter_next_2k(g):
     return g.next()

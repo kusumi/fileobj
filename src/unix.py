@@ -28,7 +28,6 @@ import os
 import posix
 import re
 import resource
-import stat
 import struct
 import termios
 import tty
@@ -116,16 +115,10 @@ def touch(f):
     return utime(f, None)
 
 def stat_type(f):
-    if not os.path.exists(f):
+    if os.path.exists(f):
+        return util.init_stat_type(f)
+    else:
         return -1
-    x = os.stat(f).st_mode
-    return util.Namespace(
-        is_file=stat.S_ISREG(x),
-        is_dir=stat.S_ISDIR(x),
-        is_blkdev=stat.S_ISBLK(x),
-        is_chrdev=stat.S_ISCHR(x),
-        is_fifo=stat.S_ISFIFO(x),
-        is_sock=stat.S_ISSOCK(x))
 
 def stat_is_blkdev(f):
     t = stat_type(f)

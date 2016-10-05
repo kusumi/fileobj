@@ -573,6 +573,10 @@ def show_fileobj_class(self, amp, opc, args, raw):
 def show_buffer_size(self, amp, opc, args, raw):
     self.co.show(self.co.get_buffer_size())
 
+def show_meminfo(self, amp, opc, args, raw):
+    self.co.show("{0}/{1}".format(
+        kernel.get_free_ram(), kernel.get_total_ram()))
+
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
         util.get_os_name(), util.get_os_release()))

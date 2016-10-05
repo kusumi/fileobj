@@ -1,6 +1,6 @@
 ## Notes
 
-+ Creates a new directory *${HOME}/.fileobj* if it doesn't exist, and creates some files under the directory.
++ A new directory *${HOME}/.fileobj* and some files under that directory are automatically created if they don't exist.
 
 + Some keyboard keys may not work correctly on vt100 terminal.
 
@@ -50,7 +50,5 @@
 + Darwin support is experimental. Not all features are supported, but it at least runs.
 
 ## Notes for Cygwin
-
-+ Cygwin support is experimental. Not all features are supported, but it at least runs.
 
 + If Python binaries for both Windows and Cygwin are installed, the shebang line of the executable script (e.g. */usr/bin/fileobj*) may have Windows path which needs to be manually changed to Cygwin path.
