@@ -181,6 +181,9 @@ def get_pid_name(pid):
 def is_pid_path_supported():
     return False
 
+def has_ptrace():
+    return libc.has_ptrace()
+
 def ptrace_peektext(pid, addr):
     return libc.ptrace(PT_READ_I, pid, addr, None)
 

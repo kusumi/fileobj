@@ -30,7 +30,8 @@ def get_text(co, fo, args):
         fileobj.literal.get_ext_literals()]
     if not l:
         return "No extension"
-    f = "{{0:>2}} {{1:<{0}}} {{2:<{1}}} {{3}}".format(
+    f = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3}}".format(
+        fileobj.extension.get_index_width(l),
         max([len(x[0]) for x in l]),
         max([len(x[1]) for x in l]),)
     return [f.format(i + 1, x[0], x[1], x[2]) for i, x in enumerate(l)]

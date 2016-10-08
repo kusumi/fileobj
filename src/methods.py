@@ -577,6 +577,16 @@ def show_meminfo(self, amp, opc, args, raw):
     self.co.show("{0}/{1}".format(
         kernel.get_free_ram(), kernel.get_total_ram()))
 
+def show_osdep(self, amp, opc, args, raw):
+    def _(t):
+        return "yes" if t else "no"
+    self.co.show("mmap={0},mremap={1},blkdev={2},ptrace={3},chgat={4}".format(
+        _(kernel.has_mmap()),
+        _(kernel.has_mremap()),
+        _(kernel.is_blkdev_supported()),
+        _(kernel.has_ptrace()),
+        _(screen.has_chgat())))
+
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
         util.get_os_name(), util.get_os_release()))

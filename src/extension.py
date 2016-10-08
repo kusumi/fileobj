@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 from __future__ import with_statement
 
 import os
@@ -125,3 +126,11 @@ def get_verbose_path(o):
         return util.NO_NAME
     else:
         return f
+
+def get_index_width(l):
+    n = len(l)
+    x = 0
+    while n:
+        n //= 10
+        x += 1
+    return x

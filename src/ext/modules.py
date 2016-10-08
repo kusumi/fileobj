@@ -21,12 +21,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.extension
 import fileobj.util
 
 def get_text(co, fo, args):
     d = fileobj.util.get_import_modules()
+    f = "{{0:{0}}} {{1}}".format(
+        fileobj.extension.get_index_width(d.keys()))
     if d:
         g = enumerate(sorted(d.keys()))
-        return ["{0:>2} {1}".format(i + 1, d[k]) for i, k in g]
+        return [f.format(i + 1, d[k]) for i, k in g]
     else:
         return "No module"

@@ -1,3 +1,8 @@
+## v0.7.38
++ Minor fixes and improvement
++ Add :allocator
++ Add :osdep
+
 ## v0.7.37
 + Minor fixes and improvement
 + Add :meminfo

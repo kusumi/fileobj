@@ -87,6 +87,7 @@ class _console (console.Console):
         self.add_method(literal.s_fcls       , methods, "show_fileobj_class")
         self.add_method(literal.s_bufsiz     , methods, "show_buffer_size")
         self.add_method(literal.s_meminfo    , methods, "show_meminfo")
+        self.add_method(literal.s_osdep      , methods, "show_osdep")
         self.add_method(literal.s_platform   , methods, "show_platform")
         self.add_method(literal.s_hostname   , methods, "show_hostname")
         self.add_method(literal.s_term       , methods, "show_term")

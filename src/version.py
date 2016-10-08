@@ -28,7 +28,7 @@
 
 MAJOR = 0
 MINOR1 = 7
-MINOR2 = 37
+MINOR2 = 38
 RELEASE = 1
 
 def get_version():

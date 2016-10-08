@@ -184,6 +184,9 @@ def __parse_ps_name(name):
         return os.path.basename(cmd)
 
 def is_pid_path_supported():
+    return has_ptrace()
+
+def has_ptrace():
     return libc.has_ptrace()
 
 def ptrace_peektext(pid, addr):

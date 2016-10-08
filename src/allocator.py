@@ -37,9 +37,12 @@ class Allocator (object):
             setattr(self, s, fileobj.get_class(s))
         self.set_default_class("rwmap")
 
-    def iter_enabled_class(self):
+    def iter_class(self):
         for s in iter_module_name():
-            cls = getattr(self, s)
+            yield getattr(self, s)
+
+    def iter_enabled_class(self):
+        for cls in self.iter_class():
             if cls._enabled:
                 yield cls
 
@@ -187,6 +190,9 @@ def iter_module_name():
     yield "rwblk"
     yield "rovm"
     yield "rrvm"
+
+def iter_class():
+    return _allocator.iter_class()
 
 def iter_enabled_class():
     return _allocator.iter_enabled_class()

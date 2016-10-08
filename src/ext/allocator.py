@@ -21,15 +21,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fileobj.allocator
 import fileobj.extension
-import fileobj.util
 
 def get_text(co, fo, args):
-    d = fileobj.util.get_import_exceptions()
-    f = "{{0:{0}}} {{1}}, \"{{2}}\"".format(
-        fileobj.extension.get_index_width(d.keys()))
-    if d:
-        g = enumerate(sorted(d.keys()))
-        return [f.format(i + 1, k, d[k]) for i, k in g]
-    else:
-        return "No exception"
+    l1 = [x for x in fileobj.allocator.iter_class()]
+    l2 = [x for x in fileobj.allocator.iter_enabled_class()]
+    d = fileobj.allocator.get_default_class()
+
+    f = "{{0:{0}}} {{1:{1}}} {{2:{2}}}".format(
+        fileobj.extension.get_index_width(l1),
+        max([len(str(_)) for _ in l1]), 3)
+    sl = []
+    for i, cls in enumerate(l1):
+        if cls in l2:
+            _ = f.format(i + 1, str(cls), "yes")
+        else:
+            _ = f.format(i + 1, str(cls), "no")
+        if cls == d:
+            _ += " *"
+        sl.append(_)
+    return sl

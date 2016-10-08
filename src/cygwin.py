@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from . import libc
 from . import linux
 from . import unix
 
@@ -134,6 +135,9 @@ def get_pid_name(pid):
 
 def is_pid_path_supported():
     return False
+
+def has_ptrace():
+    return libc.has_ptrace() # likely False
 
 def ptrace_peektext(pid, addr):
     assert 0, "Not implemented"

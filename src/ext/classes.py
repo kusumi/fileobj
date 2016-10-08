@@ -23,6 +23,7 @@
 
 import inspect
 
+import fileobj.extension
 import fileobj.util
 
 def get_text(co, fo, args):
@@ -33,10 +34,12 @@ def get_text(co, fo, args):
                 l.append(x)
     if not l:
         return "No class"
+    f = "{{0:{0}}} {{1}}".format(
+        fileobj.extension.get_index_width(l))
     sl = []
     for i, cls in enumerate(l):
         x = inspect.getmro(cls)
         if x[-1] != object:
             return "{0} is not derived from {1}".format(x[0], object)
-        sl.append("{0:>3} {1}".format(i + 1, x))
+        sl.append(f.format(i + 1, x))
     return sl

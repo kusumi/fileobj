@@ -486,6 +486,14 @@ def path_to_pid(f):
     except Exception:
         return -1
 
+def has_ptrace():
+    """Return True if ptrace(2) is supported"""
+    o = get_kernel_module()
+    if o:
+        return o.has_ptrace()
+    else:
+        return False
+
 def ptrace_peektext(pid, addr):
     o = get_kernel_module()
     if o:

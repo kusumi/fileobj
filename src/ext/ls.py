@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division
 import os
 
 import fileobj.extension
@@ -36,14 +35,8 @@ def get_text(co, fo, args):
     l2 = [len(str(o.get_size())) for o in l]
     l2.append(len(title[3]))
 
-    n = len(l)
-    x = 0
-    while n:
-        n //= 10
-        x += 1
-
     f = "{{0:{0}}} {{1}} {{2:<{1}}} {{3:{2}}} {{4}}".format(
-        x, max(l1), max(l2))
+        fileobj.extension.get_index_width(l), max(l1), max(l2))
     sl = [f.format(*title)]
     for i, o in enumerate(l):
         c = " " if os.path.exists(o.get_path()) else "!"
