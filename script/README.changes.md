@@ -1,3 +1,9 @@
+## v0.7.39
++ Minor fixes and improvement
++ Improve Cygwin support
++ Add FILEOBJ_USE_CYGWIN_CAVEAT
++ Add script/README.distributions.md
+
 ## v0.7.38
 + Minor fixes and improvement
 + Add :allocator

@@ -84,6 +84,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_XNIX"
     yield "FILEOBJ_OS_UNAME"
     yield "FILEOBJ_USE_BSD_CAVEAT"
+    yield "FILEOBJ_USE_CYGWIN_CAVEAT"
     yield "FILEOBJ_USE_TMUX_CAVEAT"
     yield "FILEOBJ_USE_PUTTY_CAVEAT"
     yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
@@ -413,6 +414,9 @@ def __get_setting_os_uname():
 
 def __get_setting_use_bsd_caveat():
     return test_bool("FILEOBJ_USE_BSD_CAVEAT", False)
+
+def __get_setting_use_cygwin_caveat():
+    return test_bool("FILEOBJ_USE_CYGWIN_CAVEAT", False)
 
 def __get_setting_use_tmux_caveat():
     return test_bool("FILEOBJ_USE_TMUX_CAVEAT", False)

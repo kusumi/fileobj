@@ -1,4 +1,4 @@
-fileobj ([v0.7.38](https://github.com/kusumi/fileobj/releases/tag/v0.7.38))
+fileobj ([v0.7.39](https://github.com/kusumi/fileobj/releases/tag/v0.7.39))
 =======
 
 ## About
@@ -55,6 +55,8 @@ fileobj ([v0.7.38](https://github.com/kusumi/fileobj/releases/tag/v0.7.38))
 ## [Changes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.changes.md)
 
 ## [Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md)
+
+## [Distributions](https://github.com/kusumi/fileobj/blob/v0.7/script/README.distributions.md)
 
 ## [List of options](https://github.com/kusumi/fileobj/blob/v0.7/script/README.list_of_options.md)
 

@@ -170,6 +170,9 @@ def dispatch(optargs=None):
     if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
         msg = "BSD caveat enabled on {0}".format(util.get_os_name())
         log.error(msg)
+    if not kernel.is_cygwin() and setting.use_cygwin_caveat:
+        msg = "CYGWIN caveat enabled on {0}".format(util.get_os_name())
+        log.error(msg)
 
     if ret == -1:
         msg = "Failed to make user directory {0}".format(setting.user_dir)

@@ -574,8 +574,10 @@ def show_buffer_size(self, amp, opc, args, raw):
     self.co.show(self.co.get_buffer_size())
 
 def show_meminfo(self, amp, opc, args, raw):
-    self.co.show("{0}/{1}".format(
-        kernel.get_free_ram(), kernel.get_total_ram()))
+    self.co.show("total={0},free={1},page={2}".format(
+        util.get_size_repr(kernel.get_total_ram()),
+        util.get_size_repr(kernel.get_free_ram()),
+        util.get_size_repr(kernel.get_page_size())))
 
 def show_osdep(self, amp, opc, args, raw):
     def _(t):

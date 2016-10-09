@@ -18,22 +18,6 @@
 
 ## Notes for BSDs
 
-+ Binary package for older version is available on [FreeBSD](https://www.freebsd.org/cgi/ports.cgi?query=fileobj&stype=name).
-
-        $ uname
-        FreeBSD
-        $ sudo pkg search fileobj
-        fileobj-0.7.25                 Portable hex editor with vi like interface
-        $ sudo pkg install fileobj
-
-+ Binary package for older version is also available on DragonFlyBSD.
-
-        $ uname
-        DragonFly
-        $ sudo pkg search fileobj
-        fileobj-0.7.25                 Portable hex editor with vi like interface
-        $ sudo pkg install fileobj
-
 + NetBSD requires py-curses package other than the python package itself.
 
         $ uname

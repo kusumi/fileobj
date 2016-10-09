@@ -44,7 +44,7 @@ if __name__ == '__main__':
     setup(name      = "fileobj",
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
-        #author_email=
+        #author_email= -> see git log
         url         = "https://sourceforge.net/projects/fileobj/",
         description = "Hex Editor",
         license     = "BSD License (2-clause)",

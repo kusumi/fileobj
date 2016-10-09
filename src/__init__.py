@@ -26,9 +26,6 @@
 import os
 import platform
 
-# XXX
-# For now, force BSD caveat if the platform is either of the following,
-# but don't enable or change the value if it's already defined.
 if platform.system() in (
     "NetBSD",
     "OpenBSD",
@@ -52,7 +49,10 @@ def __is_cygwin(name):
     except Exception:
         return False
 
-# procfs doesn't appear in mount(8) result in Cygwin
 if __is_cygwin(platform.system()):
+    if "FILEOBJ_USE_CYGWIN_CAVEAT" not in os.environ:
+        os.environ["FILEOBJ_USE_CYGWIN_CAVEAT"] = "forced_by_init"
+
+    # procfs doesn't appear in mount command result
     if "FILEOBJ_PROCFS_MOUNT_POINT" not in os.environ:
         os.environ["FILEOBJ_PROCFS_MOUNT_POINT"] = "/proc"
