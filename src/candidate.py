@@ -74,7 +74,7 @@ class PathCandidate (_candidate):
         p = path.Path(arg)
         d, b = os.path.split(p.path)
         if util.is_readable(d) and \
-            (p.is_dir or p.is_file or p.is_noent):
+            (p.is_dir or p.is_reg or p.is_noent):
             for s in sorted(os.listdir(d)):
                 if s.startswith(b):
                     yield os.path.join(d, s)

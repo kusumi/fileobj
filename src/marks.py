@@ -52,7 +52,7 @@ class Marks (object):
 
     def __read_marks(self):
         f = self.__path.path
-        if not self.__path.is_file:
+        if not self.__path.is_reg:
             if not self.__path.is_noent:
                 log.error("Can not read " + f)
             return -1
@@ -104,7 +104,7 @@ class Marks (object):
         self.__data[f] = d
 
 def _is_valid_path(o):
-    return o.is_file or o.is_noent
+    return o.is_reg or o.is_noent
 
 def _string_to_data(s):
     m = re.match(r"^(\S)(\d+)$", s)

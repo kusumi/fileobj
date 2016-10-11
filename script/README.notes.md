@@ -18,7 +18,9 @@
 
 ## Notes for BSDs
 
-+ NetBSD requires py-curses package other than the python package itself.
++ Entering block visual mode may require *CTRL-v CTRL-v* instead of *CTRL-v*.
+
++ NetBSD may require py-curses package other than the python package itself (seems no longer necessary in recent NetBSD versions).
 
         $ uname
         NetBSD
@@ -26,8 +28,6 @@
         No module named _curses
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
-
-+ Entering block visual mode may require *CTRL-v CTRL-v* instead of *CTRL-v*.
 
 ## Notes for Darwin
 

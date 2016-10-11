@@ -119,7 +119,7 @@ class Fileobj (object):
     def set_magic(self):
         if not setting.use_magic_scan:
             return -1
-        if self.__path.is_file:
+        if self.__path.is_reg:
             self.__attr.magic = magic.get_string(self)
         elif kernel.is_blkdev(self.get_path()):
             self.__attr.magic = magic.get_blk_string(self)

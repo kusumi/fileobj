@@ -1,19 +1,19 @@
-fileobj ([v0.7.39](https://github.com/kusumi/fileobj/releases/tag/v0.7.39))
+fileobj ([v0.7.40](https://github.com/kusumi/fileobj/releases/tag/v0.7.40))
 =======
 
 ## About
 
 + [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
 
-+ fileobj is a portable hex editor with vi like interface. This software is written in Python and runs on Python 2.6 or above. This software supports Linux distributions and BSDs in general. Other Unix-like operating systems with ncurses are experimentally supported. This software provides basic vi commands for binary editing. Features include inserting, replacing, deleting data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, support for multiple buffers and windows, block device editing, ptrace based userspace editing, mapping data to C style struct, etc.
++ fileobj is a portable hex editor with vi like interface. This software is written in Python and runs on Python 2.6 or above. This software supports Linux, BSDs in general, and Cygwin. Other Unix-like operating systems with ncurses are experimentally supported. This software provides basic vi commands for binary editing. Features include inserting, replacing, deleting data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, support for multiple buffers and windows, block device editing, ptrace based userspace editing, mapping data to C style struct, etc.
 
 + Repository is available at [https://github.com/kusumi/fileobj/tree/v0.7/](https://github.com/kusumi/fileobj/tree/v0.7/).
 
 ## Supported Python versions
 
-|<=2.5|2.6|2.7|3.0|3.1|3.2|3.3|3.4|3.5|
-|:----|:--|:--|:--|:--|:--|:--|:--|:--|
-|NO   |YES|YES|YES|YES|YES|YES|YES|YES|
+|<=2.5|2.6|2.7|3.0|3.1|3.2|3.3|3.4|3.5|3.6beta|
+|:----|:--|:--|:--|:--|:--|:--|:--|:--|:------|
+|NO   |YES|YES|YES|YES|YES|YES|YES|YES|YES    |
 
 ## Supported operating systems
 

@@ -32,7 +32,7 @@ _has_relpath = util.is_python_version_or_ht(2, 6, 0)
 _t_noent   = 1 << 0
 _t_noperm  = 1 << 1
 _t_link    = 1 << 2
-_t_file    = 1 << 3
+_t_reg     = 1 << 3
 _t_dir     = 1 << 4
 _t_blkdev  = 1 << 5
 _t_chrdev  = 1 << 6
@@ -65,8 +65,8 @@ class Path (object):
     def is_link(self):
         return _test(self.__type, _t_link)
     @property
-    def is_file(self):
-        return _test(self.__type, _t_file)
+    def is_reg(self):
+        return _test(self.__type, _t_reg)
     @property
     def is_dir(self):
         return _test(self.__type, _t_dir)
@@ -97,8 +97,8 @@ class Path (object):
             ret.append("NOPERM")
         if self.is_link:
             ret.append("LINK")
-        if self.is_file:
-            ret.append("FILE")
+        if self.is_reg:
+            ret.append("REG")
         if self.is_dir:
             ret.append("DIR")
         if self.is_blkdev:
@@ -185,18 +185,19 @@ def _get_type_real(f):
             a = util.is_readable(s)
 
     ret = 0
-    t = kernel.stat_type(f)
-    if t.is_file:
-        ret |= _t_file
-    if t.is_dir:
+
+    d = kernel.stat_type(f)
+    if d.get("reg", False):
+        ret |= _t_reg
+    if d.get("dir", False):
         ret |= _t_dir
-    if t.is_blkdev:
+    if d.get("blkdev", False):
         ret |= _t_blkdev
-    if t.is_chrdev:
+    if d.get("chrdev", False):
         ret |= _t_chrdev
-    if t.is_fifo:
+    if d.get("fifo", False):
         ret |= _t_fifo
-    if t.is_sock:
+    if d.get("sock", False):
         ret |= _t_sock
     if not ret:
         return _t_unknown
@@ -209,8 +210,8 @@ def is_noperm(f):
     return _test(get_type(f), _t_noperm)
 def is_link(f):
     return _test(get_type(f), _t_link)
-def is_file(f):
-    return _test(get_type(f), _t_file)
+def is_reg(f):
+    return _test(get_type(f), _t_reg)
 def is_dir(f):
     return _test(get_type(f), _t_dir)
 def is_blkdev(f):

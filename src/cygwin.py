@@ -96,10 +96,10 @@ def set_cbreak(fd):
     return unix.set_cbreak(fd)
 
 def get_total_ram():
-    return linux.get_meminfo("MemTotal")
+    return linux.get_total_ram()
 
 def get_free_ram():
-    return linux.get_meminfo("MemFree")
+    return linux.get_free_ram()
 
 def is_blkdev(f):
     return unix.stat_is_blkdev(f)
@@ -129,10 +129,10 @@ def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
 
 def has_pid(pid):
-    return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
+    return unix.has_pid(pid)
 
 def get_pid_name(pid):
-    return unix.get_pid_name_from_ps(pid)
+    return unix.get_pid_name(pid)
 
 def is_pid_path_supported():
     return False

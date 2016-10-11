@@ -287,13 +287,15 @@ def touch(f):
     else:
         return -1
 
+# returns dict
 def stat_type(f):
     o = get_kernel_module()
     if o:
         ret = o.stat_type(f)
         if ret != -1:
+            assert isinstance(ret, dict)
             return ret
-    return util.init_stat_type(None)
+    return dict()
 
 def get_page_size():
     o = get_kernel_module()

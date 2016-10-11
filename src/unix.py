@@ -28,6 +28,7 @@ import os
 import posix
 import re
 import resource
+import stat
 import struct
 import termios
 import tty
@@ -114,23 +115,35 @@ def utime(f, st):
 def touch(f):
     return utime(f, None)
 
+def __stat_type(f):
+    _ = os.stat(f).st_mode
+    t = "reg", "dir", "blk", "chr", "fifo", "sock"
+    l = [getattr(stat, "S_IS" + s.upper())(_) for s in t]
+    return dict(
+        reg=l[0],
+        dir=l[1],
+        blkdev=l[2],
+        chrdev=l[3],
+        fifo=l[4],
+        sock=l[5])
+
 def stat_type(f):
-    if os.path.exists(f):
-        return util.init_stat_type(f)
-    else:
+    try:
+        return __stat_type(f)
+    except Exception:
         return -1
 
 def stat_is_blkdev(f):
-    t = stat_type(f)
-    if t != -1:
-        return t.is_blkdev
+    d = stat_type(f)
+    if d != -1:
+        return d.get("blkdev", False)
     else:
         return False
 
 def stat_is_blkdev_or_chrdev(f):
-    t = stat_type(f)
-    if t != -1:
-        return t.is_blkdev or t.is_chrdev
+    d = stat_type(f)
+    if d != -1:
+        return d.get("blkdev", False) or d.get("chrdev", False)
     else:
         return False
 
@@ -346,6 +359,16 @@ def get_pid_name_from_fs(pid, *entries):
             except Exception:
                 pass
     return ''
+
+def has_pid(pid):
+    return fs_has_pid(pid) or ps_has_pid(pid)
+
+def get_pid_name(pid):
+    ret = get_pid_name_from_fs(pid, "cmdline")
+    if not ret:
+        return get_pid_name_from_ps(pid)
+    else:
+        return ret
 
 def get_procfs_entry(s):
     if isinstance(s, int): # /proc/<pid>

@@ -1,3 +1,7 @@
+## v0.7.40
++ Minor fixes and improvement
++ Add Python3.6b to supported Python versions at the moment
+
 ## v0.7.39
 + Minor fixes and improvement
 + Improve Cygwin support

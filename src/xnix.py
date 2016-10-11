@@ -123,10 +123,10 @@ def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
 
 def has_pid(pid):
-    return unix.fs_has_pid(pid) or unix.ps_has_pid(pid)
+    return unix.has_pid(pid)
 
 def get_pid_name(pid):
-    return unix.get_pid_name_from_ps(pid)
+    return unix.get_pid_name(pid)
 
 def is_pid_path_supported():
     return False

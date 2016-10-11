@@ -30,7 +30,6 @@ import inspect
 import os
 import platform
 import re
-import stat
 import string
 import struct
 import subprocess
@@ -597,21 +596,6 @@ def is_readable(f):
 
 def is_writable(f):
     return os.access(f, os.W_OK)
-
-def init_stat_type(f):
-    try:
-        _ = os.stat(f).st_mode
-        t = "reg", "dir", "blk", "chr", "fifo", "sock"
-        l = [getattr(stat, "S_IS" + s.upper())(_) for s in t]
-    except Exception:
-        l = [False for x in range(6)]
-    return Namespace(
-        is_file=l[0],
-        is_dir=l[1],
-        is_blkdev=l[2],
-        is_chrdev=l[3],
-        is_fifo=l[4],
-        is_sock=l[5])
 
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
