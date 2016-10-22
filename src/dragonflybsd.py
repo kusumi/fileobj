@@ -43,6 +43,10 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
+# This function should probably be written in C otherwise a change
+# in struct size breaks Python code, and catching up with definition
+# in the latest upstream code breaks support for older versions.
+
 def get_blkdev_info(fd):
     # ioctl value depends on sizeof(partinfo)
     if setting.dragonflybsd_sizeof_partinfo > 0:

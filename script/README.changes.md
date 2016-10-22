@@ -1,3 +1,7 @@
+## v0.7.41
++ Fix/workaround OpenBSD specific bug
++ Minor fixes and improvement
+
 ## v0.7.40
 + Minor fixes and improvement
 + Add Python3.6b to supported Python versions at the moment

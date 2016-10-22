@@ -44,6 +44,10 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
+# This function should probably be written in C otherwise a change
+# in struct size breaks Python code, and catching up with definition
+# in the latest upstream code breaks support for older versions.
+
 def get_blkdev_info(fd):
     # ioctl value depends on sizeof(disklabel)
     if setting.netbsd_sizeof_disklabel > 0:
@@ -60,15 +64,9 @@ def get_blkdev_info(fd):
         b = unix.ioctl(fd, DIOCGDINFO, size)
         d_typename   = b[8:24]
         d_secsize    = util.host_to_int(b[40:44])
-        d_nsectors   = util.host_to_int(b[44:48])
-        d_ntracks    = util.host_to_int(b[48:52])
-        d_ncylinders = util.host_to_int(b[52:56])
         d_secperunit = util.host_to_int(b[60:64])
-        x = d_nsectors * d_ntracks * d_ncylinders
-        if d_secperunit > x:
-            x = d_secperunit
         label = util.bytes_to_str(filebytes.rstrip(d_typename))
-        return x * d_secsize, d_secsize, label
+        return d_secperunit * d_secsize, d_secsize, label
     except Exception as e:
         log.error("ioctl({0}, {1}) failed, {2}".format(
             fd.name, "DIOCGDINFO", e))

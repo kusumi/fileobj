@@ -24,6 +24,7 @@
 from . import libc
 from . import log
 from . import netbsd
+from . import setting
 from . import unix
 from . import util
 
@@ -41,6 +42,22 @@ def get_term_info():
 
 def get_lang_info():
     return unix.get_lang_info()
+
+# get_blkdev_info() which used to just call netbsd version of this
+# is no longer compatible with NetBSD based on the result from 5.9.
+# size part seems to have changed ever since this code was originally
+# written in 2014. The size in IA32 has probably changed too.
+
+# XXX not sure where to start from, but 5.9 needs this
+if util.get_os_release() >= "5.9" and setting.netbsd_sizeof_disklabel == -1:
+    if util.is_64bit_cpu(): # assume x86_64/gcc
+        setting.netbsd_sizeof_disklabel = 404 # was 408
+    elif util.is_32bit_cpu(): # assume i386/gcc
+        setting.netbsd_sizeof_disklabel = 404 # XXX this is probably wrong
+
+# This function should probably be written in C otherwise a change
+# in struct size breaks Python code, and catching up with definition
+# in the latest upstream code breaks support for older versions.
 
 def get_blkdev_info(fd):
     return netbsd.get_blkdev_info(fd)
