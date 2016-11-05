@@ -680,7 +680,7 @@ def __iter_next_3k(g):
     return next(g)
 
 def __get_xrange_2k(*l):
-    return xrange(*l)
+    return _builtin.xrange(*l) # silence pyflakes warning on Python 3
 def __get_xrange_3k(*l):
     return range(*l)
 

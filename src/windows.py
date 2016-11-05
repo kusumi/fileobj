@@ -43,13 +43,10 @@ def get_term_info():
 def get_lang_info():
     return ''
 
-def stat_size(f):
-    if os.path.isfile(f):
-        return os.stat(f).st_size
-    else:
-        return -1
+def read_reg_size(f):
+    return -1
 
-def read_size(f):
+def seek_end(f):
     return -1
 
 def get_inode(f):

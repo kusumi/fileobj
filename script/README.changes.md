@@ -1,3 +1,6 @@
+## v0.7.42
++ Minor fixes and improvement
+
 ## v0.7.41
 + Fix/workaround OpenBSD specific bug
 + Minor fixes and improvement

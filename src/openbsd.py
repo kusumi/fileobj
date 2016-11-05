@@ -62,11 +62,11 @@ if util.get_os_release() >= "5.9" and setting.netbsd_sizeof_disklabel == -1:
 def get_blkdev_info(fd):
     return netbsd.get_blkdev_info(fd)
 
-def stat_size(f):
-    return unix.stat_size(f)
+def read_reg_size(f):
+    return unix.read_reg_size(f)
 
-def read_size(f):
-    return unix.read_size(f)
+def seek_end(f):
+    return unix.seek_end(f)
 
 def get_inode(f):
     return unix.get_inode(f)

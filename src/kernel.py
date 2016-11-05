@@ -163,37 +163,42 @@ def get_lang_info():
 
 def get_blkdev_info(f):
     if not is_blkdev(f):
-        raise KernelError(f + " is not blkdev")
+        raise KernelError(f + " is not a block device")
     o = get_kernel_module()
     if not o:
         raise KernelError("Failed to get kernel module")
+    try:
+        # NetBSD/OpenBSD fail with -EBUSY if already opened
+        with fopen(f) as fd:
+            l = o.get_blkdev_info(fd)
+            assert util.is_seq(l), l
+            return __get_blkdev_info(f, *l)
+    except Exception:
+        try:
+            return __get_blkdev_info(f, o.seek_end(f), 512, "pseudo")
+        except Exception:
+            raise
 
-    # NetBSD fails with -EBUSY if already opened
-    with fopen(f) as fd:
-        l = o.get_blkdev_info(fd)
-        b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
-        log.info("Block device {0} ({1}, {2}, '{3}')".format(
-            b.name,
-            util.get_size_repr(b.size),
-            util.get_size_repr(b.sector_size),
-            filebytes.repr(b.label)))
-        return b
+def __get_blkdev_info(name, size, sector_size, label):
+    b = util.Namespace(
+        name=name, size=size, sector_size=sector_size, label=label)
+    log.info("Block device {0} ({1}, {2}, '{3}')".format(
+        b.name,
+        util.get_size_repr(b.size),
+        util.get_size_repr(b.sector_size),
+        filebytes.repr(b.label)))
+    return b
 
 def get_size(f):
-    # caller needs to catch exception
+    # caller needs to catch an exception
     if is_blkdev(f):
         return get_blkdev_info(f).size
     elif os.path.isfile(f):
-        ret = stat_size(f)
-        if ret > 0: # not 'ret >= 0'
-            return ret
-        else:
-            return read_size(f)
+        return read_reg_size(f)
+    elif path_to_pid(f) != -1:
+        return util.get_address_space()
     else:
-        if path_to_pid(f) != -1:
-            return util.get_address_space()
-        else:
-            return -1
+        return -1
 
 def get_size_safe(f):
     # return -1 if exception is raised
@@ -202,17 +207,17 @@ def get_size_safe(f):
     except Exception:
         return -1
 
-def stat_size(f):
+def read_reg_size(f):
     o = get_kernel_module()
     if o:
-        return o.stat_size(f)
+        return o.read_reg_size(f)
     else:
         return -1
 
-def read_size(f):
+def seek_end(f):
     o = get_kernel_module()
     if o:
-        return o.read_size(f)
+        return o.seek_end(f)
     else:
         return -1
 

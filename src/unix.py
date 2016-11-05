@@ -43,26 +43,48 @@ def get_term_info():
 def get_lang_info():
     return os.getenv("LANG", "")
 
-def stat_size(f):
-    if os.path.isfile(f):
-        return os.stat(f).st_size
+def read_reg_size(f):
+    if not os.path.isfile(f): # only for regfile
+        return -1
+    if is_procfs_path(f):
+        return __read_procfs_size(f)
     else:
-        return -1
+        return __read_reg_size(f)
 
-def read_size(f):
-    if not os.path.isfile(f):
-        return -1
-    with fopen(f) as fd: # binary
+def __read_reg_size(f):
+    ret = os.stat(f).st_size
+    if ret != -1:
+        return ret
+    return seek_end(f)
+
+def __read_procfs_size(f):
+    ret = os.stat(f).st_size
+    if ret > 0: # procfs may return 0
+        return ret
+    return __read_buf_size(f) # XXX workaround for procfs
+
+# suboptimal, don't use this unless this is the only way
+def __read_buf_size(f):
+    with fopen(f) as fd:
         if set_non_blocking(fd) == -1:
             return -1
         try:
-            ret = fd.read()
+            ret = fd.read() # XXX add heuristic to return -1 if too big
         except IOError: # Python 2.x raises exception
             return -1
         if ret is None: # Python 3.x returns None
             return -1
         else: # success
             return len(ret)
+
+def seek_end(f):
+    if not os.path.exists(f): # allow blkdev
+        return -1
+    with fopen(f) as fd:
+        try:
+            return os.lseek(fd.fileno(), 0, os.SEEK_END)
+        except Exception:
+            return -1
 
 def get_inode(f):
     if os.path.exists(f):
@@ -400,6 +422,13 @@ def get_fs_mount_point(*labels):
                     return os.path.abspath(where)
     return ''
 
+def is_procfs_path(f):
+    if not os.path.isfile(f) and not os.path.isdir(f):
+        return False
+    if not os.path.isdir(_procfs_mnt):
+        return False
+    return f.startswith(_procfs_mnt + '/')
+
 _procfs_mnt = ''
 
 def init_procfs(label=''):
@@ -407,5 +436,11 @@ def init_procfs(label=''):
     _procfs_mnt = setting.procfs_mount_point
     if not os.path.isdir(_procfs_mnt):
         _procfs_mnt = get_procfs_mount_point(label)
+
+    # just make it a rule that it doesn't end with /
+    if _procfs_mnt.endswith('/'):
+        _procfs_mnt = _procfs_mnt.rstrip('/')
+    assert not _procfs_mnt.endswith('/')
+
     if not os.path.isdir(_procfs_mnt):
         return -1

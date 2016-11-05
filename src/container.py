@@ -87,7 +87,7 @@ class Container (object):
             8 : "{0:o}",
         }.get(setting.address_num_radix)
         s = fmt.format(
-            max([o.get_size() for o in self.__fileobjs]))
+            max([_.get_size() for _ in self.__fileobjs]))
         if len(s) > setting.address_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):

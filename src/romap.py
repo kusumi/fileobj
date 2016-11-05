@@ -90,7 +90,7 @@ class Fileobj (fileobj.Fileobj):
             self.map = None
 
     def is_mappable(self):
-        return kernel.stat_size(self.get_path()) > 0
+        return kernel.read_reg_size(self.get_path()) > 0
 
     def mmap(self, fileno):
         offset = self.get_mapping_offset()

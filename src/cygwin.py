@@ -34,11 +34,11 @@ def get_lang_info():
 def get_blkdev_info(fd):
     return linux.get_blkdev_info(fd)
 
-def stat_size(f):
-    return unix.stat_size(f)
+def read_reg_size(f):
+    return unix.read_reg_size(f)
 
-def read_size(f):
-    return unix.read_size(f)
+def seek_end(f):
+    return unix.seek_end(f)
 
 def get_inode(f):
     return unix.get_inode(f)
