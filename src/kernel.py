@@ -23,7 +23,6 @@
 
 # using the module name 'kernel' since 'os' is used by inbox module
 
-from __future__ import with_statement
 import os
 import re
 
@@ -169,15 +168,11 @@ def get_blkdev_info(f):
         raise KernelError("Failed to get kernel module")
     try:
         # NetBSD/OpenBSD fail with -EBUSY if already opened
-        with fopen(f) as fd:
-            l = o.get_blkdev_info(fd)
-            assert util.is_seq(l), l
-            return __get_blkdev_info(f, *l)
+        l = o.get_blkdev_info(f)
+        assert util.is_seq(l), l
+        return __get_blkdev_info(f, *l)
     except Exception:
-        try:
-            return __get_blkdev_info(f, o.seek_end(f), 512, "pseudo")
-        except Exception:
-            raise
+        return __get_blkdev_info(f, o.seek_end(f), 512, "pseudo")
 
 def __get_blkdev_info(name, size, sector_size, label):
     b = util.Namespace(

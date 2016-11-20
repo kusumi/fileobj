@@ -1,4 +1,4 @@
-fileobj ([v0.7.42](https://github.com/kusumi/fileobj/releases/tag/v0.7.42))
+fileobj ([v0.7.43](https://github.com/kusumi/fileobj/releases/tag/v0.7.43))
 =======
 
 ## About
@@ -25,16 +25,14 @@ fileobj ([v0.7.42](https://github.com/kusumi/fileobj/releases/tag/v0.7.42))
 
 + [Uninstall](#uninstall) older version(s) if possible.
 
-+ Run *[setup.py](https://docs.python.org/2/install/index.html)* using Python 2.
++ For Python 2, run *[setup.py](https://docs.python.org/2/install/index.html)* as follows.
 
-        $ python --version
-        Python 2.7.3
+        $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ or run *[setup.py](https://docs.python.org/3/installing/index.html)* using Python 3.
++ For Python 3, run *[setup.py](https://docs.python.org/3/installing/index.html)* as follows.
 
-        $ python3 --version
-        Python 3.5.0
+        $ sudo python3 ./setup.py clean --all
         $ sudo python3 ./setup.py install --force --record ./install.out
 
 + Run *./script/install.sh* to install fileobj(1) manpage under */usr/share/man/man1/*.

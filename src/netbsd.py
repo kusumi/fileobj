@@ -21,10 +21,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
+
 from . import filebytes
 from . import libc
 from . import linux
 from . import log
+from . import native
 from . import setting
 from . import unix
 from . import util
@@ -44,11 +47,15 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
-# This function should probably be written in C otherwise a change
-# in struct size breaks Python code, and catching up with definition
-# in the latest upstream code breaks support for older versions.
+def get_blkdev_info(f):
+    try:
+        return native.get_blkdev_info(f)
+    except Exception as e:
+        log.error(e)
+    with fopen(f) as fd:
+        return __get_blkdev_info(fd)
 
-def get_blkdev_info(fd):
+def __get_blkdev_info(fd):
     # ioctl value depends on sizeof(disklabel)
     if setting.netbsd_sizeof_disklabel > 0:
         size = setting.netbsd_sizeof_disklabel

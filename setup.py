@@ -34,8 +34,13 @@ if __name__ == '__main__':
     import src.nodep
     src.nodep.test()
 
-    from distutils.core import setup
+    from distutils.core import setup, Extension
     import src.version
+
+    # If setup() ever fails to compile C extension, change ext_modules to None.
+    # This way setup() installs without native code and it still runs.
+    ext_modules = [Extension("fileobj._native", ["src/_native.c"])]
+    #ext_modules = None # enable this line and disable above
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
@@ -50,4 +55,5 @@ if __name__ == '__main__':
         license     = "BSD License (2-clause)",
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],
-        package_dir = {"fileobj" : "src", "fileobj.ext" : "src/ext",})
+        package_dir = {"fileobj" : "src", "fileobj.ext" : "src/ext",},
+        ext_modules = ext_modules,)

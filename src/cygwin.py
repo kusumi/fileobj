@@ -31,8 +31,8 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
-def get_blkdev_info(fd):
-    return linux.get_blkdev_info(fd)
+def get_blkdev_info(f):
+    return linux.get_blkdev_info(f)
 
 def read_reg_size(f):
     return unix.read_reg_size(f)

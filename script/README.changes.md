@@ -1,3 +1,8 @@
+## v0.7.43
++ Minor fixes and improvement
++ Add C extension fileobj._native to better support ioctls for Linux/NetBSD/OpenBSD/FreeBSD/DragonFlyBSD
++ Add fileobj.native as a wrapper over fileobj._native
+
 ## v0.7.42
 + Minor fixes and improvement
 

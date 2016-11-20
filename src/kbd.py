@@ -82,7 +82,7 @@ _keys = [
     ("DELETE",     curses.KEY_DC,        curses.ascii.DEL,  curses.KEY_DC),
     ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE),]
 
-# XXX for FreeBSD and CYGWIN
+# XXX for FreeBSD and Cygwin
 if setting.use_bsd_caveat or setting.use_cygwin_caveat:
     _keys.append(
     ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),)

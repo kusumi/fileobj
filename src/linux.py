@@ -21,11 +21,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
 import os
 import re
 
 from . import libc
 from . import log
+from . import native
 from . import unix
 from . import util
 
@@ -44,15 +46,23 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
-def get_blkdev_info(fd):
+def get_blkdev_info(f):
     try:
-        d = {   "BLKSSZGET"  : 0x1268,
-                "BLKGETSIZE" : 0x1260, }
-        s = "BLKSSZGET"
-        sector_size = unix.ioctl_get_int(fd, d[s], 4)
+        return native.get_blkdev_info(f)
+    except Exception as e:
+        log.error(e)
+    with fopen(f) as fd:
+        return __get_blkdev_info(fd)
+
+def __get_blkdev_info(fd):
+    try:
+        d = {   "BLKGETSIZE" : 0x1260,
+                "BLKSSZGET"  : 0x1268, }
         s = "BLKGETSIZE"
         size = unix.ioctl_get_int(fd, d[s], 8)
         size <<= 9
+        s = "BLKSSZGET"
+        sector_size = unix.ioctl_get_int(fd, d[s], 4)
         return size, sector_size, ''
     except Exception as e:
         log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))

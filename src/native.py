@@ -21,29 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# RELEASE is basically always 1.
-# It was added only to sync with RPM versioning.
-# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
-# RPM patches within the same fileobj version may or may not increment RELEASE.
+from . import setting
 
-MAJOR = 0
-MINOR1 = 7
-MINOR2 = 43
-RELEASE = 1
+try:
+    from . import _native
+except Exception: # not only ImportError
+    _native = None
+    if setting.use_debug:
+        raise
 
-def get_version():
-    return MAJOR, MINOR1, MINOR2
-
-def get_release():
-    return MAJOR, MINOR1, MINOR2, RELEASE
-
-def get_version_string():
-    return "{0}.{1}.{2}".format(*get_version())
-
-def get_release_string():
-    return "{0}.{1}.{2}-{3}".format(*get_release())
-
-def get_tag_string():
-    return "v" + get_version_string()
-
-__version__ = get_version_string()
+def get_blkdev_info(f):
+    return _native.get_blkdev_info(f)
