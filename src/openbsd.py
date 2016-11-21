@@ -49,7 +49,7 @@ def get_lang_info():
 # written in 2014. The size in IA32 has probably changed too.
 
 # XXX Recent OpenBSD need below, but C extension support for native
-# ioctls was added in v0.7.43, so this is no longer too important.
+# ioctls was added in version 0.7.43, so this is no longer critical.
 
 if util.get_os_release() >= "5.9" and setting.netbsd_sizeof_disklabel == -1:
     if util.is_64bit_cpu(): # assume x86_64/gcc

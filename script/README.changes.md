@@ -1,3 +1,7 @@
+## v0.7.44
++ Minor fixes and improvement
++ Add C extension fileobj._native to better support ioctls for Cygwin
+
 ## v0.7.43
 + Minor fixes and improvement
 + Add C extension fileobj._native to better support ioctls for Linux/NetBSD/OpenBSD/FreeBSD/DragonFlyBSD
