@@ -28,6 +28,7 @@ from . import libc
 from . import linux
 from . import log
 from . import native
+from . import setting
 from . import unix
 from . import util
 
@@ -48,7 +49,8 @@ def get_lang_info():
 
 def get_blkdev_info(f):
     try:
-        return native.get_blkdev_info(f)
+        if setting.use_native:
+            return native.get_blkdev_info(f)
     except Exception as e:
         log.error(e)
     with fopen(f) as fd:

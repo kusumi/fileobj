@@ -81,6 +81,7 @@ def __iter_env_name():
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
+    yield "FILEOBJ_USE_NATIVE"
     yield "FILEOBJ_USE_XNIX"
     yield "FILEOBJ_OS_UNAME"
     yield "FILEOBJ_USE_BSD_CAVEAT"
@@ -405,6 +406,9 @@ def __get_setting_rwbuf_chunk_size_high():
         return _
     else:
         return x
+
+def __get_setting_use_native():
+    return test_bool("FILEOBJ_USE_NATIVE", True)
 
 def __get_setting_use_xnix():
     return test_bool("FILEOBJ_USE_XNIX", False)

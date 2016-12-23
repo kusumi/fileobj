@@ -1,6 +1,10 @@
+## v0.7.45
++ Minor fixes and improvement
++ Add Python3.6 to supported Python versions
+
 ## v0.7.44
 + Minor fixes and improvement
-+ Add C extension fileobj._native to better support ioctls for Cygwin
++ Add C extension for Cygwin
 
 ## v0.7.43
 + Minor fixes and improvement
