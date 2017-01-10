@@ -29,7 +29,7 @@ struct hammer_volume_ondisk {
 	x64le vol_mem_beg;
 	x64le vol_buf_beg;
 	x64le vol_buf_end;
-	s64 vol0_reserved00;
+	s64 vol_reserved01;
 
 	struct uuid vol_fsid;
 	struct uuid vol_fstype;
@@ -43,22 +43,16 @@ struct hammer_volume_ondisk {
 	x32le vol_flags;
 	u32le vol_rootvol;
 
-	s32 vol_reserved04;
-	s32 vol_reserved05;
-	u32 vol_reserved06;
-	u32 vol_reserved07;
-
-	s64 vol_reserved08;
-	s64 vol_reserved09;
+	u32 vol_reserved[8];
 
 	s64le vol0_stat_bigblocks;
 	s64le vol0_stat_freebigblocks;
-	s64 vol0_reserved11;
+	s64 vol0_reserved01;
 	s64le vol0_stat_inodes;
-	s64 vol0_reserved10;
+	s64 vol0_reserved02;
 	x64le vol0_btree_root;
 	u64le vol0_next_tid;
-	u64 vol0_unused03;
+	u64 vol0_reserved03;
 
 	struct hammer_blockmap vol0_blockmap[16];
 	x64le vol0_undo_array[128];

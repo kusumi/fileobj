@@ -1,3 +1,6 @@
+## v0.7.46
++ Minor fixes and improvement
+
 ## v0.7.45
 + Minor fixes and improvement
 + Add Python3.6 to supported Python versions

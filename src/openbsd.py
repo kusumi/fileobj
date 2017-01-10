@@ -43,19 +43,16 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
-# get_blkdev_info() which used to just call netbsd version of this
-# is no longer compatible with NetBSD based on the result from 5.9.
-# size part seems to have changed ever since this code was originally
-# written in 2014. The size in IA32 has probably changed too.
-
-# XXX Recent OpenBSD need below, but C extension support for native
-# ioctls was added in version 0.7.43, so this is no longer critical.
+# Whether sizeof(disklabel) becomes 404 or 408 is compiler dependent.
+# It's 404 after OpenBSD 5.9 commit from "Sun Oct 25 16:35:40 2015"
+# which replaced a 16 bytes union field d_un with char d_packname[16].
+# Prior to above commit, there was a 4 bytes padding after d_un.
 
 if util.get_os_release() >= "5.9" and setting.netbsd_sizeof_disklabel == -1:
     if util.is_64bit_cpu(): # assume x86_64/gcc
-        setting.netbsd_sizeof_disklabel = 404 # was 408
+        setting.netbsd_sizeof_disklabel = 404
     elif util.is_32bit_cpu(): # assume i386/gcc
-        setting.netbsd_sizeof_disklabel = 404 # XXX this is probably wrong
+        setting.netbsd_sizeof_disklabel = 404
 
 def get_blkdev_info(f):
     return netbsd.get_blkdev_info(f)
