@@ -134,7 +134,7 @@ class _string (_node):
 
     def get_repr(self, buf, name, indent):
         i = buf.find(fileobj.filebytes.ZERO)
-        b = fileobj.filebytes.repr(buf[:i])
+        b = fileobj.filebytes.str(buf[:i])
         s = "{0}string {1}; \"{2}\"".format(I(indent), name, b)
         return [s]
 

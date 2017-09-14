@@ -1,3 +1,6 @@
+## v0.7.47
++ Minor fixes and improvement
+
 ## v0.7.46
 + Minor fixes and improvement
 

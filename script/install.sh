@@ -5,10 +5,18 @@ if [ ! -f ./script/install.sh ]; then
 	exit 1
 fi
 
-MANDIR=/usr/share/man/man1
-if [ ! -d ${MANDIR} ]; then
-	echo "### No such directory ${MANDIR}"
-	exit 1
+MANDIR_LOCAL=/usr/local/share/man/man1
+MANDIR_SYSTEM=/usr/share/man/man1
+
+if [ ! -d ${MANDIR_LOCAL} ]; then
+	if [ ! -d ${MANDIR_SYSTEM} ]; then
+		echo "### Neither ${MANDIR_LOCAL} nor ${MANDIR_SYSTEM} exists"
+		exit 1
+	else
+		MANDIR=${MANDIR_SYSTEM}
+	fi
+else
+	MANDIR=${MANDIR_LOCAL}
 fi
 
 TEMPFILE=`mktemp`

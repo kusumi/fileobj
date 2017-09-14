@@ -42,7 +42,7 @@ def get_text(co, fo, args):
     sig = b[:8]
     if sig != HAMMER_FSBUF_VOLUME:
         fileobj.extension.fail(
-            "Invalid signature: '{0}'".format(fileobj.filebytes.repr(sig)))
+            "Invalid signature: '{0}'".format(fileobj.filebytes.str(sig)))
     l.append("vol_signature = 0x{0:016X}".format(_int(sig)))
 
     vol_bot_beg = _int(b[8:16])
@@ -59,7 +59,7 @@ def get_text(co, fo, args):
 
     vol_name = b[80:144]
     i = vol_name.find(fileobj.filebytes.ZERO)
-    vol_name = fileobj.filebytes.repr(vol_name[:i])
+    vol_name = fileobj.filebytes.str(vol_name[:i])
     l.append("vol_name = \"{0}\"".format(vol_name))
 
     vol_no = _int(b[144:148])

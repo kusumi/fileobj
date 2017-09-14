@@ -67,7 +67,7 @@ class _window (object):
 
     def __mkstr(self, y, x, s):
         return "{0} ({1:2}, {2:3}) {3}".format(
-            repr(self.__ref), y, x, filebytes.repr(s))
+            repr(self.__ref), y, x, filebytes.str(s))
 
     def keypad(self, yes):
         return

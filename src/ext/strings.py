@@ -46,7 +46,7 @@ def get_text(co, fo, args):
                 n += 1
             else:
                 if n >= fileobj.setting.ext_strings_thresh:
-                    s = fileobj.filebytes.repr(b[i - n:i])
+                    s = fileobj.filebytes.str(b[i - n:i])
                     l.append((pos + i - n, s))
                     if len(l) >= fileobj.setting.ext_strings_count:
                         break

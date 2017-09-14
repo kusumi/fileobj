@@ -1,4 +1,4 @@
-.TH FILEOBJ 1 "May 23, 2016" "FILEOBJ 0.7.46"
+.TH FILEOBJ 1 "August 24, 2017" "FILEOBJ 0.7.47"
 .nh
 .ad l
 .SH NAME
@@ -6,11 +6,9 @@ fileobj \- Hex Editor
 .SH SYNOPSIS
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
 .SH DESCRIPTION
-fileobj is a portable hex editor with vi like interface.
-This software is written in Python and runs on Python 2.6 or above.
-This software supports Linux, BSDs in general, and Cygwin.
-Other Unix\-like operating systems with ncurses are experimentally supported.
-This software provides basic vi commands for binary editing.
+\fBfileobj\fP is a portable console hex editor with vi interface.
+\fBfileobj\fP requires Python 2.6 or above, and runs on Unix-like operating systems with ncurses.
+\fBfileobj\fP provides basic vi commands for binary editing.
 Features include inserting, replacing, deleting data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, support for multiple buffers and windows, block device editing, ptrace based userspace editing, mapping data to C style struct, etc.
 .SH OPTIONS
 .PP
@@ -31,17 +29,17 @@ Use read\-only mode.
 .PP
 \fB\-B\fP
 .RS 4
-Use \fBmalloc\fP(3) based buffer for regular files, which may put pressure on the system depending on the file size.
-Regular files use \fBmmap\fP(2) based buffer by default, and relies on \fBmremap\fP(2) when resizing (i.e. insert or delete bytes) the buffer.
-This option is used when the system doesn't support \fBmremap\fP(2), but need to resize the buffer for regular files.
-Linux kernel has \fBmremap\fP(2), but many of the BSDs do not.
+Use \fBmalloc\fP\|(3) based buffer for regular files, which may put pressure on the system depending on the file size.
+Regular files use \fBmmap\fP\|(2) based buffer by default, and relies on \fBmremap\fP\|(2) when resizing (i.e. insert or delete bytes) the buffer.
+This option is used when the system doesn't support \fBmremap\fP\|(2), but need to resize the buffer for regular files.
+Linux kernel has \fBmremap\fP\|(2), but many of the BSDs do not.
 .RE
 .PP
 \fB\-d\fP
 .RS 4
 Enable a window to show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
 Using \fI@offset:length\fP or \fI@offset\-(offset+length)\fP syntax right after the path allows partial buffer loading.
-See \fIDOCUMENTATION\fP section of \fBfileobj\fP(1) for details of the syntax.
+See \fBDOCUMENTATION\fP for details of the syntax.
 .RE
 .PP
 \fB\-x\fP
@@ -96,14 +94,14 @@ This option is usually unnecessary as the program is able to retrieve the termin
 .RS 4
 Specify foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-bg\fP option are specified, the program assumes "black" is specified.
+If neither this option nor \fB\-\-bg\fP option is specified, the program assumes "black" is specified.
 .RE
 .PP
 \fB\-\-bg\fP=\fI<color>\fP
 .RS 4
 Specify background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-fg\fP option are specified, the program assumes "white" is specified.
+If neither this option nor \fB\-\-fg\fP option is specified, the program assumes "white" is specified.
 .RE
 .PP
 \fB\-\-simple\fP
@@ -121,48 +119,60 @@ Print the list of available editor commands and exit.
 Print Python's site\-package directory being used by the program and exit.
 .RE
 .SH COMMANDS
-See \fIDOCUMENTATION\fP section of \fBfileobj\fP(1) for details of available editor commands.
-Also see \fB\-\-command\fP option in \fIOPTIONS\fP section of \fBfileobj\fP(1).
+See \fBDOCUMENTATION\fP for details of available editor commands.
+Also see \fB\-\-command\fP option in \fBOPTIONS\fP.
 .SH FILES
 .PP
 \fI~/.fileobj\fP
 .RS 4
 A directory automatically created by the program.
-Some editor commands need a configuration file in this directory.
+Some editor commands use a configuration file in this directory.
 .RE
 .PP
 \fI~/.fileobj/history\fP
 .RS 4
-Contains history of executed editor commands that start with :.
+A file contains history of executed editor commands that start with :.
 .RE
 .PP
 \fI~/.fileobj/log\fP
 .RS 4
-Contains information and warning messages logged by the program.
+A file contains information and warning messages logged by the program.
 .RE
 .PP
 \fI~/.fileobj/marks\fP
 .RS 4
-Contains per-file marks marked by an editor command.
+A file contains per\-file marks marked by an editor command.
 .RE
 .PP
+.PD 0
 \fI/usr/share/licenses/fileobj/COPYING\fP
+.PP
 \fI/usr/share/doc/fileobj/CHANGES\fP
+.PP
 \fI/usr/share/doc/fileobj/CONTRIBUTORS\fP
-\fI/usr/share/doc/fileobj/PKG-INFO\fP
+.PP
+\fI/usr/share/doc/fileobj/PKG\-INFO\fP
+.PP
 \fI/usr/share/doc/fileobj/README.md\fP
+.PD
 .RS 4
 These files may or may not be installed depending on the installation package.
 .RE
 .PP
+.PD 0
+\fI/usr/local/share/man/man1/fileobj.1.gz\fP or
+.PP
 \fI/usr/share/man/man1/fileobj.1.gz\fP
+.PD
 .RS 4
 This manpage.
 .RE
 .SH RESOURCE
+.PD 0
 \fIhttps://sourceforge.net/projects/fileobj/\fP
-.SH REPOSITORY
+.PP
 \fIhttps://github.com/kusumi/fileobj/tree/v0.7/\fP
+.PD
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/v0.7/README.md\fP
 .SH COPYING

@@ -60,20 +60,20 @@ def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
 
-# XXX Remove extra stuff from builtin repr, which should probably be renamed
-def __repr_2k(b):
+# Remove extra stuff from builtin repr
+def __str_2k(b):
     if b is None:
-        return str(None)
+        return __builtin_str(None)
     else:
         return __builtin_repr(b)[1:-1] # cut ' and '
 
-def __repr_3k(b):
+def __str_3k(b):
     if b is None:
-        return str(None)
+        return __builtin_str(None)
     elif isinstance(b, TYPE):
         return __builtin_repr(b)[2:-1] # cut b' and '
     else:
-        return __repr_2k(b)
+        return __str_2k(b)
 
 def join(l):
     return BLANK.join(l)
@@ -94,6 +94,7 @@ def rstrip(b):
     return b.rstrip()
 
 __builtin_ord = util.get_builtin("ord")
+__builtin_str = util.get_builtin("str")
 __builtin_repr = util.get_builtin("repr")
 
 if util.is_python2():
@@ -104,7 +105,7 @@ if util.is_python2():
     split = __split_2k
     iter = __iter_2k
     riter = __riter_2k
-    repr = __repr_2k
+    str = __str_2k
 else:
     TYPE = bytes
     ZERO = _("\x00")
@@ -113,4 +114,4 @@ else:
     split = __split_3k
     iter = __iter_3k
     riter = __riter_3k
-    repr = __repr_3k
+    str = __str_3k

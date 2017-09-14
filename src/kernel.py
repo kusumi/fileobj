@@ -181,7 +181,7 @@ def __get_blkdev_info(name, size, sector_size, label):
         b.name,
         util.get_size_repr(b.size),
         util.get_size_repr(b.sector_size),
-        filebytes.repr(b.label)))
+        filebytes.str(b.label)))
     return b
 
 def get_size(f):

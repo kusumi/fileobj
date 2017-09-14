@@ -45,7 +45,7 @@ def get_text(co, fo, args):
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
         fail("Invalid vendor id: '{0}'".format(
-            fileobj.filebytes.repr(
+            fileobj.filebytes.str(
                 struct.pack(fileobj.util.U1F * 2, vend[1], vend[0]))))
 
     type = cfg[0x0E] & 0x7F

@@ -863,9 +863,9 @@ def __search(self, pos, s, is_forward):
             x = self.co.get_max_pos()
         ret = fn(x, b, pos)
     if ret == fileobj.NOTFOUND:
-        self.co.flash("Search '{0}' failed".format(filebytes.repr(word)))
+        self.co.flash("Search '{0}' failed".format(filebytes.str(word)))
     elif ret == fileobj.INTERRUPT:
-        self.co.flash("Search '{0}' interrupted".format(filebytes.repr(word)))
+        self.co.flash("Search '{0}' interrupted".format(filebytes.str(word)))
     elif ret < 0:
         self.co.flash("Search error {0}".format(ret))
     elif ret != self.co.get_pos():

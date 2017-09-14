@@ -34,7 +34,7 @@ def get_text(co, fo, args):
         b = d[k]
         assert isinstance(b, fileobj.filebytes.TYPE)
         if b:
-            s = fileobj.filebytes.repr(b)
+            s = fileobj.filebytes.str(b)
             if len(s) > fileobj.setting.ext_registers_max_string:
                 s = s[:fileobj.setting.ext_registers_max_string] + "..."
         elif k == '"' or (k in string.digits): # always show " and 0-9

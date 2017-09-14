@@ -47,16 +47,16 @@ Use read\-only mode.
 """)
 
 B = _("""
-Use \fBmalloc\fP(3) based buffer for regular files, which may put pressure on the system depending on the file size.
-Regular files use \fBmmap\fP(2) based buffer by default, and relies on \fBmremap\fP(2) when resizing (i.e. insert or delete bytes) the buffer.
-This option is used when the system doesn't support \fBmremap\fP(2), but need to resize the buffer for regular files.
-Linux kernel has \fBmremap\fP(2), but many of the BSDs do not.
+Use \fBmalloc\fP\|(3) based buffer for regular files, which may put pressure on the system depending on the file size.
+Regular files use \fBmmap\fP\|(2) based buffer by default, and relies on \fBmremap\fP\|(2) when resizing (i.e. insert or delete bytes) the buffer.
+This option is used when the system doesn't support \fBmremap\fP\|(2), but need to resize the buffer for regular files.
+Linux kernel has \fBmremap\fP\|(2), but many of the BSDs do not.
 """)
 
 d = _("""
 Enable a window to show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
 Using \fI@offset:length\fP or \fI@offset\-(offset+length)\fP syntax right after the path allows partial buffer loading.
-See \fIDOCUMENTATION\fP section of \fBfileobj\fP(1) for details of the syntax.
+See \fBDOCUMENTATION\fP for details of the syntax.
 """)
 
 x = _("""
@@ -108,14 +108,14 @@ terminal_width_metavar = _metavar("terminal_width")
 fg = _("""
 Specify foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-bg\fP option are specified, the program assumes "black" is specified.
+If neither this option nor \fB\-\-bg\fP option is specified, the program assumes "black" is specified.
 """)
 fg_metavar = _metavar("color")
 
 bg = _("""
 Specify background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-fg\fP option are specified, the program assumes "white" is specified.
+If neither this option nor \fB\-\-fg\fP option is specified, the program assumes "white" is specified.
 """)
 bg_metavar = _metavar("color")
 
