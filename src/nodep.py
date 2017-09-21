@@ -39,7 +39,6 @@ def __test(version, name):
     import curses
     del curses
 
-# XXX This detects Cygwin, but not sure if it works against all versions.
 def is_cygwin(name):
     if name.startswith("CYGWIN"):
         return True

@@ -7,17 +7,17 @@
         $ uname
         FreeBSD
         $ sudo pkg search fileobj
-        fileobj-0.7.25                 Portable hex editor with vi like interface
+        fileobj-0.7.44                 Portable hex editor with vi like interface
         $ sudo pkg install fileobj
 
 ## DragonFlyBSD dports
 
-+ [http://muscles.dragonflybsd.org/bulk/latest-per-pkg/fileobj/](http://muscles.dragonflybsd.org/bulk/latest-per-pkg/fileobj/)
++ [https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj/](https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj/)
 
         $ uname
         DragonFly
         $ sudo pkg search fileobj
-        fileobj-0.7.25                 Portable hex editor with vi like interface
+        fileobj-0.7.44                 Portable hex editor with vi like interface
         $ sudo pkg install fileobj
 
 ## Arch Linux AUR

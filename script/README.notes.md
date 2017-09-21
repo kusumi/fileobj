@@ -16,7 +16,7 @@
 
 + If the ncurses' line border characters are broken, change the settings of the section *"Window -> Appearance"* and/or *"Window -> Translation"*. Changing the character set from *"UTF-8"* (or whatever already there) to *"Use font encoding"* may fix the issue.
 
-## Notes for BSDs
+## Notes for *BSD
 
 + Entering block visual mode may require *CTRL-v CTRL-v* instead of *CTRL-v*.
 

@@ -835,3 +835,11 @@ def get_class_name(o):
 
 def get_builtin(name):
     return getattr(_builtin, name, None)
+
+def clear_dict(d, cond=None):
+    if cond:
+        for k in list(d.keys()): # Python 3 needs cast here
+            if not cond or cond(k):
+                del d[k]
+    else:
+        d.clear()

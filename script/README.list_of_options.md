@@ -14,7 +14,7 @@
                                 insert or delete bytes) the buffer. This option is
                                 used when the system doesn't support mremap\|(2), but
                                 need to resize the buffer for regular files. Linux
-                                kernel has mremap\|(2), but many of the BSDs do not.
+                                kernel has mremap\|(2), but many of the *BSD do not.
           -d                    Enable a window to show the buffer offset from offset
                                 to offset+length rather than from from 0 to length,
                                 when the buffer is partially loaded. Using

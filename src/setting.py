@@ -80,8 +80,8 @@ def __init(g):
         add(*_)
 
 def cleanup():
-    for k in list(_attr.keys()): # Python 3 needs cast here
-        delete(k)
+    from . import util # util imports setting
+    util.clear_dict(_attr)
 
 def add(k, v):
     if k not in _attr:

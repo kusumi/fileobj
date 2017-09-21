@@ -37,10 +37,9 @@ if __name__ == '__main__':
     from distutils.core import setup, Extension
     import src.version
 
-    # If setup() ever fails to compile C extension, change ext_modules to None.
-    # This way setup() installs without native code and it still runs.
+    # The C extension is enabled by default, but also works without it.
     ext_modules = [Extension("fileobj._native", ["src/_native.c"])]
-    #ext_modules = None # enable this line and disable above
+    #ext_modules = None
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
@@ -50,7 +49,7 @@ if __name__ == '__main__':
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
         url         = "https://sourceforge.net/projects/fileobj/",
-        description = "Hex Editor",
+        description = "Console hex editor for Linux/BSD with vi interface",
         license     = "BSD License (2-clause)",
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],

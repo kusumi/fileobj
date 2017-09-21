@@ -1,17 +1,17 @@
-fileobj ([v0.7.47](https://github.com/kusumi/fileobj/releases/tag/v0.7.47))
+fileobj ([v0.7.48](https://github.com/kusumi/fileobj/releases/tag/v0.7.48))
 =======
 
 ## About
 
 + fileobj is a portable console hex editor with vi interface. Requires Python 2.6 or above, and runs on Unix-like operating systems with ncurses.
 
-+ Provides basic vi commands for binary editing. Features include inserting, replacing, deleting data in hexadecimal or ascii, cut and paste, undo and redo, visual select, partial buffer loading, support for multiple buffers and windows, block device editing, ptrace based userspace editing, mapping data to C style struct, etc.
++ Provides basic vi commands for binary editing. Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
 
 ## Supported Python versions
 
-|~2.5|2.6|2.7|3.0~|
-|:---|:--|:--|:---|
-|NO  |YES|YES|YES |
+|-2.5|2.6|2.7|3.0-3.6|
+|:---|:--|:--|:------|
+|NO  |YES|YES|YES    |
 
 ## Supported operating systems
 
@@ -33,7 +33,7 @@ fileobj ([v0.7.47](https://github.com/kusumi/fileobj/releases/tag/v0.7.47))
         $ sudo bash ./script/install.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
 
-+ See [Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md) specific to various supported operating systems.
++ See *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md)* specific to various supported operating systems.
 
 ## Uninstall
 

@@ -434,9 +434,7 @@ class Fileobj (object):
             del self.__attr.marks[k]
 
     def clear_marks(self, cond):
-        for k in list(self.__attr.marks.keys()): # Python 3 needs cast here
-            if cond(k):
-                del self.__attr.marks[k]
+        util.clear_dict(self.__attr.marks, cond)
 
     def get_barrier(self, ret, offset, size):
         try:

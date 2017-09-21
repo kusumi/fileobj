@@ -21,14 +21,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
 from . import setting
+from . import util
+
+class NativeError (util.GenericError):
+    pass
 
 try:
     from . import _native
+    _e = None
 except Exception: # not only ImportError
+    _e = sys.exc_info()[1]
     _native = None
     if setting.use_debug:
         raise
 
+def get_so():
+    if not _native:
+        raise NativeError(repr(_e))
+    return _native
+
 def get_blkdev_info(f):
-    return _native.get_blkdev_info(f)
+    return get_so().get_blkdev_info(f)

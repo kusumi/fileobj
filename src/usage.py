@@ -50,7 +50,7 @@ B = _("""
 Use \fBmalloc\fP\|(3) based buffer for regular files, which may put pressure on the system depending on the file size.
 Regular files use \fBmmap\fP\|(2) based buffer by default, and relies on \fBmremap\fP\|(2) when resizing (i.e. insert or delete bytes) the buffer.
 This option is used when the system doesn't support \fBmremap\fP\|(2), but need to resize the buffer for regular files.
-Linux kernel has \fBmremap\fP\|(2), but many of the BSDs do not.
+Linux kernel has \fBmremap\fP\|(2), but many of the *BSD do not.
 """)
 
 d = _("""

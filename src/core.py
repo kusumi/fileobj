@@ -46,6 +46,8 @@ def __cleanup(arg):
     if arg.done:
         return -1
     arg.done = True
+    setting.cleanup()
+    kernel.cleanup()
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()

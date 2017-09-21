@@ -1,6 +1,6 @@
 ## Examples
 
-+ Note that some commands can take *[count]* prefix, see *List of commands* section for details.
++ Note that some commands can take *[count]* prefix, see *[List of commands](https://github.com/kusumi/fileobj/blob/v0.7/script/README.list_of_commands.md)* for details.
 
 + Note that *offset 0* means the first byte of the buffer (*offset 1* is the second byte).
 
@@ -489,7 +489,7 @@
           and press escape or CTRL-c or V to exit
           (command)<ESC>
 
-+ Open a file *./a.out* and enter block visual mode (see *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md) for BSDs* section for BSDs).
++ Open a file *./a.out* and enter block visual mode (see *[Notes for \*BSD](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md#notes-for-bsds)* for \*BSD).
 
         $ fileobj ./a.out
           (command)CTRL-v

@@ -219,7 +219,12 @@ def seek_end(f):
 def get_inode(f):
     o = get_kernel_module()
     if o:
-        return o.get_inode(f)
+        ino = o.get_inode(f)
+        if f in _ino and ino != _ino[f]:
+            log.info("inode#{0} for {1} was previously inode#{2}".format(
+                ino, f, _ino[f]))
+        _ino[f] = ino
+        return ino
     else:
         return -1
 
@@ -588,6 +593,7 @@ def parse_waitpid_result(status):
         return ''
 
 def init():
+    util.clear_dict(_ino)
     o = get_kernel_module()
     if o:
         try:
@@ -595,4 +601,9 @@ def init():
         except Exception as e:
             log.error(e)
     return -1
+
+def cleanup():
+    util.clear_dict(_ino)
+
+_ino = {}
 init()
