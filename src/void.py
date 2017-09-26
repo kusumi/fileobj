@@ -122,6 +122,8 @@ class _console (console.Console):
         self.add_method(literal.q_reg        , methods, "start_record")
         self.add_method(literal.atsign_reg   , methods, "replay_record")
         self.add_method(literal.atsign_at    , methods, "replay_record")
+        self.add_method(literal.atsign_colon , methods, "replay_bind")
+        self.add_method(literal.s_bind       , methods, "bind_command")
         self.add_method(literal.bit_and      , methods, "logical_bit_operation")
         self.add_method(literal.bit_or       , methods, "logical_bit_operation")
         self.add_method(literal.bit_xor      , methods, "logical_bit_operation")

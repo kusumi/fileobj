@@ -672,6 +672,8 @@ class Container (object):
 
     def end_record(self):
         del self.__records[self.__records_key][-1] # remove last q
+        if not len(self.__records[self.__records_key]):
+            del self.__records[self.__records_key]
         self.__records_key = ''
 
     def add_record(self, x):

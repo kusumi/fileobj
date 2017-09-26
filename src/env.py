@@ -28,6 +28,7 @@ import sys
 
 def __iter_env_name():
     yield "FILEOBJ_USE_DEBUG"
+    yield "FILEOBJ_USE_FORCE"
     yield "FILEOBJ_USE_GETCH"
     yield "FILEOBJ_USE_STDOUT"
     yield "FILEOBJ_STDOUT_VERBOSE"
@@ -74,6 +75,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ARRAY_CHUNK"
     yield "FILEOBJ_USE_ADAPTIVE_FILEOPS"
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP"
+    yield "FILEOBJ_REGFILE_SOFT_LIMIT"
     yield "FILEOBJ_ALLOC_MMAP_THRESH"
     yield "FILEOBJ_USE_RRVM_SYNC_ON_EDIT"
     yield "FILEOBJ_USE_PS_AUX"
@@ -166,6 +168,9 @@ def __env_ge_zero(e):
 
 def __get_setting_use_debug():
     return test_bool("FILEOBJ_USE_DEBUG", False)
+
+def __get_setting_use_force():
+    return test_bool("FILEOBJ_USE_FORCE", False)
 
 def __get_setting_use_getch():
     return test_bool("FILEOBJ_USE_GETCH", True)
@@ -367,6 +372,10 @@ def __get_setting_use_adaptive_fileops():
 # unittests need False for this, so don't remove this
 def __get_setting_use_auto_fileops_cleanup():
     return test_bool("FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True)
+
+# default 100 MiB
+def __get_setting_regfile_soft_limit():
+    return test_ge_zero("FILEOBJ_REGFILE_SOFT_LIMIT", (1 << 20) * 100)
 
 def __get_setting_alloc_mmap_thresh():
     return test_ge_zero("FILEOBJ_ALLOC_MMAP_THRESH", PSEUDO_PAGE_SIZE)

@@ -737,6 +737,13 @@ def __cmp_buffer(self, pos, fn):
         __cmp_go_to(self, min(x1, x2))
 
 def __cmp_go_to(self, pos):
+    # force even sized windows if not set
+    if not setting.use_even_size_window:
+        self.co.set_bytes_per_window("even")
+        self.co.refresh()
+        full_repaint = True
+    else:
+        full_repaint = False
     f = self.co.get_path()
     self.co.go_to(pos)
     self.co.switch_to_next_workspace()
@@ -744,7 +751,10 @@ def __cmp_go_to(self, pos):
     self.co.switch_to_next_workspace()
     assert self.co.get_path() == f
     self.co.show(pos)
-    self.co.lrepaint()
+    if full_repaint:
+        self.co.repaint()
+    else:
+        self.co.lrepaint()
 
 @_cleanup
 def inc_number(self, amp, opc, args, raw):
@@ -1474,6 +1484,36 @@ def replay_record(self, amp, opc, args, raw):
     assert len(opc) > 1
     for x in util.get_xrange(get_int(amp)):
         self.co.replay_record(opc[1])
+
+def replay_bind(self, amp, opc, args, raw):
+    __replay_bind(self)
+
+def __replay_bind(self):
+    replay_record(self, None, literal.atsign_colon.str, None, None)
+
+_bind_key = literal.atsign_colon.str[1]
+
+def bind_command(self, amp, opc, args, raw):
+    if not args:
+        self.co.flash("Argument required")
+        return
+    s = args[0] # :cmd
+    if len(s) < 2 or s[0] != ":":
+        self.co.flash("Invalid command {0}".format(s))
+        return
+    if s == literal.s_bind.str:
+        self.co.flash("Can not bind {0} command".format(s))
+        return
+    self.co.start_record(_bind_key)
+    for i, s in enumerate(args):
+        for x in s: # s is string (not bytes)
+            self.co.add_record(ord(x))
+        if i != len(args) - 1:
+            self.co.add_record(ord(' '))
+    self.co.add_record(kbd.ENTER)
+    self.co.add_record(ord('q')) # termination
+    self.co.end_record()
+    __replay_bind(self)
 
 def __get_and_ops(mask):
     return lambda b: filebytes.ord(b) & mask

@@ -1,3 +1,12 @@
+## v0.7.49
++ Minor fixes and improvement
++ Add :bind
++ Add @:
++ Add --force
++ Add FILEOBJ_USE_FORCE
++ Add FILEOBJ_REGFILE_SOFT_LIMIT
++ Use even-sized windows on :cmp variants
+
 ## v0.7.48
 + Minor fixes and improvement
 

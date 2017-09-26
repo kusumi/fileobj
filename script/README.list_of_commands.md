@@ -46,6 +46,7 @@
         :argv                    Print arguments of this program
         :bfirst                  Go to the first buffer in buffer list
         :brewind                 Go to the first buffer in buffer list
+        :bind                    Run/bind given :command in argument, replayable with @:
         :blast                   Go to the last buffer in buffer list
         :bnext                   Change buffer to the next
         <TAB>                    Change buffer to the next
@@ -108,6 +109,7 @@
         ZZ                       Like :wq, but write only when changes have been made
         >>                       Rotate [count] bits to right
         <<                       Rotate [count] bits to left
+        @:                       Execute the binded command
         @[0-9a-zA-Z]             Execute the contents of register [count] times
         @@                       Execute the previous @ command [count] times
         D                        Delete characters under the cursor until the end of buffer

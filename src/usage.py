@@ -31,6 +31,7 @@ def _(s):
     s = s.replace("\fP", "")
     s = s.replace("\fR", "")
     s = s.replace("\-", "-")
+    s = s.replace("\|", "")
     if not s.endswith("\n"):
         s += "\n"
     return s
@@ -121,6 +122,10 @@ bg_metavar = _metavar("color")
 
 simple = _("""
 Use simplified status window format.
+""")
+
+force = _("""
+Ignore warnings and force the action.
 """)
 
 command = _("""

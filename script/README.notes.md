@@ -1,20 +1,20 @@
 ## Notes
 
-+ A new directory *${HOME}/.fileobj* and some files under that directory are automatically created if they don't exist.
++ A new directory *${HOME}/.fileobj* and some files under that directory are automatically created by the program if they don't exist.
 
 + Some keyboard keys may not work correctly on vt100 terminal.
 
-+ Set an environment variable *FILEOBJ_USE_TMUX_CAVEAT* (with a blank value as shown in below bash example) if using *--fg* and/or *--bg* options while in terminal multiplexer causes the cursor to disappear.
++ Using *--fg* and/or *--bg* options while running in a terminal multiplexer may cause the cursor to disappear. => Define an environment variable *FILEOBJ_USE_TMUX_CAVEAT* (with any value as shown in below bash example).
 
         $ export FILEOBJ_USE_TMUX_CAVEAT=
 
 ## Notes for PuTTY on Windows
 
-+ Setting an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with a blank value as shown in below bash example) is recommended.
++ Defining an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with any value as shown in below bash example) is recommended.
 
         $ export FILEOBJ_USE_PUTTY_CAVEAT=
 
-+ If the ncurses' line border characters are broken, change the settings of the section *"Window -> Appearance"* and/or *"Window -> Translation"*. Changing the character set from *"UTF-8"* (or whatever already there) to *"Use font encoding"* may fix the issue.
++ The window border lines may be shown broken. => Change the section *"Window -> Appearance"* and/or *"Window -> Translation"* to use *"Use font encoding"*.
 
 ## Notes for *BSD
 
@@ -31,7 +31,7 @@
 
 ## Notes for Darwin
 
-+ Darwin support is experimental. Not all features are supported, but it at least runs.
++ Darwin support is experimental and untested. Not all features are supported.
 
 ## Notes for Cygwin
 

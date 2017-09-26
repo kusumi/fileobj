@@ -386,6 +386,8 @@ class _console (console.Console):
         self.add_method(literal.q_reg        , methods, "start_record")
         self.add_method(literal.atsign_reg   , methods, "replay_record")
         self.add_method(literal.atsign_at    , methods, "replay_record")
+        self.add_method(literal.atsign_colon , methods, "replay_bind")
+        self.add_method(literal.s_bind       , this,    "_buffer_input")
         self.add_method(literal.bit_and      , this,    "_logical_bit_operation")
         self.add_method(literal.bit_or       , this,    "_logical_bit_operation")
         self.add_method(literal.bit_xor      , this,    "_logical_bit_operation")

@@ -7,14 +7,14 @@
           --version             show program's version number and exit
           -h, --help            show this help message and exit
           -R                    Use read-only mode.
-          -B                    Use malloc\|(3) based buffer for regular files, which
+          -B                    Use malloc(3) based buffer for regular files, which
                                 may put pressure on the system depending on the file
-                                size. Regular files use mmap\|(2) based buffer by
-                                default, and relies on mremap\|(2) when resizing (i.e.
+                                size. Regular files use mmap(2) based buffer by
+                                default, and relies on mremap(2) when resizing (i.e.
                                 insert or delete bytes) the buffer. This option is
-                                used when the system doesn't support mremap\|(2), but
+                                used when the system doesn't support mremap(2), but
                                 need to resize the buffer for regular files. Linux
-                                kernel has mremap\|(2), but many of the *BSD do not.
+                                kernel has mremap(2), but many of the *BSD do not.
           -d                    Enable a window to show the buffer offset from offset
                                 to offset+length rather than from from 0 to length,
                                 when the buffer is partially loaded. Using
@@ -75,6 +75,7 @@
                                 neither this option nor --fg option is specified, the
                                 program assumes "white" is specified.
           --simple              Use simplified status window format.
+          --force               Ignore warnings and force the action.
           --command             Print the list of available editor commands and exit.
           --sitepkg             Print Python's site-package directory being used by
                                 the program and exit.

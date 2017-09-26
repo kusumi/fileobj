@@ -36,6 +36,7 @@ from . import literal
 from . import log
 from . import marks
 from . import package
+from . import path
 from . import screen
 from . import setting
 from . import usage
@@ -77,6 +78,9 @@ def __sigint_handler(sig, frame):
 def __sigterm_handler(sig, frame):
     sys.exit(1)
 
+def __error(s):
+    raise util.QuietError(s)
+
 def dispatch(optargs=None):
     if setting.use_debug: # FILEOBJ_USE_DEBUG=
         suppress_help = "<This is supposed to be suppressed>"
@@ -98,6 +102,7 @@ def dispatch(optargs=None):
     parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
     parser.add_option("--simple", action="store_true", default=(not setting.use_full_status_window and not setting.use_status_window_frame), help=usage.simple)
+    parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
 
@@ -191,26 +196,42 @@ def dispatch(optargs=None):
     try:
         co = None
         if not kernel.is_detected():
-            msg = "{0}, consider setting the following variable e.g.\n" \
-                "$ export FILEOBJ_USE_XNIX=\n" \
-                "to manually declare running on Unix-like OS".format(
-                kernel.get_status_string())
-            raise util.QuietError(msg)
+            __error("{0}, consider setting FILEOBJ_USE_XNIX to manually "
+                "declare running on Unix-like OS (bash example below)\n"
+                "  $ export FILEOBJ_USE_XNIX=".format(
+                kernel.get_status_string()))
 
         assert literal.init() != -1
         if screen.init(opts.fg, opts.bg) == -1:
-            msg = "Unable to retrieve terminal size, consider using " \
-                "--terminal_height and --terminal_width options " \
-                "to manually specify terminal size"
-            raise util.QuietError(msg)
+            __error("Unable to retrieve terminal size, consider using "
+                "--terminal_height and --terminal_width options "
+                "to manually specify terminal size")
         assert console.init() != -1
+
+        free_ram = kernel.get_free_ram()
+        if opts.B and free_ram != -1:
+            tot = 0
+            for x in args:
+                o = path.Path(x)
+                if o.is_reg:
+                    siz = kernel.get_size(o.path)
+                    if siz != -1:
+                        tot += siz
+            s1 = "Required memory {0}".format(util.get_size_repr(tot))
+            s2 = "use --force option to continue"
+            log.debug(s1)
+            if not opts.force and tot > free_ram:
+                __error("{0} exceeds free RAM size {1}, {2}".format(
+                    s1, util.get_size_repr(free_ram), s2))
+            if not opts.force and tot > setting.regfile_soft_limit:
+                __error("{0} exceeds soft limit size {1}, {2}".format(
+                    s1, util.get_size_repr(setting.regfile_soft_limit), s2))
 
         co = container.Container()
         if co.init(args, wspnum,
             opts.bytes_per_line, opts.bytes_per_window, msg) == -1:
-            msg = "Terminal ({0},{1}) does not have enough room".format(
-                screen.get_size_y(), screen.get_size_x())
-            raise util.QuietError(msg)
+            __error("Terminal ({0},{1}) does not have enough room".format(
+                screen.get_size_y(), screen.get_size_x()))
         if setting.use_debug:
             d = util.get_import_exceptions()
             assert not d, d

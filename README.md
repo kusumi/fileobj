@@ -1,4 +1,4 @@
-fileobj ([v0.7.48](https://github.com/kusumi/fileobj/releases/tag/v0.7.48))
+fileobj ([v0.7.49](https://github.com/kusumi/fileobj/releases/tag/v0.7.49))
 =======
 
 ## About
@@ -21,8 +21,6 @@ fileobj ([v0.7.48](https://github.com/kusumi/fileobj/releases/tag/v0.7.48))
 
 ## Install
 
-+ [Uninstall](#uninstall) older version(s) if possible.
-
 + Run *setup.py* as follows. Use *python3* for Python 3.
 
         $ sudo python ./setup.py clean --all
@@ -37,7 +35,7 @@ fileobj ([v0.7.48](https://github.com/kusumi/fileobj/releases/tag/v0.7.48))
 
 ## Uninstall
 
-+ Remove files listed in *install.out*.
++ Remove files listed in *install.out* which was generated on installation.
 
 + Remove */usr/local/share/man/man1/fileobj.1.gz* or */usr/share/man/man1/fileobj.1.gz* if a manpage is installed.
 
