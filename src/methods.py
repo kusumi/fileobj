@@ -33,6 +33,7 @@ from . import fileobj
 from . import kbd
 from . import kernel
 from . import literal
+from . import native
 from . import path
 from . import screen
 from . import setting
@@ -520,7 +521,7 @@ _set_methods = {
 
 def set_option(self, amp, opc, args, raw):
     if not args:
-        self.co.flash("No arg")
+        self.co.flash("Argument required")
         return
     li = None
     argl = literal.get_arg_literals()
@@ -570,6 +571,9 @@ def show_kernel_module(self, amp, opc, args, raw):
 def show_fileobj_class(self, amp, opc, args, raw):
     self.co.show(str(self.co.get_type()))
 
+def show_fileobj_object(self, amp, opc, args, raw):
+    self.co.show(self.co.get_repr())
+
 def show_buffer_size(self, amp, opc, args, raw):
     self.co.show(self.co.get_buffer_size())
 
@@ -582,12 +586,14 @@ def show_meminfo(self, amp, opc, args, raw):
 def show_osdep(self, amp, opc, args, raw):
     def _(t):
         return "yes" if t else "no"
-    self.co.show("mmap={0},mremap={1},blkdev={2},ptrace={3},chgat={4}".format(
+    self.co.show("mmap={0},mremap={1},blkdev={2},ptrace={3},chgat={4},"
+        "native={5}".format(
         _(kernel.has_mmap()),
         _(kernel.has_mremap()),
         _(kernel.is_blkdev_supported()),
         _(kernel.has_ptrace()),
-        _(screen.has_chgat())))
+        _(screen.has_chgat()),
+        _(native.get_so())))
 
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
@@ -671,72 +677,175 @@ def __get_md5(self, l):
     else:
         self.co.flash("No input")
 
+def __is_equal(a, b):
+    return a == b
+def __is_not_equal(a, b):
+    return a != b
+
+def __cmp_to_find_equal(self, fn):
+    return fn(1, 1) == True
+
+# :cmp variants (cmp from offset 0)
 def cmp_buffer(self, amp, opc, args, raw):
-    __cmp_buffer(self, 0, lambda a, b: a != b)
+    __cmp_buffer(self, 0, __is_not_equal)
 
 def cmp_buffer_neg(self, amp, opc, args, raw):
-    __cmp_buffer(self, 0, lambda a, b: a == b)
+    __cmp_buffer(self, 0, __is_equal)
 
 def cmp_buffer_next(self, amp, opc, args, raw):
-    __cmp_buffer(self, self.co.get_pos() + 1, lambda a, b: a != b)
+    __cmp_buffer(self, self.co.get_pos() + 1, __is_not_equal)
 
 def cmp_buffer_next_neg(self, amp, opc, args, raw):
-    __cmp_buffer(self, self.co.get_pos() + 1, lambda a, b: a == b)
+    __cmp_buffer(self, self.co.get_pos() + 1, __is_equal)
+
+# :cmpr variants (cmp from max offset)
+def cmpr_buffer(self, amp, opc, args, raw):
+    __cmpr_buffer(self, self.co.get_max_pos(), __is_not_equal)
+
+def cmpr_buffer_neg(self, amp, opc, args, raw):
+    __cmpr_buffer(self, self.co.get_max_pos(), __is_equal)
+
+def cmpr_buffer_next(self, amp, opc, args, raw):
+    __cmpr_buffer(self, self.co.get_pos() - 1, __is_not_equal)
+
+def cmpr_buffer_next_neg(self, amp, opc, args, raw):
+    __cmpr_buffer(self, self.co.get_pos() - 1, __is_equal)
 
 def __cmp_buffer(self, pos, fn):
-    if len(self.co) != 2:
-        self.co.flash("Need two (and only two) windows")
+    sizes = __cmp_buffer_prep(self)
+    if sizes is None:
         return
-    if self.co.get_buffer_count() < 2:
-        self.co.flash("Need two or more buffers")
-        return
-
-    f1 = self.co.get_path()
-    x1 = self.co.get_size()
-    self.co.switch_to_next_workspace()
-    f2 = self.co.get_path()
-    x2 = self.co.get_size()
-    self.co.switch_to_next_workspace()
-    assert self.co.get_path() == f1
-    if f1 == f2:
-        self.co.flash("Need different buffers in two windows")
-        return
-    if x1 == 0:
-        self.co.flash(f1 + " is an empty buffer")
-        return
-    if x2 == 0:
-        self.co.flash(f2 + " is an empty buffer")
+    max_pos = min(sizes) - 1
+    if pos > max_pos:
+        self.co.flash("Already at the end of the buffer")
         return
 
-    # XXX too slow
+    find_equal = __cmp_to_find_equal(self, fn)
     beg = pos
     siz = kernel.get_buffer_size()
-    while True:
-        b1 = self.co.read(pos, siz)
-        self.co.switch_to_next_workspace()
-        b2 = self.co.read(pos, siz)
-        self.co.switch_to_next_workspace()
-        assert self.co.get_path() == f1
-        if not b1 or not b2:
-            break
-        for x in util.get_xrange(min(len(b1), len(b2))):
-            if fn(b1[x], b2[x]):
-                __cmp_go_to(self, pos + x)
-                return
-        if len(b1) != len(b2):
-            break
-        pos += len(b1)
-    if x1 == x2:
-        # if cmp didn't start from 0 these may be wrong
-        if beg == 0:
-            if fn(1, 1) == False: # non! cmp comes here
-                self.co.show("Two buffers are the same")
-            else:
-                self.co.show("Two buffers are not the same")
-    else:
-        __cmp_go_to(self, min(x1, x2))
 
-def __cmp_go_to(self, pos):
+    # XXX too slow
+    while True:
+        bufs, is_equal = __cmp_buffer_read(self, pos, siz)
+        if bufs is None:
+            break
+        if find_equal and is_equal: # short cut
+            __cmp_buffer_goto(self, pos)
+            return
+        l = [len(b) for b in bufs]
+        for x in util.get_xrange(min(l)):
+            for i in range(len(bufs)):
+                if i == 0:
+                    continue
+                a = bufs[i - 1]
+                b = bufs[i]
+                if fn(a[x], b[x]):
+                    __cmp_buffer_goto(self, pos + x)
+                    return
+        if len(set(l)) != 1: # end of either of the buffers
+            break
+        pos += siz
+        if pos > max_pos:
+            break
+        if screen.test_signal():
+            self.co.flash("Forward cmp interrupted")
+            return
+    if beg == 0: # can only tell if started from offset 0
+        if find_equal:
+            self.co.show("Buffers have nothing in common")
+        else:
+            self.co.show("Buffers are the same")
+    else:
+        self.co.show("Done")
+
+def __cmpr_buffer(self, pos, fn):
+    sizes = __cmp_buffer_prep(self)
+    if sizes is None:
+        return
+    if len(set(sizes)) != 1:
+        self.co.flash("Buffers need to have the same size")
+        return
+    max_pos = sizes[0] - 1
+    if pos < 0:
+        self.co.flash("Already at offset 0 of the buffer")
+        return
+
+    find_equal = __cmp_to_find_equal(self, fn)
+    beg = pos
+    siz = kernel.get_buffer_size()
+    pos -= siz
+    pos += 1 # max pos is (size - 1), so plus 1
+    if pos < 0:
+        siz += pos
+        pos = 0
+
+    # XXX too slow
+    while True:
+        bufs, is_equal = __cmp_buffer_read(self, pos, siz)
+        if bufs is None:
+            break
+        if find_equal and is_equal: # short cut
+            __cmp_buffer_goto(self, pos + len(bufs[0]) - 1)
+            return
+        assert len(set([len(b) for b in bufs])) == 1
+        n = len(bufs[0])
+        for x in util.get_xrange(n):
+            for i in range(len(bufs)):
+                if i == 0:
+                    continue
+                a = bufs[i - 1]
+                b = bufs[i]
+                xx = n - 1 - x
+                if fn(a[xx], b[xx]):
+                    __cmp_buffer_goto(self, pos + xx)
+                    return
+        if n <= siz and pos == 0:
+            break
+        pos -= siz
+        if pos < 0:
+            pos = 0
+        if screen.test_signal():
+            self.co.flash("Reverse cmp interrupted")
+            return
+    if beg == max_pos: # can only tell if started from the end
+        if find_equal:
+            self.co.show("Buffers have nothing in common")
+        else:
+            self.co.show("Buffers are the same")
+    else:
+        self.co.show("Done")
+
+def __cmp_buffer_prep(self):
+    if len(self.co) < 2:
+        self.co.flash("More than one windows required")
+        return
+    files = []
+    sizes = []
+    for x in range(len(self.co)):
+        files.append(self.co.get_path())
+        sizes.append(self.co.get_size())
+        self.co.switch_to_next_workspace()
+    assert self.co.get_path() == files[0]
+    for i, x in enumerate(sizes):
+        if not x:
+            self.co.flash(files[i] + " is an empty buffer")
+            return
+    return sizes
+
+def __cmp_buffer_read(self, pos, siz):
+    bufs = []
+    is_equal = True
+    for x in range(len(self.co)):
+        b = self.co.read(pos, siz)
+        if not b:
+            return None, False
+        if bufs and bufs[-1] != b:
+            is_equal = False
+        bufs.append(b)
+        self.co.switch_to_next_workspace()
+    return bufs, is_equal
+
+def __cmp_buffer_goto(self, pos):
     # force even sized windows if not set
     if not setting.use_even_size_window:
         self.co.set_bytes_per_window("even")
@@ -744,12 +853,9 @@ def __cmp_go_to(self, pos):
         full_repaint = True
     else:
         full_repaint = False
-    f = self.co.get_path()
-    self.co.go_to(pos)
-    self.co.switch_to_next_workspace()
-    self.co.go_to(pos)
-    self.co.switch_to_next_workspace()
-    assert self.co.get_path() == f
+    for x in range(len(self.co)):
+        self.co.go_to(pos)
+        self.co.switch_to_next_workspace()
     self.co.show(pos)
     if full_repaint:
         self.co.repaint()
@@ -1491,8 +1597,6 @@ def replay_bind(self, amp, opc, args, raw):
 def __replay_bind(self):
     replay_record(self, None, literal.atsign_colon.str, None, None)
 
-_bind_key = literal.atsign_colon.str[1]
-
 def bind_command(self, amp, opc, args, raw):
     if not args:
         self.co.flash("Argument required")
@@ -1504,7 +1608,7 @@ def bind_command(self, amp, opc, args, raw):
     if s == literal.s_bind.str:
         self.co.flash("Can not bind {0} command".format(s))
         return
-    self.co.start_record(_bind_key)
+    self.co.start_record(literal.atsign_colon.str[1])
     for i, s in enumerate(args):
         for x in s: # s is string (not bytes)
             self.co.add_record(ord(x))
@@ -1897,7 +2001,7 @@ def __get_save_partial_path(self, args, force):
     if len(args) > 1:
         self.co.flash("Only one file name allowed")
     elif not args:
-        self.co.flash("No file name")
+        self.co.flash("File name required")
     else:
         o = path.Path(args[0])
         f = o.path

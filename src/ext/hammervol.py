@@ -21,16 +21,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import uuid
+
 import fileobj.extension
 import fileobj.filebytes
 import fileobj.util
-
-# Taken from sys/vfs/hammer/hammer_disk.h in 6191bf2c
 
 _ = fileobj.util.str_to_bytes
 _int = fileobj.util.le_to_int
 
 HAMMER_FSBUF_VOLUME = _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8")
+HAMMER_FSBUF_VOLUME_REV = _("\xC8\x41\x4D\x4D\xC5\x52\x30\x31")
 
 def get_text(co, fo, args):
     l = []
@@ -40,10 +41,14 @@ def get_text(co, fo, args):
     print_rsv = (args[0] == "all")
 
     sig = b[:8]
-    if sig != HAMMER_FSBUF_VOLUME:
+    if sig not in (HAMMER_FSBUF_VOLUME, HAMMER_FSBUF_VOLUME_REV):
         fileobj.extension.fail(
             "Invalid signature: '{0}'".format(fileobj.filebytes.str(sig)))
-    l.append("vol_signature = 0x{0:016X}".format(_int(sig)))
+    if fileobj.filebytes.ord(sig[:1]) == 0x31:
+        endian = "LE"
+    else:
+        endian = "BE" # invalid
+    l.append("vol_signature = 0x{0:016X} {1}".format(_int(sig), endian))
 
     vol_bot_beg = _int(b[8:16])
     vol_mem_beg = _int(b[16:24])
@@ -57,10 +62,23 @@ def get_text(co, fo, args):
     if print_rsv:
         l.append("vol_reserved01 = 0x{0:016X}".format(vol_reserved01))
 
-    vol_name = b[80:144]
-    i = vol_name.find(fileobj.filebytes.ZERO)
-    vol_name = fileobj.filebytes.str(vol_name[:i])
-    l.append("vol_name = \"{0}\"".format(vol_name))
+    # b[:] are (supposed to be) in le, but swap byte order for 4-2-2 part
+    vol_fsid = uuid.UUID(bytes=b[48:64]).bytes_le
+    vol_fstype = uuid.UUID(bytes=b[64:80]).bytes_le
+    # since str(uuid) simply converts bytes to string
+    vol_fsid_str = str(uuid.UUID(bytes=vol_fsid))
+    vol_fstype_str = str(uuid.UUID(bytes=vol_fstype))
+    if vol_fstype_str == "61dc63ac-6e38-11dc-8513-01301bb8a9f5":
+        vol_fstype_dfly = " \"{0}\"".format("DragonFly HAMMER")
+    else:
+        vol_fstype_dfly = ""
+    l.append("vol_fsid = {0}".format(vol_fsid_str))
+    l.append("vol_fstype = {0}{1}".format(vol_fstype_str, vol_fstype_dfly))
+
+    vol_label = b[80:144]
+    i = vol_label.find(fileobj.filebytes.ZERO)
+    vol_label = fileobj.filebytes.str(vol_label[:i])
+    l.append("vol_label = \"{0}\"".format(vol_label))
 
     vol_no = _int(b[144:148])
     vol_count = _int(b[148:152])

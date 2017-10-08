@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import copy
-
 from . import edit
 from . import extension
 from . import panel
@@ -109,7 +107,8 @@ class Workspace (object):
     def clone(self):
         ret = Workspace(self.__bpl)
         for i, o in enumerate(self.__fileopss):
-            ret.add_buffer(i, copy.copy(o), self.__consoles[i])
+            # do shallow copy, but don't use copy.copy()
+            ret.add_buffer(i, o.clone(), self.__consoles[i])
         return ret
 
     def add_buffer(self, i, fop, con):

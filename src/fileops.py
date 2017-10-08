@@ -33,11 +33,11 @@ from . import util
 from . import vm
 
 class Fileops (object):
-    def __init__(self, ref):
+    def __init__(self, ref, o=None):
         assert isinstance(ref, fileobj.Fileobj)
         self.__ref = ref
-        self.__pos = 0
-        self.__ppos = 0
+        self.__pos = o.get_pos() if o else 0
+        self.__ppos = o.get_prev_pos() if o else 0
         self.__trail = 0
         self.__reg = None
         self.__init_ops()
@@ -73,6 +73,9 @@ class Fileops (object):
             return -1
         self.__ref.cleanup()
         self.__ref = None
+
+    def clone(self):
+        return Fileops(self.__ref, self)
 
     def test_access(self):
         return self.__ref.test_access()
@@ -121,6 +124,8 @@ class Fileops (object):
         return self.__ref.get_mapping_length()
     def get_type(self):
         return util.get_class(self.__ref)
+    def get_repr(self):
+        return repr(self.__ref)
 
     def get_pos_percentage(self):
         if self.is_empty():

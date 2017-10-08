@@ -1,3 +1,13 @@
+## v0.7.50
++ Minor fixes and improvement
++ Fix bugs
++ Add :cmpr
++ Add :cmpr!
++ Add :cmprnext
++ Add :cmprnext!
++ Add :fobj
++ Improve :hammervol
+
 ## v0.7.49
 + Minor fixes and improvement
 + Add :bind

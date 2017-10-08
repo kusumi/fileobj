@@ -59,6 +59,10 @@
         :cmp!                    Compare two buffers and go to the first matching byte
         :cmpnext                 Compare two buffers starting from the next byte and go to the first non matching byte
         :cmpnext!                Compare two buffers starting from the next byte and go to the first matching byte
+        :cmpr                    Compare two buffers from the end and go to the first non matching byte
+        :cmpr!                   Compare two buffers from the end and go to the first matching byte
+        :cmprnext                Compare two buffers starting from the previous byte and go to the first non matching byte
+        :cmprnext!               Compare two buffers starting from the previous byte and go to the first matching byte
         :date                    Print date
         :delmarks                Delete the specified marks
         :delmarks!               Delete all marks for the current buffer except for uppercase marks
@@ -66,6 +70,7 @@
         :bdelete                 Close a buffer
         :extensions              Show list of extensions
         :fcls                    Print Python class name of the current buffer
+        :fobj                    Print Python object name of the current buffer
         :help                    Show list of commands
         :hostname                Print hostname
         :kmod                    Print Python module name for the platform OS
