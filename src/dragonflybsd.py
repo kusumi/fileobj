@@ -26,7 +26,6 @@ from __future__ import with_statement
 from . import libc
 from . import linux
 from . import log
-from . import native
 from . import setting
 from . import unix
 from . import util
@@ -47,11 +46,6 @@ def get_lang_info():
     return unix.get_lang_info()
 
 def get_blkdev_info(f):
-    try:
-        if setting.use_native:
-            return native.get_blkdev_info(f)
-    except Exception as e:
-        log.error(e)
     with fopen(f) as fd:
         return __get_blkdev_info(fd)
 
@@ -215,9 +209,6 @@ def ptrace_attach(pid):
 
 def ptrace_detach(pid):
     return libc.ptrace(PT_DETACH, pid, 1, 0)
-
-ptrace_peek = ptrace_peektext
-ptrace_poke = ptrace_poketext
 
 def get_ptrace_word_size():
     return libc.get_ptrace_data_size()

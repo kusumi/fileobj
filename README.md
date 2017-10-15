@@ -1,4 +1,4 @@
-fileobj ([v0.7.50](https://github.com/kusumi/fileobj/releases/tag/v0.7.50))
+fileobj ([v0.7.51](https://github.com/kusumi/fileobj/releases/tag/v0.7.51))
 =======
 
 ## About
@@ -31,7 +31,7 @@ fileobj ([v0.7.50](https://github.com/kusumi/fileobj/releases/tag/v0.7.50))
         $ sudo bash ./script/install.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
 
-+ See *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md)* specific to various supported operating systems.
++ See *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md)* specific to various supported operating systems.
 
 ## Uninstall
 
@@ -43,18 +43,18 @@ fileobj ([v0.7.50](https://github.com/kusumi/fileobj/releases/tag/v0.7.50))
 
 + Upstream [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
 
-+ Repository [https://github.com/kusumi/fileobj/tree/v0.7/](https://github.com/kusumi/fileobj/tree/v0.7/)
++ Repository [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
 
 ## [Reporting issues](https://github.com/kusumi/fileobj/issues)
 
-## [Changes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.changes.md)
+## [Changes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.changes.md)
 
-## [Notes](https://github.com/kusumi/fileobj/blob/v0.7/script/README.notes.md)
+## [Notes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md)
 
-## [Distributions](https://github.com/kusumi/fileobj/blob/v0.7/script/README.distributions.md)
+## [Distributions](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.distributions.md)
 
-## [List of options](https://github.com/kusumi/fileobj/blob/v0.7/script/README.list_of_options.md)
+## [List of options](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.list_of_options.md)
 
-## [List of commands](https://github.com/kusumi/fileobj/blob/v0.7/script/README.list_of_commands.md)
+## [List of commands](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.list_of_commands.md)
 
-## [Examples](https://github.com/kusumi/fileobj/blob/v0.7/script/README.examples.md)
+## [Examples](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.examples.md)

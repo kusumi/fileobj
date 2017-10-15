@@ -196,9 +196,6 @@ def ptrace_attach(pid):
 def ptrace_detach(pid):
     return libc.ptrace(PT_DETACH, pid, 1, 0)
 
-ptrace_peek = ptrace_peektext
-ptrace_poke = ptrace_poketext
-
 def get_ptrace_word_size():
     return libc.get_ptrace_data_size()
 

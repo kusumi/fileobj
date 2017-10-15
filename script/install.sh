@@ -20,7 +20,7 @@ else
 fi
 
 TEMPFILE=`mktemp`
-cat ./script/fileobj.1 | gzip -9 -n > ${TEMPFILE}
+cat ./doc/fileobj.1 | gzip -9 -n > ${TEMPFILE}
 if [ $? -ne 0 ]; then
 	echo "### Failed to gzip manpage"
 	exit 1

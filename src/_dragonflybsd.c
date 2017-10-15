@@ -26,31 +26,65 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/diskslice.h>
+#include <sys/ptrace.h>
 
-static int __get_blkdev_info(const char *path, blkdev_info_t b)
+static int get_blkdev_info(const char *path, blkdev_info_t *b)
 {
 	int fd;
 	struct partinfo pi;
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
-		return -1;
+		return -errno;
 
 	memset(b, 0, sizeof(*b));
 	memset(&pi, 0, sizeof(pi));
 
 	if (ioctl(fd, DIOCGPART, &pi) == -1) {
 		close(fd);
-		return -2;
+		return -errno;
 	}
 
 	b->size = pi.media_size;
 	b->sector_size = pi.media_blksize;
 
 	close(fd);
+	return 0;
+}
+
+static int ptrace_cont(pid_t pid)
+{
+	if (ptrace(PT_CONTINUE, pid, (caddr_t)1, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_kill(pid_t pid)
+{
+	if (ptrace(PT_KILL, pid, NULL, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_attach(pid_t pid)
+{
+	if (ptrace(PT_ATTACH, pid, NULL, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_detach(pid_t pid)
+{
+	if (ptrace(PT_DETACH, pid, NULL, 0) == -1)
+		return -errno;
+
 	return 0;
 }

@@ -22,6 +22,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from . import kernel
+#from . import native
+from . import setting
 from . import util
 
 ERROR = None
@@ -39,34 +41,38 @@ def _B(ret, err):
     return ret, err
 
 def peektext(pid, addr):
-    return _B(*kernel.ptrace_peektext(pid, addr))
+    return _B(*_.ptrace_peektext(pid, addr))
 
 def peekdata(pid, addr):
-    return _B(*kernel.ptrace_peekdata(pid, addr))
+    return _B(*_.ptrace_peekdata(pid, addr))
 
 def poketext(pid, addr, data):
-    return _I(*kernel.ptrace_poketext(pid, addr, data))
+    return _I(*_.ptrace_poketext(pid, addr, data))
 
 def pokedata(pid, addr, data):
-    return _I(*kernel.ptrace_pokedata(pid, addr, data))
+    return _I(*_.ptrace_pokedata(pid, addr, data))
 
 def cont(pid):
-    return _I(*kernel.ptrace_cont(pid))
+    return _I(*_.ptrace_cont(pid))
 
 def kill(pid):
-    return _I(*kernel.ptrace_kill(pid))
+    return _I(*_.ptrace_kill(pid))
 
 def attach(pid):
-    return _I(*kernel.ptrace_attach(pid))
+    return _I(*_.ptrace_attach(pid))
 
 def detach(pid):
-    return _I(*kernel.ptrace_detach(pid))
-
-def peek(pid, addr):
-    return _B(*kernel.ptrace_peek(pid, addr))
-
-def poke(pid, addr, data):
-    return _I(*kernel.ptrace_poke(pid, addr, data))
+    return _I(*_.ptrace_detach(pid))
 
 def get_word_size():
-    return kernel.get_ptrace_word_size()
+    return _.get_ptrace_word_size()
+
+try:
+    _ = kernel
+    # XXX disable native ptrace until peek/poke are added
+    #if setting.use_native:
+    #    native.get_so()
+    #    _ = native
+except Exception as e:
+    if setting.use_debug:
+        raise

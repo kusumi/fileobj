@@ -116,7 +116,7 @@ class methods (object):
     def __peek_vm(self, addr, size):
         l = []
         while True:
-            ret, err = ptrace.peek(self.pid, addr)
+            ret, err = ptrace.peektext(self.pid, addr)
             if ret == ptrace.ERROR:
                 raise fileobj.FileobjError(
                     "Failed to peek pid {0} at 0x{1:X}: {2}".format(
@@ -144,7 +144,7 @@ class methods (object):
     def __poke_vm(self, addr, buf):
         ret = 0
         for data in buf:
-            ret, err = ptrace.poke(self.pid, addr, data)
+            ret, err = ptrace.poketext(self.pid, addr, data)
             if ret == ptrace.ERROR:
                 raise fileobj.FileobjError(
                     "Failed to poke pid {0} at 0x{1:X}: {2}".format(

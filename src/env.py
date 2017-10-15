@@ -520,6 +520,8 @@ def __get_home():
 def print_env():
     for k, v in iter_defined_env():
         print(k + "=" + v)
+    for k, v in iter_defined_ext_env():
+        print(k + "=" + v)
 
 def iter_env_name():
     for x in sorted(__iter_env_name()):

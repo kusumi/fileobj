@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
+import sys
 
 from . import setting
 from . import util
@@ -52,6 +53,7 @@ def init(name, f=None):
         util.get_os_release()))
     info("Running {0} ({1})".format(
         util.get_program_path(), version.__version__))
+    info("argv {0}".format(sys.argv))
 
 def cleanup():
     global _logger

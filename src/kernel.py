@@ -21,14 +21,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# using the module name 'kernel' since 'os' is used by inbox module
-
 import os
 import re
 
 from . import env
 from . import filebytes
 from . import log
+from . import native
 from . import nodep
 from . import setting
 from . import util
@@ -163,26 +162,33 @@ def get_lang_info():
 def get_blkdev_info(f):
     if not is_blkdev(f):
         raise KernelError(f + " is not a block device")
-    o = get_kernel_module()
-    if not o:
-        raise KernelError("Failed to get kernel module")
-    try:
-        # NetBSD/OpenBSD fail with -EBUSY if already opened
-        l = o.get_blkdev_info(f)
-        assert util.is_seq(l), l
-        return __get_blkdev_info(f, *l)
-    except Exception:
-        return __get_blkdev_info(f, o.seek_end(f), 512, "pseudo")
 
-def __get_blkdev_info(name, size, sector_size, label):
-    b = util.Namespace(
-        name=name, size=size, sector_size=sector_size, label=label)
+    l = __get_blkdev_info(f)
+    assert util.is_seq(l), l
+
+    b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
     log.info("Block device {0} ({1}, {2}, '{3}')".format(
         b.name,
         util.get_size_repr(b.size),
         util.get_size_repr(b.sector_size),
         filebytes.str(b.label)))
     return b
+
+def __get_blkdev_info(f):
+    # try native first and fall back to non native
+    o = get_kernel_module()
+    if not o:
+        raise KernelError("Failed to get kernel module")
+    try:
+        if setting.use_native:
+            return native.get_blkdev_info(f)
+    except Exception as e:
+        log.error(e)
+    try:
+        return o.get_blkdev_info(f)
+    except Exception as e:
+        log.error(e)
+        return o.seek_end(f), 512, "pseudo"
 
 def get_size(f):
     # caller needs to catch an exception
@@ -554,20 +560,6 @@ def ptrace_detach(pid):
     o = get_kernel_module()
     if o:
         return o.ptrace_detach(pid)
-    else:
-        return None
-
-def ptrace_peek(pid, addr):
-    o = get_kernel_module()
-    if o:
-        return o.ptrace_peek(pid, addr)
-    else:
-        return None
-
-def ptrace_poke(pid, addr, data):
-    o = get_kernel_module()
-    if o:
-        return o.ptrace_poke(pid, addr, data)
     else:
         return None
 

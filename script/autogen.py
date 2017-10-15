@@ -67,7 +67,7 @@ if __name__ == '__main__':
         s = fileobj.util.execute_sh(cmd).stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
-        f = os.path.join(d, "README.list_of_options.md")
+        f = os.path.join(d, "../doc/README.list_of_options.md")
         writel(f, l)
         print(f)
     except Exception as e:
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         s = fileobj.util.execute_sh(cmd).stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
-        f = os.path.join(d, "README.list_of_commands.md")
+        f = os.path.join(d, "../doc/README.list_of_commands.md")
         writel(f, l)
         print(f)
     except Exception as e:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
             assert 0, "Invalid line " + s
         assert l and v
 
-        f = os.path.join(d, "README.changes.md")
+        f = os.path.join(d, "../doc/README.changes.md")
         writel(f, l)
         print(f)
         print(v)

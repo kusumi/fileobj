@@ -23,4 +23,57 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <cygwin/fs.h>
-#include "./_linux.c"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+
+static int get_blkdev_info(const char *path, blkdev_info_t *b)
+{
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return -errno;
+
+	memset(b, 0, sizeof(*b));
+
+	if (ioctl(fd, BLKGETSIZE, &b->size) == -1) {
+		close(fd);
+		return -errno;
+	}
+	b->size <<= 9;
+
+	if (ioctl(fd, BLKSSZGET, &b->sector_size) == -1) {
+		close(fd);
+		return -errno;
+	}
+
+	close(fd);
+	return 0;
+}
+
+static int ptrace_cont(pid_t pid)
+{
+	return -1;
+}
+
+static int ptrace_kill(pid_t pid)
+{
+	return -1;
+}
+
+static int ptrace_attach(pid_t pid)
+{
+	return -1;
+}
+
+static int ptrace_detach(pid_t pid)
+{
+	return -1;
+}

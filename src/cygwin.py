@@ -164,12 +164,6 @@ def ptrace_attach(pid):
 def ptrace_detach(pid):
     assert 0, "Not implemented"
 
-def ptrace_peek(pid, addr):
-    assert 0, "Not implemented"
-
-def ptrace_poke(pid, addr, data):
-    assert 0, "Not implemented"
-
 def get_ptrace_word_size():
     assert 0, "Not implemented"
 

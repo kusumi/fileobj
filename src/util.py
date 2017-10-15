@@ -127,16 +127,10 @@ def is_running_script(name=None):
         return os.path.isfile(f)
 
 def is_running_fileobj():
-    return is_running_script("fileobj")
+    return is_running_script("fileobj") or is_running_script("profile")
 
-def is_running_profile():
-    return is_running_script("profile")
-
-def is_running_inbox():
-    return is_running_fileobj() or is_running_profile()
-
-def is_running_outbox():
-    return not is_running_inbox()
+def is_imported_module():
+    return not is_running_fileobj()
 
 def is_in_screen():
     return "STY" in os.environ

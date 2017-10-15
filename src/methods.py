@@ -593,7 +593,7 @@ def show_osdep(self, amp, opc, args, raw):
         _(kernel.is_blkdev_supported()),
         _(kernel.has_ptrace()),
         _(screen.has_chgat()),
-        _(native.get_so())))
+        _(native.get_so(safe=True))))
 
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
@@ -921,11 +921,24 @@ def __do_replace_number(self, amp, opc, siz):
 
 _did_search_forward = True
 def search_forward(self, amp, opc, args, raw):
-    __do_search(self, opc, True)
+    __do_search_repeat(self, amp, opc, True)
 def search_backward(self, amp, opc, args, raw):
-    __do_search(self, opc, False)
+    __do_search_repeat(self, amp, opc, False)
 
-def __do_search(self, s, is_forward):
+def __do_search_repeat(self, amp, opc, is_forward):
+    n = get_int(amp)
+    for x in range(n):
+        is_last = (x == (n - 1))
+        if not x:
+            if __do_search(self, opc, is_forward, is_last) == -1:
+                return
+        else:
+            # Always pass True, as the actual direction is set
+            # based on comparison with the previous regular search.
+            if __do_search_next(self, True, is_last) == -1:
+                return
+
+def __do_search(self, s, is_forward, is_last):
     global _did_search_forward
     if len(s) == 1:
         s = self.ope.get_prev_history(s[0])
@@ -933,24 +946,33 @@ def __do_search(self, s, is_forward):
             self.co.flash("No previous search")
             return
     _did_search_forward = is_forward
-    __search(self, self.co.get_pos(), s, is_forward)
+    return __search(self, self.co.get_pos(), s, is_forward, is_last)
 
 def search_next_forward(self, amp, opc, args, raw):
-    __do_search_next(self, '/')
+    __do_search_next_repeat(self, amp, True)
 def search_next_backward(self, amp, opc, args, raw):
-    __do_search_next(self, '?')
+    __do_search_next_repeat(self, amp, False)
 
-def __do_search_next(self, key):
-    if _did_search_forward:
-        x = '/'
-    else:
-        x = '?'
-    s = self.ope.get_prev_history(x)
+def __do_search_next_repeat(self, amp, is_forward):
+    n = get_int(amp)
+    for x in range(n):
+        is_last = (x == (n - 1))
+        if __do_search_next(self, is_forward, is_last) == -1:
+            return
+
+def __do_search_next(self, _is_forward, is_last):
+    k = literal.s_fsearch.str if _did_search_forward else literal.s_rsearch.str
+    s = self.ope.get_prev_history(k)
     if not s:
         self.co.flash("No previous search")
         return
     pos = self.co.get_pos()
-    is_forward = x == key
+    # The direction is set based on the previous regualr search.
+    # If searched forward (/xxx) and forward next (n), then forward.
+    # If searched forward (/xxx) and backward next (N), then backward.
+    # If searched backward (?xxx) and forward next (n), then backward.
+    # If searched backward (?xxx) and backward next (N), then forward.
+    is_forward = (_did_search_forward == _is_forward)
     if is_forward:
         if pos >= self.co.get_max_pos():
             pos = 0
@@ -961,10 +983,10 @@ def __do_search_next(self, key):
             pos = self.co.get_max_pos()
         else:
             pos -= 1
-    __search(self, pos, s, is_forward)
+    return __search(self, pos, s, is_forward, is_last)
 
-def __search(self, pos, s, is_forward):
-    assert s[0] in "/?"
+def __search(self, pos, s, is_forward, is_last):
+    assert s[0] in (literal.s_fsearch.str, literal.s_rsearch.str)
     word = util.pack_hex_string(s[1:])
     b = util.str_to_bytes(word)
     if is_forward:
@@ -978,15 +1000,23 @@ def __search(self, pos, s, is_forward):
         else:
             x = self.co.get_max_pos()
         ret = fn(x, b, pos)
+
+    retval = None
     if ret == fileobj.NOTFOUND:
         self.co.flash("Search '{0}' failed".format(filebytes.str(word)))
+        retval = -1
     elif ret == fileobj.INTERRUPT:
         self.co.flash("Search '{0}' interrupted".format(filebytes.str(word)))
+        retval = -1
     elif ret < 0:
         self.co.flash("Search error {0}".format(ret))
+        retval = -1
     elif ret != self.co.get_pos():
-        go_to(self, ret)
-    self.co.lrepaintf()
+        self.co.set_pos(ret) # only update position
+    # refresh if last or error (e.g. clear old valid search word)
+    if is_last or retval == -1:
+        self.co.lrepaintf()
+    return retval
 
 @_cleanup
 def delete(self, amp, opc, args, raw):

@@ -1,3 +1,11 @@
+## v0.7.51
++ Minor fixes and improvement
++ Add [count] support for searching
++ Add script/clean.sh
++ Add script/build.sh
++ Move script/README* to doc/
++ Move script/fileobj.1 to doc/
+
 ## v0.7.50
 + Minor fixes and improvement
 + Fix bugs

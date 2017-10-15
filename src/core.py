@@ -168,10 +168,24 @@ def dispatch(optargs=None):
         setting.use_full_status_window = False
         setting.use_status_window_frame = False
 
+    l = []
     for o in parser.option_list:
         if isinstance(o.dest, str):
             a = getattr(opts, o.dest, None)
-            log.debug("Option {0} -> {1}".format(o.dest, a))
+            l.append("{0}={1}".format(o.dest, a))
+    log.debug("options {0}".format(l))
+
+    l = []
+    for _ in env.iter_defined_env():
+        l.append("{0}={1}".format(*_))
+    for _ in env.iter_defined_ext_env():
+        l.append("{0}={1}".format(*_))
+    log.debug("envs {0}".format(l))
+
+    l = []
+    for _ in setting.iter_setting():
+        l.append("{0}={1}".format(*_))
+    log.debug("settings {0}".format(l))
 
     msg = ''
     if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
@@ -185,7 +199,8 @@ def dispatch(optargs=None):
         msg = "Failed to make user directory {0}".format(setting.user_dir)
         log.error(msg)
 
-    log.debug(sys.argv)
+    log.debug((util.get_os_name(), util.get_os_release(), util.get_cpu_name()))
+    log.debug((kernel.get_term_info(), kernel.get_lang_info()))
     log.debug("Free ram {0}/{1}".format(
         util.get_size_repr(kernel.get_free_ram()),
         util.get_size_repr(kernel.get_total_ram())))
@@ -208,8 +223,7 @@ def dispatch(optargs=None):
                 "to manually specify terminal size")
         assert console.init() != -1
 
-        free_ram = kernel.get_free_ram()
-        if opts.B and free_ram != -1:
+        if opts.B:
             tot = 0
             for x in args:
                 o = path.Path(x)
@@ -219,8 +233,9 @@ def dispatch(optargs=None):
                         tot += siz
             s1 = "Required memory {0}".format(util.get_size_repr(tot))
             s2 = "use --force option to continue"
-            log.debug(s1)
-            if not opts.force and tot > free_ram:
+            log.info(s1)
+            free_ram = kernel.get_free_ram()
+            if free_ram != -1 and not opts.force and tot > free_ram:
                 __error("{0} exceeds free RAM size {1}, {2}".format(
                     s1, util.get_size_repr(free_ram), s2))
             if not opts.force and tot > setting.regfile_soft_limit:

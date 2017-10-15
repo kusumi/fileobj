@@ -24,12 +24,13 @@
  */
 
 #include <stdint.h>
+#include <unistd.h>
 
 typedef struct blkdev_info {
 	uint64_t size;
 	int sector_size;
 	char label[64];
-} *blkdev_info_t;
+} blkdev_info_t;
 
 #if defined __linux__
 #include "./_linux.c"
@@ -44,7 +45,23 @@ typedef struct blkdev_info {
 #elif defined __CYGWIN__
 #include "./_cygwin.c"
 #else
-static int __get_blkdev_info(const char *path, blkdev_info_t b)
+static int get_blkdev_info(const char *path, blkdev_info_t *b)
+{
+	return -1;
+}
+static int ptrace_cont(pid_t pid)
+{
+	return -1;
+}
+static int ptrace_kill(pid_t pid)
+{
+	return -1;
+}
+static int ptrace_attach(pid_t pid)
+{
+	return -1;
+}
+static int ptrace_detach(pid_t pid)
 {
 	return -1;
 }

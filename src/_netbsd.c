@@ -26,27 +26,29 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/dkio.h>
 #include <sys/disklabel.h>
+#include <sys/ptrace.h>
 
-static int __get_blkdev_info(const char *path, blkdev_info_t b)
+static int get_blkdev_info(const char *path, blkdev_info_t *b)
 {
 	int fd, i;
 	struct disklabel dl;
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
-		return -1;
+		return -errno;
 
 	memset(b, 0, sizeof(*b));
 	memset(&dl, 0, sizeof(dl));
 
 	if (ioctl(fd, DIOCGDINFO, &dl) == -1) {
 		close(fd);
-		return -2;
+		return -errno;
 	}
 
 	b->size = ((uint64_t)dl.d_secperunit) * dl.d_secsize;
@@ -63,5 +65,37 @@ static int __get_blkdev_info(const char *path, blkdev_info_t b)
 	}
 
 	close(fd);
+	return 0;
+}
+
+static int ptrace_cont(pid_t pid)
+{
+	if (ptrace(PT_CONTINUE, pid, (caddr_t)1, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_kill(pid_t pid)
+{
+	if (ptrace(PT_KILL, pid, NULL, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_attach(pid_t pid)
+{
+	if (ptrace(PT_ATTACH, pid, NULL, 0) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_detach(pid_t pid)
+{
+	if (ptrace(PT_DETACH, pid, NULL, 0) == -1)
+		return -errno;
+
 	return 0;
 }

@@ -79,6 +79,8 @@ def __get_cmdline(tf):
     for k, v in env.iter_defined_env():
         if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_FILE_STREAM_NAME"):
             ret.append(k + "=" + v)
+    for k, v in env.iter_defined_ext_env():
+        ret.append(k + "=" + v)
     ret.extend(sys.argv)
     return ' '.join(ret)
 

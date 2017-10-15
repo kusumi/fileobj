@@ -24,9 +24,13 @@
  */
 
 #include <Python.h>
+#include <string.h>
 #include "./_native.h"
 
-static PyObject *get_blkdev_info(PyObject *self, PyObject *args)
+#define PYERR_FORMAT(exception, ret)	\
+	PyErr_Format(exception, "%s: %s", __func__, strerror(-ret))
+
+static PyObject *__get_blkdev_info(PyObject *self, PyObject *args)
 {
 	const char *path;
 	struct blkdev_info b;
@@ -35,17 +39,89 @@ static PyObject *get_blkdev_info(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &path))
 		return NULL;
 
-	ret = __get_blkdev_info(path, &b);
+	ret = get_blkdev_info(path, &b);
 	if (ret) {
-		PyErr_Format(PyExc_IOError, "Failed: %d", ret);
+		PYERR_FORMAT(PyExc_IOError, ret);
 		return NULL;
 	}
 
 	return Py_BuildValue("lis", b.size, b.sector_size, b.label);
 }
 
+static PyObject *__ptrace_cont(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	int ret;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	ret = ptrace_cont(pid);
+	if (ret) {
+		PYERR_FORMAT(PyExc_IOError, ret);
+		return NULL;
+	}
+
+	return Py_BuildValue("i", ret);
+}
+
+static PyObject *__ptrace_kill(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	int ret;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	ret = ptrace_kill(pid);
+	if (ret) {
+		PYERR_FORMAT(PyExc_IOError, ret);
+		return NULL;
+	}
+
+	return Py_BuildValue("i", ret);
+}
+
+static PyObject *__ptrace_attach(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	int ret;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	ret = ptrace_attach(pid);
+	if (ret) {
+		PYERR_FORMAT(PyExc_IOError, ret);
+		return NULL;
+	}
+
+	return Py_BuildValue("i", ret);
+}
+
+static PyObject *__ptrace_detach(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	int ret;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	ret = ptrace_detach(pid);
+	if (ret) {
+		PYERR_FORMAT(PyExc_IOError, ret);
+		return NULL;
+	}
+
+	return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef __methods[] = {
-	{"get_blkdev_info", (PyCFunction)get_blkdev_info, METH_VARARGS, "",},
+	{"get_blkdev_info", (PyCFunction)__get_blkdev_info, METH_VARARGS, "",},
+	{"ptrace_cont", (PyCFunction)__ptrace_cont, METH_VARARGS, "",},
+	{"ptrace_kill", (PyCFunction)__ptrace_kill, METH_VARARGS, "",},
+	{"ptrace_attach", (PyCFunction)__ptrace_attach, METH_VARARGS, "",},
+	{"ptrace_detach", (PyCFunction)__ptrace_detach, METH_VARARGS, "",},
 	{NULL, NULL, 0, NULL,},
 };
 
