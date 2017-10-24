@@ -25,9 +25,10 @@
 
 #include <Python.h>
 #include <string.h>
+
 #include "./_native.h"
 
-#define PYERR_FORMAT(exception, ret)	\
+#define PyErr_Format_Errno(exception, ret)	\
 	PyErr_Format(exception, "%s: %s", __func__, strerror(-ret))
 
 static PyObject *__get_blkdev_info(PyObject *self, PyObject *args)
@@ -40,84 +41,129 @@ static PyObject *__get_blkdev_info(PyObject *self, PyObject *args)
 		return NULL;
 
 	ret = get_blkdev_info(path, &b);
-	if (ret) {
-		PYERR_FORMAT(PyExc_IOError, ret);
+	if (ret < 0) {
+		PyErr_Format_Errno(PyExc_IOError, ret);
 		return NULL;
 	}
 
 	return Py_BuildValue("lis", b.size, b.sector_size, b.label);
 }
 
-static PyObject *__ptrace_cont(PyObject *self, PyObject *args)
+static PyObject *__get_ptrace_word_size(PyObject *self, PyObject *args)
 {
-	pid_t pid;
 	int ret;
 
-	if (!PyArg_ParseTuple(args, "i", &pid))
-		return NULL;
-
-	ret = ptrace_cont(pid);
-	if (ret) {
-		PYERR_FORMAT(PyExc_IOError, ret);
+	ret = get_ptrace_word_size();
+	if (ret < 0) {
+		PyErr_Format_Errno(PyExc_IOError, ret);
 		return NULL;
 	}
 
 	return Py_BuildValue("i", ret);
+}
+
+static PyObject *__p(long ret)
+{
+	if (ret < 0)
+		return Py_BuildValue("Oi", Py_None, -ret);
+
+	return Py_BuildValue("li", ret, 0);
+}
+
+static PyObject *__ptrace_peektext(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	long long addr;
+
+	if (!PyArg_ParseTuple(args, "iL", &pid, &addr))
+		return NULL;
+
+	return __p(ptrace_peektext(pid, addr));
+}
+
+static PyObject *__ptrace_peekdata(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	long long addr;
+
+	if (!PyArg_ParseTuple(args, "iL", &pid, &addr))
+		return NULL;
+
+	return __p(ptrace_peekdata(pid, addr));
+}
+
+static PyObject *__ptrace_poketext(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	long long addr;
+	long data;
+
+	if (!PyArg_ParseTuple(args, "iLl", &pid, &addr, &data))
+		return NULL;
+
+	return __p(ptrace_poketext(pid, addr, data));
+}
+
+static PyObject *__ptrace_pokedata(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+	long long addr;
+	long data;
+
+	if (!PyArg_ParseTuple(args, "iLl", &pid, &addr, &data))
+		return NULL;
+
+	return __p(ptrace_pokedata(pid, addr, data));
+}
+
+static PyObject *__ptrace_cont(PyObject *self, PyObject *args)
+{
+	pid_t pid;
+
+	if (!PyArg_ParseTuple(args, "i", &pid))
+		return NULL;
+
+	return __p(ptrace_cont(pid));
 }
 
 static PyObject *__ptrace_kill(PyObject *self, PyObject *args)
 {
 	pid_t pid;
-	int ret;
 
 	if (!PyArg_ParseTuple(args, "i", &pid))
 		return NULL;
 
-	ret = ptrace_kill(pid);
-	if (ret) {
-		PYERR_FORMAT(PyExc_IOError, ret);
-		return NULL;
-	}
-
-	return Py_BuildValue("i", ret);
+	return __p(ptrace_kill(pid));
 }
 
 static PyObject *__ptrace_attach(PyObject *self, PyObject *args)
 {
 	pid_t pid;
-	int ret;
 
 	if (!PyArg_ParseTuple(args, "i", &pid))
 		return NULL;
 
-	ret = ptrace_attach(pid);
-	if (ret) {
-		PYERR_FORMAT(PyExc_IOError, ret);
-		return NULL;
-	}
-
-	return Py_BuildValue("i", ret);
+	return __p(ptrace_attach(pid));
 }
 
 static PyObject *__ptrace_detach(PyObject *self, PyObject *args)
 {
 	pid_t pid;
-	int ret;
 
 	if (!PyArg_ParseTuple(args, "i", &pid))
 		return NULL;
 
-	ret = ptrace_detach(pid);
-	if (ret) {
-		PYERR_FORMAT(PyExc_IOError, ret);
-		return NULL;
-	}
-
-	return Py_BuildValue("i", ret);
+	return __p(ptrace_detach(pid));
 }
 
 static PyMethodDef __methods[] = {
 	{"get_blkdev_info", (PyCFunction)__get_blkdev_info, METH_VARARGS, "",},
+	{"get_ptrace_word_size", (PyCFunction)__get_ptrace_word_size,
+		METH_VARARGS, "",},
+	{"ptrace_peektext", (PyCFunction)__ptrace_peektext, METH_VARARGS, "",},
+	{"ptrace_peekdata", (PyCFunction)__ptrace_peekdata, METH_VARARGS, "",},
+	{"ptrace_poketext", (PyCFunction)__ptrace_poketext, METH_VARARGS, "",},
+	{"ptrace_pokedata", (PyCFunction)__ptrace_pokedata, METH_VARARGS, "",},
 	{"ptrace_cont", (PyCFunction)__ptrace_cont, METH_VARARGS, "",},
 	{"ptrace_kill", (PyCFunction)__ptrace_kill, METH_VARARGS, "",},
 	{"ptrace_attach", (PyCFunction)__ptrace_attach, METH_VARARGS, "",},
@@ -141,7 +187,7 @@ static struct PyModuleDef __module = {
 PyMODINIT_FUNC PyInit__native(void)
 {
 	PyObject *m = PyModule_Create(&__module);
-	if (m == NULL)
+	if (!m)
 		return NULL;
 	return m;
 }

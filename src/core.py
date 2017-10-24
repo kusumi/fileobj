@@ -35,6 +35,7 @@ from . import kernel
 from . import literal
 from . import log
 from . import marks
+from . import methods
 from . import package
 from . import path
 from . import screen
@@ -101,7 +102,7 @@ def dispatch(optargs=None):
     parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar=usage.terminal_width_metavar, help=usage.terminal_width)
     parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_option("--simple", action="store_true", default=(not setting.use_full_status_window and not setting.use_status_window_frame), help=usage.simple)
+    parser.add_option("--verbose_window", action="store_true", default=(setting.use_full_status_window or setting.use_status_window_frame), help=usage.verbose_window)
     parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
@@ -164,9 +165,9 @@ def dispatch(optargs=None):
         setting.terminal_height = opts.terminal_height
     if opts.terminal_width > 0:
         setting.terminal_width = opts.terminal_width
-    if opts.simple:
-        setting.use_full_status_window = False
-        setting.use_status_window_frame = False
+    if opts.verbose_window:
+        setting.use_full_status_window = True
+        setting.use_status_window_frame = True
 
     l = []
     for o in parser.option_list:
@@ -201,9 +202,8 @@ def dispatch(optargs=None):
 
     log.debug((util.get_os_name(), util.get_os_release(), util.get_cpu_name()))
     log.debug((kernel.get_term_info(), kernel.get_lang_info()))
-    log.debug("Free ram {0}/{1}".format(
-        util.get_size_repr(kernel.get_free_ram()),
-        util.get_size_repr(kernel.get_total_ram())))
+    log.debug("RAM {0}".format(methods.get_meminfo_string()))
+    log.debug(methods.get_osdep_string())
 
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)

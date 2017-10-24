@@ -26,7 +26,6 @@ from __future__ import with_statement
 from . import libc
 from . import linux
 from . import log
-from . import setting
 from . import unix
 from . import util
 
@@ -51,14 +50,12 @@ def get_blkdev_info(f):
 
 def __get_blkdev_info(fd):
     # ioctl value depends on sizeof(partinfo)
-    if setting.dragonflybsd_sizeof_partinfo > 0:
-        size = setting.dragonflybsd_sizeof_partinfo
-    elif util.is_64bit_cpu(): # assume x86_64/gcc
+    if util.is_64bit_cpu(): # assume x86_64/gcc
         size = 144
     elif util.is_32bit_cpu(): # assume i386/gcc
         size = 136
     else: # forget it
-        log.error("Unsupported processor " + util.get_cpu_name())
+        log.error("Unknown processor " + util.get_cpu_name())
         return -1, -1, ''
     try:
         DIOCGPART = 0x40006468 | ((size & 0x1FFF) << 16)

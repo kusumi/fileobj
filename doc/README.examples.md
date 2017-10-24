@@ -539,9 +539,9 @@
 
         $ fileobj ./a.out -R
 
-+ Open a file *./a.out* in simple window mode.
++ Open a file *./a.out* in verbose window mode.
 
-        $ fileobj ./a.out --simple
+        $ fileobj ./a.out --verbose_window
 
 + Open a file *./a.out* with green foreground and black background color.
 
@@ -705,6 +705,13 @@
         # pgrep -l test1
         8549 test1
         # fileobj pid8549@0x400628:26
+          (command)26~
+          (command):wq
+
++ Or if the executable binary was specified in absolute path (i.e. */path/to/test1*), use *@objdump<section>* syntax to open the entire .rodata section.
+
+        # fileobj pid8549@objdump.rodata
+          (command)/A<ENTER>
           (command)26~
           (command):wq
 

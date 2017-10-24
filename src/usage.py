@@ -120,8 +120,8 @@ If neither this option nor \fB\-\-fg\fP option is specified, the program assumes
 """)
 bg_metavar = _metavar("color")
 
-simple = _("""
-Use simplified status window format.
+verbose_window = _("""
+Use verbose status window format.
 """)
 
 force = _("""

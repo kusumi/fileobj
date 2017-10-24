@@ -153,11 +153,25 @@ class Fileops (object):
     def __set_pos(self, pos):
         self.__ppos = self.__pos
         if pos > self.get_max_pos():
-            self.__pos = self.get_max_pos()
+            if self.__fall_through():
+                self.__pos = pos - self.get_max_pos() - 1
+                if self.__pos > self.get_max_pos():
+                    self.__pos = self.get_max_pos()
+            else:
+                self.__pos = self.get_max_pos()
         elif pos < 0:
-            self.__pos = 0
+            if self.__fall_through():
+                self.__pos = self.get_max_pos() + pos + 1
+                if self.__pos < 0:
+                    self.__pos = 0
+            else:
+                self.__pos = 0
         else:
             self.__pos = pos
+
+    def __fall_through(self):
+        return setting.use_cursor_fall_through and \
+            not self.__ref.is_barrier_active()
 
     def discard_eof(self):
         self.__trail = self.test_insert() * 1

@@ -33,6 +33,7 @@ from . import fileattr
 from . import filebytes
 from . import fileops
 from . import kbd
+from . import kernel
 from . import marks
 from . import operand
 from . import path
@@ -294,6 +295,7 @@ class Container (object):
             return self.__fileobjs[i]
 
     def __get_buffer_index(self, f, cond=None):
+        f, offset, length = kernel.parse_file_path(f) # drop offset/length
         f = path.get_path(f)
         for i, x in enumerate(self.get_buffer_paths(cond)):
             if util.is_same_file(f, x) or f == x:

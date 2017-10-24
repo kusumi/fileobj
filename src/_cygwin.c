@@ -58,22 +58,47 @@ static int get_blkdev_info(const char *path, blkdev_info_t *b)
 	return 0;
 }
 
+static int get_ptrace_word_size(void)
+{
+	return -EOPNOTSUPP;
+}
+
+static long ptrace_peektext(pid_t pid, long long addr)
+{
+	return -EOPNOTSUPP;
+}
+
+static long  ptrace_peekdata(pid_t pid, long long addr)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_poketext(pid_t pid, long long addr, long data)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_pokedata(pid_t pid, long long addr, long data)
+{
+	return -EOPNOTSUPP;
+}
+
 static int ptrace_cont(pid_t pid)
 {
-	return -1;
+	return -EOPNOTSUPP;
 }
 
 static int ptrace_kill(pid_t pid)
 {
-	return -1;
+	return -EOPNOTSUPP;
 }
 
 static int ptrace_attach(pid_t pid)
 {
-	return -1;
+	return -EOPNOTSUPP;
 }
 
 static int ptrace_detach(pid_t pid)
 {
-	return -1;
+	return -EOPNOTSUPP;
 }

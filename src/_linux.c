@@ -58,6 +58,49 @@ static int get_blkdev_info(const char *path, blkdev_info_t *b)
 	return 0;
 }
 
+static int get_ptrace_word_size(void)
+{
+	return (int)sizeof(long);
+}
+
+static long ptrace_peektext(pid_t pid, long long addr)
+{
+	long ret;
+
+	ret = ptrace(PTRACE_PEEKTEXT, pid, addr, NULL);
+	if (ret == -1)
+		return -errno;
+
+	return ret;
+}
+
+static long ptrace_peekdata(pid_t pid, long long addr)
+{
+	long ret;
+
+	ret = ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
+	if (ret == -1)
+		return -errno;
+
+	return ret;
+}
+
+static int ptrace_poketext(pid_t pid, long long addr, long data)
+{
+	if (ptrace(PTRACE_POKETEXT, pid, addr, data) == -1)
+		return -errno;
+
+	return 0;
+}
+
+static int ptrace_pokedata(pid_t pid, long long addr, long data)
+{
+	if (ptrace(PTRACE_POKEDATA, pid, addr, data) == -1)
+		return -errno;
+
+	return 0;
+}
+
 static int ptrace_cont(pid_t pid)
 {
 	if (ptrace(PTRACE_CONT, pid, NULL, NULL) == -1)

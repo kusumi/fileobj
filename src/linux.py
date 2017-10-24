@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
-import os
 import re
 
 from . import libc
@@ -174,19 +173,7 @@ def has_pid(pid):
     return unix.has_pid(pid)
 
 def get_pid_name(pid):
-    # comm does not exist on older kernels
-    ret = unix.get_pid_name_from_fs(pid, "comm", "cmdline")
-    if not ret:
-        return unix.get_pid_name_from_ps(pid, __parse_ps_name)
-    else:
-        return ret
-
-def __parse_ps_name(name):
-    cmd = name.split(" ")[0]
-    if re.match(r"^\[.+\]$", cmd): # kernel thread
-        return cmd[1:-1]
-    else:
-        return os.path.basename(cmd)
+    return unix.get_pid_name(pid)
 
 def is_pid_path_supported():
     return has_ptrace()

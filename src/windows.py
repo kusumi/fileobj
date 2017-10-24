@@ -31,6 +31,7 @@
 # no curses for Python on win32 however unofficial binary is available at
 # http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses
 
+import errno
 import mmap
 import nt
 import os
@@ -171,31 +172,31 @@ def has_ptrace():
     return False
 
 def ptrace_peektext(pid, addr):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_peekdata(pid, addr):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_poketext(pid, addr, data):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_pokedata(pid, addr, data):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_cont(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_kill(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_attach(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_detach(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def get_ptrace_word_size():
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def waitpid(pid, opts):
     return os.waitpid(pid, opts)

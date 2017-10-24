@@ -204,7 +204,7 @@ def rfind_string(src, sub, start=0):
     return src.rfind(sub, 0, start)
 
 def get_os_name():
-    # this should be used only for debugging
+    # for debugging to pretend other platforms
     if setting.os_uname:
         return setting.os_uname
     # e.g. 'Linux'
@@ -591,19 +591,29 @@ def is_readable(f):
 def is_writable(f):
     return os.access(f, os.W_OK)
 
+def is_file_path_partial(f):
+    s = os.path.basename(f)
+    m = re.match(r"^.+@.*([:-]).*$", s)
+    if m:
+        return m.group(1)
+    m = re.match(r"^.+@.*$", s)
+    if m:
+        return ''
+
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
     if not setting.use_path_attr:
         return f, 0, 0
-    if '@' in f:
+    mode = is_file_path_partial(f)
+    if mode is not None:
         i = f.rindex('@')
         sep = os.path.sep
         if sep in f:
             if i > f.rindex(sep):
                 s = f[i + 1:]
                 f = f[:i]
-                if '-' in s:
-                    j = s.find('-')
+                if mode == '-':
+                    j = s.find(mode)
                     a = s[:j]
                     b = s[j + 1:]
                     offset = __get_path_attribute(a)
@@ -612,8 +622,8 @@ def parse_file_path(f):
                         length = endpos - offset
                     else:
                         length = 0
-                elif ':' in s:
-                    j = s.find(':')
+                elif mode == ':':
+                    j = s.find(mode)
                     a = s[:j]
                     b = s[j + 1:]
                     offset = __get_path_attribute(a)
@@ -826,6 +836,14 @@ def get_class_name(o):
         return o.__name__
     else:
         return get_class(o).__name__
+
+def get_class_repr(cls):
+    if not is_class(cls):
+        cls = get_class(cls)
+    m = re.match(r"^<class '(.+)'>$", repr(cls))
+    if not m:
+        return ""
+    return m.group(1)
 
 def get_builtin(name):
     return getattr(_builtin, name, None)

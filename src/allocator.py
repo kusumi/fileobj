@@ -110,7 +110,7 @@ class Allocator (object):
 
     def alloc(self, f):
         f = path.get_path(f)
-        f, offset, length = util.parse_file_path(f)
+        f, offset, length = kernel.parse_file_path(f)
         o = path.Path(f)
         is_non = not f or o.is_noent
         is_pid = setting.use_pid_path and kernel.is_pid_path(f)

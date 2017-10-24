@@ -578,22 +578,36 @@ def show_buffer_size(self, amp, opc, args, raw):
     self.co.show(self.co.get_buffer_size())
 
 def show_meminfo(self, amp, opc, args, raw):
-    self.co.show("total={0},free={1},page={2}".format(
+    self.co.show(get_meminfo_string())
+
+def get_meminfo_string():
+    return "total={0}," \
+        "free={1}," \
+        "page={2}".format(
         util.get_size_repr(kernel.get_total_ram()),
         util.get_size_repr(kernel.get_free_ram()),
-        util.get_size_repr(kernel.get_page_size())))
+        util.get_size_repr(kernel.get_page_size()))
 
 def show_osdep(self, amp, opc, args, raw):
+    self.co.show(get_osdep_string())
+
+def get_osdep_string():
     def _(t):
         return "yes" if t else "no"
-    self.co.show("mmap={0},mremap={1},blkdev={2},ptrace={3},chgat={4},"
-        "native={5}".format(
+    return "mmap={0}," \
+        "mremap={1}," \
+        "blkdev={2}," \
+        "ptrace={3}," \
+        "native={4}," \
+        "has_chgat={5}," \
+        "use_alt_chgat={6}".format(
         _(kernel.has_mmap()),
         _(kernel.has_mremap()),
         _(kernel.is_blkdev_supported()),
         _(kernel.has_ptrace()),
+        _(native.is_enabled()),
         _(screen.has_chgat()),
-        _(native.get_so(safe=True))))
+        _(screen.use_alt_chgat()))
 
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(
@@ -1870,14 +1884,22 @@ def open_buffer(self, amp, opc, args, raw):
         self.co.show(self.co.get_path())
     else:
         ff = path.get_path(args[0])
-        f, offset, length = util.parse_file_path(ff)
+        f, offset, length = kernel.parse_file_path(ff)
         ret = path.get_path_failure_message(path.Path(f))
         if ret:
             self.co.flash(ret)
         elif self.co.has_buffer(f):
             self.co.switch_to_buffer(f)
             self.co.lrepaintf()
-            show_current(self, amp, opc, args, raw)
+            if offset or length:
+                self.co.flash(f + " exists, can't partially open")
+            else:
+                offset = self.co.get_mapping_offset()
+                length = self.co.get_mapping_length()
+                if offset or length:
+                    self.co.flash(f + " partially exists, can't open")
+                else:
+                    show_current(self, amp, opc, args, raw)
         else:
             self.co.add_buffer(ff)
             self.co.lrepaintf()

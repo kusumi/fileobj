@@ -106,7 +106,8 @@ def ptrace(request, pid, addr, data):
         data = _libc.ptrace.dattype(data)
     ret = _libc.ptrace(request, pid, addr, data)
     err = get_errno()
-    if ret == -1 and err != 0:
+    if ret < 0:
+        assert err != 0, err
         return None, err
     else:
         return ret, err

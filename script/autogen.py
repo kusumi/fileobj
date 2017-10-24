@@ -27,14 +27,10 @@ if __name__ == '__main__':
     import sys
     import fileobj.util
 
-    # Don't run this in a production repository,
-    # where a batch of commits are squashed into 1 for every release.
     d = os.path.basename(os.getcwd())
-    assert d.startswith("fileobj-devel"), "Not in devel repository"
+    assert d.startswith("fileobj-devel"), os.getcwd()
 
     f = "./script/autogen.py"
-    d = os.path.dirname(f)
-    assert os.path.isdir(d), "No " + d
     assert os.path.isfile(f), "No " + f
     assert os.path.samefile(sys.argv[0], f), "Not " + f
 
@@ -46,11 +42,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     def write(f, s):
+        assert os.path.isfile(f), "No " + f
         with open(f, "w") as fd:
             fd.write(s)
         assert os.path.isfile(f), "No " + f
 
     def writel(f, l):
+        assert os.path.isfile(f), "No " + f
         with open(f, "w") as fd:
             for x in l:
                 fd.write("{0}\n".format(x))
@@ -67,7 +65,7 @@ if __name__ == '__main__':
         s = fileobj.util.execute_sh(cmd).stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
-        f = os.path.join(d, "../doc/README.list_of_options.md")
+        f = "./doc/README.list_of_options.md"
         writel(f, l)
         print(f)
     except Exception as e:
@@ -83,7 +81,7 @@ if __name__ == '__main__':
         s = fileobj.util.execute_sh(cmd).stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
-        f = os.path.join(d, "../doc/README.list_of_commands.md")
+        f = "./doc/README.list_of_commands.md"
         writel(f, l)
         print(f)
     except Exception as e:
@@ -124,7 +122,7 @@ if __name__ == '__main__':
             assert 0, "Invalid line " + s
         assert l and v
 
-        f = os.path.join(d, "../doc/README.changes.md")
+        f = "./doc/README.changes.md"
         writel(f, l)
         print(f)
         print(v)

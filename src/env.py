@@ -34,6 +34,7 @@ def __iter_env_name():
     yield "FILEOBJ_STDOUT_VERBOSE"
     yield "FILEOBJ_USE_PATH_ATTR"
     yield "FILEOBJ_USE_PID_PATH"
+    yield "FILEOBJ_USE_SHELL"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_TRACE_WORD_SIZE"
     yield "FILEOBJ_PROCFS_MOUNT_POINT"
@@ -45,6 +46,7 @@ def __iter_env_name():
     yield "FILEOBJ_MAX_HISTORY"
     yield "FILEOBJ_BARRIER_SIZE"
     yield "FILEOBJ_BARRIER_EXTEND"
+    yield "FILEOBJ_USE_CURSOR_FALL_THROUGH"
     yield "FILEOBJ_USE_ALT_CHGAT"
     yield "FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "FILEOBJ_USE_SINGLE_OPERATION"
@@ -69,7 +71,6 @@ def __iter_env_name():
     yield "FILEOBJ_BYTES_PER_WINDOW"
     yield "FILEOBJ_TERMINAL_HEIGHT"
     yield "FILEOBJ_TERMINAL_WIDTH"
-    yield "FILEOBJ_USE_MAGIC_SCAN"
     yield "FILEOBJ_USE_ALLOC_DEGENERATE"
     yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_ARRAY_CHUNK"
@@ -90,8 +91,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_CYGWIN_CAVEAT"
     yield "FILEOBJ_USE_TMUX_CAVEAT"
     yield "FILEOBJ_USE_PUTTY_CAVEAT"
-    yield "FILEOBJ_NETBSD_SIZEOF_DISKLABEL"
-    yield "FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO"
     yield "FILEOBJ_GENERAL_BUFFER_SIZE"
     yield "FILEOBJ_USER_DIR"
     yield "FILEOBJ_FILE_TRACE_NAME"
@@ -99,10 +98,6 @@ def __iter_env_name():
     yield "FILEOBJ_FILE_LOG_NAME"
     yield "FILEOBJ_FILE_HISTORY_NAME"
     yield "FILEOBJ_FILE_MARKS_NAME"
-    yield "FILEOBJ_KEY_TAB"
-    yield "FILEOBJ_KEY_ENTER"
-    yield "FILEOBJ_KEY_ESCAPE"
-    yield "FILEOBJ_KEY_SPACE"
     yield "FILEOBJ_KEY_DOWN"
     yield "FILEOBJ_KEY_UP"
     yield "FILEOBJ_KEY_LEFT"
@@ -188,6 +183,9 @@ def __get_setting_use_path_attr():
 def __get_setting_use_pid_path():
     return test_bool("FILEOBJ_USE_PID_PATH", True)
 
+def __get_setting_use_shell():
+    return test_bool("FILEOBJ_USE_SHELL", False)
+
 def __get_setting_use_trace():
     return test_bool("FILEOBJ_USE_TRACE", False)
 
@@ -237,6 +235,9 @@ def __get_setting_barrier_size():
 def __get_setting_barrier_extend():
     return test_gt_zero("FILEOBJ_BARRIER_EXTEND", 1024)
 
+def __get_setting_use_cursor_fall_through():
+    return test_bool("FILEOBJ_USE_CURSOR_FALL_THROUGH", False)
+
 def __get_setting_use_alt_chgat():
     return test_bool("FILEOBJ_USE_ALT_CHGAT", False)
 
@@ -253,10 +254,10 @@ def __get_setting_use_downward_window_adjust():
     return test_bool("FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST", True)
 
 def __get_setting_use_full_status_window():
-    return test_bool("FILEOBJ_USE_FULL_STATUS_WINDOW", True)
+    return test_bool("FILEOBJ_USE_FULL_STATUS_WINDOW", False)
 
 def __get_setting_use_status_window_frame():
-    return test_bool("FILEOBJ_USE_STATUS_WINDOW_FRAME", True)
+    return test_bool("FILEOBJ_USE_STATUS_WINDOW_FRAME", False)
 
 def __get_setting_screen_attr_posstr():
     return __get_screen_attr("FILEOBJ_SCREEN_ATTR_POSSTR")
@@ -353,9 +354,6 @@ def __get_setting_terminal_height():
 def __get_setting_terminal_width():
     return test_gt_zero("FILEOBJ_TERMINAL_WIDTH", -1)
 
-def __get_setting_use_magic_scan():
-    return test_bool("FILEOBJ_USE_MAGIC_SCAN", True)
-
 def __get_setting_use_alloc_degenerate():
     return test_bool("FILEOBJ_USE_ALLOC_DEGENERATE", True)
 
@@ -437,12 +435,6 @@ def __get_setting_use_tmux_caveat():
 def __get_setting_use_putty_caveat():
     return test_bool("FILEOBJ_USE_PUTTY_CAVEAT", False)
 
-def __get_setting_netbsd_sizeof_disklabel():
-    return test_gt_zero("FILEOBJ_NETBSD_SIZEOF_DISKLABEL", -1)
-
-def __get_setting_dragonflybsd_sizeof_partinfo():
-    return test_gt_zero("FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO", -1)
-
 def __get_setting_general_buffer_size():
     return test_gt_zero("FILEOBJ_GENERAL_BUFFER_SIZE", -1)
 
@@ -464,18 +456,6 @@ def __get_setting_file_history_name():
 
 def __get_setting_file_marks_name():
     return test_name("FILEOBJ_FILE_MARKS_NAME", "marks")
-
-def __get_setting_key_tab():
-    return __get_setting_key("FILEOBJ_KEY_TAB")
-
-def __get_setting_key_enter():
-    return __get_setting_key("FILEOBJ_KEY_ENTER")
-
-def __get_setting_key_escape():
-    return __get_setting_key("FILEOBJ_KEY_ESCAPE")
-
-def __get_setting_key_space():
-    return __get_setting_key("FILEOBJ_KEY_SPACE")
 
 def __get_setting_key_down():
     return __get_setting_key("FILEOBJ_KEY_DOWN")

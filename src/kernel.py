@@ -29,6 +29,7 @@ from . import filebytes
 from . import log
 from . import native
 from . import nodep
+from . import objdump
 from . import setting
 from . import util
 
@@ -488,16 +489,39 @@ def is_pid_path(f):
     pid = path_to_pid(f)
     return pid != -1 and has_pid(pid)
 
+_pid_path_regex = r"^pid(\d+)$"
+_pid_path_objdump_section_regex = r"^pid(\d+)@objdump(\.[a-z]+)$"
+
 def path_to_pid(f):
     try:
         f = os.path.basename(f)
-        m = re.match(r"^pid(\d+)$", f)
+        m = re.match(_pid_path_regex, f)
+        if not m:
+            m = re.match(_pid_path_objdump_section_regex, f)
         if m:
             return int(m.group(1))
         else:
             return -1
     except Exception:
         return -1
+
+def parse_file_path(f):
+    m = re.match(_pid_path_objdump_section_regex, os.path.basename(f))
+    if m:
+        pid = int(m.group(1))
+        section = m.group(2)
+        elf = get_pid_name(pid)
+        if not os.path.isfile(elf) and setting.use_shell:
+            ret = util.execute_sh("which {0} 2>/dev/null".format(elf))
+            if not ret.retval:
+                elf = ret.stdout.rstrip()
+            else:
+                log.error("Can't find path for {0}".format(elf))
+        if os.path.isfile(elf):
+            l = objdump.get_elf_section_info(elf, section)
+            if l is not None:
+                return "pid{0}".format(pid), l[0], l[1]
+    return util.parse_file_path(f)
 
 def has_ptrace():
     """Return True if ptrace(2) is supported"""

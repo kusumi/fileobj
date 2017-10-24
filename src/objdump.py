@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2017, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,62 +21,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
+import re
 
-from . import setting
+from . import log
 from . import util
 
-class NativeError (util.GenericError):
-    pass
+def get_elf_section_info(f, section):
+    cmd = "objdump", "-h", "-j", section, f,
+    ret = util.execute(*cmd)
+    if ret.retval:
+        log.error("Failed to execute {0}".format(cmd))
+        return
 
-try:
-    from . import _native
-    _e = None
-except Exception: # not only ImportError
-    _e = sys.exc_info()[1]
-    _native = None
-    if setting.use_debug:
-        raise
+    pattern = r"^\s+[0-9]+\s+{0}\s+(\S+)\s+(\S+)".format(section)
+    start = False
 
-def get_so(safe=False):
-    if not _native:
-        if safe:
-            return None
-        raise NativeError(repr(_e))
-    return _native
-
-def is_enabled():
-    return get_so(True) is not None
-
-def get_blkdev_info(f):
-    return get_so().get_blkdev_info(f)
-
-def has_ptrace():
-    return True # otherwise fails to compile
-
-def ptrace_peektext(pid, addr):
-    return get_so().ptrace_peektext(pid, addr)
-
-def ptrace_peekdata(pid, addr):
-    return get_so().ptrace_peekdata(pid, addr)
-
-def ptrace_poketext(pid, addr, data):
-    return get_so().ptrace_poketext(pid, addr, data)
-
-def ptrace_pokedata(pid, addr, data):
-    return get_so().ptrace_pokedata(pid, addr, data)
-
-def ptrace_cont(pid):
-    return get_so().ptrace_cont(pid)
-
-def ptrace_kill(pid):
-    return get_so().ptrace_kill(pid)
-
-def ptrace_attach(pid):
-    return get_so().ptrace_attach(pid)
-
-def ptrace_detach(pid):
-    return get_so().ptrace_detach(pid)
-
-def get_ptrace_word_size():
-    return get_so().get_ptrace_word_size()
+    for l in ret.stdout.split("\n"):
+        if l.startswith("Idx Name"):
+            start = True
+            continue
+        if not start:
+            continue
+        m = re.match(pattern, l)
+        if m:
+            length = int(m.group(1), 16)
+            offset = int(m.group(2), 16)
+            return offset, length

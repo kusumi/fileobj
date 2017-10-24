@@ -22,12 +22,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-import os
 
 from . import ascii
 from . import filebytes
 from . import kbd
 from . import log
+from . import native
 from . import screen
 from . import setting
 from . import util
@@ -575,17 +575,27 @@ class StatusCanvas (Canvas, default_addon):
             16: "0x{0:X}",
             10: "{0:d}",
             8 : "0{0:o}", }
+        self.__cur_size = 0
+        self.__cur_fmt = self.__get_size_format()
 
-    def get_first_template(self):
+    def get_static_info(self):
         s = ''
         if setting.use_debug:
-            s += "<{0}> <{1}> <{2}> {3} ".format(
-                util.get_python_executable_string(),
-                util.get_program_path(),
-                version.__version__,
-                self.fileops.get_type())
+            a = ''
             if screen.use_alt_chgat():
-                s += "<*> "
+                a += "A"
+            if not native.is_enabled():
+                a += "N"
+            if a:
+                s += "{0}|".format(a)
+            cls = self.fileops.get_type()
+            x = util.get_class_repr(cls)
+            if not x:
+                x = cls
+            s += "{0}|{1}|{2} ".format(
+                util.get_python_executable_string(),
+                version.__version__,
+                x)
         s += self.__get_buffer_name()
 
         offset = self.fileops.get_mapping_offset()
@@ -595,8 +605,8 @@ class StatusCanvas (Canvas, default_addon):
             s += " @"
             s += fmt.format(offset)
             if length:
-                s += ":"
-                s += fmt.format(length)
+                s += "-"
+                s += fmt.format(offset + length)
         if self.fileops.is_readonly():
             s += " [RO]"
         return s
@@ -608,17 +618,18 @@ class StatusCanvas (Canvas, default_addon):
             if alias:
                 f += "|{0}".format(alias)
             if self.fileops.is_vm():
-                b = os.path.basename(f)
-                f = "[{0}]".format(b)
+                f = "[{0}]".format(f)
             return f
         else:
             return util.NO_NAME
 
     def get_status_common1(self):
-        if self.fileops.is_dirty():
-            return " [+]"
-        else:
+        if self.fileops.is_readonly():
             return ""
+        if self.fileops.is_dirty():
+            return "[+]"
+        else:
+            return "   "
 
     def get_status_common2(self):
         fmt = self.__nstr[setting.status_num_radix]
@@ -627,19 +638,35 @@ class StatusCanvas (Canvas, default_addon):
         per = "{0:.1f}".format(self.fileops.get_pos_percentage())
         if per.endswith(".0"):
             per = per[:-2]
-        return "{0}[B] {1:>4}% {2}".format(siz, per, pos)
+        # Update the format for e.g. on transition from 99 -> 100.
+        # This also means self.__cur_fmt is formatted with the largest
+        # file opened in *this* status canvas.
+        if len(str(self.fileops.get_size())) > len(str(self.__cur_size)):
+            self.__cur_size = self.fileops.get_size()
+            self.__cur_fmt = self.__get_size_format()
+        return self.__cur_fmt.format(siz, per, pos)
+
+    def get_status_common3(self):
+        c = self.fileops.read(self.fileops.get_pos(), 1)
+        if not c:
+            return ""
+        n = filebytes.ord(c)
+        return "hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(
+            n, n, n, ascii.get_symbol(n))
+
+    def __get_size_format(self):
+        n = len(str(self.__cur_size))
+        return "{{0:>{0}}}[B] {{1:>5}}% {{2:>{1}}}".format(n, n)
 
 class FullStatusCanvas (StatusCanvas):
     def set_buffer(self, fileops):
         super(FullStatusCanvas, self).set_buffer(fileops)
         if self.fileops is not None:
-            a = self.get_first_template()
+            a = self.get_static_info()
             b = self.fileops.get_magic()
-            if b:
-                b += ' '
             def fn():
                 yield 0, a
-                yield 1, b
+                yield 1, b # may be empty
             self.iter_buffer_template = fn
 
     def iter_buffer_template(self):
@@ -649,16 +676,24 @@ class FullStatusCanvas (StatusCanvas):
     def iter_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
-        s += self.get_status_common1()
+        x = self.get_status_common1()
+        if x:
+            if s:
+                s += ' '
+            s += x
         yield i, s
 
         i, s = util.iter_next(g)
-        s += self.get_status_common2()
-        x = self.fileops.read(self.fileops.get_pos(), 1)
+        x = self.get_status_common2()
         if x:
-            n = filebytes.ord(x)
-            s += " hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(
-                n, n, n, ascii.get_symbol(n))
+            if s:
+                s += ' '
+            s += x
+        x = self.get_status_common3()
+        if x:
+            if s:
+                s += ' '
+            s += x
         yield i, s
 
     def sync_cursor(self):
@@ -668,7 +703,11 @@ class SingleStatusCanvas (StatusCanvas):
     def set_buffer(self, fileops):
         super(SingleStatusCanvas, self).set_buffer(fileops)
         if self.fileops is not None:
-            a = self.get_first_template()
+            a = self.get_static_info()
+            s = self.fileops.get_magic()
+            if s:
+                a += ' '
+                a += s
             def fn():
                 yield 0, a
             self.iter_buffer_template = fn
@@ -679,9 +718,21 @@ class SingleStatusCanvas (StatusCanvas):
     def iter_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
-        s += self.get_status_common1()
-        s += ' '
-        s += self.get_status_common2()
+        x = self.get_status_common1()
+        if x:
+            if s:
+                s += ' '
+            s += x
+        x = self.get_status_common2()
+        if x:
+            if s:
+                s += ' '
+            s += x
+        x = self.get_status_common3()
+        if x and (len(x) < self.get_size_x()/3): # heuristic
+            if s:
+                s += ' '
+            s += x
         yield i, s
 
     def sync_cursor(self):

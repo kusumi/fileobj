@@ -1,3 +1,22 @@
+v0.7.52
+=======
+- Minor fixes and improvement
+- Fix a bug (avoid >1 same fileobj being loaded via partial path)
+- Change default window mode to --simple
+- Remove --simple
+- Add --verbose_window
+- Add FILEOBJ_USE_CURSOR_FALL_THROUGH
+- Add FILEOBJ_USE_SHELL
+- Remove FILEOBJ_USE_MAGIC_SCAN
+- Remove FILEOBJ_NETBSD_SIZEOF_DISKLABEL
+- Remove FILEOBJ_DRAGONFLYBSD_SIZEOF_PARTINFO
+- Remove FILEOBJ_KEY_TAB
+- Remove FILEOBJ_KEY_ENTER
+- Remove FILEOBJ_KEY_ESCAPE
+- Remove FILEOBJ_KEY_SPACE
+- Enable fileobj._native ptrace(2) support on Linux
+- Support @objdump<section> syntax for pid path
+
 v0.7.51
 =======
 - Minor fixes and improvement

@@ -74,7 +74,7 @@
                                 "green", "magenta", "red", "white" and "yellow". If
                                 neither this option nor --fg option is specified, the
                                 program assumes "white" is specified.
-          --simple              Use simplified status window format.
+          --verbose_window      Use verbose status window format.
           --force               Ignore warnings and force the action.
           --command             Print the list of available editor commands and exit.
           --sitepkg             Print Python's site-package directory being used by

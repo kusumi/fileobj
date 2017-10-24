@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import errno
+
 from . import unix
 
 def get_term_info():
@@ -135,31 +137,31 @@ def has_ptrace():
     return False
 
 def ptrace_peektext(pid, addr):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_peekdata(pid, addr):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_poketext(pid, addr, data):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_pokedata(pid, addr, data):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_cont(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_kill(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_attach(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def ptrace_detach(pid):
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def get_ptrace_word_size():
-    assert 0, "Not implemented"
+    return None, errno.EOPNOTSUPP
 
 def waitpid(pid, opts):
     return unix.waitpid(pid, opts)

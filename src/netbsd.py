@@ -27,7 +27,6 @@ from . import filebytes
 from . import libc
 from . import linux
 from . import log
-from . import setting
 from . import unix
 from . import util
 
@@ -52,14 +51,12 @@ def get_blkdev_info(f):
 
 def __get_blkdev_info(fd):
     # ioctl value depends on sizeof(disklabel)
-    if setting.netbsd_sizeof_disklabel > 0:
-        size = setting.netbsd_sizeof_disklabel
-    elif util.is_64bit_cpu(): # assume x86_64/gcc
+    if util.is_64bit_cpu(): # assume x86_64/gcc
         size = 408
     elif util.is_32bit_cpu(): # assume i386/gcc
         size = 404
     else: # forget it
-        log.error("Unsupported processor " + util.get_cpu_name())
+        log.error("Unknown processor " + util.get_cpu_name())
         return -1, -1, ''
     try:
         DIOCGDINFO = 0x40006465 | ((size & 0x1FFF) << 16)

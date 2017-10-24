@@ -65,28 +65,42 @@ class Fileobj (robuf.Fileobj):
     def __overwrite_self(self, f):
         with util.do_atomic_write(f, fsync=kernel.fsync) as fd:
             log.debug("Renaming {0} to {1}".format(fd.name, f))
-            hdr = self.__read_unmapped_header()
-            if hdr:
-                fd.write(hdr)
+            self.__write_unmapped_header(fd, f)
             fd.write(self.readall())
-            trr = self.__read_unmapped_trailer()
-            if trr:
-                fd.write(trr)
+            self.__write_unmapped_trailer(fd, f)
 
-    def __read_unmapped_header(self):
-        offset = self.get_mapping_offset()
-        if not offset:
-            return filebytes.BLANK
-        with kernel.fopen(self.get_path()) as fd:
-            return fd.read(offset)
+    def __write_unmapped_header(self, fdw, f):
+        tot = self.get_mapping_offset()
+        if not tot:
+            return
+        with kernel.fopen(f) as fdr:
+            self.__rw(fdr, fdw, tot)
 
-    def __read_unmapped_trailer(self):
-        length = self.get_mapping_length()
-        if not length:
-            return filebytes.BLANK
-        with kernel.fopen(self.get_path()) as fd:
-            fd.seek(self.get_mapping_offset() + length)
-            return fd.read()
+    def __write_unmapped_trailer(self, fdw, f):
+        x = self.get_mapping_length()
+        if not x:
+            return
+        x += self.get_mapping_offset()
+        tot = kernel.get_size(f)
+        if tot == -1:
+            log.error("Failed to sync trailer of {0}".format(f))
+            return
+        tot -= x
+        with kernel.fopen(f) as fdr:
+            fdr.seek(x)
+            self.__rw(fdr, fdw, tot)
+
+    def __rw(self, fdr, fdw, tot):
+        siz = kernel.get_buffer_size()
+        while True:
+            if siz > tot:
+                siz = tot
+            b = fdr.read(siz)
+            assert b
+            fdw.write(b)
+            tot -= len(b)
+            if tot <= 0:
+                break
 
     def seq_to_ords(self, l):
         # adaptive version of filebytes.seq_to_ords()

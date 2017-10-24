@@ -141,13 +141,7 @@ def __stat_type(f):
     _ = os.stat(f).st_mode
     t = "reg", "dir", "blk", "chr", "fifo", "sock"
     l = [getattr(stat, "S_IS" + s.upper())(_) for s in t]
-    return dict(
-        reg=l[0],
-        dir=l[1],
-        blkdev=l[2],
-        chrdev=l[3],
-        fifo=l[4],
-        sock=l[5])
+    return dict(reg=l[0],dir=l[1],blkdev=l[2],chrdev=l[3],fifo=l[4],sock=l[5])
 
 def stat_type(f):
     try:
@@ -319,8 +313,7 @@ def get_pid_name_from_ps(pid, fn=None):
     return ''
 
 def __parse_ps_name(name):
-    cmd = name.split(" ")[0]
-    return os.path.basename(cmd)
+    return name.split(" ")[0]
 
 def iter_ps(opt=None):
     if not opt:
@@ -377,7 +370,7 @@ def get_pid_name_from_fs(pid, *entries):
             try:
                 b = fopen(f).read()
                 b = filebytes.rstrip(b)
-                return os.path.basename(util.bytes_to_str(b))
+                return util.bytes_to_str(b)
             except Exception:
                 pass
     return ''

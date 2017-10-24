@@ -22,14 +22,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from . import kernel
-#from . import native
+from . import native
 from . import setting
 from . import util
 
 ERROR = None
 
 def _I(ret, err):
-    if ret is None or ret == -1:
+    if ret is None:
         ret = ERROR
     return ret, err
 
@@ -67,12 +67,11 @@ def detach(pid):
 def get_word_size():
     return _.get_ptrace_word_size()
 
-try:
+def init():
+    global _
     _ = kernel
-    # XXX disable native ptrace until peek/poke are added
-    #if setting.use_native:
-    #    native.get_so()
-    #    _ = native
-except Exception as e:
-    if setting.use_debug:
-        raise
+    if setting.use_native and native.is_enabled():
+        _ = native
+
+_ = None
+init()

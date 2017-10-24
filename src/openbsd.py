@@ -21,10 +21,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
+
+from . import filebytes
 from . import libc
 from . import log
-from . import netbsd
-from . import setting
 from . import unix
 from . import util
 
@@ -43,19 +44,43 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
-# Whether sizeof(disklabel) becomes 404 or 408 is compiler dependent.
-# It's 404 after OpenBSD 5.9 commit from "Sun Oct 25 16:35:40 2015"
-# which replaced a 16 bytes union field d_un with char d_packname[16].
-# Prior to above commit, there was a 4 bytes padding after d_un.
-
-if util.get_os_release() >= "5.9" and setting.netbsd_sizeof_disklabel == -1:
-    if util.is_64bit_cpu(): # assume x86_64/gcc
-        setting.netbsd_sizeof_disklabel = 404
-    elif util.is_32bit_cpu(): # assume i386/gcc
-        setting.netbsd_sizeof_disklabel = 404
-
 def get_blkdev_info(f):
-    return netbsd.get_blkdev_info(f)
+    with fopen(f) as fd:
+        return __get_blkdev_info(fd)
+
+# copied from netbsd
+def __get_blkdev_info(fd):
+    # ioctl value depends on sizeof(disklabel)
+    size = -1
+    # Whether sizeof(disklabel) becomes 404 or 408 is compiler dependent.
+    # It's 404 after OpenBSD 5.9 commit from "Sun Oct 25 16:35:40 2015"
+    # which replaced a 16 bytes union field d_un with char d_packname[16].
+    # Prior to above commit, there was a 4 bytes padding after d_un.
+    if util.get_os_release() >= "5.9":
+        if util.is_64bit_cpu(): # assume x86_64/gcc
+            size = 404
+        elif util.is_32bit_cpu(): # assume i386/gcc
+            size = 404
+    else:
+        if util.is_64bit_cpu(): # assume x86_64/gcc
+            size = 408
+        elif util.is_32bit_cpu(): # assume i386/gcc
+            size = 404
+    if size == -1: # forget it
+        log.error("Unknown processor " + util.get_cpu_name())
+        return -1, -1, ''
+    try:
+        DIOCGDINFO = 0x40006465 | ((size & 0x1FFF) << 16)
+        b = unix.ioctl(fd, DIOCGDINFO, size)
+        d_typename   = b[8:24]
+        d_secsize    = util.host_to_int(b[40:44])
+        d_secperunit = util.host_to_int(b[60:64])
+        label = util.bytes_to_str(filebytes.rstrip(d_typename))
+        return d_secperunit * d_secsize, d_secsize, label
+    except Exception as e:
+        log.error("ioctl({0}, {1}) failed, {2}".format(
+            fd.name, "DIOCGDINFO", e))
+        raise
 
 def read_reg_size(f):
     return unix.read_reg_size(f)
