@@ -106,6 +106,7 @@ def ptrace(request, pid, addr, data):
         data = _libc.ptrace.dattype(data)
     ret = _libc.ptrace(request, pid, addr, data)
     err = get_errno()
+    # note that ret == -1 for peek is not valid data
     if ret < 0:
         assert err != 0, err
         return None, err

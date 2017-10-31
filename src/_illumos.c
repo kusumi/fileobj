@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017, Tomohiro Kusumi
+ * Copyright (c) 2017, Tomohiro Kusumi
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,63 +22,74 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include <stdint.h>
-
-typedef struct blkdev_info {
-	uint64_t size;
-	int sector_size;
-	char label[64];
-} blkdev_info_t;
-
-#if defined __linux__
-#include "./_linux.c"
-#elif defined __NetBSD__
-#include "./_netbsd.c"
-#elif defined __OpenBSD__
-#include "./_openbsd.c"
-#elif defined __FreeBSD__
-#include "./_freebsd.c"
-#elif defined __DragonFly__
-#include "./_dragonflybsd.c"
-#elif defined __sun__
-#include "./_illumos.c"
-#elif defined __CYGWIN__
-#include "./_cygwin.c"
-#else
-#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/dkio.h>
 
 static int get_blkdev_info(const char *path, blkdev_info_t *b)
 {
-	return -EOPNOTSUPP;
+	int fd;
+	struct dk_minfo dm;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return -errno;
+
+	memset(b, 0, sizeof(*b));
+
+	if (ioctl(fd, DKIOCGMEDIAINFO, &dm) == -1) {
+		close(fd);
+		return -errno;
+	}
+
+	b->size = ((uint64_t)dm.dki_capacity) * dm.dki_lbsize;
+	b->sector_size = dm.dki_lbsize;
+
+	close(fd);
+	return 0;
 }
+
+/*
+ * The ptrace() function is available only with the 32-bit version of
+ * libc(3LIB). It is not available with the 64-bit version of this library.
+ */
 static long ptrace_peektext(pid_t pid, long long addr)
 {
 	return -EOPNOTSUPP;
 }
+
 static long ptrace_peekdata(pid_t pid, long long addr)
 {
 	return -EOPNOTSUPP;
 }
+
 static int ptrace_poketext(pid_t pid, long long addr, long data)
 {
 	return -EOPNOTSUPP;
 }
+
 static int ptrace_pokedata(pid_t pid, long long addr, long data)
 {
 	return -EOPNOTSUPP;
 }
+
 static int ptrace_attach(pid_t pid)
 {
 	return -EOPNOTSUPP;
 }
+
 static int ptrace_detach(pid_t pid)
 {
 	return -EOPNOTSUPP;
 }
+
 static int get_ptrace_word_size(void)
 {
 	return -1;
 }
-#endif

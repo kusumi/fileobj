@@ -52,7 +52,7 @@ def get_blkdev_info(f):
     return get_so().get_blkdev_info(f)
 
 def has_ptrace():
-    return True # otherwise fails to compile
+    return get_ptrace_word_size() > 0
 
 def ptrace_peektext(pid, addr):
     return get_so().ptrace_peektext(pid, addr)
@@ -66,12 +66,6 @@ def ptrace_poketext(pid, addr, data):
 def ptrace_pokedata(pid, addr, data):
     return get_so().ptrace_pokedata(pid, addr, data)
 
-def ptrace_cont(pid):
-    return get_so().ptrace_cont(pid)
-
-def ptrace_kill(pid):
-    return get_so().ptrace_kill(pid)
-
 def ptrace_attach(pid):
     return get_so().ptrace_attach(pid)
 
@@ -79,4 +73,7 @@ def ptrace_detach(pid):
     return get_so().ptrace_detach(pid)
 
 def get_ptrace_word_size():
-    return get_so().get_ptrace_word_size()
+    try:
+        return get_so().get_ptrace_word_size()
+    except Exception:
+        return -1 # don't raise an exception

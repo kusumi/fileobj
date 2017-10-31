@@ -31,8 +31,7 @@ from . import ptrace
 from . import setting
 from . import util
 
-enabled = setting.use_pid_path and \
-    kernel.is_pid_path_supported()
+enabled = setting.use_pid_path and ptrace.has_ptrace()
 
 class methods (object):
     def get_string(self):

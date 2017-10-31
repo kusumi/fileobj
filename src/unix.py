@@ -137,31 +137,33 @@ def utime(f, st):
 def touch(f):
     return utime(f, None)
 
-def __stat_type(f):
-    _ = os.stat(f).st_mode
-    t = "reg", "dir", "blk", "chr", "fifo", "sock"
-    l = [getattr(stat, "S_IS" + s.upper())(_) for s in t]
-    return dict(reg=l[0],dir=l[1],blkdev=l[2],chrdev=l[3],fifo=l[4],sock=l[5])
-
 def stat_type(f):
     try:
-        return __stat_type(f)
+        mode = os.stat(f).st_mode
+        t = "reg", "dir", "blk", "chr", "fifo", "sock"
+        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in t]
+        return dict(
+            reg=l[0],dir=l[1],blkdev=l[2],chrdev=l[3],fifo=l[4],sock=l[5])
     except Exception:
         return -1
 
 def stat_is_blkdev(f):
-    d = stat_type(f)
-    if d != -1:
-        return d.get("blkdev", False)
-    else:
-        return False
+    return __stat_is(f, "blkdev")
+
+def stat_is_chrdev(f):
+    return __stat_is(f, "chrdev")
 
 def stat_is_blkdev_or_chrdev(f):
+    return __stat_is(f, "blkdev", "chrdev")
+
+def __stat_is(f, *l):
     d = stat_type(f)
-    if d != -1:
-        return d.get("blkdev", False) or d.get("chrdev", False)
-    else:
+    if d == -1:
         return False
+    for s in l:
+        if d.get(s, False):
+            return True
+    return False
 
 def get_page_size():
     ret = __get_resource_page_size()
@@ -211,24 +213,16 @@ def __get_mmap_prot(readonly):
     else:
         return mmap.PROT_READ | mmap.PROT_WRITE
 
-def test_mmap_resize():
+def test_mmap_resize(osiz, nsiz):
     try:
-        ll = ((1024, 2048), (1024, 512), (4096, 17123), (5678, 1024))
-        for l in ll:
-            nsiz = __try_mmap_resize(*l)
-            if nsiz != l[1]:
-                return False, "Bad size {0} != {1}".format(nsiz, l[1])
+        ret = __do_mmap_resize(osiz, nsiz)
+        if ret != nsiz:
+            return False, "Bad size {0} != {1}".format(ret, nsiz)
         return True, None
     except Exception as e:
         return False, str(e)
 
-def try_mmap_resize(osiz, nsiz):
-    try:
-        return __try_mmap_resize(osiz, nsiz)
-    except Exception:
-        return -1
-
-def __try_mmap_resize(osiz, nsiz):
+def __do_mmap_resize(osiz, nsiz):
     fd = util.open_temp_file()
     fd.write(filebytes.ZERO * osiz)
     fsync(fd)
@@ -304,16 +298,11 @@ def ps_has_pid(pid):
             return True
     return False
 
-def get_pid_name_from_ps(pid, fn=None):
-    if not fn:
-        fn = __parse_ps_name
-    for l in iter_ps():
-        if pid == l[0]:
-            return fn(l[1])
+def get_pid_name_from_ps(pid):
+    for i, s, in iter_ps():
+        if pid == i:
+            return s.split(" ")[0] # prefer abs (no basename)
     return ''
-
-def __parse_ps_name(name):
-    return name.split(" ")[0]
 
 def iter_ps(opt=None):
     if not opt:
@@ -370,7 +359,7 @@ def get_pid_name_from_fs(pid, *entries):
             try:
                 b = fopen(f).read()
                 b = filebytes.rstrip(b)
-                return util.bytes_to_str(b)
+                return util.bytes_to_str(b) # prefer abs (no basename)
             except Exception:
                 pass
     return ''
@@ -407,9 +396,15 @@ def get_fs_mount_point(*labels):
     except Exception:
         return ''
     for x in s.split('\n'):
-        m = re.search(r"^(.+)\s+on\s+(.+?)\s", x)
+        # both need ? as "on" appears twice on Solaris
+        m = re.search(r"^(.+?)\s+on\s+(.+?)\s", x)
         if m:
             name, where = m.groups()
+            if name in labels:
+                if os.path.isdir(where):
+                    return os.path.abspath(where)
+            # XXX Solaris has these opposite
+            name, where = where, name
             if name in labels:
                 if os.path.isdir(where):
                     return os.path.abspath(where)

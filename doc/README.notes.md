@@ -35,6 +35,10 @@
 
 + Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
 
+## illumos
+
++ Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
+
 ## Cygwin
 
-+ Can't execute the program after installation. -> **If Python is installed for both Windows and Cygwin, the shebang line of the program (e.g. */usr/bin/fileobj*) may have Windows path which then needs to be manually modified to Cygwin path.**
++ Can't execute the program after installation. -> **If Python is installed for both Windows and Cygwin, the shebang line of the program (e.g. *#!/usr/bin/fileobj*) may have Windows path which then needs to be manually modified to Cygwin path.**

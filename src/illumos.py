@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2017, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,8 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
 import errno
 
+from . import libc
 from . import log
 from . import unix
 from . import util
@@ -32,6 +34,29 @@ def get_term_info():
 
 def get_lang_info():
     return unix.get_lang_info()
+
+def get_blkdev_info(f):
+    with fopen(f) as fd:
+        return __get_blkdev_info(fd)
+
+def __get_blkdev_info(fd):
+    try:
+        DKIOC = (0x04 << 8)
+        DKIOCGMEDIAINFO = (DKIOC | 42)
+        sizeof_uint = libc.get_sizeof_uint()
+        sizeof_ulonglong = libc.get_sizeof_ulonglong()
+        size = sizeof_uint*2 + sizeof_ulonglong
+        b = unix.ioctl(fd, DKIOCGMEDIAINFO, size)
+
+        buf = b[sizeof_uint:sizeof_uint*2]
+        sector_size = util.host_to_int(buf)
+        buf = b[sizeof_uint*2:sizeof_uint*2 + sizeof_ulonglong]
+        size = util.host_to_int(buf) * sector_size
+        return size, sector_size, ''
+    except Exception as e:
+        log.error("ioctl({0}, {1}) failed, {2}".format(
+            fd.name, "DKIOCGMEDIAINFO", e))
+        raise
 
 def read_reg_size(f):
     return unix.read_reg_size(f)
@@ -94,30 +119,36 @@ def set_cbreak(fd):
     return unix.set_cbreak(fd)
 
 def get_total_ram():
+    return __get_meminfo("physmem")
+
+def get_free_ram():
+    return __get_meminfo("freemem")
+
+def __get_meminfo(name):
+    ret = __get_kstat_system_pages(name)
+    if ret == -1:
+        return -1
+    return ret * get_page_size()
+
+def __get_kstat_system_pages(name):
     """
-    [user@darwin ~]$ sysctl hw.physmem
-    hw.physmem: 2147483648
+    [root@unknown ~]# kstat -n system_pages -p -s physmem
+    unix:0:system_pages:physmem     522126
     """
     try:
-        s = util.execute("sysctl", "hw.physmem").stdout
-        x = s.split()[-1]
+        cmd = "kstat", "-n", "system_pages", "-p", "-s", name
+        s = util.execute(*cmd).stdout
+        x = s.split("\t")[-1]
         return int(x)
     except Exception as e:
         log.error(e)
         return -1
 
-def get_free_ram():
-    return -1
-
 def is_blkdev(f):
-    """
-    [user@darwin ~]$ file /dev/disk0
-    /dev/disk0: block special
-    """
-    return unix.stat_is_blkdev(f)
+    return unix.stat_is_chrdev(f)
 
 def is_blkdev_supported():
-    return False
+    return True
 
 def mmap_full(fileno, readonly=False):
     return unix.mmap_full(fileno, readonly)
@@ -138,12 +169,13 @@ def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
 
 def has_pid(pid):
-    return unix.ps_has_pid(pid)
+    return unix.has_pid(pid)
 
 def get_pid_name(pid):
-    return unix.get_pid_name_from_ps(pid)
+    return unix.get_pid_name(pid)
 
-# not supported even if Darwin has ptrace(2)
+# The ptrace() function is available only with the 32-bit version of
+# libc(3LIB). It is not available with the 64-bit version of this library.
 def has_ptrace():
     return False
 

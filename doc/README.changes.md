@@ -1,3 +1,12 @@
+## v0.7.53
++ Minor fixes and improvement
++ Fix a bug (check errno for native ptrace(2) peek functions)
++ Fix a bug (search "a b c" ignores " b c" for the initial attempt)
++ Enable ptrace(2) support on FreeBSD/DragonFlyBSD/NetBSD/OpenBSD
++ Enable pid path support on FreeBSD/DragonFlyBSD/NetBSD/OpenBSD
++ Improve Solaris/illumos support
++ Add FILEOBJ_USE_ILLUMOS_CAVEAT
+
 ## v0.7.52
 + Minor fixes and improvement
 + Fix a bug (avoid >1 same fileobj being loaded via partial path)
@@ -14,7 +23,7 @@
 + Remove FILEOBJ_KEY_ESCAPE
 + Remove FILEOBJ_KEY_SPACE
 + Enable fileobj._native ptrace(2) support on Linux
-+ Support @objdump<section> syntax for pid path
++ Support @objdump[section] syntax for pid path
 
 ## v0.7.51
 + Minor fixes and improvement

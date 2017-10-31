@@ -49,19 +49,6 @@ static PyObject *__get_blkdev_info(PyObject *self, PyObject *args)
 	return Py_BuildValue("lis", b.size, b.sector_size, b.label);
 }
 
-static PyObject *__get_ptrace_word_size(PyObject *self, PyObject *args)
-{
-	int ret;
-
-	ret = get_ptrace_word_size();
-	if (ret < 0) {
-		PyErr_Format_Errno(PyExc_IOError, ret);
-		return NULL;
-	}
-
-	return Py_BuildValue("i", ret);
-}
-
 static PyObject *__p(long ret)
 {
 	if (ret < 0)
@@ -116,26 +103,6 @@ static PyObject *__ptrace_pokedata(PyObject *self, PyObject *args)
 	return __p(ptrace_pokedata(pid, addr, data));
 }
 
-static PyObject *__ptrace_cont(PyObject *self, PyObject *args)
-{
-	pid_t pid;
-
-	if (!PyArg_ParseTuple(args, "i", &pid))
-		return NULL;
-
-	return __p(ptrace_cont(pid));
-}
-
-static PyObject *__ptrace_kill(PyObject *self, PyObject *args)
-{
-	pid_t pid;
-
-	if (!PyArg_ParseTuple(args, "i", &pid))
-		return NULL;
-
-	return __p(ptrace_kill(pid));
-}
-
 static PyObject *__ptrace_attach(PyObject *self, PyObject *args)
 {
 	pid_t pid;
@@ -156,18 +123,29 @@ static PyObject *__ptrace_detach(PyObject *self, PyObject *args)
 	return __p(ptrace_detach(pid));
 }
 
+static PyObject *__get_ptrace_word_size(PyObject *self, PyObject *args)
+{
+	int ret;
+
+	ret = get_ptrace_word_size();
+	if (ret < 0) {
+		PyErr_Format_Errno(PyExc_IOError, ret);
+		return NULL;
+	}
+
+	return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef __methods[] = {
 	{"get_blkdev_info", (PyCFunction)__get_blkdev_info, METH_VARARGS, "",},
-	{"get_ptrace_word_size", (PyCFunction)__get_ptrace_word_size,
-		METH_VARARGS, "",},
 	{"ptrace_peektext", (PyCFunction)__ptrace_peektext, METH_VARARGS, "",},
 	{"ptrace_peekdata", (PyCFunction)__ptrace_peekdata, METH_VARARGS, "",},
 	{"ptrace_poketext", (PyCFunction)__ptrace_poketext, METH_VARARGS, "",},
 	{"ptrace_pokedata", (PyCFunction)__ptrace_pokedata, METH_VARARGS, "",},
-	{"ptrace_cont", (PyCFunction)__ptrace_cont, METH_VARARGS, "",},
-	{"ptrace_kill", (PyCFunction)__ptrace_kill, METH_VARARGS, "",},
 	{"ptrace_attach", (PyCFunction)__ptrace_attach, METH_VARARGS, "",},
 	{"ptrace_detach", (PyCFunction)__ptrace_detach, METH_VARARGS, "",},
+	{"get_ptrace_word_size", (PyCFunction)__get_ptrace_word_size,
+		METH_VARARGS, "",},
 	{NULL, NULL, 0, NULL,},
 };
 

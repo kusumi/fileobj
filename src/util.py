@@ -602,47 +602,44 @@ def is_file_path_partial(f):
 
 def parse_file_path(f):
     """Return tuple of path, offset, length"""
-    if not setting.use_path_attr:
+    if not setting.use_path_attr or os.path.exists(f):
         return f, 0, 0
     mode = is_file_path_partial(f)
     if mode is not None:
         i = f.rindex('@')
-        sep = os.path.sep
-        if sep in f:
-            if i > f.rindex(sep):
-                s = f[i + 1:]
-                f = f[:i]
-                if mode == '-':
-                    j = s.find(mode)
-                    a = s[:j]
-                    b = s[j + 1:]
-                    offset = __get_path_attribute(a)
-                    endpos = __get_path_attribute(b)
-                    if endpos > offset:
-                        length = endpos - offset
-                    else:
-                        length = 0
-                elif mode == ':':
-                    j = s.find(mode)
-                    a = s[:j]
-                    b = s[j + 1:]
-                    offset = __get_path_attribute(a)
-                    length = __get_path_attribute(b)
-                else:
-                    a = s
-                    b = ''
-                    offset = __get_path_attribute(a)
-                    length = __get_path_attribute(b)
-                return f, offset, length
+        s = f[i + 1:]
+        ff = f[:i]
+        if mode == '-' and f.rindex(mode) > i:
+            j = s.find(mode)
+            a = s[:j]
+            b = s[j + 1:]
+            offset = __get_path_attribute(a)
+            endpos = __get_path_attribute(b)
+            if endpos > offset:
+                length = endpos - offset
+            else:
+                length = 0
+        elif mode == ':' and f.rindex(mode) > i:
+            j = s.find(mode)
+            a = s[:j]
+            b = s[j + 1:]
+            offset = __get_path_attribute(a)
+            length = __get_path_attribute(b)
+        else:
+            a = s
+            b = ''
+            offset = __get_path_attribute(a)
+            length = __get_path_attribute(b)
+        return ff, offset, length
     return f, 0, 0
 
-def __get_path_attribute(s, default=0):
+def __get_path_attribute(s):
     if s:
         ret = parse_size_repr(s)
     else:
         ret = None
     if ret is None:
-        return default
+        return 0
     else:
         return ret
 

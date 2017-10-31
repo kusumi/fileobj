@@ -40,6 +40,9 @@ def _B(ret, err):
         ret = util.int_to_host(ret, get_word_size())
     return ret, err
 
+def has_ptrace():
+    return _.has_ptrace()
+
 def peektext(pid, addr):
     return _B(*_.ptrace_peektext(pid, addr))
 
@@ -51,12 +54,6 @@ def poketext(pid, addr, data):
 
 def pokedata(pid, addr, data):
     return _I(*_.ptrace_pokedata(pid, addr, data))
-
-def cont(pid):
-    return _I(*_.ptrace_cont(pid))
-
-def kill(pid):
-    return _I(*_.ptrace_kill(pid))
 
 def attach(pid):
     return _I(*_.ptrace_attach(pid))

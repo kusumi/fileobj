@@ -58,6 +58,8 @@ def is_minix():
     return __system_is("Minix")
 def is_solaris():
     return __system_is("SunOS")
+def is_illumos():
+    return is_solaris()
 def is_hpux():
     return __system_is("HP-UX")
 def is_aix():
@@ -100,6 +102,7 @@ def is_xnix():
         is_kfreebsd() or \
         is_minix() or \
         is_solaris() or \
+        is_illumos() or \
         is_hpux() or \
         is_aix() or \
         is_irix() or \
@@ -127,6 +130,8 @@ elif is_windows():
     from . import windows as _kmod
 elif is_cygwin():
     from . import cygwin as _kmod
+elif is_illumos():
+    from . import illumos as _kmod
 elif is_xnix():
     from . import xnix as _kmod
 else:
@@ -434,24 +439,21 @@ def __has_mremap():
         return False
     if o.has_mremap():
         return True
-    return o.test_mmap_resize()[0] # should fail if above is False
+    # try some random resizing
+    l = ((1024, 2048), (1024, 512), (4096, 17123), (5678, 1024))
+    for osiz, nsiz in l:
+        res, err = test_mmap_resize(osiz, nsiz)
+        if not res:
+            return False # should fail if above is False
+    return True
 
-def test_mmap_resize():
+def test_mmap_resize(osiz, nsiz):
     """Return True,None if resizable otherwise False,str"""
     o = get_kernel_module()
     if o:
-        return o.test_mmap_resize()
+        return o.test_mmap_resize(osiz, nsiz)
     else:
         return False, None
-
-# this is for testing
-def try_mmap_resize(osiz, nsiz):
-    """Return mmap size after resize"""
-    o = get_kernel_module()
-    if o:
-        return o.try_mmap_resize(osiz, nsiz)
-    else:
-        return -1
 
 def has_pid_access(pid):
     """Return True if an user can see the existence of pid"""
@@ -477,14 +479,6 @@ def get_pid_name(pid):
     else:
         return ''
 
-def is_pid_path_supported():
-    """Return True if pid path is supported"""
-    o = get_kernel_module()
-    if o:
-        return o.is_pid_path_supported()
-    else:
-        return False
-
 def is_pid_path(f):
     pid = path_to_pid(f)
     return pid != -1 and has_pid(pid)
@@ -506,6 +500,16 @@ def path_to_pid(f):
         return -1
 
 def parse_file_path(f):
+    """Return tuple of path, offset, length"""
+    if not setting.use_path_attr or os.path.exists(f):
+        return f, 0, 0
+    # try objdump path and return if matched
+    l = __parse_objdump_path(f)
+    if l is not None:
+        return l
+    return util.parse_file_path(f)
+
+def __parse_objdump_path(f):
     m = re.match(_pid_path_objdump_section_regex, os.path.basename(f))
     if m:
         pid = int(m.group(1))
@@ -521,7 +525,6 @@ def parse_file_path(f):
             l = objdump.get_elf_section_info(elf, section)
             if l is not None:
                 return "pid{0}".format(pid), l[0], l[1]
-    return util.parse_file_path(f)
 
 def has_ptrace():
     """Return True if ptrace(2) is supported"""
@@ -556,20 +559,6 @@ def ptrace_pokedata(pid, addr, data):
     o = get_kernel_module()
     if o:
         return o.ptrace_pokedata(pid, addr, data)
-    else:
-        return None
-
-def ptrace_cont(pid):
-    o = get_kernel_module()
-    if o:
-        return o.ptrace_cont(pid)
-    else:
-        return None
-
-def ptrace_kill(pid):
-    o = get_kernel_module()
-    if o:
-        return o.ptrace_kill(pid)
     else:
         return None
 

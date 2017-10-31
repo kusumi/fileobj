@@ -115,11 +115,8 @@ def has_mmap():
 def has_mremap():
     return False
 
-def test_mmap_resize():
-    return unix.test_mmap_resize()
-
-def try_mmap_resize(osiz, nsiz):
-    return unix.try_mmap_resize(osiz, nsiz)
+def test_mmap_resize(osiz, nsiz):
+    return unix.test_mmap_resize(osiz, nsiz)
 
 def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
@@ -129,9 +126,6 @@ def has_pid(pid):
 
 def get_pid_name(pid):
     return unix.get_pid_name(pid)
-
-def is_pid_path_supported():
-    return False
 
 def has_ptrace():
     return False
@@ -148,12 +142,6 @@ def ptrace_poketext(pid, addr, data):
 def ptrace_pokedata(pid, addr, data):
     return None, errno.EOPNOTSUPP
 
-def ptrace_cont(pid):
-    return None, errno.EOPNOTSUPP
-
-def ptrace_kill(pid):
-    return None, errno.EOPNOTSUPP
-
 def ptrace_attach(pid):
     return None, errno.EOPNOTSUPP
 
@@ -161,7 +149,7 @@ def ptrace_detach(pid):
     return None, errno.EOPNOTSUPP
 
 def get_ptrace_word_size():
-    return None, errno.EOPNOTSUPP
+    return -1
 
 def waitpid(pid, opts):
     return unix.waitpid(pid, opts)

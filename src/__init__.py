@@ -26,15 +26,6 @@
 import os
 import platform
 
-if platform.system() in (
-    "NetBSD",
-    "OpenBSD",
-    "FreeBSD",
-    "DragonFly",
-    "Darwin"):
-    if "FILEOBJ_USE_BSD_CAVEAT" not in os.environ:
-        os.environ["FILEOBJ_USE_BSD_CAVEAT"] = "forced_by_init"
-
 # XXX copied from nodep.is_cygwin()
 def __is_cygwin(name):
     if name.startswith("CYGWIN"):
@@ -49,10 +40,19 @@ def __is_cygwin(name):
     except Exception:
         return False
 
-if __is_cygwin(platform.system()):
-    if "FILEOBJ_USE_CYGWIN_CAVEAT" not in os.environ:
-        os.environ["FILEOBJ_USE_CYGWIN_CAVEAT"] = "forced_by_init"
+def __set_caveat(name):
+    s = "FILEOBJ_USE_{0}_CAVEAT".format(name)
+    if s not in os.environ:
+        os.environ[s] = name
 
+_system = platform.system()
+
+if _system in ("NetBSD", "OpenBSD", "FreeBSD", "DragonFly", "Darwin"):
+    __set_caveat("BSD")
+elif _system in ("SunOS",):
+    __set_caveat("ILLUMOS")
+elif __is_cygwin(_system):
+    __set_caveat("CYGWIN")
     # procfs doesn't appear in mount command result
     if "FILEOBJ_PROCFS_MOUNT_POINT" not in os.environ:
         os.environ["FILEOBJ_PROCFS_MOUNT_POINT"] = "/proc"

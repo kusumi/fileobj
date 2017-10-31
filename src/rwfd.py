@@ -120,6 +120,13 @@ class Fileobj (rofd.Fileobj):
             self.__bbuf[lba][pos] = b
         else:
             self.fd.seek(lba * siz)
-            buf = self.fd.read(siz)
-            self.__bbuf[lba] = filebytes.split(buf)
-            self.__bbuf[lba][pos] = b
+            try:
+                buf = self.fd.read(siz)
+                self.__bbuf[lba] = filebytes.split(buf)
+                self.__bbuf[lba][pos] = b
+            except Exception:
+                # XXX Added for Solaris.
+                # If failed to read a block device beyond a certain sector
+                # with ENXIO (even if it's within what ioctl had reported),
+                # just pretend it's read.
+                pass

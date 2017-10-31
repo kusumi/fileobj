@@ -68,6 +68,15 @@ def _KEY_DEAD(x):
 DEAD       = 0xDEAD
 DUMMY      = _KEY_DEAD(0x100)
 
+# XXX alternative backspace key
+use_bspace2 = setting.use_bsd_caveat or \
+    setting.use_illumos_caveat or \
+    setting.use_cygwin_caveat
+
+# XXX alternative for block visual mode
+use_alt_block_visual = setting.use_bsd_caveat or \
+    setting.use_illumos_caveat
+
 #                  stdout                VTxxx              others
 _keys = [
     ("TAB",        curses.ascii.TAB,     curses.ascii.TAB,  curses.ascii.TAB),
@@ -82,8 +91,7 @@ _keys = [
     ("DELETE",     curses.KEY_DC,        curses.ascii.DEL,  curses.KEY_DC),
     ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE),]
 
-# XXX for FreeBSD and Cygwin
-if setting.use_bsd_caveat or setting.use_cygwin_caveat:
+if use_bspace2:
     _keys.append(
     ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),)
 

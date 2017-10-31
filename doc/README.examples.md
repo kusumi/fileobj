@@ -658,7 +658,7 @@
         $ fileobj ./a.out
           (command):extensions<ENTER>
 
-+ Open and modify userspace of a process *(experimental feature currently available only on Linux)*.
++ Open and modify userspace of a process *(experimental feature available only on Linux and \*BSD)*.
 
         # uname
         Linux
@@ -708,7 +708,7 @@
           (command)26~
           (command):wq
 
-+ Or if the executable binary was specified in absolute path (i.e. */path/to/test1*), use *@objdump<section>* syntax to open the entire .rodata section.
++ Or if the executable binary was specified in absolute path (i.e. */path/to/test1*), use *@objdump[section]* syntax to open the entire .rodata section.
 
         # fileobj pid8549@objdump.rodata
           (command)/A<ENTER>

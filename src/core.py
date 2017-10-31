@@ -189,11 +189,15 @@ def dispatch(optargs=None):
     log.debug("settings {0}".format(l))
 
     msg = ''
+    s = " caveat enabled on {0}".format(util.get_os_name())
     if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
-        msg = "BSD caveat enabled on {0}".format(util.get_os_name())
+        msg = "BSD" + s
+        log.error(msg)
+    if not kernel.is_illumos() and setting.use_illumos_caveat:
+        msg = "illumos" + s
         log.error(msg)
     if not kernel.is_cygwin() and setting.use_cygwin_caveat:
-        msg = "CYGWIN caveat enabled on {0}".format(util.get_os_name())
+        msg = "Cygwin" + s
         log.error(msg)
 
     if ret == -1:

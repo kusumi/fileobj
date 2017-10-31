@@ -1,4 +1,4 @@
-fileobj ([v0.7.52](https://github.com/kusumi/fileobj/releases/tag/v0.7.52))
+fileobj ([v0.7.53](https://github.com/kusumi/fileobj/releases/tag/v0.7.53))
 =======
 
 ## About
@@ -15,9 +15,9 @@ fileobj ([v0.7.52](https://github.com/kusumi/fileobj/releases/tag/v0.7.52))
 
 ## Supported operating systems
 
-|Linux|\*BSD|Cygwin|Other Unix-likes|Windows|
-|:----|:----|:-----|:---------------|:------|
-|YES  |YES  |YES   |untested        |NO     |
+|Linux|\*BSD|illumos|Cygwin|Other Unix-likes|Windows|
+|:----|:----|:------|:-----|:---------------|:------|
+|YES  |YES  |YES    |YES   |untested        |NO     |
 
 ## Install
 

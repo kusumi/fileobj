@@ -34,8 +34,6 @@ PT_READ_I   = 1
 PT_READ_D   = 2
 PT_WRITE_I  = 4
 PT_WRITE_D  = 5
-PT_CONTINUE = 7
-PT_KILL     = 8
 PT_ATTACH   = 10
 PT_DETACH   = 11
 
@@ -161,11 +159,8 @@ def has_mmap():
 def has_mremap():
     return False
 
-def test_mmap_resize():
-    return unix.test_mmap_resize()
-
-def try_mmap_resize(osiz, nsiz):
-    return unix.try_mmap_resize(osiz, nsiz)
+def test_mmap_resize(osiz, nsiz):
+    return unix.test_mmap_resize(osiz, nsiz)
 
 def has_pid_access(pid):
     return unix.kill_sig_zero(pid)
@@ -175,9 +170,6 @@ def has_pid(pid):
 
 def get_pid_name(pid):
     return unix.get_pid_name(pid)
-
-def is_pid_path_supported():
-    return False
 
 def has_ptrace():
     return libc.has_ptrace()
@@ -193,12 +185,6 @@ def ptrace_poketext(pid, addr, data):
 
 def ptrace_pokedata(pid, addr, data):
     return libc.ptrace(PT_WRITE_D, pid, addr, data)
-
-def ptrace_cont(pid):
-    return libc.ptrace(PT_CONTINUE, pid, 1, 0)
-
-def ptrace_kill(pid):
-    return libc.ptrace(PT_KILL, pid, None, None)
 
 def ptrace_attach(pid):
     return libc.ptrace(PT_ATTACH, pid, None, None)

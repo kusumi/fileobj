@@ -28,6 +28,7 @@ from . import fileobj
 from . import kernel
 from . import log
 from . import screen
+from . import setting
 from . import util
 
 class Fileobj (fileobj.Fileobj):
@@ -171,11 +172,20 @@ class Fileobj (fileobj.Fileobj):
                 self.fd.seek(beg)
                 b = self.fd.read(end - beg)
             except Exception as e:
-                log.error((e, (beg, end)))
-                beg = x
-                end = x + n
-                self.fd.seek(beg)
-                b = self.fd.read(end - beg)
+                # Don't unconditionally log an exception (see below).
+                if setting.use_debug:
+                    log.error((e, (beg, end)))
+                try:
+                    beg = x
+                    end = x + n
+                    self.fd.seek(beg)
+                    b = self.fd.read(end - beg)
+                except Exception:
+                    # XXX Added for Solaris.
+                    # If failed to read a block device beyond a certain sector
+                    # with ENXIO (even if it's within what ioctl had reported),
+                    # just pretend it's read by returning 0xff filled buffer.
+                    return util.str_to_bytes("\xff" * n)
 
             o = util.Namespace(beg=beg, end=beg + len(b), buf=b)
             self.__ra_count[end - beg] += 1

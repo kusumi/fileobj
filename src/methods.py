@@ -699,7 +699,7 @@ def __is_not_equal(a, b):
 def __cmp_to_find_equal(self, fn):
     return fn(1, 1) == True
 
-# :cmp variants (cmp from offset 0)
+# :cmp (compare from offset 0) variants
 def cmp_buffer(self, amp, opc, args, raw):
     __cmp_buffer(self, 0, __is_not_equal)
 
@@ -712,7 +712,7 @@ def cmp_buffer_next(self, amp, opc, args, raw):
 def cmp_buffer_next_neg(self, amp, opc, args, raw):
     __cmp_buffer(self, self.co.get_pos() + 1, __is_equal)
 
-# :cmpr variants (cmp from max offset)
+# :cmpr (compare from max offset) variants
 def cmpr_buffer(self, amp, opc, args, raw):
     __cmpr_buffer(self, self.co.get_max_pos(), __is_not_equal)
 
@@ -935,16 +935,20 @@ def __do_replace_number(self, amp, opc, siz):
 
 _did_search_forward = True
 def search_forward(self, amp, opc, args, raw):
-    __do_search_repeat(self, amp, opc, True)
+    __do_search_repeat(self, amp, opc, args, raw, True)
 def search_backward(self, amp, opc, args, raw):
-    __do_search_repeat(self, amp, opc, False)
+    __do_search_repeat(self, amp, opc, args, raw, False)
 
-def __do_search_repeat(self, amp, opc, is_forward):
+def __do_search_repeat(self, amp, opc, args, raw, is_forward):
+    # /xxx yyy  zzz
+    # is to find "xxx yyy  zzz" but not "xxx".
+    # Note that joining args can't handle double space.
+    s = util.bytes_to_str(filebytes.input_to_bytes(raw))
     n = get_int(amp)
     for x in range(n):
         is_last = (x == (n - 1))
         if not x:
-            if __do_search(self, opc, is_forward, is_last) == -1:
+            if __do_search(self, s, is_forward, is_last) == -1:
                 return
         else:
             # Always pass True, as the actual direction is set

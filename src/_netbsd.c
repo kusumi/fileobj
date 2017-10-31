@@ -68,17 +68,13 @@ static int get_blkdev_info(const char *path, blkdev_info_t *b)
 	return 0;
 }
 
-static int get_ptrace_word_size(void)
-{
-	return (int)sizeof(int);
-}
-
 static long ptrace_peektext(pid_t pid, long long addr)
 {
 	int ret;
 
+	errno = 0;
 	ret = ptrace(PT_READ_I, pid, (void*)addr, 0);
-	if (ret == -1)
+	if (ret == -1 && errno)
 		return -errno;
 
 	return ret;
@@ -88,8 +84,9 @@ static long ptrace_peekdata(pid_t pid, long long addr)
 {
 	int ret;
 
+	errno = 0;
 	ret = ptrace(PT_READ_D, pid, (void*)addr, 0);
-	if (ret == -1)
+	if (ret == -1 && errno)
 		return -errno;
 
 	return ret;
@@ -97,7 +94,8 @@ static long ptrace_peekdata(pid_t pid, long long addr)
 
 static int ptrace_poketext(pid_t pid, long long addr, long data)
 {
-	if (ptrace(PT_WRITE_I, pid, (void*)addr, (int)data) == -1)
+	errno = 0;
+	if (ptrace(PT_WRITE_I, pid, (void*)addr, data) == -1)
 		return -errno;
 
 	return 0;
@@ -105,23 +103,8 @@ static int ptrace_poketext(pid_t pid, long long addr, long data)
 
 static int ptrace_pokedata(pid_t pid, long long addr, long data)
 {
-	if (ptrace(PT_WRITE_D, pid, (void*)addr, (int)data) == -1)
-		return -errno;
-
-	return 0;
-}
-
-static int ptrace_cont(pid_t pid)
-{
-	if (ptrace(PT_CONTINUE, pid, (void*)1, 0) == -1)
-		return -errno;
-
-	return 0;
-}
-
-static int ptrace_kill(pid_t pid)
-{
-	if (ptrace(PT_KILL, pid, NULL, 0) == -1)
+	errno = 0;
+	if (ptrace(PT_WRITE_D, pid, (void*)addr, data) == -1)
 		return -errno;
 
 	return 0;
@@ -129,6 +112,7 @@ static int ptrace_kill(pid_t pid)
 
 static int ptrace_attach(pid_t pid)
 {
+	errno = 0;
 	if (ptrace(PT_ATTACH, pid, NULL, 0) == -1)
 		return -errno;
 
@@ -137,8 +121,14 @@ static int ptrace_attach(pid_t pid)
 
 static int ptrace_detach(pid_t pid)
 {
-	if (ptrace(PT_DETACH, pid, NULL, 0) == -1)
+	errno = 0;
+	if (ptrace(PT_DETACH, pid, (void*)1, 0) == -1)
 		return -errno;
 
 	return 0;
+}
+
+static int get_ptrace_word_size(void)
+{
+	return (int)sizeof(int);
 }
