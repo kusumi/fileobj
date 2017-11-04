@@ -36,10 +36,8 @@ _t_reg     = 1 << 3
 _t_dir     = 1 << 4
 _t_blkdev  = 1 << 5
 _t_chrdev  = 1 << 6
-_t_fifo    = 1 << 7
-_t_sock    = 1 << 8
-_t_unknown = 1 << 9
-_t_error   = 1 << 10
+_t_unknown = 1 << 7
+_t_error   = 1 << 8
 
 _sep = os.path.sep
 _cwd = os.getcwd()
@@ -77,12 +75,6 @@ class Path (object):
     def is_chrdev(self):
         return _test(self.__type, _t_chrdev)
     @property
-    def is_fifo(self):
-        return _test(self.__type, _t_fifo)
-    @property
-    def is_sock(self):
-        return _test(self.__type, _t_sock)
-    @property
     def is_unknown(self):
         return _test(self.__type, _t_unknown)
     @property
@@ -105,10 +97,6 @@ class Path (object):
             ret.append("BLKDEV")
         if self.is_chrdev:
             ret.append("CHRDEV")
-        if self.is_fifo:
-            ret.append("FIFO")
-        if self.is_sock:
-            ret.append("SOCK")
         if self.is_unknown:
             ret.append("UNKNOWN")
         if self.is_error:
@@ -183,22 +171,16 @@ def _get_type_real(f):
                 else:
                     return _t_noperm
             a = util.is_readable(s)
-
     ret = 0
-
     d = kernel.stat_type(f)
-    if d.get("reg", False):
+    if d.get("REG", False):
         ret |= _t_reg
-    if d.get("dir", False):
+    if d.get("DIR", False):
         ret |= _t_dir
-    if d.get("blkdev", False):
+    if d.get("BLKDEV", False):
         ret |= _t_blkdev
-    if d.get("chrdev", False):
+    if d.get("CHRDEV", False):
         ret |= _t_chrdev
-    if d.get("fifo", False):
-        ret |= _t_fifo
-    if d.get("sock", False):
-        ret |= _t_sock
     if not ret:
         return _t_unknown
     else:
@@ -218,10 +200,6 @@ def is_blkdev(f):
     return _test(get_type(f), _t_blkdev)
 def is_chrdev(f):
     return _test(get_type(f), _t_chrdev)
-def is_fifo(f):
-    return _test(get_type(f), _t_fifo)
-def is_sock(f):
-    return _test(get_type(f), _t_sock)
 def is_unknown(f):
     return _test(get_type(f), _t_unknown)
 def is_error(f):

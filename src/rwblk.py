@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import errno
+
 from . import blk
 from . import rwfd
 
@@ -44,3 +46,20 @@ class Fileobj (rwfd.Fileobj, blk.methods):
 
     def creat(self, f):
         self.creat_blk()
+
+    def read(self, x, n):
+        try:
+            return super(Fileobj, self).read(x, n)
+        except IOError as e:
+            return self.pad(e, n)
+
+    def replace(self, x, l, rec=True):
+        try:
+            return super(Fileobj, self).replace(x, l, rec)
+        except IOError as e:
+            # XXX Added for Solaris.
+            # If failed to read a block device beyond a certain sector
+            # with ENXIO (even if it's within what ioctl had reported),
+            # just ignore.
+            if e.errno != errno.ENXIO:
+                raise

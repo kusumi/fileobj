@@ -1,3 +1,7 @@
+## v0.7.54
++ Minor fixes and improvement
++ Improve Solaris/illumos support
+
 ## v0.7.53
 + Minor fixes and improvement
 + Fix a bug (check errno for native ptrace(2) peek functions)

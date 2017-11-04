@@ -1,4 +1,4 @@
-fileobj ([v0.7.53](https://github.com/kusumi/fileobj/releases/tag/v0.7.53))
+fileobj ([v0.7.54](https://github.com/kusumi/fileobj/releases/tag/v0.7.54))
 =======
 
 ## About
@@ -47,14 +47,14 @@ fileobj ([v0.7.53](https://github.com/kusumi/fileobj/releases/tag/v0.7.53))
 
 ## [Reporting issues](https://github.com/kusumi/fileobj/issues)
 
-## [Changes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.changes.md)
+## [Changes](doc/README.changes.md)
 
-## [Notes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md)
+## [Notes](doc/README.notes.md)
 
-## [Distributions](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.distributions.md)
+## [Distributions](doc/README.distributions.md)
 
-## [List of options](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.list_of_options.md)
+## [List of options](doc/README.list_of_options.md)
 
-## [List of commands](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.list_of_commands.md)
+## [List of commands](doc/README.list_of_commands.md)
 
-## [Examples](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.examples.md)
+## [Examples](doc/README.examples.md)

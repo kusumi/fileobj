@@ -166,6 +166,8 @@ def get_lang_info():
         return ''
 
 def get_blkdev_info(f):
+    if f in _blkdev_info_cache:
+        return _blkdev_info_cache[f] # assume the same blkdev for f
     if not is_blkdev(f):
         raise KernelError(f + " is not a block device")
 
@@ -178,6 +180,7 @@ def get_blkdev_info(f):
         util.get_size_repr(b.size),
         util.get_size_repr(b.sector_size),
         filebytes.str(b.label)))
+    _blkdev_info_cache[b.name] = b
     return b
 
 def __get_blkdev_info(f):
@@ -232,10 +235,10 @@ def get_inode(f):
     o = get_kernel_module()
     if o:
         ino = o.get_inode(f)
-        if f in _ino and ino != _ino[f]:
+        if f in _inode_cache and ino != _inode_cache[f]:
             log.info("inode#{0} for {1} was previously inode#{2}".format(
-                ino, f, _ino[f]))
-        _ino[f] = ino
+                ino, f, _inode_cache[f]))
+        _inode_cache[f] = ino
         return ino
     else:
         return -1
@@ -598,7 +601,8 @@ def parse_waitpid_result(status):
         return ''
 
 def init():
-    util.clear_dict(_ino)
+    util.clear_dict(_blkdev_info_cache)
+    util.clear_dict(_inode_cache)
     o = get_kernel_module()
     if o:
         try:
@@ -608,7 +612,9 @@ def init():
     return -1
 
 def cleanup():
-    util.clear_dict(_ino)
+    util.clear_dict(_blkdev_info_cache)
+    util.clear_dict(_inode_cache)
 
-_ino = {}
+_blkdev_info_cache = {}
+_inode_cache = {}
 init()

@@ -140,21 +140,21 @@ def touch(f):
 def stat_type(f):
     try:
         mode = os.stat(f).st_mode
-        t = "reg", "dir", "blk", "chr", "fifo", "sock"
-        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in t]
-        return dict(
-            reg=l[0],dir=l[1],blkdev=l[2],chrdev=l[3],fifo=l[4],sock=l[5])
+        path_type = "LINK", "REG", "DIR", "BLKDEV", "CHRDEV"
+        stat_type = "lnk", "reg", "dir", "blk", "chr"
+        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in stat_type]
+        return dict(zip(path_type, l)) # LINK always false
     except Exception:
         return -1
 
 def stat_is_blkdev(f):
-    return __stat_is(f, "blkdev")
+    return __stat_is(f, "BLKDEV")
 
 def stat_is_chrdev(f):
-    return __stat_is(f, "chrdev")
+    return __stat_is(f, "CHRDEV")
 
 def stat_is_blkdev_or_chrdev(f):
-    return __stat_is(f, "blkdev", "chrdev")
+    return __stat_is(f, "BLKDEV", "CHRDEV")
 
 def __stat_is(f, *l):
     d = stat_type(f)
@@ -269,6 +269,26 @@ def set_tc(fd):
 
 def set_cbreak(fd):
     tty.setcbreak(fd)
+
+def get_total_ram():
+    page_size = get_page_size()
+    if page_size == -1:
+        return -1
+    try:
+        ret = os.sysconf("SC_PHYS_PAGES") # not standard
+        return ret * page_size
+    except Exception:
+        return -1
+
+def get_free_ram():
+    page_size = get_page_size()
+    if page_size == -1:
+        return -1
+    try:
+        ret = os.sysconf("SC_AVPHYS_PAGES") # not standard
+        return ret * page_size
+    except Exception:
+        return -1
 
 def waitpid(pid, opts):
     return os.waitpid(pid, opts)

@@ -44,3 +44,9 @@ class Fileobj (rofd.Fileobj, blk.methods):
 
     def creat(self, f):
         self.creat_blk()
+
+    def read(self, x, n):
+        try:
+            return super(Fileobj, self).read(x, n)
+        except IOError as e:
+            return self.pad(e, n)

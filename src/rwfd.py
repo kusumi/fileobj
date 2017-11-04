@@ -99,8 +99,8 @@ class Fileobj (rofd.Fileobj):
 
         for i, c in enumerate(l):
             b = filebytes.input_to_bytes((c,))
-            self.__diff[x + i] = b
-            self.__add_block_buffer(x + i, b)
+            self.__add_block_buffer(x + i, b) # call this first
+            self.__diff[x + i] = b # and then update diff
         self.__dirty = not not self.__bbuf
 
         if rec:
@@ -120,13 +120,6 @@ class Fileobj (rofd.Fileobj):
             self.__bbuf[lba][pos] = b
         else:
             self.fd.seek(lba * siz)
-            try:
-                buf = self.fd.read(siz)
-                self.__bbuf[lba] = filebytes.split(buf)
-                self.__bbuf[lba][pos] = b
-            except Exception:
-                # XXX Added for Solaris.
-                # If failed to read a block device beyond a certain sector
-                # with ENXIO (even if it's within what ioctl had reported),
-                # just pretend it's read.
-                pass
+            buf = self.fd.read(siz) # may raise exception but don't catch
+            self.__bbuf[lba] = filebytes.split(buf)
+            self.__bbuf[lba][pos] = b

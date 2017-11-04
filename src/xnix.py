@@ -92,10 +92,10 @@ def set_cbreak(fd):
     return unix.set_cbreak(fd)
 
 def get_total_ram():
-    return -1
+    return unix.get_total_ram()
 
 def get_free_ram():
-    return -1
+    return unix.get_free_ram()
 
 def is_blkdev(f):
     return unix.stat_is_blkdev(f)

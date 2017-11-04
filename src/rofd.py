@@ -172,20 +172,13 @@ class Fileobj (fileobj.Fileobj):
                 self.fd.seek(beg)
                 b = self.fd.read(end - beg)
             except Exception as e:
-                # Don't unconditionally log an exception (see below).
+                # Don't unconditionally log an exception for blkdev.
                 if setting.use_debug:
                     log.error((e, (beg, end)))
-                try:
-                    beg = x
-                    end = x + n
-                    self.fd.seek(beg)
-                    b = self.fd.read(end - beg)
-                except Exception:
-                    # XXX Added for Solaris.
-                    # If failed to read a block device beyond a certain sector
-                    # with ENXIO (even if it's within what ioctl had reported),
-                    # just pretend it's read by returning 0xff filled buffer.
-                    return util.str_to_bytes("\xff" * n)
+                beg = x
+                end = x + n
+                self.fd.seek(beg)
+                b = self.fd.read(end - beg)
 
             o = util.Namespace(beg=beg, end=beg + len(b), buf=b)
             self.__ra_count[end - beg] += 1

@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import errno
+
 from . import fileobj
 from . import kernel
 from . import util
@@ -55,3 +57,12 @@ class methods (object):
     def creat_blk(self):
         raise fileobj.FileobjError(
             "Can only write to " + self.get_path())
+
+    def pad(self, e, n):
+        # XXX Added for Solaris.
+        # If failed to read a block device beyond a certain sector
+        # with ENXIO (even if it's within what ioctl had reported),
+        # just pretend it's read by returning 0xff filled buffer.
+        if isinstance(e, IOError) and e.errno == errno.ENXIO:
+            return util.str_to_bytes("\xff" * n)
+        raise e
