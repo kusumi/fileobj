@@ -658,7 +658,7 @@
         $ fileobj ./a.out
           (command):extensions<ENTER>
 
-+ Open and modify userspace of a process *(experimental feature available only on Linux and \*BSD)*.
++ Open and modify userspace of a process *(experimental feature available only on Linux and \*BSD)*. Note that this behavior is OS specific.
 
         # uname
         Linux
@@ -684,7 +684,7 @@
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        abcdefghijklmnopqrstuvwxyz <- .rodata overwritten with lower case (see below)
+        abcdefghijklmnopqrstuvwxyz <- .rodata section overwritten with lower case (see below)
         abcdefghijklmnopqrstuvwxyz
         abcdefghijklmnopqrstuvwxyz
         abcdefghijklmnopqrstuvwxyz
@@ -692,7 +692,7 @@
         abcdefghijklmnopqrstuvwxyz
         ^C
 
-+ Modify .rodata while running test1.
++ Modify .rodata section while running test1.
 
         # objdump -s -j .rodata ./test1
         

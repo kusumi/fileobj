@@ -10,13 +10,16 @@
 
 + An unknown directory appeared under *${HOME}* after running the program. -> **A directory *${HOME}/.fileobj* and some files used by the program are automatically created unless already exist.**
 
-+ Using *--fg* or *--bg* options while running in a terminal multiplexer may cause the cursor to disappear. -> **Defining an environment variable *FILEOBJ_USE_TMUX_CAVEAT* (with any value) may help. See below bash example.**
+
+## Running in a terminal multiplexer
+
++ The editor cursor disappears when using *--fg* or *--bg*. -> **Defining an environment variable *FILEOBJ_USE_TMUX_CAVEAT* (with any value) may help. See below bash example.**
 
         $ export FILEOBJ_USE_TMUX_CAVEAT=
 
-## PuTTY on Windows
+## Running in PuTTY on Windows
 
-+ Bold characters are not in bold while running in PuTTY. -> **Defining an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with any value) may help. See below bash example.**
++ Bold characters are not in bold. -> **Defining an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with any value) may help. See below bash example.**
 
         $ export FILEOBJ_USE_PUTTY_CAVEAT=
 
@@ -35,7 +38,7 @@
 
 + Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
 
-## illumos
+## Solaris/illumos
 
 + Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
 

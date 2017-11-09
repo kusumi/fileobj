@@ -361,7 +361,14 @@ def resize_container(self, amp, opc, args, raw):
     self.co.repaint()
 
 def refresh_container(self, amp, opc, args, raw):
-    self.co.refresh()
+    # XXX If in tmux, call resize() to possibly recover from a window
+    # frame issue which happens after once changing to a different terminal.
+    # e.g. Frames disappear on *BSD, and corrupt on Cygwin.
+    # Not confirmed on Linux and Solaris.
+    if util.is_in_terminal_multiplexer():
+        self.co.resize()
+    else:
+        self.co.refresh()
     self.co.repaint()
 
 def switch_to_next_workspace(self, amp, opc, args, raw):

@@ -1,3 +1,10 @@
+## v0.7.55
++ Minor fixes and improvement
++ Fix a bug (be able to recover from a tmux specific screen issue with Ctrl-l)
++ Change default manpage directory from /usr/local/share/man/man1 to /usr/share/man/man1
++ Rename script/build.sh to script/pybuild.sh
++ Rename script/clean.sh to script/pyclean.sh
+
 ## v0.7.54
 + Minor fixes and improvement
 + Improve Solaris/illumos support

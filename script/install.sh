@@ -1,4 +1,27 @@
-#!/bin/bash
+#!/bin/sh
+
+# Copyright (c) 2017, Tomohiro Kusumi
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 if [ ! -f ./script/install.sh ]; then
 	echo "### Invalid directory `pwd`"
@@ -9,22 +32,33 @@ if [ ! -f ./doc/fileobj.1 ]; then
 	exit 1
 fi
 
-MANDIR_LOCAL=/usr/local/share/man/man1
+MANDIR_USER=$1
 MANDIR_SYSTEM=/usr/share/man/man1
+MANDIR_LOCAL=/usr/local/share/man/man1
 
-if [ ! -d ${MANDIR_LOCAL} ]; then
-	if [ ! -d ${MANDIR_SYSTEM} ]; then
-		echo "### Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
-		exit 1
+if [ "${MANDIR_USER}" != "" ]; then
+	if [ -d ${MANDIR_USER} ]; then
+		MANDIR=${MANDIR_USER}
 	else
-		MANDIR=${MANDIR_SYSTEM}
+		echo "### No such directory ${MANDIR_USER}"
+		exit 1
 	fi
-else
+elif [ -d ${MANDIR_SYSTEM} ]; then
+	MANDIR=${MANDIR_SYSTEM}
+elif [ -d ${MANDIR_LOCAL} ]; then
 	MANDIR=${MANDIR_LOCAL}
+else
+	echo "### Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
+	exit 1
 fi
 
-case "`uname`" in
+UNAME=`uname`
+case "${UNAME}" in
 	Linux | *BSD | DragonFly | CYGWIN*)
+		if [ -f ./doc/fileobj.1.gz ]; then
+			echo "### ./doc/fileobj.1.gz exists"
+			exit 1
+		fi
 		cat ./doc/fileobj.1 | gzip -9 -n > ./doc/fileobj.1.gz
 		if [ $? -ne 0 ]; then
 			echo "### Failed to gzip manpage"
@@ -47,6 +81,6 @@ case "`uname`" in
 		file ${MANDIR}/fileobj.1
 		;;
 	*)
-		echo "No manpage available" # XXX
+		echo "No manpage available for ${UNAME}" # XXX
 		;;
 esac

@@ -1,4 +1,4 @@
-fileobj ([v0.7.54](https://github.com/kusumi/fileobj/releases/tag/v0.7.54))
+fileobj ([v0.7.55](https://github.com/kusumi/fileobj/releases/tag/v0.7.55))
 =======
 
 ## About
@@ -15,9 +15,9 @@ fileobj ([v0.7.54](https://github.com/kusumi/fileobj/releases/tag/v0.7.54))
 
 ## Supported operating systems
 
-|Linux|\*BSD|illumos|Cygwin|Other Unix-likes|Windows|
-|:----|:----|:------|:-----|:---------------|:------|
-|YES  |YES  |YES    |YES   |untested        |NO     |
+|Linux|\*BSD|Solaris/illumos|Cygwin|Other Unix-likes|Windows|
+|:----|:----|:--------------|:-----|:---------------|:------|
+|YES  |YES  |YES            |YES   |untested        |NO     |
 
 ## Install
 
@@ -26,7 +26,7 @@ fileobj ([v0.7.54](https://github.com/kusumi/fileobj/releases/tag/v0.7.54))
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ Run *./script/install.sh* to install a manpage under */usr/local/share/man/man1/* or */usr/share/man/man1/*.
++ Run *./script/install.sh* to install a manpage under */usr/local/share/man/man1/* or */usr/share/man/man1/* (or specify by an argument).
 
         $ sudo bash ./script/install.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
@@ -37,7 +37,7 @@ fileobj ([v0.7.54](https://github.com/kusumi/fileobj/releases/tag/v0.7.54))
 
 + Remove files listed in *install.out* which was generated on installation.
 
-+ Remove */usr/local/share/man/man1/fileobj.1.gz* or */usr/share/man/man1/fileobj.1.gz* if a manpage is installed.
++ Remove the manpage if installed.
 
 ## Resource
 

@@ -1,4 +1,6 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+#!/bin/sh
+
+# Copyright (c) 2017, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,29 +23,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# RELEASE is basically always 1.
-# It was added only to sync with RPM versioning.
-# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
-# RPM patches within the same fileobj version may or may not increment RELEASE.
+if [ ! -f ./script/pybuild.sh ]; then
+	echo "### Invalid directory `pwd`"
+	exit 1
+fi
 
-MAJOR = 0
-MINOR1 = 7
-MINOR2 = 55
-RELEASE = 1
+PYTHON=$1
+if [ "${PYTHON}" = "" ]; then
+	PYTHON=python
+fi
 
-def get_version():
-    return MAJOR, MINOR1, MINOR2
+which ${PYTHON} >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+	echo "### ${PYTHON} does not exist"
+	exit 1
+fi
 
-def get_release():
-    return MAJOR, MINOR1, MINOR2, RELEASE
+bash ./script/pyclean.sh ${PYTHON}
+echo
 
-def get_version_string():
-    return "{0}.{1}.{2}".format(*get_version())
-
-def get_release_string():
-    return "{0}.{1}.{2}-{3}".format(*get_release())
-
-def get_tag_string():
-    return "v" + get_version_string()
-
-__version__ = get_version_string()
+${PYTHON} ./setup.py build
+if [ $? -ne 0 ]; then
+	echo "### Failed to build"
+	exit 1
+fi
