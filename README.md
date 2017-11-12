@@ -1,4 +1,4 @@
-fileobj ([v0.7.55](https://github.com/kusumi/fileobj/releases/tag/v0.7.55))
+fileobj ([v0.7.56](https://github.com/kusumi/fileobj/releases/tag/v0.7.56))
 =======
 
 ## About
@@ -26,10 +26,10 @@ fileobj ([v0.7.55](https://github.com/kusumi/fileobj/releases/tag/v0.7.55))
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ Run *./script/install.sh* to install a manpage under */usr/local/share/man/man1/* or */usr/share/man/man1/* (or specify by an argument).
++ Run *./script/install.sh* to install a manpage. The location defaults to /usr/share/man/man1, but can be specified by an argument.
 
         $ sudo bash ./script/install.sh
-        /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
+        /usr/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
 
 + See *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md)* specific to various supported operating systems.
 

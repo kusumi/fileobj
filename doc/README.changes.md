@@ -1,3 +1,6 @@
+## v0.7.56
++ Minor fixes and improvement
+
 ## v0.7.55
 + Minor fixes and improvement
 + Fix a bug (be able to recover from a tmux specific screen issue with Ctrl-l)

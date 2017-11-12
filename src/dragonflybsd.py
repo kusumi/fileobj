@@ -42,6 +42,9 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
+def is_in_tmux():
+    return unix.is_in_tmux()
+
 def get_blkdev_info(f):
     with fopen(f) as fd:
         return __get_blkdev_info(fd)

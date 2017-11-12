@@ -87,7 +87,8 @@ def is_bsd():
         is_netbsd() or \
         is_openbsd() or \
         is_freebsd() or \
-        is_dragonflybsd() # or ...
+        is_dragonflybsd() or \
+        _system.endswith("BSD")
 
 def is_bsd_derived():
     return is_bsd() or is_darwin()
@@ -164,6 +165,13 @@ def get_lang_info():
         return o.get_lang_info()
     else:
         return ''
+
+def is_in_tmux():
+    o = get_kernel_module()
+    if o:
+        return o.is_in_tmux()
+    else:
+        return False
 
 def get_blkdev_info(f):
     if f in _blkdev_info_cache:

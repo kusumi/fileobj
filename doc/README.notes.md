@@ -17,6 +17,8 @@
 
         $ export FILEOBJ_USE_TMUX_CAVEAT=
 
++ Window frames disappear after once changing to a different terminal. -> **Refresh the entire screen with *CTRL-l*. This happens on some platforms.**
+
 ## Running in PuTTY on Windows
 
 + Bold characters are not in bold. -> **Defining an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with any value) may help. See below bash example.**
@@ -27,7 +29,7 @@
 
 ## *BSD
 
-+ Can't install on NetBSD due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. See below pkgsrc example.**
++ Can't install on NetBSD due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. See below pkgsrc example. The binary package name would be for example *py27-curses* for Python 2.7.**
 
         $ uname
         NetBSD

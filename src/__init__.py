@@ -21,8 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# This file must have no dependency on other files.
-
 import os
 import platform
 
@@ -41,7 +39,7 @@ def __is_cygwin(name):
         return False
 
 def __set_caveat(name):
-    s = "FILEOBJ_USE_{0}_CAVEAT".format(name)
+    s = "FILEOBJ_USE_{0}_CAVEAT".format(name.upper())
     if s not in os.environ:
         os.environ[s] = name
 
@@ -49,10 +47,12 @@ _system = platform.system()
 
 if _system in ("NetBSD", "OpenBSD", "FreeBSD", "DragonFly", "Darwin"):
     __set_caveat("BSD")
+elif _system.endswith("BSD"):
+    __set_caveat("BSD")
 elif _system in ("SunOS",):
-    __set_caveat("ILLUMOS")
+    __set_caveat("illumos") # for both Solaris and illumos
 elif __is_cygwin(_system):
-    __set_caveat("CYGWIN")
+    __set_caveat("Cygwin")
     # procfs doesn't appear in mount command result
     if "FILEOBJ_PROCFS_MOUNT_POINT" not in os.environ:
         os.environ["FILEOBJ_PROCFS_MOUNT_POINT"] = "/proc"

@@ -26,6 +26,7 @@ from __future__ import division
 from . import ascii
 from . import filebytes
 from . import kbd
+from . import kernel
 from . import log
 from . import native
 from . import screen
@@ -299,7 +300,7 @@ class DisplayCanvas (Canvas):
     def __init_highlight_attrs(self):
         # A_STANDOUT may disappear
         if setting.use_tmux_caveat and \
-            util.is_in_terminal_multiplexer() and \
+            kernel.is_in_tmux() and \
             screen.use_color():
             setting.screen_attr_cursor.append("bold")
             setting.screen_attr_visual.append("bold")

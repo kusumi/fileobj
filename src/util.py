@@ -40,7 +40,6 @@ import traceback
 
 from . import package
 from . import setting
-from . import version
 
 NO_NAME = "[No Name]"
 UNKNOWN = "Unknown"
@@ -106,9 +105,6 @@ def is_python2_version_or_ht(*l):
 def is_python3_version_or_ht(*l):
     return is_python3() and is_python_version_or_ht(*l)
 
-def is_python3_supported():
-    return version.get_version() >= (0, 7, 0)
-
 def get_home():
     return os.path.expanduser("~")
 
@@ -131,17 +127,6 @@ def is_running_fileobj():
 
 def is_imported_module():
     return not is_running_fileobj()
-
-def is_in_screen():
-    return "STY" in os.environ
-
-def is_in_tmux():
-    return "TMUX" in os.environ
-
-def is_in_terminal_multiplexer():
-    return \
-        is_in_screen() or \
-        is_in_tmux() # or ...
 
 _Xregex = re.compile(r"\\X[{0}]{{1,}}$".format(string.hexdigits))
 _xregex = re.compile(r"\\x([{0}]{{1,2}})".format(string.hexdigits))

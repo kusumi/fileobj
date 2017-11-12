@@ -33,6 +33,9 @@ def get_term_info():
 def get_lang_info():
     return unix.get_lang_info()
 
+def is_in_tmux():
+    return unix.is_in_tmux()
+
 def read_reg_size(f):
     return unix.read_reg_size(f)
 

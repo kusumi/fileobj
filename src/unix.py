@@ -43,6 +43,9 @@ def get_term_info():
 def get_lang_info():
     return os.getenv("LANG", "")
 
+def is_in_tmux():
+    return ("STY" in os.environ) or ("TMUX" in os.environ) # screen or tmux
+
 def read_reg_size(f):
     if not os.path.isfile(f): # only for regfile
         return -1
@@ -420,15 +423,15 @@ def get_fs_mount_point(*labels):
         m = re.search(r"^(.+?)\s+on\s+(.+?)\s", x)
         if m:
             name, where = m.groups()
-            if name in labels:
-                if os.path.isdir(where):
-                    return os.path.abspath(where)
-            # XXX Solaris has these opposite
-            name, where = where, name
-            if name in labels:
-                if os.path.isdir(where):
-                    return os.path.abspath(where)
+            if __test_fs_mount_point(labels, name, where):
+                return os.path.abspath(where)
+            name, where = where, name # XXX Solaris has these opposite
+            if __test_fs_mount_point(labels, name, where):
+                return os.path.abspath(where)
     return ''
+
+def __test_fs_mount_point(labels, name, where):
+    return (name in labels) and os.path.isdir(where)
 
 def is_procfs_path(f):
     if not os.path.isfile(f) and not os.path.isdir(f):

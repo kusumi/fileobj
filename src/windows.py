@@ -44,6 +44,9 @@ def get_term_info():
 def get_lang_info():
     return ''
 
+def is_in_tmux():
+    return False
+
 def read_reg_size(f):
     return -1
 
