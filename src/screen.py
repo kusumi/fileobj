@@ -35,6 +35,7 @@ else:
 _std = None
 _size = util.Pair()
 _signaled = False
+_soft_resize = False
 
 A_DEFAULT   = 0
 A_BOLD      = 0
@@ -129,6 +130,17 @@ def test_signal():
     if ret:
         cli()
     return ret
+
+def set_soft_resize():
+    global _soft_resize
+    _soft_resize = True
+
+def clear_soft_resize():
+    global _soft_resize
+    _soft_resize = False
+
+def test_soft_resize():
+    return _soft_resize
 
 def has_chgat():
     return _screen.has_chgat()

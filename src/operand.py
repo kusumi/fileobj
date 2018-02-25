@@ -55,6 +55,7 @@ class Operand (object):
                 li is literal.s_wneg or \
                 li is literal.s_wq or \
                 li is literal.s_split or \
+                li is literal.s_vsplit or \
                 li is literal.s_bdelete:
                 self.__cand[li.str] = p
         self.clear()

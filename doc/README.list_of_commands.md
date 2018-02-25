@@ -17,10 +17,10 @@
         <CTRL>w<CTRL>b           Change to the bottom window
         <CTRL>ws                 Split current window
         <CTRL>w<CTRL>s           Split current window
-        <CTRL>wv                 Split current window
-        <CTRL>w<CTRL>v           Split current window
         <CTRL>wt                 Change to the top window
         <CTRL>w<CTRL>t           Change to the top window
+        <CTRL>wv                 Split current window vertically
+        <CTRL>w<CTRL>v           Split current window vertically
         <CTRL>ww                 Change to the next window
         <CTRL>w<CTRL>w           Change to the next window
         <CTRL>x                  Subtract [count] from the number at cursor
@@ -87,6 +87,7 @@
         <CTRL>wq                 Close current window if more than 1 windows exist else quit program
         :q!                      Close current window if more than 1 windows exist else quit program without writing
         ZQ                       Close current window if more than 1 windows exist else quit program without writing
+        :screen                  Print screen information
         :sector                  Print sector size for block device
         :self                    Print current console instance string
         :set                     Set option
@@ -95,7 +96,9 @@
                 binary           Set binary edit mode (unset ascii edit mode)
                 ascii            Set ascii edit mode (unset binary edit mode)
                 bytes_per_line   Set bytes_per_line to {[0-9]+,"max","min","auto"}
+                bpl              Set bytes_per_line to {[0-9]+,"max","min","auto"}
                 bytes_per_window Set bytes_per_window to {[0-9]+,"even","auto"}
+                bpw              Set bytes_per_window to {[0-9]+,"even","auto"}
                 ic               Set ic mode (ignore the case of alphabets on search)
                 noic             Unset ic mode
                 le               Set endianness to little (unset big endian if set)
@@ -107,6 +110,7 @@
         :split                   Split current window
         :term                    Print terminal type
         :version                 Print version
+        :vsplit                  Split current window vertically
         :w                       Write the whole buffer to the file
         :w!                      Like :w, but overwrite an existing file
         :wq                      Write the current file and quit

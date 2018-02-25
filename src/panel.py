@@ -60,6 +60,7 @@ _panel
 
 class _panel (object):
     def __init__(self, siz, pos):
+        assert (siz and pos) or (not siz and not pos), (siz, pos)
         if not siz and not pos:
             siz = get_min_size(self)
             pos = get_min_position(self)
@@ -214,7 +215,7 @@ class Canvas (_panel):
         except Exception as e:
             if (y < self.get_size_y() - 1) or \
                 (x + len(s) < self.get_size_x() - 1):
-                log.debug((e, (y, x), s))
+                log.debug(e, (y, x), s)
 
     def clrl(self, y, x):
         try:

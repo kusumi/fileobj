@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2010-2016, Tomohiro Kusumi
 # All rights reserved.
 #

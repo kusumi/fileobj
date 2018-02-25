@@ -1,4 +1,4 @@
-fileobj ([v0.7.56](https://github.com/kusumi/fileobj/releases/tag/v0.7.56))
+fileobj ([v0.7.57](https://github.com/kusumi/fileobj/releases/tag/v0.7.57))
 =======
 
 ## About
@@ -31,7 +31,7 @@ fileobj ([v0.7.56](https://github.com/kusumi/fileobj/releases/tag/v0.7.56))
         $ sudo bash ./script/install.sh
         /usr/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
 
-+ See *[Notes](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md)* specific to various supported operating systems.
++ See *[Notes](doc/README.notes.md)* for compilation error due to a missing header file *Python.h*, and other platform specific information.
 
 ## Uninstall
 

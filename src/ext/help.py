@@ -26,8 +26,7 @@ import fileobj.version
 import fileobj.url
 
 def get_text(co, fo, args):
-    l = [fileobj.url.get_readme_url()]
-    l.append('')
+    l = [fileobj.url.get_doc_url("list_of_commands")]
     l.extend(fileobj.literal.get_lines(
         fileobj.literal.get_literals()))
     return l

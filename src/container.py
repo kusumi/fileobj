@@ -42,6 +42,7 @@ from . import setting
 from . import trace
 from . import util
 from . import void
+from . import window
 from . import workspace
 
 DEF_REG = '"'
@@ -62,6 +63,7 @@ class Container (object):
         self.__operand = operand.Operand()
         self.__marks = marks.Marks(None)
         self.__cur_workspace = None
+        self.__in_vertical = False
         self.set_prev_context(None)
 
     def __getattr__(self, name):
@@ -72,7 +74,7 @@ class Container (object):
     def __len__(self):
         return len(self.__workspaces)
 
-    def init(self, args, wspnum, optbpl, optbpw, msg=''):
+    def init(self, args, wspnum, vertical, optbpl, optbpw):
         assert not self.__fileobjs
         for x in args:
             o = self.__alloc_buffer(x)
@@ -95,7 +97,8 @@ class Container (object):
                     setting.address_num_width = x
                     break
 
-        self.__workspaces.append(workspace.Workspace(optbpl))
+        bpl = self.__find_bytes_per_line(optbpl)
+        self.__workspaces.append(workspace.Workspace(bpl))
         wsp = self.__workspaces[0]
         self.__set_workspace(wsp)
         for i, o in enumerate(self.__fileobjs):
@@ -106,15 +109,14 @@ class Container (object):
         if self.set_bytes_per_window(optbpw) == -1:
             self.set_bytes_per_window("auto")
 
+        self.__in_vertical = vertical # True if -O
         for i in range(1, wspnum):
             o = self.__cur_workspace.clone()
             o.switch_to_buffer(i % len(self.__fileobjs))
             self.__workspaces.append(o)
-            if self.__do_build(True) == workspace.BUILD_FAILED:
+            if self.__build(self.__in_vertical, True) == workspace.BUILD_FAILED:
                 self.__remove_workspace(o)
                 break
-        if msg:
-            self.flash(msg)
         return self.build()
 
     def cleanup(self):
@@ -163,7 +165,7 @@ class Container (object):
 
     def __get_console(self, cls=None):
         if not cls:
-            cls = workspace.get_default_console()
+            cls = console.get_default_class()
         if cls not in self.__consoles:
             self.__consoles[cls] = cls(self, self.__operand)
         return self.__consoles[cls]
@@ -320,31 +322,54 @@ class Container (object):
         for o in self.__cur_workspace.iter_buffer():
             yield o
 
-    def build(self):
-        if len(self):
-            if self.__do_build(True) == workspace.BUILD_FAILED:
-                self.__clear_workspace_delta()
-                if self.__do_build(True) == workspace.BUILD_FAILED: # retry
-                    self.flash("Not enough room")
-                    return -1
-            if setting.use_even_size_window or self.__bpw != -1:
-                screen.clear()
-            if self.__do_build(False) == workspace.BUILD_FAILED:
+    def get_build_size(self):
+        l = []
+        for o in self.__workspaces:
+            l.append(o.get_build_size())
+        return tuple(l)
+
+    def build(self, vertical=-1):
+        if not len(self): # nothing to do
+            return
+        if vertical == -1:
+            vertical = self.__in_vertical
+        assert isinstance(vertical, bool)
+
+        if self.__build(vertical, True) == workspace.BUILD_FAILED:
+            self.__clear_workspace_delta()
+            if self.__build(vertical, True) == workspace.BUILD_FAILED:
+                self.flash("Not enough room")
                 return -1
+        if setting.use_even_size_window or self.__bpw != -1 or vertical:
+            screen.clear()
+        if self.__build(vertical, False) == workspace.BUILD_FAILED:
+            return -1
+        # Update vertical flag after successful build,
+        # if explicitly specified or len(self) is 1.
+        if len(self) == 1:
+            self.__in_vertical = False
+        elif vertical:
+            self.__in_vertical = True
 
-    def __do_build(self, dry):
+    def __build(self, vertical, dry):
         if self.__bpw == -1:
-            return self.__build(dry)
+            if not vertical:
+                return self.__build_workspace(dry)
+            else:
+                return self.__vbuild_workspace(dry)
         else:
-            return self.__build_fixed(dry)
+            if not vertical:
+                return self.__build_workspace_fixed_size(dry)
+            else:
+                return self.__vbuild_workspace_fixed_size(dry)
 
-    def __build(self, dry):
+    def __build_workspace(self, dry):
         l = console.get_position_y()
         if setting.use_even_size_window:
             h = l // len(self)
             y = 0
             for o in self.__workspaces:
-                ret = self.__build_workspace(o, h, y, dry)
+                ret = self.__do_build_workspace(o, h, y, dry)
                 if ret == workspace.BUILD_FAILED:
                     return ret
                 y += h
@@ -358,12 +383,12 @@ class Container (object):
                 if r > 0:
                     h += 1
                     r -= 1
-                ret = self.__build_workspace(o, h, y, dry)
+                ret = self.__do_build_workspace(o, h, y, dry)
                 if ret == workspace.BUILD_FAILED:
                     return ret
                 y += h
 
-    def __build_workspace(self, wsp, hei, beg, dry):
+    def __do_build_workspace(self, wsp, hei, beg, dry):
         if wsp in self.__workspace_delta:
             hei += self.__workspace_delta[wsp][0]
             beg += self.__workspace_delta[wsp][1]
@@ -372,20 +397,71 @@ class Container (object):
         else:
             return wsp.build(hei, beg)
 
-    def __build_fixed(self, dry):
+    def __vbuild_workspace(self, dry):
+        while True:
+            ret = self.__do_vbuild_workspace(dry)
+            if ret == workspace.BUILD_RETRY:
+                continue
+            else:
+                return ret
+
+    def __do_vbuild_workspace(self, dry):
+        if dry:
+            self.__vbuild_assert_width()
+        x = 0
+        for o in self.__workspaces:
+            if dry:
+                ret = o.vbuild_dryrun(x)
+            else:
+                ret = o.vbuild(x)
+            if ret == workspace.BUILD_FAILED:
+                # shrink bpl if unable to build with the current bpl
+                bpl = self.get_bytes_per_line()
+                if bpl < 1:
+                    return ret
+                else:
+                    bpl //= 2
+                    if bpl < 1:
+                        return ret
+                    # window.get_max_bytes_per_line() may fail on resize
+                    if self.set_bytes_per_line(bpl, True) == -1:
+                        return ret
+                    return workspace.BUILD_RETRY
+            x += o.guess_width()
+
+    def __build_workspace_fixed_size(self, dry):
         lpw = self.get_lines_per_window()
         y = 0
         for o in self.__workspaces:
-            ret = self.__build_fixed_workspace(o, lpw, y, dry)
+            if dry:
+                ret = o.build_fixed_size_dryrun(lpw, y)
+            else:
+                ret = o.build_fixed_size(lpw, y)
             if ret == workspace.BUILD_FAILED:
                 return ret
             y += ret
 
-    def __build_fixed_workspace(self, wsp, lpw, beg, dry):
+    def __vbuild_workspace_fixed_size(self, dry):
         if dry:
-            return wsp.build_fixed_dryrun(lpw, beg)
-        else:
-            return wsp.build_fixed(lpw, beg)
+            self.__vbuild_assert_width()
+        lpw = self.get_lines_per_window()
+        x = 0
+        for o in self.__workspaces:
+            if dry:
+                ret = o.vbuild_fixed_size_dryrun(lpw, x)
+            else:
+                ret = o.vbuild_fixed_size(lpw, x)
+            if ret == workspace.BUILD_FAILED:
+                return ret
+            x += o.guess_width()
+
+    def __vbuild_assert_width(self):
+        prev = -1
+        for o in self.__workspaces:
+            width = o.guess_width()
+            if prev != -1:
+                assert width == prev, (width, prev)
+            prev = width
 
     def adjust_workspace(self, n):
         if self.__bpw != -1:
@@ -448,9 +524,21 @@ class Container (object):
             self.__workspace_delta[wsp] = [h, b]
 
     def __clear_workspace_delta(self):
-        self.__workspace_delta.clear()
+        if not self.__in_vertical:
+            self.__workspace_delta.clear()
+        else:
+            assert not self.__workspace_delta, self.__workspace_delta
 
-    def add_workspace(self):
+    def add_workspace(self, vertical):
+        if len(self) > 1:
+            if vertical:
+                if not self.__in_vertical:
+                    self.flash("Already splitted horizontally, can't mix both")
+                    return -1
+            else:
+                if self.__in_vertical:
+                    self.flash("Already splitted vertically, can't mix both")
+                    return -1
         i = self.__get_buffer_index(self.get_path())
         cur_workspace = self.__cur_workspace
         new_workspace = self.__cur_workspace.clone()
@@ -458,7 +546,7 @@ class Container (object):
         self.__workspaces.insert(
             self.__workspaces.index(cur_workspace), new_workspace)
         self.__set_workspace(new_workspace)
-        if self.build() != -1:
+        if self.build(vertical) != -1:
             new_workspace.switch_to_buffer(i)
             return self.__get_workspace_index()
         else:
@@ -554,11 +642,19 @@ class Container (object):
         self.__cur_workspace.delete_current(n, rec)
 
     def resize(self):
+        screen.set_soft_resize()
+        self.__resize()
+        screen.clear_soft_resize()
+
+    def __resize(self):
         x = screen.get_size_x()
         screen.update_size()
         screen.clear()
         if screen.get_size_x() != x:
-            if self.is_gt_max_width():
+            width = self.get_width()
+            if self.__in_vertical: # multiply by number of wsp
+                width *= len(self)
+            if width > screen.get_size_x():
                 self.set_bytes_per_line("max")
             else:
                 self.set_bytes_per_line("auto")
@@ -817,14 +913,61 @@ class Container (object):
         else:
             return filebytes.BLANK
 
-    def set_bytes_per_line(self, arg):
-        ret = self.__cur_workspace.set_bytes_per_line(arg)
+    def set_bytes_per_line(self, arg, power_of_two=False):
+        ret = self.__find_bytes_per_line(arg)
         if ret == -1:
             return -1
+        # adjust down to max power of 2
+        if power_of_two:
+            for x in [2 ** _ for _ in range(10)]:
+                if ret <= x:
+                    if ret == x: # already power of 2
+                        ret = x
+                    else:
+                        ret = x // 2
+                    if ret < 1:
+                        ret = 1
+                    break
         for o in self.__workspaces:
-            if o is not self.__cur_workspace:
-                o.set_bytes_per_line(ret)
-                assert o.get_bytes_per_line() == ret
+            o.set_bytes_per_line(ret)
+        # assert the result
+        prev = -1
+        for o in self.__workspaces:
+            if prev != -1:
+                bpl = o.get_bytes_per_line()
+                assert bpl == prev, (bpl, prev)
+                prev = bpl
+
+    def __find_bytes_per_line(self, arg):
+        if self.__in_vertical:
+            n = len(self)
+        else:
+            n = 1
+        max_bpl = window.get_max_bytes_per_line(n)
+        if max_bpl < 1:
+            return -1
+        if not arg:
+            arg = "auto"
+        if arg == "min":
+            return 1
+        elif arg == "max":
+            return max_bpl
+        elif arg == "auto":
+            for ret in reversed([2 ** x for x in range(10)]):
+                if ret <= max_bpl:
+                    return ret
+            return 1
+        else:
+            try:
+                ret = int(arg)
+                if ret >= max_bpl:
+                    return max_bpl
+                elif ret <= 1:
+                    return 1
+                else:
+                    return ret
+            except ValueError:
+                return -1
 
     def get_lines_per_window(self):
         if self.__bpw == -1:
@@ -841,15 +984,12 @@ class Container (object):
 
     def set_bytes_per_window(self, arg):
         ret = self.__find_bytes_per_window(arg)
-        if ret != -1:
-            prev = self.__bpw
-            self.__bpw = ret
-            if self.__do_build(True) == workspace.BUILD_FAILED:
-                self.__bpw = prev
-                return -1
-            else:
-                return self.get_bytes_per_window()
-        else:
+        if ret == -1:
+            return -1
+        prev = self.__bpw
+        self.__bpw = ret
+        if self.__build(self.__in_vertical, True) == workspace.BUILD_FAILED:
+            self.__bpw = prev
             return -1
 
     def __find_bytes_per_window(self, arg):

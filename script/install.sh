@@ -23,10 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ ! -f ./script/install.sh ]; then
-	echo "### Invalid directory `pwd`"
-	exit 1
-fi
 if [ ! -f ./doc/fileobj.1 ]; then
 	echo "### Missing ./doc/fileobj.1"
 	exit 1

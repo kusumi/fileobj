@@ -174,7 +174,7 @@ class Fileobj (fileobj.Fileobj):
             except Exception as e:
                 # Don't unconditionally log an exception for blkdev.
                 if setting.use_debug:
-                    log.error((e, (beg, end)))
+                    log.error(e, (beg, end))
                 beg = x
                 end = x + n
                 self.fd.seek(beg)

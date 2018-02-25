@@ -81,20 +81,23 @@ def __remove_handler(logger):
         logger.removeHandler(hnd)
         hnd.close()
 
-def debug(o):
-    return __log(o, logging.DEBUG)
-def info(o):
-    return __log(o, logging.INFO)
-def warning(o):
-    return __log(o, logging.WARNING)
-def error(o):
-    return __log(o, logging.ERROR)
-def critical(o):
-    return __log(o, logging.CRITICAL)
+def debug(*l):
+    return __log(l, logging.DEBUG)
+def info(*l):
+    return __log(l, logging.INFO)
+def warning(*l):
+    return __log(l, logging.WARNING)
+def error(*l):
+    return __log(l, logging.ERROR)
+def critical(*l):
+    return __log(l, logging.CRITICAL)
 
-def __log(o, level):
+def __log(l, level):
+    assert util.is_seq(l), l
+    if len(l) == 1:
+        l = l[0]
     if _logger:
-        _logger.log(level, util.obj_to_string(o))
+        _logger.log(level, util.obj_to_string(l))
     else:
         return -1
 

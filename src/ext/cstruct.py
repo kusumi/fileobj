@@ -268,6 +268,13 @@ def init():
     fileobj.setting.ext_add_name("file_cstruct_name", "cstruct")
     fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
+    # create an empty file
+    f = fileobj.setting.get_ext_path("cstruct")
+    if not os.path.exists(f):
+        try:
+            fileobj.kernel.fcreat_text(f)
+        except Exception:
+            pass
 
 def cleanup():
     fileobj.setting.ext_delete("file_cstruct_name")

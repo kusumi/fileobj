@@ -116,6 +116,8 @@ def get_status_window_height(scls, fcls):
 
 def get_width(cls, bytes_per_line):
     assert util.is_subclass(cls, panel.Canvas)
+    s = cls.__name__
+    assert "Binary" in s or "Text" in s
     lf = panel.get_min_size(panel.Frame)
     lc = panel.get_min_size(cls)
     o = cls(None, None)
@@ -124,16 +126,22 @@ def get_width(cls, bytes_per_line):
     ret += _get_diff_x(lf, lc)
     return ret
 
-def get_max_bytes_per_line():
+def get_max_bytes_per_line(wspnum):
+    if not wspnum: # when container creates initial wsp
+        wspnum = 1
+    width, cell = __get_min_info()
+    assert width > 0, width
+    assert cell > 0, cell
+    max_bpl = screen.get_size_x() - width * wspnum
+    max_bpl //= (cell * wspnum)
+    return max_bpl
+
+def __get_min_info():
     bc = panel.BinaryCanvas(None, None)
     tc = panel.TextCanvas(None, None)
     lf = panel.get_min_size(panel.Frame)
-    ret = screen.get_size_x()
-    ret -= _get_diff_x(lf, panel.get_min_size(bc))
-    ret -= _get_diff_x(lf, panel.get_min_size(tc))
-    ret -= (bc.offset.x + tc.offset.x)
-    ret //= (bc.get_cell()[0] + tc.get_cell()[0])
-    if ret < 1:
-        return -1
-    else:
-        return ret
+    width = _get_diff_x(lf, panel.get_min_size(bc))
+    width += _get_diff_x(lf, panel.get_min_size(tc))
+    width += (bc.offset.x + tc.offset.x)
+    cell = bc.get_cell()[0] + tc.get_cell()[0]
+    return width, cell

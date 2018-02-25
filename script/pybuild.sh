@@ -23,12 +23,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ ! -f ./script/pybuild.sh ]; then
-	echo "### Invalid directory `pwd`"
+CMD=$1
+if [ "${CMD}" != "build" -a "${CMD}" != "clean" ]; then
+	echo "### Usage: bash ${0} [build|clean] [python]"
 	exit 1
 fi
 
-PYTHON=$1
+PYTHON=$2
 if [ "${PYTHON}" = "" ]; then
 	PYTHON=python
 fi
@@ -39,8 +40,14 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-bash ./script/pyclean.sh ${PYTHON}
-echo
+${PYTHON} ./setup.py clean --all
+if [ $? -ne 0 ]; then
+	echo "### Failed to clean"
+	exit 1
+fi
+if [ "${CMD}" = "clean" ]; then
+	exit 0
+fi
 
 ${PYTHON} ./setup.py build
 if [ $? -ne 0 ]; then

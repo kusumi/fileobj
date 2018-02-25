@@ -400,11 +400,23 @@ def switch_to_bottom_workspace(self, amp, opc, args, raw):
         return RETURN
 
 def add_workspace(self, amp, opc, args, raw):
-    self.co.add_workspace()
+    __add_workspace(self, amp, opc, args, raw, False)
+
+def add_workspace_vertical(self, amp, opc, args, raw):
+    __add_workspace(self, amp, opc, args, raw, True)
+
+def __add_workspace(self, amp, opc, args, raw, vertical):
+    self.co.add_workspace(vertical)
     self.co.repaint()
 
 def split_workspace(self, amp, opc, args, raw):
-    self.co.add_workspace()
+    __split_workspace(self, amp, opc, args, raw, False)
+
+def split_workspace_vertical(self, amp, opc, args, raw):
+    __split_workspace(self, amp, opc, args, raw, True)
+
+def __split_workspace(self, amp, opc, args, raw, vertical):
+    self.co.add_workspace(vertical)
     if args:
         open_buffer(self, amp, opc, args, raw)
     self.co.repaint()
@@ -542,6 +554,11 @@ def set_option(self, amp, opc, args, raw):
             li = l[0]
     if li:
         fn = _set_methods.get(li.seq)
+        if not fn: # li is an alias
+            for o in argl:
+                if literal.test_alias(li, o): # li is an alias of o
+                    fn = _set_methods.get(o.seq)
+                    assert fn, (li.str, o.str)
         fn(self, args)
         self.co.lrepaint()
     else:
@@ -615,6 +632,15 @@ def get_osdep_string():
         _(native.is_enabled()),
         _(screen.has_chgat()),
         _(screen.use_alt_chgat()))
+
+def show_screen(self, amp, opc, args, raw):
+    self.co.show(__get_screen_string(self))
+
+def __get_screen_string(self):
+    return "({0},{1}),{2}".format(
+        screen.get_size_y(),
+        screen.get_size_x(),
+        self.co.get_build_size())
 
 def show_platform(self, amp, opc, args, raw):
     self.co.show("{0} {1}".format(

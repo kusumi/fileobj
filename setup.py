@@ -37,9 +37,15 @@ if __name__ == '__main__':
     from distutils.core import setup, Extension
     import src.version
 
-    # The C extension is enabled by default, but also works without it.
+    # The C extension is enabled by default.
     ext_modules = [Extension("fileobj._native", ["src/_native.c"])]
-    #ext_modules = None
+
+    # Ignore C extension if --no-native is specified.
+    s = "--no-native"
+    if s in sys.argv:
+        ext_modules = None
+        while s in sys.argv:
+            sys.argv.remove(s)
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too

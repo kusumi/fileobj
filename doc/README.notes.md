@@ -1,8 +1,13 @@
 ## General
 
-+ Installation failed due to a missing Python header file. -> **Install *python-devel* package for the Python version in use. The name may differ among platforms, however it's generally called *python-devel* or *python2-devel* or *python3-devel* or something along these lines.**
++ Installation failed due to a missing Python header file. -> **Install *Python.h* via *python-devel* package for the Python version in use. The name may differ among platforms, however it's generally called *python-devel* or *python2-devel* or *python3-devel* or something along these lines. On Debian based Linux distributions, these packages are probably called *libpython-dev* or *libpython3-dev*.**
 
         Python.h: No such file or directory
+
++ Unable to install a missing header file *Python.h*. -> **Run *setup.py* with *--no-native* option. This option mostly provides the same functionality without using C extension.**
+
+        $ sudo python ./setup.py clean --all
+        $ sudo python ./setup.py install --force --record ./install.out --no-native
 
 + Installation warned below warning. -> **This can be ignored. GCC may complain this on some old Python versions.**
 
@@ -29,7 +34,7 @@
 
 ## *BSD
 
-+ Can't install on NetBSD due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. See below pkgsrc example. The binary package name would be for example *py27-curses* for Python 2.7.**
++ Can not install on NetBSD due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. See below pkgsrc example. The binary package name would be for example *py27-curses* for Python 2.7.**
 
         $ uname
         NetBSD
@@ -38,12 +43,12 @@
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
 
-+ Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
++ Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
 
 ## Solaris/illumos
 
-+ Can't enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
++ Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* instead of *CTRL-v*.**
 
 ## Cygwin
 
-+ Can't execute the program after installation. -> **If Python is installed for both Windows and Cygwin, the shebang line of the program (e.g. *#!/usr/bin/fileobj*) may have Windows path which then needs to be manually modified to Cygwin path.**
++ Can not execute the program after installation. -> **If Python is installed for both Windows and Cygwin, the shebang line of the program (e.g. *#!/usr/bin/fileobj*) may have Windows path which then needs to be manually modified to Cygwin path.**

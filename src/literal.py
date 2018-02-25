@@ -92,7 +92,7 @@ class Literal (object):
 
     def alias(self, ref):
         assert self.desc == ref.desc
-        self.ali = ref
+        self.ali = ref # ref is the original of self
         return self.refer(ref)
 
     def match(self, l):
@@ -228,8 +228,8 @@ ctrlw_b       = FastLiteral("<CTRL>wb", (kbd.ctrl('w'), ord('b')), "Change to th
 ctrlw_ctrlb   = FastLiteral("<CTRL>w<CTRL>b", (kbd.ctrl('w'), kbd.ctrl('b')), "Change to the bottom window")
 ctrlw_s       = FastLiteral("<CTRL>ws", (kbd.ctrl('w'), ord('s')), "Split current window")
 ctrlw_ctrls   = FastLiteral("<CTRL>w<CTRL>s", (kbd.ctrl('w'), kbd.ctrl('s')), "Split current window")
-ctrlw_v       = FastLiteral("<CTRL>wv", (kbd.ctrl('w'), ord('v')), "Split current window")
-ctrlw_ctrlv   = FastLiteral("<CTRL>w<CTRL>v", (kbd.ctrl('w'), kbd.ctrl('v')), "Split current window")
+ctrlw_v       = FastLiteral("<CTRL>wv", (kbd.ctrl('w'), ord('v')), "Split current window vertically")
+ctrlw_ctrlv   = FastLiteral("<CTRL>w<CTRL>v", (kbd.ctrl('w'), kbd.ctrl('v')), "Split current window vertically")
 ctrlw_plus    = FastLiteral("<CTRL>w+", (kbd.ctrl('w'), ord('+')), "Increase current window height [count] lines")
 ctrlw_minus   = FastLiteral("<CTRL>w-", (kbd.ctrl('w'), ord('-')), "Decrease current window height [count] lines")
 ctrlw_c       = FastLiteral("<CTRL>wc", (kbd.ctrl('w'), ord('c')), "Close current window")
@@ -311,6 +311,7 @@ s_fobj        = SlowLiteral(":fobj", None, "Print Python object name of the curr
 s_bufsiz      = SlowLiteral(":bufsiz", None, "Print temporary buffer size")
 s_meminfo     = SlowLiteral(":meminfo", None, "Print free/total physical memory")
 s_osdep       = SlowLiteral(":osdep", None, "Print OS dependent information")
+s_screen      = SlowLiteral(":screen", None, "Print screen information")
 s_platform    = SlowLiteral(":platform", None, "Print platform")
 s_hostname    = SlowLiteral(":hostname", None, "Print hostname")
 s_term        = SlowLiteral(":term", None, "Print terminal type")
@@ -331,6 +332,7 @@ s_cmprnextneg = SlowLiteral(":cmprnext!", None, "Compare two buffers starting fr
 s_delmarks    = SlowLiteral(":delmarks", None, "Delete the specified marks")
 s_delmarksneg = SlowLiteral(":delmarks!", None, "Delete all marks for the current buffer except for uppercase marks")
 s_split       = SlowLiteral(":split", None, "Split current window")
+s_vsplit      = SlowLiteral(":vsplit", None, "Split current window vertically")
 s_close       = SlowLiteral(":close", None, "Close current window")
 s_only        = SlowLiteral(":only", None, "Make the current window the only one")
 s_w           = SlowLiteral(":w", None, "Write the whole buffer to the file")
@@ -356,7 +358,15 @@ s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10
 s_set_address = ArgLiteral("address", None, "Set address radix to {16,10,8}")
 s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to {16,10,8}")
 s_set_bpl     = ArgLiteral("bytes_per_line", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}")
+s_set_bpl_    = ArgLiteral("bpl", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}")
 s_set_bpw     = ArgLiteral("bytes_per_window", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}")
+s_set_bpw_    = ArgLiteral("bpw", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}")
+
+# test if li is an alias of o
+def test_alias(li, o):
+    assert li, li.str
+    assert o, o.str
+    return (li.ali is o) and o.desc and o.desc == li.desc
 
 def get_slow_strings():
     return tuple(":/?")
@@ -468,11 +478,8 @@ def init():
     ctrlw_ctrlw.alias(ctrlw_w)
     ctrlw_ctrlt.alias(ctrlw_t)
     ctrlw_ctrlb.alias(ctrlw_b)
-    ctrlw_ctrlv.alias(
-        ctrlw_v.alias(
-            ctrlw_ctrls.alias(ctrlw_s)
-        )
-    )
+    ctrlw_ctrls.alias(ctrlw_s)
+    ctrlw_ctrlv.alias(ctrlw_v)
     ctrlw_c.alias(s_close)
     ctrlw_ctrlo.alias(
         ctrlw_o.alias(s_only)
@@ -486,6 +493,12 @@ def init():
     ZQ.alias(s_qneg)
     s_brewind.alias(s_bfirst)
     s_bNext.alias(s_bprev)
+    s_set_bpw_.alias(
+        s_set_bpw.refer(s_set)
+    )
+    s_set_bpl_.alias(
+        s_set_bpl.refer(s_set)
+    )
 
     # refer
     gg.refer(G)
@@ -550,9 +563,6 @@ def init():
     )
     s_set_status.refer(
         s_set_address.refer(s_set)
-    )
-    s_set_bpw.refer(
-        s_set_bpl.refer(s_set)
     )
 
     def fn(l, o, cls):

@@ -1,6 +1,6 @@
 ## Examples
 
-+ Note that some commands can take *[count]* prefix, see *[List of commands](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.list_of_commands.md)* for details.
++ Note that some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
 
 + Note that *offset 0* means the first byte of the buffer (*offset 1* is the second byte).
 
@@ -358,7 +358,7 @@
         $ fileobj ./a.out
           (command)N
 
-+ Open a file *./a.out* and search for "\x7fELF" (can't search for ascii string in "\x??\x??.." or "\X??.." format).
++ Open a file *./a.out* and search for "\x7fELF" (can not search for ascii string in "\x??\x??.." or "\X??.." format).
 
         $ fileobj ./a.out
           (command)/\x7fELF<ENTER>
@@ -367,7 +367,7 @@
           or
           (command)/\X7f454c46<ENTER>
 
-+ Open a file *./a.out* and search for "\x41\x42\x43" (can't search for ascii string in "\x??\x??.." or "\X??.." format).
++ Open a file *./a.out* and search for "\x41\x42\x43" (can not search for ascii string in "\x??\x??.." or "\X??.." format).
 
         $ fileobj ./a.out
           (command)/\x41\x42\x43<ENTER>
@@ -489,7 +489,7 @@
           and press escape or CTRL-c or V to exit
           (command)<ESC>
 
-+ Open a file *./a.out* and enter block visual mode (see *[Notes for \*BSD](https://github.com/kusumi/fileobj/blob/v0.7/doc/README.notes.md#notes-for-bsds)* for \*BSD).
++ Open a file *./a.out* and enter block visual mode (also see *[Notes](README.notes.md)*).
 
         $ fileobj ./a.out
           (command)CTRL-v
@@ -715,7 +715,7 @@
           (command)26~
           (command):wq
 
-+ Map binary data to C struct defined in *${HOME}/.fileobj/cstruct*.
++ Map binary data to C struct defined in *${HOME}/.fileobj/cstruct*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless the file path which defines the C struct(s) is specified in the first argument.
 
         $ cat > ~/.fileobj/cstruct << EOF
         > struct test1 {
@@ -743,10 +743,10 @@
             string s[32]; "\x01"
         };
 
-+ Map binary data to C struct using a predefined example in *fileobj/script/cstruct.usb*.
++ Map binary data to C struct using a predefined example in *fileobj/script/cstruct/usb*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless *fileobj/script/cstruct/usb* is specified in the first argument.
 
         $ cd /path/to/fileobj/source
-        $ cp ./script/cstruct.usb ~/.fileobj/cstruct
+        $ cp ./script/cstruct/usb ~/.fileobj/cstruct
         $ cd /path/to/somewhere
         $ od -tx1 -Ax ./usb_device_descriptor.bin
         000000 12 01 00 03 09 00 03 09 6b 1d 03 00 06 02 03 02

@@ -40,3 +40,6 @@ def get_repository_archive_url():
 
 def get_readme_url():
     return "https://github.com/kusumi/fileobj/blob/v{0}.{1}/README.md".format(_[0], _[1])
+
+def get_doc_url(s):
+    return "https://github.com/kusumi/fileobj/blob/v{0}.{1}/doc/README.{2}.md".format(_[0], _[1], s)

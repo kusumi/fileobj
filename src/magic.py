@@ -72,8 +72,8 @@ class EXEMagic (_magic):
         return "EXE"
 
 class PythonMagic (_magic):
-    """Magic definition is taken from
-Python-3.6.0b2/Lib/importlib/_bootstrap_external.py"""
+    """Magic definition is taken from https://github.com/
+python/cpython/blob/master/Lib/importlib/_bootstrap_external.py"""
     def __init__(self):
         self.__name = "PYC"
 
@@ -130,8 +130,11 @@ Python-3.6.0b2/Lib/importlib/_bootstrap_external.py"""
             v = 3.4
         elif x in (3320, 3330, 3340, 3350, 3351):
             v = 3.5
-        elif x in (3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378):
+        elif x in (3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378, \
+            3379):
             v = 3.6
+        elif x in (3390, 3391, 3392, 3393):
+            v = 3.7
         elif 3000 <= x < 4000: # is this good ?
             v = 3
         return v

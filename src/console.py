@@ -85,7 +85,7 @@ class Console (object):
             util.add_method(self, fn, name)
         self.__fn[li.seq] = getattr(self, name)
         for o in li.children:
-            if o.desc and o.desc == li.desc:
+            if literal.test_alias(o, li): # o is an alias of li
                 self.__add_method(o, module, name)
 
     def handle_signal():
@@ -230,7 +230,7 @@ def printl(x, s, attr=screen.A_DEFAULT):
         _scr.addstr(0, x, s, attr | screen.A_COLOR)
     except Exception as e:
         if len(s) < screen.get_size_x() - 1:
-            log.debug((e, x, s))
+            log.debug(e, x, s)
 
 def clrl():
     try:
@@ -297,3 +297,7 @@ def get_position_y():
 
 def get_position_x():
     return 0
+
+def get_default_class():
+    from . import void
+    return void.Console

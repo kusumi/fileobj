@@ -1,3 +1,23 @@
+v0.7.57
+=======
+- Minor fixes and improvement
+- Change CTRL-w,v and CTRL-w,CTRL-v to vertical split
+- Add :vsplit
+- Add :screen
+- Add :set bpl (alias for :set bytes_per_line)
+- Add :set bpw (alias for :set bytes_per_window)
+- Add --bpl (alias for --bytes_per_line)
+- Add --bpw (alias for --bytes_per_window)
+- Add --no-native option for setup.py
+- Change -O to do vertical split (align with -O in vim)
+- Change -o to do horizontal version of -O (align with -o in vim)
+- Rename script/profile to script/profile.py
+- Remove script/fedora.spec
+- Remove script/pyclean.sh (integrate into script/pybuild.sh)
+- Move script/cstruct.usb to script/cstruct/usb
+- Move script/cstruct.hammer to script/cstruct/hammer
+- Create empty file ~/.fileobj/cstruct if it does not exist
+
 v0.7.56
 =======
 - Minor fixes and improvement

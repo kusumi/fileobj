@@ -93,16 +93,16 @@ def dispatch(optargs=None):
     parser.add_option("-B", action="store_true", default=False, help=usage.B)
     parser.add_option("-d", action="store_true", default=False, help=usage.d)
     parser.add_option("-x", action="store_true", default=False, help=usage.x)
-    parser.add_option("-o", type="int", default=1, metavar=usage.o_metavar, help=usage.o)
+    parser.add_option("-o", action="store_true", default=False, help=usage.o)
     parser.add_option("-O", action="store_true", default=False, help=usage.O)
 
-    parser.add_option("--bytes_per_line", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
-    parser.add_option("--bytes_per_window", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
+    parser.add_option("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
+    parser.add_option("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
     parser.add_option("--terminal_height", type="int", default=setting.terminal_height, metavar=usage.terminal_height_metavar, help=usage.terminal_height)
     parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar=usage.terminal_width_metavar, help=usage.terminal_width)
     parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_option("--verbose_window", action="store_true", default=(setting.use_full_status_window or setting.use_status_window_frame), help=usage.verbose_window)
+    parser.add_option("--verbose_window", action="store_true", default=(setting.use_full_status_window and setting.use_status_window_frame), help=usage.verbose_window)
     parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
@@ -112,6 +112,7 @@ def dispatch(optargs=None):
     parser.add_option("--env", action="store_true", default=False, help=suppress_help)
     parser.add_option("--history", default=None, metavar="<path>", help=suppress_help)
     parser.add_option("--marks", default=None, metavar="<path>", help=suppress_help)
+    parser.add_option("--wspnum", type="int", default=1, help=suppress_help)
 
     for s in allocator.iter_module_name():
         parser.add_option("--" + s, action="store_true", default=False, help=suppress_help)
@@ -156,10 +157,9 @@ def dispatch(optargs=None):
         setting.use_address_num_offset = True
     if opts.x:
         setting.status_num_radix = 16
-    wspnum = opts.o
-    if opts.O:
+    if opts.o or opts.O:
         wspnum = len(args)
-    if wspnum < 1:
+    else:
         wspnum = 1
     if opts.terminal_height > 0:
         setting.terminal_height = opts.terminal_height
@@ -168,6 +168,14 @@ def dispatch(optargs=None):
     if opts.verbose_window:
         setting.use_full_status_window = True
         setting.use_status_window_frame = True
+
+    # force wspnum and split direction
+    absnum = abs(opts.wspnum)
+    if absnum != 1:
+        if absnum > wspnum:
+            wspnum = absnum
+        if opts.wspnum < 0:
+            opts.O = True
 
     l = []
     for o in parser.option_list:
@@ -204,8 +212,8 @@ def dispatch(optargs=None):
         msg = "Failed to make user directory {0}".format(setting.user_dir)
         log.error(msg)
 
-    log.debug((util.get_os_name(), util.get_os_release(), util.get_cpu_name()))
-    log.debug((kernel.get_term_info(), kernel.get_lang_info()))
+    log.debug(util.get_os_name(), util.get_os_release(), util.get_cpu_name())
+    log.debug(kernel.get_term_info(), kernel.get_lang_info())
     log.debug("RAM {0}".format(methods.get_meminfo_string()))
     log.debug(methods.get_osdep_string())
 
@@ -247,13 +255,15 @@ def dispatch(optargs=None):
                     s1, util.get_size_repr(setting.regfile_soft_limit), s2))
 
         co = container.Container()
-        if co.init(args, wspnum,
-            opts.bytes_per_line, opts.bytes_per_window, msg) == -1:
+        if co.init(args, wspnum, True if opts.O else False,
+            opts.bytes_per_line, opts.bytes_per_window) == -1:
             __error("Terminal ({0},{1}) does not have enough room".format(
                 screen.get_size_y(), screen.get_size_x()))
         if setting.use_debug:
             d = util.get_import_exceptions()
             assert not d, d
+        if msg:
+            co.flash(msg)
         co.repaint()
         co.dispatch()
     except Exception as e:
