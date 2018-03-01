@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-from __future__ import print_function
 import os
 import sys
 
@@ -500,12 +499,6 @@ def __get_setting_key(envname):
 
 def __get_home():
     return os.path.expanduser("~")
-
-def print_env():
-    for k, v in iter_defined_env():
-        print(k + "=" + v)
-    for k, v in iter_defined_ext_env():
-        print(k + "=" + v)
 
 def iter_env_name():
     for x in sorted(__iter_env_name()):

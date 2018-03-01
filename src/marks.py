@@ -119,18 +119,5 @@ def _data_to_string(k, v):
     assert len(k) == 1
     return k + str(v)
 
-def print_marks(f):
-    l = []
-    for ff, d in Marks(f):
-        l.append(ff)
-        for k, v in sorted(d.items()):
-            l.append(get_mark_repr(k, v))
-        l.append('')
-    if l:
-        s = '\n'.join(l)
-    else:
-        s = "No mark"
-    util.printf(s.rstrip())
-
 def get_mark_repr(k, v):
     return "  '{0}' {1}[B]".format(k, v)

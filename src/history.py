@@ -173,12 +173,3 @@ def _string_to_data(s):
 
 def _data_to_string(k, v):
     return "{0} {1}\n".format(k, v)
-
-def print_history(f):
-    for k, v in History(f):
-        for i in range(len(v)):
-            if i == 0:
-                s = " <NEW>"
-            else:
-                s = ''
-            util.printf("{0} \"{1}\"{2}".format(i, v[i], s))

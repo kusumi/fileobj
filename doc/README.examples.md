@@ -2,15 +2,43 @@
 
 + Note that some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
 
-+ Note that *offset 0* means the first byte of the buffer (*offset 1* is the second byte).
++ Note that *offset 0* of the buffer means the first byte of the buffer. *offset 1* is the second byte.
 
-+ Print the help message and exit.
+### Command line options (also see fileobj(1))
+
++ Print help message and exit.
 
         $ fileobj -h
 
-+ Print the list of commands and exit.
++ Print the list of available editor commands and exit.
 
         $ fileobj --command
+
++ Use read-only mode.
+
+        $ fileobj -R
+
++ Use verbose status window format instead of the default one.
+
+        $ fileobj --verbose_window
+
++ Use green foreground and black background color.
+
+        $ fileobj --fg=green --bg=black
+
++ Print fixed *bytes per line* within an editor window.
+
+        $ fileobj --bytes_per_line=8
+
++ Print fixed *bytes per window* within an editor window.
+
+        $ fileobj --bytes_per_window=512
+
++ Always keep the same window size after splitting a window.
+
+        $ fileobj --bytes_per_window=even
+
+### Basic commands
 
 + Run the program with an empty buffer.
 
@@ -21,12 +49,14 @@
         $ fileobj
           (command):q<ENTER>
 
-+ Run the program and discard input that has been typed after the previous command.
++ Run the program and discard incomplete command which has been typed after the previous command.
 
         $ fileobj
           (command)ttttttttt<ESC>
           (command):elhwefsdhnkfjsd<ESC>
           (command)[123456789<ESC>
+
+### Open a file
 
 + Open a file *./a.out*.
 
@@ -56,6 +86,8 @@
 
         $ fileobj
           (command):w ./a.out<ENTER>
+
+### Move a cursor
 
 + Open a file *./a.out* and move the cursor.
 
@@ -167,6 +199,8 @@
         $ fileobj ./a.out
           (command)(move the cursor)
           (command)CTRL-g
+
+### Edit a buffer
 
 + Open a file *./a.out* and delete a character.
 
@@ -319,6 +353,44 @@
           (command):set ascii<ENTER>
           (command)4RABC<ESC>
 
+### Rotate a buffer contents
+
++ Open an empty buffer and fill in the first 512 bytes with a pattern of "\x55\xaa" and save it as *./a.img*.
+
+        $ fileobj
+          (command)256i55aa<ESC>
+          (command):wq ./a.img<ENTER>
+
++ Open above *./a.img* and overwrite the first 4 bytes with "\x7fELF".
+
+        $ fileobj ./a.img
+          (command)R7f454c46<ESC>
+          or
+          (command)R7f<ESC>
+          (command):set ascii<ENTER>
+          (command)l
+          (command)RELF<ESC>
+
++ Open above *./a.img* and rotate the whole buffer 1 bit to right and then restore.
+
+        $ fileobj ./a.img
+          (command)>>
+          (command)G
+          (command)<<
+
++ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to right.
+
+        $ fileobj ./a.img
+          (command)8>>
+
++ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to left.
+
+        $ fileobj ./a.img
+          (command)G
+          (command)8<<
+
+### Undo a buffer
+
 + Open a file *./a.out* and undo.
 
         $ fileobj ./a.out
@@ -337,6 +409,8 @@
           (command)(do some edit)
           (command)(do undo)
           (command)CTRL-r
+
+### Search a buffer
 
 + Open a file *./a.out* and search forward for "GNU".
 
@@ -376,6 +450,21 @@
           or
           (command)/ABC<ENTER>
 
+### Mark a buffer
+
++ Open a file *./a.out*, move the cursor to offset 1024, and mark that offset as 'a'.
+
+        $ fileobj ./a.out
+          (command)1024go
+          (command)ma
+
++ Open a file *./a.out* and jump to above mark 'a'.
+
+        $ fileobj ./a.out
+          (command)`a
+
+### Partially open a file
+
 + Open a file *./a.out* from offset 1024.
 
         $ fileobj ./a.out@1024
@@ -405,6 +494,8 @@
         $ fileobj ./a.out@:0x400
         or
         $ fileobj ./a.out@-0x400
+
+### Multiple files
 
 + Open a file *./a.out* and close the buffer.
 
@@ -436,18 +527,24 @@
 
         $ fileobj ./a.out@0x400:0x200 ./b.out@:4096
 
-+ Open files *./a.out* and *./b.out*, and start with a window for each.
+### Multiple windows
+
++ Open files *./a.out* and *./b.out*, and start with horizontally splitted windows assigned for each buffer.
+
+        $ fileobj ./a.out ./b.out -o
+
++ Open files *./a.out* and *./b.out*, and start with vertically splitted windows assigned for each buffer.
 
         $ fileobj ./a.out ./b.out -O
 
 + Open files *./a.out*, *./b.out*, *./c.out* with 3 windows, and move to the next window.
 
-        $ fileobj ./a.out ./b.out -O
+        $ fileobj ./a.out ./b.out ./c.out -o
           (command)CTRL-W w
 
 + Open files *./a.out*, *./b.out*, *./c.out* with 3 windows, and close all windows except for the current window.
 
-        $ fileobj ./a.out ./b.out ./c.out -O
+        $ fileobj ./a.out ./b.out ./c.out -o
           (command)CTRL-W o
           or
           (command):only<ENTER>
@@ -474,6 +571,8 @@
           (command)CTRL-W c
           or
           (command):close<ENTER>
+
+### Visual mode
 
 + Open a file *./a.out* and enter visual mode.
 
@@ -535,70 +634,66 @@
           then
           (command)rff
 
-+ Open a file *./a.out* in readonly mode.
++ Open a file *./a.out* and rotate visually selected region.
 
-        $ fileobj ./a.out -R
-
-+ Open a file *./a.out* in verbose window mode.
-
-        $ fileobj ./a.out --verbose_window
-
-+ Open a file *./a.out* with green foreground and black background color.
-
-        $ fileobj ./a.out --fg=green --bg=black
-
-+ Open a file *./a.out* with 8 bytes per line (whereas default is maximum 2^x that fits in the terminal).
-
-        $ fileobj ./a.out --bytes_per_line=8
-
-+ Open a file *./a.out* with 512 bytes per window (whereas default is maximum bytes that fits in the terminal using the current bytes per line value).
-
-        $ fileobj ./a.out --bytes_per_window=512
-
-+ Open a file *./a.out* and always keep the same window size after split.
-
-        $ fileobj ./a.out --bytes_per_window=even
-          (command)CTRL-W s
-          (command)CTRL-W s
-          (command)CTRL-W s
-          ...
-          (command)CTRL-W c
-          (command)CTRL-W c
-          (command)CTRL-W c
-
-+ Open an empty buffer and fill in the first 512 bytes with a pattern of "\x55\xaa" and save it as *./a.img*.
-
-        $ fileobj
-          (command)256i55aa<ESC>
-          (command):wq ./a.img<ENTER>
-
-+ Open above *./a.img* and overwrite the first 4 bytes with "\x7fELF".
-
-        $ fileobj ./a.img
-          (command)R7f454c46<ESC>
+        $ fileobj ./a.out
+          (command)v
           or
-          (command)R7f<ESC>
-          (command):set ascii<ENTER>
-          (command)l
-          (command)RELF<ESC>
-
-+ Open above *./a.img* and rotate the whole buffer 1 bit to right and then restore.
-
-        $ fileobj ./a.img
+          (command)V
+          or
+          (command)CTRL-v
+          then
+          (command)(move the cursor)
+          then
           (command)>>
-          (command)G
-          (command)<<
 
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to right.
+### Set editor options (also see fileobj(1))
 
-        $ fileobj ./a.img
-          (command)8>>
++ Set binary edit mode (unset ascii edit mode, default).
 
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to left.
+        $ fileobj ./a.out
+          (command):set binary<ENTER>
 
-        $ fileobj ./a.img
-          (command)G
-          (command)8<<
++ Set ascii edit mode (unset binary edit mode).
+
+        $ fileobj ./a.out
+          (command):set ascii<ENTER>
+
++ Set *bytes per line* to the specified number, "max", "min" or "auto".
+
+        $ fileobj ./a.out
+          (command):set bytes_per_line 8<ENTER>
+          or
+          (command):set bpl 8<ENTER>
+
++ Set *bytes per window* to the specified number, "even" or "auto".
+
+        $ fileobj ./a.out
+          (command):set bytes_per_window 512<ENTER>
+          or
+          (command):set bpw 512<ENTER>
+
++ Ignore the case of alphabets on search.
+
+        $ fileobj ./a.out
+          (command):set ic<ENTER>
+
++ Unset above ic mode (default).
+
+        $ fileobj ./a.out
+          (command):set noic<ENTER>
+
++ Search wrap around the end of the buffer (default).
+
+        $ fileobj ./a.out
+          (command):set ws<ENTER>
+
++ Unset above ws mode.
+
+        $ fileobj ./a.out
+          (command):set nows<ENTER>
+
+### Open a block device
 
 + Open a loop device */dev/loop0* on Linux.
 
@@ -626,18 +721,7 @@
           or
           (command)[327680KiB]go
 
-+ Open a block device */dev/sdb*, move the cursor to offset 320 MiB, and mark that offset to 'a'.
-
-        $ sudo fileobj /dev/sdb
-          (command)[320MiB]go
-          (command)ma
-
-+ Open a block device */dev/sdb* and jump to the mark 'a'.
-
-        $ sudo fileobj /dev/sdb
-          (command)`a
-
-+ Open a block device */dev/sdb* and print the sector size recognized by the userspace program.
++ Open a block device */dev/sdb* and print sector size.
 
         $ sudo fileobj /dev/sdb
           (command):sector<ENTER>
@@ -648,17 +732,9 @@
           (command)(move the cursor)
           (command)gCTRL-g
 
-+ Open a file *./a.out* and then open a help page.
+### Open address space of a user process (experimental and platform specific feature)
 
-        $ fileobj ./a.out
-          (command):help<ENTER>
-
-+ Open a file *./a.out* and then open a list of extensions.
-
-        $ fileobj ./a.out
-          (command):extensions<ENTER>
-
-+ Open and modify userspace of a process *(experimental feature available only on Linux and \*BSD)*. Note that this behavior is OS specific.
++ Prepare a test program *test1* which continues to print "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 
         # uname
         Linux
@@ -684,15 +760,9 @@
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        abcdefghijklmnopqrstuvwxyz <- .rodata section overwritten with lower case (see below)
-        abcdefghijklmnopqrstuvwxyz
-        abcdefghijklmnopqrstuvwxyz
-        abcdefghijklmnopqrstuvwxyz
-        abcdefghijklmnopqrstuvwxyz
-        abcdefghijklmnopqrstuvwxyz
-        ^C
+        ...
 
-+ Modify .rodata section while running test1.
++ Modify .rodata section while running *test1*.
 
         # objdump -s -j .rodata ./test1
         
@@ -708,14 +778,47 @@
           (command)26~
           (command):wq
 
-+ Or if the executable binary was specified in absolute path (i.e. */path/to/test1*), use *@objdump[section]* syntax to open the entire .rodata section.
++ *test1* starts to print "abcdefghijklmnopqrstuvwxyz".
+
+        ...
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        abcdefghijklmnopqrstuvwxyz <- .rodata section overwritten in lower case
+        abcdefghijklmnopqrstuvwxyz
+        abcdefghijklmnopqrstuvwxyz
+        abcdefghijklmnopqrstuvwxyz
+        abcdefghijklmnopqrstuvwxyz
+        abcdefghijklmnopqrstuvwxyz
+        ^C
+
++ If *test1* was executed via absolute path (i.e. */path/to/test1*), *@objdump[section]* syntax can be used to open the entire .rodata section.
 
         # fileobj pid8549@objdump.rodata
           (command)/A<ENTER>
           (command)26~
           (command):wq
 
-+ Map binary data to C struct defined in *${HOME}/.fileobj/cstruct*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless the file path which defines the C struct(s) is specified in the first argument.
+### Extensions
+
++ Extensions open a new buffer in text only representation.
+
+#### :extensions extension
+
++ Open a list of extensions buffer.
+
+        $ fileobj
+          (command):extensions<ENTER>
+
+#### :help extension
+
++ Open a usage buffer.
+
+        $ fileobj
+          (command):help<ENTER>
+
+#### :cstruct extension
+
++ Define a C struct *test1* in *${HOME}/.fileobj/cstruct*.
 
         $ cat > ~/.fileobj/cstruct << EOF
         > struct test1 {
@@ -727,8 +830,19 @@
         > string s[32];
         > };
         > EOF
+
++ Open a buffer */path/to/data* which contains the data in interest.
+
+        $ fileobj /path/to/data
+
++ Open a :cstruct buffer which maps data to the C struct *test1*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless the file path is specified in the first argument before the C struct name.
+
         $ fileobj /path/to/data
           (command):cstruct test1<ENTER>
+
++ Save :cstruct buffer it as *./test1.out*.
+
+        ...
           (command):wq ./test1.out<ENTER>
         $ cat ./test1.out
         struct test1 {
@@ -743,7 +857,7 @@
             string s[32]; "\x01"
         };
 
-+ Map binary data to C struct using a predefined example in *fileobj/script/cstruct/usb*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless *fileobj/script/cstruct/usb* is specified in the first argument.
++ Another example using a predefined example in *fileobj/script/cstruct/usb*.
 
         $ cd /path/to/fileobj/source
         $ cp ./script/cstruct/usb ~/.fileobj/cstruct

@@ -30,11 +30,9 @@ from . import allocator
 from . import console
 from . import container
 from . import env
-from . import history
 from . import kernel
 from . import literal
 from . import log
-from . import marks
 from . import methods
 from . import package
 from . import path
@@ -98,8 +96,6 @@ def dispatch(optargs=None):
 
     parser.add_option("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
     parser.add_option("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
-    parser.add_option("--terminal_height", type="int", default=setting.terminal_height, metavar=usage.terminal_height_metavar, help=usage.terminal_height)
-    parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar=usage.terminal_width_metavar, help=usage.terminal_width)
     parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
     parser.add_option("--verbose_window", action="store_true", default=(setting.use_full_status_window and setting.use_status_window_frame), help=usage.verbose_window)
@@ -107,11 +103,10 @@ def dispatch(optargs=None):
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
 
-    parser.add_option("--executable", action="store_true", default=False, help=suppress_help)
+    # hidden options
     parser.add_option("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
-    parser.add_option("--env", action="store_true", default=False, help=suppress_help)
-    parser.add_option("--history", default=None, metavar="<path>", help=suppress_help)
-    parser.add_option("--marks", default=None, metavar="<path>", help=suppress_help)
+    parser.add_option("--terminal_height", type="int", default=setting.terminal_height, metavar="<terminal_height>", help=suppress_help)
+    parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar="<terminal_width>", help=suppress_help)
     parser.add_option("--wspnum", type="int", default=1, help=suppress_help)
 
     for s in allocator.iter_module_name():
@@ -127,18 +122,6 @@ def dispatch(optargs=None):
     if opts.sitepkg:
         for x in package.get_paths():
             util.printf(x)
-        return
-    if opts.executable:
-        util.printf(util.get_python_executable_string())
-        return
-    if opts.env:
-        env.print_env()
-        return
-    if opts.history:
-        history.print_history(opts.history)
-        return
-    if opts.marks:
-        marks.print_marks(opts.marks)
         return
 
     targs = util.Namespace(e=None, tb=[], done=False)
@@ -161,17 +144,17 @@ def dispatch(optargs=None):
         wspnum = len(args)
     else:
         wspnum = 1
-    if opts.terminal_height > 0:
-        setting.terminal_height = opts.terminal_height
-    if opts.terminal_width > 0:
-        setting.terminal_width = opts.terminal_width
     if opts.verbose_window:
         setting.use_full_status_window = True
         setting.use_status_window_frame = True
 
-    # force wspnum and split direction
+    # hidden options
+    if opts.terminal_height > 0:
+        setting.terminal_height = opts.terminal_height
+    if opts.terminal_width > 0:
+        setting.terminal_width = opts.terminal_width
     absnum = abs(opts.wspnum)
-    if absnum != 1:
+    if absnum != 1: # force wspnum and split direction
         if absnum > wspnum:
             wspnum = absnum
         if opts.wspnum < 0:
@@ -230,9 +213,7 @@ def dispatch(optargs=None):
 
         assert literal.init() != -1
         if screen.init(opts.fg, opts.bg) == -1:
-            __error("Unable to retrieve terminal size, consider using "
-                "--terminal_height and --terminal_width options "
-                "to manually specify terminal size")
+            __error("Unable to retrieve terminal size")
         assert console.init() != -1
 
         if opts.B:

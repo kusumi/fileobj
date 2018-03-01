@@ -33,7 +33,6 @@ def get_project_archive_url():
 
 def get_repository_url():
     return "https://github.com/kusumi/fileobj/"
-    #return "https://github.com/kusumi/fileobj/tree/v{0}.{1}/".format(_[0], _[1])
 
 def get_repository_archive_url():
     return "https://github.com/kusumi/fileobj/archive/v{0}.{1}.{2}.tar.gz".format(*_)

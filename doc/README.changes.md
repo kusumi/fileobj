@@ -1,3 +1,11 @@
+## v0.7.58
++ Minor fixes and improvement
++ Fix a bug (:set bytes_per_window auto/even)
++ Fix a bug (fail to catch exception on too small initial terminal size)
++ Remove --terminal_height
++ Remove --terminal_width
++ Improve doc/README.examples.md
+
 ## v0.7.57
 + Minor fixes and improvement
 + Change CTRL-w,v and CTRL-w,CTRL-v to vertical split

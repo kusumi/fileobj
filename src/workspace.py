@@ -38,8 +38,8 @@ BUILD_RETRY  = -2
 class Workspace (object):
     def __init__(self, bpl):
         self.__bpl = 1
-        if self.set_bytes_per_line(bpl) == -1:
-            self.set_bytes_per_line("auto")
+        self.set_bytes_per_line(bpl)
+        assert self.__bpl >= 1, self.__bpl
         self.__windows = ()
         self.__fileopss = []
         self.__consoles = []
@@ -551,4 +551,6 @@ class Workspace (object):
     def set_bytes_per_line(self, bpl):
         assert isinstance(bpl, int)
         assert self.__bpl > 0
+        if bpl == -1: # possible on container init
+            return -1
         self.__bpl = bpl

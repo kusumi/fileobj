@@ -51,22 +51,6 @@
                                 but makes all windows have the same size when a new
                                 window is added. If this option is not specified, the
                                 program assumes "auto" is specified.
-          --terminal_height=<terminal_height>
-                                Set fixed number of height actually used within the
-                                terminal. If <terminal_height> is smaller than the
-                                actual terminal size, the rest of space is unused. If
-                                <terminal_height> is larger than the actual terminal
-                                size, this option is ignored. This option is usually
-                                unnecessary as the program retrieves the terminal
-                                height by default.
-          --terminal_width=<terminal_width>
-                                Set fixed number of width actually used within the
-                                terminal. If <terminal_width> is smaller than the
-                                actual terminal size, the rest of space is unused. If
-                                <terminal_width> is larger than the actual terminal
-                                size, this option is ignored. This option is usually
-                                unnecessary as the program retrieves the terminal
-                                width by default.
           --fg=<color>          Set foreground color of the terminal. Available colors
                                 for <color> are "black", "blue", "cyan", "green",
                                 "magenta", "red", "white" and "yellow". If neither

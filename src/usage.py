@@ -66,7 +66,6 @@ Show the buffer size and current position in hexadecimal.
 o = _("""
 Start the program with each buffer given by \fIpaths\fP in horizontally splitted windows, as long as the terminal has enough size to accommodate windows.
 """)
-o_metavar = _metavar("num")
 
 O = _("""
 Start the program with each buffer given by \fIpaths\fP in vertically splitted windows, as long as the terminal has enough size to accommodate windows.
@@ -90,22 +89,6 @@ Specifying "even" does not set fixed number of bytes, but makes all windows have
 If this option is not specified, the program assumes "auto" is specified.
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
-
-terminal_height = _("""
-Set fixed number of height actually used within the terminal.
-If \fI<terminal_height>\fP is smaller than the actual terminal size, the rest of space is unused.
-If \fI<terminal_height>\fP is larger than the actual terminal size, this option is ignored.
-This option is usually unnecessary as the program retrieves the terminal height by default.
-""")
-terminal_height_metavar = _metavar("terminal_height")
-
-terminal_width = _("""
-Set fixed number of width actually used within the terminal.
-If \fI<terminal_width>\fP is smaller than the actual terminal size, the rest of space is unused.
-If \fI<terminal_width>\fP is larger than the actual terminal size, this option is ignored.
-This option is usually unnecessary as the program retrieves the terminal width by default.
-""")
-terminal_width_metavar = _metavar("terminal_width")
 
 fg = _("""
 Set foreground color of the terminal.

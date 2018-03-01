@@ -929,7 +929,7 @@ class Container (object):
                         ret = 1
                     break
         for o in self.__workspaces:
-            o.set_bytes_per_line(ret)
+            assert o.set_bytes_per_line(ret) != -1
         # assert the result
         prev = -1
         for o in self.__workspaces:
@@ -984,6 +984,8 @@ class Container (object):
 
     def set_bytes_per_window(self, arg):
         ret = self.__find_bytes_per_window(arg)
+        if ret is None: # auto or even
+            return
         if ret == -1:
             return -1
         prev = self.__bpw
@@ -996,10 +998,11 @@ class Container (object):
         if not arg:
             arg = "auto"
         if arg == "auto":
-            return -1
+            self.__bpw = -1
+            return
         elif arg == "even":
             setting.use_even_size_window = True
-            return -1
+            return
         else:
             try:
                 return int(arg)
