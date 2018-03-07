@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017, Tomohiro Kusumi
+ * Copyright (c) 2018, Tomohiro Kusumi
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,36 +22,74 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/mount.h>
+#include <sys/disk.h>
 
-#include <stdint.h>
+static int get_blkdev_info(const char *path, blkdev_info_t *b)
+{
+	int fd;
+	uint64_t blkcount = 0;
 
-typedef struct blkdev_info {
-	uint64_t size;
-	int sector_size;
-	char label[64];
-} blkdev_info_t;
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return -errno;
 
-#if defined __linux__
-#include "./_linux.c"
-#elif defined __NetBSD__
-#include "./_netbsd.c"
-#elif defined __OpenBSD__
-#include "./_openbsd.c"
-#elif defined __FreeBSD__
-#include "./_freebsd.c"
-#elif defined __DragonFly__
-#include "./_dragonflybsd.c"
-#elif defined __APPLE__ /* Apple */
-#include "TargetConditionals.h"
-#if defined TARGET_OS_MAC /* OS X */
-#include "./_darwin.c"
-#else
-#include "./_xnix.h"
-#endif
-#elif defined __sun__
-#include "./_illumos.c"
-#elif defined __CYGWIN__
-#include "./_cygwin.c"
-#else
-#include "./_xnix.h"
-#endif
+	memset(b, 0, sizeof(*b));
+
+	if (ioctl(fd, DKIOCGETBLOCKCOUNT, &blkcount) == -1) {
+		close(fd);
+		return -errno;
+	}
+
+	if (ioctl(fd, DKIOCGETBLOCKSIZE, &b->sector_size) == -1) {
+		close(fd);
+		return -errno;
+	}
+	b->size = blkcount * b->sector_size;
+
+	close(fd);
+	return 0;
+}
+
+static long ptrace_peektext(pid_t pid, long long addr)
+{
+	return -EOPNOTSUPP;
+}
+
+static long ptrace_peekdata(pid_t pid, long long addr)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_poketext(pid_t pid, long long addr, long data)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_pokedata(pid_t pid, long long addr, long data)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_attach(pid_t pid)
+{
+	return -EOPNOTSUPP;
+}
+
+static int ptrace_detach(pid_t pid)
+{
+	return -EOPNOTSUPP;
+}
+
+static int get_ptrace_word_size(void)
+{
+	return -1;
+}

@@ -265,7 +265,7 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    fileobj.setting.ext_add_name("file_cstruct_name", "cstruct")
+    fileobj.setting.ext_add_name("file_name_cstruct", "cstruct")
     fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
     # create an empty file
@@ -277,7 +277,7 @@ def init():
             pass
 
 def cleanup():
-    fileobj.setting.ext_delete("file_cstruct_name")
+    fileobj.setting.ext_delete("file_name_cstruct")
     fileobj.setting.ext_delete("use_cstruct_libc")
 
 init()

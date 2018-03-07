@@ -54,9 +54,12 @@ _panel
                 visual.ExtBinaryCanvas
             extension.ExtTextCanvas
         StatusCanvas
-            FullStatusCanvas
+            VerboseStatusCanvas
             SingleStatusCanvas
 """
+
+# XXX This needs to be per workspace for vertical split.
+address_num_width = 8
 
 class _panel (object):
     def __init__(self, siz, pos):
@@ -129,7 +132,7 @@ class binary_addon (object):
     def get_cell(self):
         return 3, 1
     def get_offset(self):
-        return 1, setting.address_num_width + 3
+        return 1, address_num_width + 3
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
@@ -299,25 +302,25 @@ class DisplayCanvas (Canvas):
         self.__init_highlight_attrs()
 
     def __init_highlight_attrs(self):
+        attr_posstr = []
+        attr_cursor = []
+        attr_search = []
+        attr_visual = []
         # A_STANDOUT may disappear
         if setting.use_tmux_caveat and \
             kernel.is_in_tmux() and \
             screen.use_color():
-            setting.screen_attr_cursor.append("bold")
-            setting.screen_attr_visual.append("bold")
+            attr_cursor.append("bold")
+            attr_visual.append("bold")
         # A_BOLD may disappear
         if setting.use_putty_caveat:
-            setting.screen_attr_posstr.append("standout")
-            setting.screen_attr_search.append("underline")
+            attr_posstr.append("standout")
+            attr_search.append("underline")
         # initialize attributes
-        self.attr_posstr = _parse_attr(
-            setting.screen_attr_posstr, screen.A_BOLD)
-        self.attr_cursor = _parse_attr(
-            setting.screen_attr_cursor, screen.A_STANDOUT)
-        self.attr_search = _parse_attr(
-            setting.screen_attr_search, screen.A_BOLD)
-        self.attr_visual = _parse_attr(
-            setting.screen_attr_visual, screen.A_STANDOUT)
+        self.attr_posstr = _parse_attr(attr_posstr, screen.A_BOLD)
+        self.attr_cursor = _parse_attr(attr_cursor, screen.A_STANDOUT)
+        self.attr_search = _parse_attr(attr_search, screen.A_BOLD)
+        self.attr_visual = _parse_attr(attr_visual, screen.A_STANDOUT)
 
     def iter_buffer(self):
         b = self.read_page()
@@ -423,11 +426,10 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             16: "|{0}| ",
             10: " {0}| ",
             8 : "<{0}> ", }
-        n = setting.address_num_width
         self.__lstr_fmt = {
-            16: "{{0:0{0}X}}".format(n),
-            10: "{{0:{0}d}}".format(n),
-            8 : "{{0:0{0}o}}".format(n), }
+            16: "{{0:0{0}X}}".format(address_num_width),
+            10: "{{0:{0}d}}".format(address_num_width),
+            8 : "{{0:0{0}o}}".format(address_num_width), }
 
     def get_form_single(self, x):
         return "{0:02X}".format(filebytes.ord(x) & 0xFF)
@@ -508,7 +510,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             n += self.fileops.get_mapping_offset()
         return self.__lstr[setting.address_num_radix].format(
             self.__lstr_fmt[setting.address_num_radix].format(
-                n)[-setting.address_num_width:])
+                n)[-address_num_width:])
 
 class TextCanvas (DisplayCanvas, text_addon):
     def __init__(self, siz, pos):
@@ -660,9 +662,9 @@ class StatusCanvas (Canvas, default_addon):
         n = len(str(self.__cur_size))
         return "{{0:>{0}}}[B] {{1:>5}}% {{2:>{1}}}".format(n, n)
 
-class FullStatusCanvas (StatusCanvas):
+class VerboseStatusCanvas (StatusCanvas):
     def set_buffer(self, fileops):
-        super(FullStatusCanvas, self).set_buffer(fileops)
+        super(VerboseStatusCanvas, self).set_buffer(fileops)
         if self.fileops is not None:
             a = self.get_static_info()
             b = self.fileops.get_magic()
@@ -747,8 +749,8 @@ def get_status_frame_class():
         return NullStatusFrame
 
 def get_status_canvas_class():
-    if setting.use_full_status_window:
-        return FullStatusCanvas
+    if setting.use_verbose_status_window:
+        return VerboseStatusCanvas
     else:
         return SingleStatusCanvas
 

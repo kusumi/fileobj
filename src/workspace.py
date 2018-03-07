@@ -554,3 +554,6 @@ class Workspace (object):
         if bpl == -1: # possible on container init
             return -1
         self.__bpl = bpl
+
+    def get_capacity(self):
+        return self.__def_bwindow.get_capacity()

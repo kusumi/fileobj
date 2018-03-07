@@ -507,14 +507,14 @@ def __set_bytes_per_line(self, args):
 def __set_bytes_per_window(self, args):
     prev = self.co.get_bytes_per_window()
     if len(args) == 1:
-        self.co.show(prev)
+        self.co.show(self.co.get_capacity())
     elif self.co.set_bytes_per_window(args[1]) == -1:
         try:
-            if int(args[1]) > prev:
-                self.co.flash("{0} is too large, "
-                    "consider :set bytes_per_line first".format(args[1]))
+            bpw = int(args[1])
+            if bpw > prev:
+                self.co.flash("Too large arg: {0}".format(bpw))
             else:
-                self.co.flash("Invalid arg: {0} ???".format(args[1]))
+                self.co.flash("Invalid arg: {0} ???".format(bpw))
         except ValueError:
             self.co.flash("Invalid arg: {0}".format(args[1]))
     elif self.co.get_bytes_per_window() != prev:

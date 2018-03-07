@@ -63,7 +63,6 @@ class Marks (object):
                     self.__data[ff] = d
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))
-            raise e
 
     def __iter_csv(self, fd):
         for l in csv.reader(fd):

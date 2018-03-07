@@ -106,7 +106,7 @@ def get_status_window_height(scls, fcls):
     assert util.is_subclass(fcls, panel.StatusFrame)
     lf = panel.get_min_size(fcls)
     lc = panel.get_min_size(scls)
-    if util.is_subclass(scls, panel.FullStatusCanvas):
+    if util.is_subclass(scls, panel.VerboseStatusCanvas):
         height = 2
     elif util.is_subclass(scls, panel.SingleStatusCanvas):
         height = 1

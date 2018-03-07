@@ -1,3 +1,28 @@
+## v0.7.59
++ Minor fixes and improvement
++ Improve Darwin support
++ Improve :set bytes_per_window behavior
++ Fix a bug (:set bytes_per_window with no arg)
++ Add --backup
++ Add FILEOBJ_USE_BACKUP
++ Remove FILEOBJ_USE_LOG
++ Remove FILEOBJ_SCREEN_ATTR_POSSTR
++ Remove FILEOBJ_SCREEN_ATTR_CURSOR
++ Remove FILEOBJ_SCREEN_ATTR_SEARCH
++ Remove FILEOBJ_SCREEN_ATTR_VISUAL
++ Remove FILEOBJ_TERMINAL_HEIGHT
++ Remove FILEOBJ_TERMINAL_WIDTH
++ Remove FILEOBJ_ADDRESS_NUM_WIDTH
++ Remove FILEOBJ_USE_ALLOC_DEGENERATE
++ Remove FILEOBJ_USE_ARRAY_CHUNK
++ Remove FILEOBJ_ALLOC_MMAP_THRESH
++ Remove FILEOBJ_USE_XNIX
++ Rename FILEOBJ_USE_FULL_STATUS_WINDOW to FILEOBJ_USE_VERBOSE_STATUS_WINDOW
++ Rename FILEOBJ_USE_ADAPTIVE_FILEOPS to FILEOBJ_USE_AUTO_FILEOPS_ADJUST
++ Rename FILEOBJ_GENERAL_BUFFER_SIZE to FILEOBJ_BUFFER_SIZE
++ Rename FILEOBJ_FILE_XXX_NAME to FILEOBJ_FILE_NAME_XXX
++ Change default manpage directory to /usr/local/share/man/man1
+
 ## v0.7.58
 + Minor fixes and improvement
 + Fix a bug (:set bytes_per_window auto/even)

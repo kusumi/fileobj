@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import with_statement
+
 import errno
 
 from . import log
@@ -35,6 +37,23 @@ def get_lang_info():
 
 def is_in_tmux():
     return unix.is_in_tmux()
+
+def get_blkdev_info(f):
+    with fopen(f) as fd:
+        return __get_blkdev_info(fd)
+
+def __get_blkdev_info(fd):
+    try:
+        d = {   "DKIOCGETBLOCKCOUNT" : 0x40086419,
+                "DKIOCGETBLOCKSIZE"  : 0x40046418, }
+        s = "DKIOCGETBLOCKCOUNT"
+        blkcount = unix.ioctl_get_int(fd, d[s], 8)
+        s = "DKIOCGETBLOCKSIZE"
+        sector_size = unix.ioctl_get_int(fd, d[s], 4)
+        return blkcount * sector_size, sector_size, ''
+    except Exception as e:
+        log.error("ioctl({0}, {1}) failed, {2}".format(fd.name, s, e))
+        raise
 
 def read_reg_size(f):
     return unix.read_reg_size(f)
@@ -120,7 +139,7 @@ def is_blkdev(f):
     return unix.stat_is_blkdev(f)
 
 def is_blkdev_supported():
-    return False
+    return True
 
 def mmap_full(fileno, readonly=False):
     return unix.mmap_full(fileno, readonly)
@@ -146,9 +165,8 @@ def has_pid(pid):
 def get_pid_name(pid):
     return unix.get_pid_name_from_ps(pid)
 
-# not supported even if Darwin has ptrace(2)
 def has_ptrace():
-    return False
+    return False # XXX unsupported
 
 def ptrace_peektext(pid, addr):
     return None, errno.EOPNOTSUPP

@@ -30,7 +30,7 @@ from . import version
 
 def init(name, f=None):
     global _logger
-    if not setting.use_log:
+    if __get_attr() is None:
         return -1
     if _logger:
         return -1
@@ -39,8 +39,7 @@ def init(name, f=None):
         if setting.use_debug:
             logger.setLevel(logging.DEBUG)
         else:
-            logger.setLevel(getattr(
-                logging, setting.log_level, logging.WARNING))
+            logger.setLevel(__get_attr(logging.WARNING))
         __add_handler(logger, f)
         _logger = logger
     except Exception:
@@ -66,6 +65,9 @@ def cleanup():
         return -1
     finally:
         _logger = None
+
+def __get_attr(default=None):
+    return getattr(logging, setting.log_level, default)
 
 def __add_handler(logger, f):
     if not logger.handlers:

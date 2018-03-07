@@ -138,6 +138,7 @@ class Allocator (object):
                     cls = self.__test_mmap_class(f, offset, length, cls)
                 return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
+        assert False, "Failed to allocate fileobj"
 
     def __alloc_noent(self, f):
         if setting.use_alloc_noent_rwbuf or \
@@ -151,7 +152,7 @@ class Allocator (object):
         size = kernel.get_size_safe(f)
         if size == -1:
             log.error("Failed to stat " + f)
-        elif size < setting.alloc_mmap_thresh:
+        elif size < kernel.get_page_size():
             if self.__is_ro_class(cls):
                 cls = self.robuf
             else:
@@ -159,23 +160,18 @@ class Allocator (object):
         return cls
 
     def __alloc(self, f, offset, length, cls):
-        if not setting.use_alloc_degenerate:
-            return self.__alloc_fileobj(f, offset, length, cls)
         while cls:
             try:
-                return self.__alloc_fileobj(f, offset, length, cls)
+                log.info("Trying {0} for '{1}'".format(cls, f))
+                ret = cls(f, offset, length)
+                ret.set_magic()
+                log.info("Using {0} for '{1}'".format(cls, f))
+                return ret
             except Exception as e:
                 log.error(e)
                 cls = self.__get_alt_class(cls)
                 if not cls:
                     raise AllocatorError(str(e))
-
-    def __alloc_fileobj(self, f, offset, length, cls):
-        log.info("Trying {0} for '{1}'".format(cls, f))
-        ret = cls(f, offset, length)
-        ret.set_magic()
-        log.info("Using {0} for '{1}'".format(cls, f))
-        return ret
 
 def iter_module_name():
     yield "romap"

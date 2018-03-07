@@ -231,7 +231,7 @@ class Fileops (object):
             self.insert  = self.__insert
             self.replace = self.__replace
             self.delete  = self.__delete
-        if util.is_imported_module() and setting.use_adaptive_fileops:
+        if util.is_imported_module() and setting.use_auto_fileops_adjust:
             self.read    = self.__decorate_read(self.read)
             self.insert  = self.__decorate_insert(self.insert)
             self.replace = self.__decorate_replace(self.replace)

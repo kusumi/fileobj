@@ -30,6 +30,7 @@ import inspect
 import os
 import platform
 import re
+import shutil
 import string
 import struct
 import subprocess
@@ -553,16 +554,26 @@ def do_atomic_write(dst, binary=True, fsync=None, rename=None):
             yield tmp
             if fsync:
                 fsync(tmp)
+        l1 = __get_uid_gid(dst)
         # see https://docs.python.org/2/library/os.html#os.rename
         if rename:
             rename(src, dst)
         else:
-            os.rename(src, dst) # atomic
+            os.rename(src, dst) # supposed to be atomic
         assert os.path.isfile(dst)
+        l2 = __get_uid_gid(dst)
+        if l1 is not None and l1 != l2:
+            os.chown(dst, *l1)
     finally:
         if os.path.isfile(src):
             os.unlink(src) # exception before rename
         assert not os.path.exists(src)
+
+def __get_uid_gid(f):
+    if not os.path.exists(f):
+        return
+    st = os.stat(f)
+    return st.st_uid, st.st_gid
 
 def is_same_file(a, b):
     if os.path.exists(a) and os.path.exists(b):
@@ -628,11 +639,31 @@ def __get_path_attribute(s):
     else:
         return ret
 
+def creat_backup(f, timestamp=""):
+    if os.path.isfile(f):
+        x = f.replace("/", "-")
+        while x.startswith("-"):
+            x = x[1:]
+        x = "{0}.{1}.bak".format(timestamp, x)
+        dst = os.path.join(setting.user_dir, x)
+        shutil.copy(f, dst) # not copy2 (don't preserve ctime/mtime)
+        if setting.use_debug:
+            siz = os.stat(f).st_size
+            if siz < 10 * MiB:
+                assert get_md5(open(f, "rb").read()) == \
+                    get_md5(open(dst, "rb").read()), (f, dst)
+        return dst
+
+def get_timestamp(prefix=''):
+    # e.g. profile.2014-07-03-00:24:32
+    return "{0}.{1}".format(
+        prefix,
+        time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()))
+
 def get_stamp(prefix=''):
     # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
-    return "{0}.{1}.{2}.pid{3}".format(
-        prefix,
-        time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()),
+    return "{0}.{1}.pid{2}".format(
+        get_timestamp(prefix),
         get_python_executable_string(),
         os.getpid())
 

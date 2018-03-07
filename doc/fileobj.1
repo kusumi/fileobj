@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "February 26, 2018" "FILEOBJ 0.7.58"
+.TH FILEOBJ 1 "March 3, 2018" "FILEOBJ 0.7.59"
 .nh
 .ad l
 .SH NAME
@@ -117,6 +117,11 @@ If neither this option nor \fB\-\-fg\fP option is specified, the program assumes
 Use verbose status window format instead of the default one.
 .RE
 .PP
+\fB\-\-backup\fP
+.RS 4
+Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of regular files before loading them. Backup files are created under \fI~/.fileobj\fP by default, and removed if the program terminates normally. Backup files start with '.'.
+.RE
+.PP
 \fB\-\-force\fP
 .RS 4
 Ignore warnings which can be ignored by specifying this option and proceed.
@@ -163,6 +168,11 @@ A file contains information and warning messages logged by the program.
 A file contains per\-file marks marked by an editor command.
 .RE
 .PP
+\fI~/.fileobj/.YYYY-MM-DD-HH:MM:SS.path-to-file.bak\fP
+.RS 4
+A temporary backup file. See \fB\-\-backup\fP option in \fBOPTIONS\fP.
+.RE
+.PP
 .PD 0
 \fI/usr/share/licenses/fileobj/COPYING\fP
 .PP
@@ -198,6 +208,8 @@ This manpage.
 .PD
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/master/README.md\fP
+.SH EXAMPLES
+\fIhttps://github.com/kusumi/fileobj/blob/master/doc/README.examples.md\fP
 .SH COPYING
 Copyright (c) 2010\-2018, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).

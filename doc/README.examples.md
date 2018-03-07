@@ -4,7 +4,7 @@
 
 + Note that *offset 0* of the buffer means the first byte of the buffer. *offset 1* is the second byte.
 
-### Command line options (also see fileobj(1))
+### Command line options (also see *[List of options](doc/README.list_of_options.md)*)
 
 + Print help message and exit.
 
@@ -647,7 +647,7 @@
           then
           (command)>>
 
-### Set editor options (also see fileobj(1))
+### Set editor options (also see *[List of commands](doc/README.list_of_commands.md)*)
 
 + Set binary edit mode (unset ascii edit mode, default).
 

@@ -108,6 +108,10 @@ verbose_window = _("""
 Use verbose status window format instead of the default one.
 """)
 
+backup = _("""
+Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of regular files before loading them. Backup files are created under \fI~/.fileobj\fP by default, and removed if the program terminates normally. Backup files start with '.'.
+""")
+
 force = _("""
 Ignore warnings which can be ignored by specifying this option and proceed.
 """)

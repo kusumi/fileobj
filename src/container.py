@@ -36,6 +36,7 @@ from . import kbd
 from . import kernel
 from . import marks
 from . import operand
+from . import panel
 from . import path
 from . import screen
 from . import setting
@@ -46,9 +47,11 @@ from . import window
 from . import workspace
 
 DEF_REG = '"'
+MAX_LOG_2_BPL = 10
 
 class Container (object):
-    def __init__(self):
+    def __init__(self, backup_files=None):
+        self.__baks = backup_files
         self.__bpw = -1
         self.__workspaces = []
         self.__workspace_delta = {}
@@ -91,10 +94,10 @@ class Container (object):
         }.get(setting.address_num_radix)
         s = fmt.format(
             max([_.get_size() for _ in self.__fileobjs]))
-        if len(s) > setting.address_num_width:
+        if len(s) > panel.address_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):
-                    setting.address_num_width = x
+                    panel.address_num_width = x
                     break
 
         bpl = self.__find_bytes_per_line(optbpl)
@@ -201,7 +204,13 @@ class Container (object):
 
     def alloc_fileobj(self, f):
         try:
-            return allocator.alloc(f)
+            o = allocator.alloc(f)
+            f = o.get_path()
+            if self.__baks is not None and f not in self.__baks:
+                bak = util.creat_backup(f, util.get_timestamp())
+                if bak:
+                    self.__baks[f] = bak
+            return o
         except allocator.AllocatorError as e:
             self.flash(e)
 
@@ -297,7 +306,7 @@ class Container (object):
             return self.__fileobjs[i]
 
     def __get_buffer_index(self, f, cond=None):
-        f, offset, length = kernel.parse_file_path(f) # drop offset/length
+        f = kernel.parse_file_path(f)[0] # drop offset/length
         f = path.get_path(f)
         for i, x in enumerate(self.get_buffer_paths(cond)):
             if util.is_same_file(f, x) or f == x:
@@ -919,12 +928,12 @@ class Container (object):
             return -1
         # adjust down to max power of 2
         if power_of_two:
-            for x in [2 ** _ for _ in range(10)]:
-                if ret <= x:
-                    if ret == x: # already power of 2
-                        ret = x
+            for bpl in [2 ** x for x in range(MAX_LOG_2_BPL)]:
+                if ret <= bpl:
+                    if ret == bpl: # already power of 2
+                        ret = bpl
                     else:
-                        ret = x // 2
+                        ret = bpl // 2
                     if ret < 1:
                         ret = 1
                     break
@@ -953,7 +962,7 @@ class Container (object):
         elif arg == "max":
             return max_bpl
         elif arg == "auto":
-            for ret in reversed([2 ** x for x in range(10)]):
+            for ret in reversed([2 ** x for x in range(MAX_LOG_2_BPL)]):
                 if ret <= max_bpl:
                     return ret
             return 1
@@ -975,6 +984,7 @@ class Container (object):
         bpl = self.get_bytes_per_line()
         return (self.__bpw + bpl - 1) // bpl
 
+    # use Workspace.get_capacity() to get actual capacity
     def get_bytes_per_window(self):
         if self.__bpw == -1:
             return -1
@@ -990,7 +1000,20 @@ class Container (object):
             return -1
         prev = self.__bpw
         self.__bpw = ret
+
         if self.__build(self.__in_vertical, True) == workspace.BUILD_FAILED:
+            # expand bpl if possible and retry
+            prev_bpl = self.get_bytes_per_line()
+            for bpl in [2 ** x for x in range(MAX_LOG_2_BPL)]:
+                if bpl < prev_bpl:
+                    continue
+                if self.set_bytes_per_line(bpl) != -1 and \
+                    ret <= self.get_bytes_per_window() and \
+                    self.__build(self.__in_vertical, True) is None:
+                        return
+                # could rollback bpl here for extra safety
+            # failed, rollback bpl and bpw
+            assert self.set_bytes_per_line(prev_bpl) != -1, prev_bpl
             self.__bpw = prev
             return -1
 

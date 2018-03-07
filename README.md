@@ -1,4 +1,4 @@
-# fileobj ([v0.7.58](https://github.com/kusumi/fileobj/releases/tag/v0.7.58))
+# fileobj ([v0.7.59](https://github.com/kusumi/fileobj/releases/tag/v0.7.59))
 
 ## About
 
@@ -25,10 +25,10 @@
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ Run *./script/install.sh* to install a manpage. The location defaults to /usr/share/man/man1, but can be specified by an argument.
++ Run *./script/install.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument.
 
         $ sudo bash ./script/install.sh
-        /usr/share/man/man1/fileobj.1.gz: gzip compressed data, max compression, from Unix
+        /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, from Unix, max compression
 
 + See *[Notes](doc/README.notes.md)* for compilation error due to a missing header file *Python.h*, and other platform specific information.
 
@@ -37,6 +37,12 @@
 + Remove files listed in *install.out* which was generated on installation.
 
 + Remove the manpage if installed.
+
+## Usage
+
++ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via */path/to/file@offset:length* or */path/to/file@offset-(offset+length)* syntax.
+
+        $ fileobj [options]... [paths]...
 
 ## Resource
 

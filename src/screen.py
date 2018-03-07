@@ -37,6 +37,8 @@ _size = util.Pair()
 _signaled = False
 _soft_resize = False
 
+terminal = util.Namespace(height=-1, width=-1)
+
 A_DEFAULT   = 0
 A_BOLD      = 0
 A_STANDOUT  = 0
@@ -94,8 +96,8 @@ def update_size():
         x, y = shutil.get_terminal_size() # portable ???
     else:
         y, x = kernel.get_terminal_size()
-    y = __override_size(y, setting.terminal_height)
-    x = __override_size(x, setting.terminal_width)
+    y = __override_size(y, terminal.height)
+    x = __override_size(x, terminal.width)
     if y > 0 and x > 0:
         _size.set(y, x)
     else:

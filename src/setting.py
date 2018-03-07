@@ -42,13 +42,13 @@ def get_marks_path():
     return get_path("marks")
 
 def get_path(s):
-    return __get_path("file_{0}_name".format(s))
+    return __get_path("file_name_{0}".format(s))
 
 def get_ext_path(s):
-    return __get_path("ext_file_{0}_name".format(s))
+    return __get_path("ext_file_name_{0}".format(s))
 
 def __get_path(s):
-    b = getattr(this, s) # "(ext_)file_xxx_name"
+    b = getattr(this, s) # "(ext_)file_name_xxx"
     d = this.user_dir
     if d is None:
         return ''
@@ -56,21 +56,28 @@ def __get_path(s):
         return ''
     return os.path.join(d, b)
 
+USER_DIR_NONE         = -1
+USER_DIR_NO_READ      = -2
+USER_DIR_NO_WRITE     = -3
+USER_DIR_MKDIR_FAILED = -4
+
 def init_user():
     d = this.user_dir
     if not d:
-        return -1
+        return USER_DIR_NONE
     elif os.path.isdir(d):
-        if os.access(d, os.R_OK | os.W_OK):
-            return 0 # already exists
+        if not os.access(d, os.R_OK):
+            return USER_DIR_NO_READ
+        elif not os.access(d, os.R_OK | os.W_OK):
+            return USER_DIR_NO_WRITE
         else:
-            return -1 # no permission
+            return # success
     else:
         try:
             os.makedirs(d)
-            return 1 # mkdir success
+            return # success
         except Exception:
-            return -1
+            return USER_DIR_MKDIR_FAILED
 
 def init():
     __init(env.iter_setting())

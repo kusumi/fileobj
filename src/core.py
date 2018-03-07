@@ -23,6 +23,7 @@
 
 import atexit
 import optparse
+import os
 import signal
 import sys
 
@@ -45,6 +46,12 @@ from . import version
 def __cleanup(arg):
     if arg.done:
         return -1
+    if not arg.e:
+        for f in arg.baks.values():
+            try:
+                os.unlink(f)
+            except Exception as e:
+                log.error(e)
     arg.done = True
     setting.cleanup()
     kernel.cleanup()
@@ -81,7 +88,7 @@ def __error(s):
     raise util.QuietError(s)
 
 def dispatch(optargs=None):
-    if setting.use_debug: # FILEOBJ_USE_DEBUG=
+    if setting.use_debug:
         suppress_help = "<This is supposed to be suppressed>"
     else:
         suppress_help = optparse.SUPPRESS_HELP
@@ -98,15 +105,16 @@ def dispatch(optargs=None):
     parser.add_option("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
     parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_option("--verbose_window", action="store_true", default=(setting.use_full_status_window and setting.use_status_window_frame), help=usage.verbose_window)
+    parser.add_option("--verbose_window", action="store_true", default=(setting.use_verbose_status_window and setting.use_status_window_frame), help=usage.verbose_window)
+    parser.add_option("--backup", action="store_true", default=setting.use_backup, help=usage.backup)
     parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
 
     # hidden options
     parser.add_option("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
-    parser.add_option("--terminal_height", type="int", default=setting.terminal_height, metavar="<terminal_height>", help=suppress_help)
-    parser.add_option("--terminal_width", type="int", default=setting.terminal_width, metavar="<terminal_width>", help=suppress_help)
+    parser.add_option("--terminal_height", type="int", default=-1, metavar="<terminal_height>", help=suppress_help)
+    parser.add_option("--terminal_width", type="int", default=-1, metavar="<terminal_width>", help=suppress_help)
     parser.add_option("--wspnum", type="int", default=1, help=suppress_help)
 
     for s in allocator.iter_module_name():
@@ -124,7 +132,7 @@ def dispatch(optargs=None):
             util.printf(x)
         return
 
-    targs = util.Namespace(e=None, tb=[], done=False)
+    targs = util.Namespace(e=None, tb=[], done=False, baks={})
     atexit.register(__cleanup, targs)
     ret = setting.init_user()
     log.init(util.get_program_name())
@@ -145,14 +153,14 @@ def dispatch(optargs=None):
     else:
         wspnum = 1
     if opts.verbose_window:
-        setting.use_full_status_window = True
+        setting.use_verbose_status_window = True
         setting.use_status_window_frame = True
 
     # hidden options
     if opts.terminal_height > 0:
-        setting.terminal_height = opts.terminal_height
+        screen.terminal.height = opts.terminal_height
     if opts.terminal_width > 0:
-        setting.terminal_width = opts.terminal_width
+        screen.terminal.width = opts.terminal_width
     absnum = abs(opts.wspnum)
     if absnum != 1: # force wspnum and split direction
         if absnum > wspnum:
@@ -179,21 +187,28 @@ def dispatch(optargs=None):
         l.append("{0}={1}".format(*_))
     log.debug("settings {0}".format(l))
 
-    msg = ''
+    msg1 = ''
     s = " caveat enabled on {0}".format(util.get_os_name())
     if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
-        msg = "BSD" + s
-        log.error(msg)
+        msg1 = "BSD" + s
     if not kernel.is_illumos() and setting.use_illumos_caveat:
-        msg = "illumos" + s
-        log.error(msg)
+        msg1 = "illumos" + s
     if not kernel.is_cygwin() and setting.use_cygwin_caveat:
-        msg = "Cygwin" + s
-        log.error(msg)
+        msg1 = "Cygwin" + s
+    if msg1:
+        log.error(msg1)
 
-    if ret == -1:
-        msg = "Failed to make user directory {0}".format(setting.user_dir)
-        log.error(msg)
+    msg2 = ''
+    if ret == setting.USER_DIR_NONE:
+        msg2 = "Not using user directory"
+    elif ret == setting.USER_DIR_NO_READ:
+        msg2 = "Permission denied (read): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_NO_WRITE:
+        msg2 = "Permission denied (write): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_MKDIR_FAILED:
+        msg2 = "Failed to create user directory {0}".format(setting.user_dir)
+    if msg2:
+        log.error(msg2)
 
     log.debug(util.get_os_name(), util.get_os_release(), util.get_cpu_name())
     log.debug(kernel.get_term_info(), kernel.get_lang_info())
@@ -206,10 +221,7 @@ def dispatch(optargs=None):
     try:
         co = None
         if not kernel.is_detected():
-            __error("{0}, consider setting FILEOBJ_USE_XNIX to manually "
-                "declare running on Unix-like OS (bash example below)\n"
-                "  $ export FILEOBJ_USE_XNIX=".format(
-                kernel.get_status_string()))
+            __error(kernel.get_status_string())
 
         assert literal.init() != -1
         if screen.init(opts.fg, opts.bg) == -1:
@@ -219,6 +231,7 @@ def dispatch(optargs=None):
         if opts.B:
             tot = 0
             for x in args:
+                x = kernel.parse_file_path(x)[0] # drop offset/length
                 o = path.Path(x)
                 if o.is_reg:
                     siz = kernel.get_size(o.path)
@@ -235,7 +248,7 @@ def dispatch(optargs=None):
                 __error("{0} exceeds soft limit size {1}, {2}".format(
                     s1, util.get_size_repr(setting.regfile_soft_limit), s2))
 
-        co = container.Container()
+        co = container.Container(targs.baks if opts.backup else None)
         if co.init(args, wspnum, True if opts.O else False,
             opts.bytes_per_line, opts.bytes_per_window) == -1:
             __error("Terminal ({0},{1}) does not have enough room".format(
@@ -243,8 +256,10 @@ def dispatch(optargs=None):
         if setting.use_debug:
             d = util.get_import_exceptions()
             assert not d, d
-        if msg:
-            co.flash(msg)
+        if msg2:
+            co.flash(msg2) # higher priority than msg1
+        elif msg1:
+            co.flash(msg1)
         co.repaint()
         co.dispatch()
     except Exception as e:

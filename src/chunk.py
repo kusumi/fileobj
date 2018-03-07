@@ -115,9 +115,9 @@ class Chunk (object):
             assert x in self, (x, len(self), self.offset)
         return x - self.offset
 
-if setting.use_array_chunk and util.is_python2():
+if util.is_python2(): # only works with python2
     def alloc_buffer(b):
         return array.array('c', b)
-else:
+else: # works with both python2 and python3
     def alloc_buffer(b):
         return filebytes.split(b)

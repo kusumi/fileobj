@@ -29,8 +29,8 @@ if [ ! -f ./doc/fileobj.1 ]; then
 fi
 
 MANDIR_USER=$1
+MANDIR_LOCAL=/usr/local/share/man/man1 # default
 MANDIR_SYSTEM=/usr/share/man/man1
-MANDIR_LOCAL=/usr/local/share/man/man1
 
 if [ "${MANDIR_USER}" != "" ]; then
 	if [ -d ${MANDIR_USER} ]; then
@@ -39,10 +39,10 @@ if [ "${MANDIR_USER}" != "" ]; then
 		echo "### No such directory ${MANDIR_USER}"
 		exit 1
 	fi
-elif [ -d ${MANDIR_SYSTEM} ]; then
-	MANDIR=${MANDIR_SYSTEM}
 elif [ -d ${MANDIR_LOCAL} ]; then
 	MANDIR=${MANDIR_LOCAL}
+elif [ -d ${MANDIR_SYSTEM} ]; then
+	MANDIR=${MANDIR_SYSTEM}
 else
 	echo "### Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
 	exit 1
@@ -67,6 +67,14 @@ case "${UNAME}" in
 		fi
 		file ${MANDIR}/fileobj.1.gz
 		rm ./doc/fileobj.1.gz
+		;;
+	Darwin)
+		install -m 644 ./doc/fileobj.1 ${MANDIR}/fileobj.1
+		if [ $? -ne 0 ]; then
+			echo "### Failed to install manpage"
+			exit 1
+		fi
+		file ${MANDIR}/fileobj.1
 		;;
 	SunOS)
 		install -m 644 -f ${MANDIR} ./doc/fileobj.1

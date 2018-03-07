@@ -24,7 +24,6 @@
 import os
 import re
 
-from . import env
 from . import filebytes
 from . import log
 from . import native
@@ -77,7 +76,13 @@ def __system_is(s):
     return _system == s
 
 def __is_xnix():
-    return setting.use_xnix
+    try:
+        util.execute("uname")
+        util.execute("pwd")
+        util.execute("ls")
+        return True
+    except Exception:
+        return False
 
 def is_cygwin():
     return nodep.is_cygwin(_system)
@@ -328,17 +333,13 @@ def stat_type(f):
 def get_page_size():
     o = get_kernel_module()
     if o:
-        ret = o.get_page_size()
+        return o.get_page_size()
     else:
-        ret = -1
-    if ret == -1:
-        return env.PSEUDO_PAGE_SIZE
-    else:
-        return ret
+        return -1
 
 def get_buffer_size():
-    if setting.general_buffer_size != -1:
-        return setting.general_buffer_size
+    if setting.buffer_size != -1:
+        return setting.buffer_size
     o = get_kernel_module()
     if o:
         return o.get_buffer_size()

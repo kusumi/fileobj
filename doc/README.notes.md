@@ -1,10 +1,10 @@
-## General
+## FAQ
 
 + Installation failed due to a missing Python header file. -> **Install *Python.h* via *python-devel* package for the Python version in use. The name may differ among platforms, however it's generally called *python-devel* or *python2-devel* or *python3-devel* or something along these lines. On Debian based Linux distributions, these packages are probably called *libpython-dev* or *libpython3-dev*.**
 
         Python.h: No such file or directory
 
-+ Unable to install a missing header file *Python.h*. -> **Run *setup.py* with *--no-native* option. This option mostly provides the same functionality without using C extension.**
++ Unable to install a missing header file *Python.h*. -> **Run *setup.py* with *--no-native* option. This option mostly provides the same functionality without using C extension. Note that if an older version is installed without *--no-native* option, it should be manually uninstalled first.**
 
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out --no-native
