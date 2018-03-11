@@ -84,6 +84,9 @@ class _window (object):
     def addstr(self, y, x, s, attr=A_DEFAULT):
         if setting.stdout_verbose > 0:
             util.printf(self.__mkstr(y, x, s))
+        if setting.stdout_verbose > 1:
+            for x in util.iter_traceback():
+                util.printf(x)
 
     def clrtoeol(self):
         return
@@ -144,32 +147,34 @@ class _window (object):
         if x != -1:
             return ord(x)
         x = _stdin.read(1)
+        util.printf(repr(x))
+
         s = self.__input_to_string()
         self.__append_input(x)
-        if x == "\x1B": # ESCAPE
+        if x == "\x1B": # ESC
             if not s:
                 return kbd.CONTINUE
         elif x == "[":
-            if s == "\x1B":
-                return kbd.CONTINUE
+            if s == "\x1B": # ESC
+                return kbd.CONTINUE # CSI
         elif x == "A":
-            if s == "\x1B[":
+            if s == "\x1B[": # CSI
                 self.__clear_input()
                 return kbd.UP
         elif x == "B":
-            if s == "\x1B[":
+            if s == "\x1B[": # CSI
                 self.__clear_input()
                 return kbd.DOWN
         elif x == "C":
-            if s == "\x1B[":
+            if s == "\x1B[": # CSI
                 self.__clear_input()
                 return kbd.RIGHT
         elif x == "D":
-            if s == "\x1B[":
+            if s == "\x1B[": # CSI
                 self.__clear_input()
                 return kbd.LEFT
         elif x == "3":
-            if s == "\x1B[":
+            if s == "\x1B[": # CSI
                 return kbd.CONTINUE
         elif x == "~":
             if s == "\x1B[3":

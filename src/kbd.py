@@ -27,6 +27,7 @@ import sys
 
 from . import kernel
 from . import setting
+from . import util
 
 def ctrl(c):
     """Take str/bytes and return int"""
@@ -63,77 +64,62 @@ def to_chr_repr(c):
     else:
         return '.'
 
-def _KEY_DEAD(x):
-    return DEAD | (x << 16)
-DEAD       = 0xDEAD
-DUMMY      = _KEY_DEAD(0x100)
-
-# XXX alternative backspace key
-use_bspace2 = setting.use_bsd_caveat or \
-    setting.use_illumos_caveat or \
-    setting.use_cygwin_caveat
-
 # XXX alternative for block visual mode
 use_alt_block_visual = setting.use_bsd_caveat or \
     setting.use_illumos_caveat
 
-#                  stdout                VTxxx              others
+ERROR     = curses.ERR
+CONTINUE  = util.gen_key()
+INTERRUPT = util.gen_key()
+QUIT      = util.gen_key()
+
+#                  stdout            VTxxx(XXX/DELETE)  xterm/others(XXX)
 _keys = [
-    ("TAB",        curses.ascii.TAB,     curses.ascii.TAB,  curses.ascii.TAB),
-    ("ENTER",      curses.ascii.LF,      curses.ascii.LF,   curses.ascii.LF),
-    ("ESCAPE",     curses.ascii.ESC,     curses.ascii.ESC,  curses.ascii.ESC),
-    ("SPACE",      curses.ascii.SP,      curses.ascii.SP,   curses.ascii.SP),
-    ("DOWN",       curses.KEY_DOWN,      curses.KEY_DOWN,   curses.KEY_DOWN),
-    ("UP",         curses.KEY_UP,        curses.KEY_UP,     curses.KEY_UP),
-    ("LEFT",       curses.KEY_LEFT,      curses.KEY_LEFT,   curses.KEY_LEFT),
-    ("RIGHT",      curses.KEY_RIGHT,     curses.KEY_RIGHT,  curses.KEY_RIGHT),
-    ("BACKSPACE",  curses.KEY_BACKSPACE, curses.ascii.BS,   curses.KEY_BACKSPACE),
-    ("DELETE",     curses.KEY_DC,        curses.ascii.DEL,  curses.KEY_DC),
-    ("RESIZE",     DUMMY,                curses.KEY_RESIZE, curses.KEY_RESIZE),]
+    ("TAB",        curses.ascii.TAB, curses.ascii.TAB,  curses.ascii.TAB),
+    ("ENTER",      curses.ascii.LF,  curses.ascii.LF,   curses.ascii.LF),
+    ("ESCAPE",     curses.ascii.ESC, curses.ascii.ESC,  curses.ascii.ESC),
+    ("SPACE",      curses.ascii.SP,  curses.ascii.SP,   curses.ascii.SP),
+    ("DOWN",       util.gen_key(),   curses.KEY_DOWN,   curses.KEY_DOWN),
+    ("UP",         util.gen_key(),   curses.KEY_UP,     curses.KEY_UP),
+    ("LEFT",       util.gen_key(),   curses.KEY_LEFT,   curses.KEY_LEFT),
+    ("RIGHT",      util.gen_key(),   curses.KEY_RIGHT,  curses.KEY_RIGHT),
+    ("BACKSPACE",  curses.ascii.DEL, curses.ascii.DEL,  curses.KEY_BACKSPACE),
+    ("BACKSPACE2", util.gen_key(),   util.gen_key(),    curses.ascii.DEL),
+    ("DELETE",     curses.KEY_DC,    curses.KEY_DC,     curses.KEY_DC),
+    ("RESIZE",     util.gen_key(),   curses.KEY_RESIZE, curses.KEY_RESIZE),]
 
-if use_bspace2:
-    _keys.append(
-    ("BACKSPACE2", curses.ascii.DEL,     DUMMY,             curses.ascii.DEL),)
-
-def iter_kbd_name():
-    for l in _keys:
-        yield l[0]
-
-def get_code(term, use_stdout):
-    if use_stdout:
+def get_code(term):
+    if term == "stdout":
         x = 1
     elif term.startswith("vt"):
         x = 2
     else:
         x = 3
-    return tuple(l[x] for l in _keys)
-
-ERROR      = curses.ERR
-CONTINUE   = _KEY_DEAD(0)
-INTERRUPT  = _KEY_DEAD(1)
-QUIT       = _KEY_DEAD(2)
+    d = {}
+    for l in _keys:
+        d[l[0]] = l[x]
+    return d
 
 def init(term):
     bs = []
     ar = []
-    l = get_code(term, setting.use_stdout)
+    if setting.use_stdout:
+        term = "stdout"
+    d = get_code(term)
 
-    for i, s in enumerate(iter_kbd_name()):
-        name = "key_" + s.lower()
-        config = getattr(setting, name, None)
+    for s, v in d.items():
+        config = getattr(setting, "key_" + s.lower(), None)
         if config is not None:
             v = config
-        else:
-            v = l[i]
         setattr(this, s, v)
         if s.startswith("BACKSPACE"):
             bs.append(v)
         if s in ("DOWN", "UP", "LEFT", "RIGHT"):
             ar.append(v)
 
-    bs = tuple(bs)
+    bs = tuple(sorted(bs))
     setattr(this, "get_backspaces", lambda: bs)
-    ar = tuple(ar)
+    ar = tuple(sorted(ar))
     setattr(this, "get_arrows", lambda: ar)
 
 this = sys.modules[__name__]

@@ -27,19 +27,19 @@ import sys
 from . import env
 
 def get_trace_path():
-    return get_path("trace")
+    return os.path.join(this.user_dir, "trace")
 
 def get_stream_path():
     return get_path("stream")
 
 def get_log_path():
-    return get_path("log")
+    return os.path.join(this.user_dir, "log")
 
 def get_history_path():
-    return get_path("history")
+    return os.path.join(this.user_dir, "history")
 
 def get_marks_path():
-    return get_path("marks")
+    return os.path.join(this.user_dir, "marks")
 
 def get_path(s):
     return __get_path("file_name_{0}".format(s))

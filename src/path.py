@@ -217,7 +217,7 @@ def is_canonical_type(o):
         return True
 
 def get_path_failure_message(o, allow_link=True):
-    if not kernel.is_detected():
+    if not kernel.get_kernel_module():
         return "Failure: " + kernel.get_status_string()
     f = o.path
     if o.is_dir:

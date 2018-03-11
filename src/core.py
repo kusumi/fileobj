@@ -188,25 +188,25 @@ def dispatch(optargs=None):
     log.debug("settings {0}".format(l))
 
     msg1 = ''
-    s = " caveat enabled on {0}".format(util.get_os_name())
-    if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
-        msg1 = "BSD" + s
-    if not kernel.is_illumos() and setting.use_illumos_caveat:
-        msg1 = "illumos" + s
-    if not kernel.is_cygwin() and setting.use_cygwin_caveat:
-        msg1 = "Cygwin" + s
+    if ret == setting.USER_DIR_NONE:
+        msg1 = "Not using user directory"
+    elif ret == setting.USER_DIR_NO_READ:
+        msg1 = "Permission denied (read): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_NO_WRITE:
+        msg1 = "Permission denied (write): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_MKDIR_FAILED:
+        msg1 = "Failed to create user directory {0}".format(setting.user_dir)
     if msg1:
         log.error(msg1)
 
     msg2 = ''
-    if ret == setting.USER_DIR_NONE:
-        msg2 = "Not using user directory"
-    elif ret == setting.USER_DIR_NO_READ:
-        msg2 = "Permission denied (read): {0}".format(setting.user_dir)
-    elif ret == setting.USER_DIR_NO_WRITE:
-        msg2 = "Permission denied (write): {0}".format(setting.user_dir)
-    elif ret == setting.USER_DIR_MKDIR_FAILED:
-        msg2 = "Failed to create user directory {0}".format(setting.user_dir)
+    s = " caveat enabled on {0}".format(util.get_os_name())
+    if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
+        msg2 = "BSD" + s
+    if not kernel.is_illumos() and setting.use_illumos_caveat:
+        msg2 = "illumos" + s
+    if not kernel.is_cygwin() and setting.use_cygwin_caveat:
+        msg2 = "Cygwin" + s
     if msg2:
         log.error(msg2)
 
@@ -220,13 +220,21 @@ def dispatch(optargs=None):
 
     try:
         co = None
-        if not kernel.is_detected():
+        if not kernel.get_kernel_module():
             __error(kernel.get_status_string())
 
         assert literal.init() != -1
-        if screen.init(opts.fg, opts.bg) == -1:
-            __error("Unable to retrieve terminal size")
-        assert console.init() != -1
+
+        # don't let go ncurses exception unless in debug
+        try:
+            if screen.init(opts.fg, opts.bg) == -1:
+                __error("Failed to initialize terminal")
+            assert console.init() != -1
+        except Exception as e:
+            if setting.use_debug:
+                raise
+            else:
+                __error(str(e))
 
         if opts.B:
             tot = 0
@@ -256,11 +264,11 @@ def dispatch(optargs=None):
         if setting.use_debug:
             d = util.get_import_exceptions()
             assert not d, d
-        if msg2:
-            co.flash(msg2) # higher priority than msg1
-        elif msg1:
-            co.flash(msg1)
-        co.repaint()
+        if msg1:
+            co.flash(msg1) # higher priority than msg2
+        elif msg2:
+            co.flash(msg2)
+        co.xrepaint()
         co.dispatch()
     except Exception as e:
         tb = sys.exc_info()[2]

@@ -373,30 +373,30 @@ def refresh_container(self, amp, opc, args, raw):
 
 def switch_to_next_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.wbrepaint(False)
+        self.co.brepaint(False)
         self.co.switch_to_next_workspace()
-        self.co.wbrepaint(True)
+        self.co.brepaint(True)
         return RETURN
 
 def switch_to_prev_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.wbrepaint(False)
+        self.co.brepaint(False)
         self.co.switch_to_prev_workspace()
-        self.co.wbrepaint(True)
+        self.co.brepaint(True)
         return RETURN
 
 def switch_to_top_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.wbrepaint(False)
+        self.co.brepaint(False)
         self.co.switch_to_top_workspace()
-        self.co.wbrepaint(True)
+        self.co.brepaint(True)
         return RETURN
 
 def switch_to_bottom_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.wbrepaint(False)
+        self.co.brepaint(False)
         self.co.switch_to_bottom_workspace()
-        self.co.wbrepaint(True)
+        self.co.brepaint(True)
         return RETURN
 
 def add_workspace(self, amp, opc, args, raw):

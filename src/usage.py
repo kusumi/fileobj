@@ -85,7 +85,7 @@ Set fixed number of bytes printed per window.
 The program prints \fI<bytes_per_window>\fP bytes for each window as long as the terminal has enough size to accommodate.
 This option technically sets number of lines printed per window, based on the number of bytes per line which can also manually be specified by \fB\-\-bytes_per_line\fP option.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-Specifying "even" does not set fixed number of bytes, but makes all windows have the same size when a new window is added.
+Specifying "even" does not set fixed number of bytes, but makes all windows have the same size when a new window is vertically added.
 If this option is not specified, the program assumes "auto" is specified.
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")

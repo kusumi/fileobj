@@ -21,13 +21,19 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 3, 2018" "FILEOBJ 0.7.59"
+.TH FILEOBJ 1 "March 8, 2018" "FILEOBJ 0.7.60"
 .nh
 .ad l
 .SH NAME
 fileobj \- Hex Editor
 .SH SYNOPSIS
+.PD 0
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
+.PP
+\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset:length\fP]]...
+.PP
+\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset-(offset+length)\fP]]...
+.PD
 .SH DESCRIPTION
 \fBfileobj\fP is a portable console hex editor with vi interface.
 \fBfileobj\fP requires Python 2.6 or above, and runs on Unix-like operating systems with ncurses.
@@ -94,7 +100,7 @@ Set fixed number of bytes printed per window.
 The program prints \fI<bytes_per_window>\fP bytes for each window as long as the terminal has enough size to accommodate.
 This option technically sets number of lines printed per window, based on the number of bytes per line which can also manually be specified by \fB\-\-bytes_per_line\fP option.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-Specifying "even" does not set fixed number of bytes, but makes all windows have the same size when a new window is added.
+Specifying "even" does not set fixed number of bytes, but makes all windows have the same size when a new window is vertically added.
 If this option is not specified, the program assumes "auto" is specified.
 .RE
 .PP

@@ -40,7 +40,6 @@ Many of them are for debugging which could be removed at some point.
     yield "FILEOBJ_USE_SHELL"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_TRACE_WORD_SIZE"
-    yield "FILEOBJ_PROCFS_MOUNT_POINT"
     yield "FILEOBJ_USE_READONLY" # -R
     yield "FILEOBJ_USE_BACKUP" # --backup
     yield "FILEOBJ_COLOR_FG" # --fg
@@ -86,11 +85,7 @@ Many of them are for debugging which could be removed at some point.
     yield "FILEOBJ_USE_PUTTY_CAVEAT" # doc/README.notes.md
     yield "FILEOBJ_BUFFER_SIZE"
     yield "FILEOBJ_USER_DIR"
-    yield "FILEOBJ_FILE_NAME_TRACE"
     yield "FILEOBJ_FILE_NAME_STREAM"
-    yield "FILEOBJ_FILE_NAME_LOG"
-    yield "FILEOBJ_FILE_NAME_HISTORY"
-    yield "FILEOBJ_FILE_NAME_MARKS"
     yield "FILEOBJ_KEY_DOWN"
     yield "FILEOBJ_KEY_UP"
     yield "FILEOBJ_KEY_LEFT"
@@ -191,9 +186,6 @@ def __get_setting_trace_word_size():
         return x
     else:
         return _
-
-def __get_setting_procfs_mount_point():
-    return test_name("FILEOBJ_PROCFS_MOUNT_POINT", "")
 
 def __get_setting_use_readonly():
     return test_bool("FILEOBJ_USE_READONLY", False)
@@ -396,20 +388,8 @@ def __get_setting_user_dir():
     d = os.path.join(os.path.expanduser("~"), ".fileobj")
     return test_name("FILEOBJ_USER_DIR", d)
 
-def __get_setting_file_name_trace():
-    return test_name("FILEOBJ_FILE_NAME_TRACE", "trace")
-
 def __get_setting_file_name_stream():
     return getenv("FILEOBJ_FILE_NAME_STREAM")
-
-def __get_setting_file_name_log():
-    return test_name("FILEOBJ_FILE_NAME_LOG", "log")
-
-def __get_setting_file_name_history():
-    return test_name("FILEOBJ_FILE_NAME_HISTORY", "history")
-
-def __get_setting_file_name_marks():
-    return test_name("FILEOBJ_FILE_NAME_MARKS", "marks")
 
 def __get_setting_key_down():
     return __get_setting_key("FILEOBJ_KEY_DOWN")

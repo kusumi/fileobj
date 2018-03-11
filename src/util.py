@@ -681,7 +681,15 @@ def execute_sh(cmd):
 
 def __execute(shell, l):
     p = subprocess.Popen(l, stdout=subprocess.PIPE, shell=shell)
-    out, err = p.communicate()
+    if is_python_version_or_ht(3, 3):
+        # https://docs.python.org/3.6/library/subprocess.html
+        try:
+            out, err = p.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            out, err = p.communicate()
+    else:
+        out, err = p.communicate()
     if out is None:
         out = _('')
     if err is None:
@@ -868,3 +876,24 @@ def clear_dict(d, cond=None):
                 del d[k]
     else:
         d.clear()
+
+_max_key = 0
+def gen_key():
+    global _max_key
+    _max_key += 1
+    return encode_key(_max_key)
+
+def encode_key(x):
+    assert isinstance(x, int), x
+    assert 0 <= x <= 0xFFFF, x
+    return 0xDEAD | (x << 16)
+
+def decode_key(x):
+    assert isinstance(x, int), x
+    ret = x >> 16
+    assert 0 <= ret <= _max_key, ret
+    return ret
+
+def test_key(x):
+    assert isinstance(x, int), x
+    return x & 0xFFFF == 0xDEAD

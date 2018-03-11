@@ -67,8 +67,7 @@ class _panel (object):
         if not siz and not pos:
             siz = get_min_size(self)
             pos = get_min_position(self)
-        self.scr = screen.alloc(
-            siz[0], siz[1], pos[0], pos[1], self)
+        self.scr = screen.alloc(siz[0], siz[1], pos[0], pos[1], self)
 
     def get_size_y(self):
         return self.scr.getmaxyx()[0]

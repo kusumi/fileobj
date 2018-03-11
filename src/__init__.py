@@ -24,20 +24,6 @@
 import os
 import platform
 
-# XXX copied from nodep.is_cygwin()
-def __is_cygwin(name):
-    if name.startswith("CYGWIN"):
-        return True
-    if not name.startswith("Windows"):
-        return False
-    try:
-        import subprocess
-        p = subprocess.Popen(["uname"], stdout=subprocess.PIPE)
-        s = p.communicate()[0]
-        return s.startswith("CYGWIN")
-    except Exception:
-        return False
-
 def __set_caveat(name):
     s = "FILEOBJ_USE_{0}_CAVEAT".format(name.upper())
     if s not in os.environ:
@@ -51,7 +37,7 @@ elif _system.endswith("BSD"):
     __set_caveat("BSD")
 elif _system in ("SunOS",):
     __set_caveat("illumos") # for both Solaris and illumos
-elif __is_cygwin(_system):
+elif _system.startswith("CYGWIN"):
     __set_caveat("Cygwin")
     # procfs doesn't appear in mount command result
     if "FILEOBJ_PROCFS_MOUNT_POINT" not in os.environ:

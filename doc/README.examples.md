@@ -4,7 +4,7 @@
 
 + Note that *offset 0* of the buffer means the first byte of the buffer. *offset 1* is the second byte.
 
-### Command line options (also see *[List of options](doc/README.list_of_options.md)*)
+### Command line options (also see *[List of options](README.list_of_options.md)*)
 
 + Print help message and exit.
 
@@ -647,7 +647,7 @@
           then
           (command)>>
 
-### Set editor options (also see *[List of commands](doc/README.list_of_commands.md)*)
+### Set editor options (also see *[List of commands](README.list_of_commands.md)*)
 
 + Set binary edit mode (unset ascii edit mode, default).
 
@@ -776,7 +776,7 @@
         8549 test1
         # fileobj pid8549@0x400628:26
           (command)26~
-          (command):wq
+          (command):wq<ENTER>
 
 + *test1* starts to print "abcdefghijklmnopqrstuvwxyz".
 
@@ -796,7 +796,7 @@
         # fileobj pid8549@objdump.rodata
           (command)/A<ENTER>
           (command)26~
-          (command):wq
+          (command):wq<ENTER>
 
 ### Extensions
 

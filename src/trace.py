@@ -75,9 +75,9 @@ def __write_script(sf, tf, e, tb):
         log.debug("Wrote text to {0}".format(fd))
 
 def __get_cmdline(tf):
-    ret = ["FILEOBJ_FILE_STREAM_NAME=" + os.path.basename(tf)]
+    ret = ["FILEOBJ_FILE_NAME_STREAM=" + os.path.basename(tf)]
     for k, v in env.iter_defined_env():
-        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_FILE_STREAM_NAME"):
+        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_FILE_NAME_STREAM"):
             ret.append(k + "=" + v)
     for k, v in env.iter_defined_ext_env():
         ret.append(k + "=" + v)

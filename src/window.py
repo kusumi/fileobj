@@ -77,6 +77,9 @@ class Window (object):
     def lrepaint(self, low):
         self.__canvas.repaint(low)
 
+    def xrepaint(self):
+        self.__frame.repaint(False)
+
     def resize(self, siz, pos):
         self.__frame.resize(siz, pos)
         self.__canvas.resize(

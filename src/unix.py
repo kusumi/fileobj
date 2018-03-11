@@ -444,7 +444,7 @@ _procfs_mnt = ''
 
 def init_procfs(label=''):
     global _procfs_mnt
-    _procfs_mnt = setting.procfs_mount_point
+    _procfs_mnt = "/proc"
     if not os.path.isdir(_procfs_mnt):
         _procfs_mnt = get_procfs_mount_point(label)
 

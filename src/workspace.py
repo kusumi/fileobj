@@ -465,6 +465,10 @@ class Workspace (object):
         for o in self.__windows:
             o.lrepaint(low)
 
+    def xrepaint(self):
+        for o in self.__windows:
+            o.xrepaint()
+
     def go_up(self, n=1):
         for o in self.__windows:
             if o.go_up(n) == -1:

@@ -1,3 +1,13 @@
+## v0.7.60
++ Minor fixes and improvement
++ Improve Darwin support
++ Fix key mapping on VTxxx
++ Remove FILEOBJ_PROCFS_MOUNT_POINT
++ Remove FILEOBJ_FILE_NAME_TRACE
++ Remove FILEOBJ_FILE_NAME_LOG
++ Remove FILEOBJ_FILE_NAME_HISTORY
++ Remove FILEOBJ_FILE_NAME_MARKS
+
 ## v0.7.59
 + Minor fixes and improvement
 + Improve Darwin support

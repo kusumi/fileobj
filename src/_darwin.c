@@ -32,6 +32,7 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/disk.h>
+#include <sys/ptrace.h>
 
 static int get_blkdev_info(const char *path, blkdev_info_t *b)
 {
@@ -61,35 +62,65 @@ static int get_blkdev_info(const char *path, blkdev_info_t *b)
 
 static long ptrace_peektext(pid_t pid, long long addr)
 {
-	return -EOPNOTSUPP;
+	int ret;
+
+	errno = 0;
+	ret = ptrace(PT_READ_I, pid, (caddr_t)addr, 0);
+	if (ret == -1 && errno)
+		return -errno;
+
+	return ret;
 }
 
 static long ptrace_peekdata(pid_t pid, long long addr)
 {
-	return -EOPNOTSUPP;
+	int ret;
+
+	errno = 0;
+	ret = ptrace(PT_READ_D, pid, (caddr_t)addr, 0);
+	if (ret == -1 && errno)
+		return -errno;
+
+	return ret;
 }
 
 static int ptrace_poketext(pid_t pid, long long addr, long data)
 {
-	return -EOPNOTSUPP;
+	errno = 0;
+	if (ptrace(PT_WRITE_I, pid, (caddr_t)addr, (int)data) == -1)
+		return -errno;
+
+	return 0;
 }
 
 static int ptrace_pokedata(pid_t pid, long long addr, long data)
 {
-	return -EOPNOTSUPP;
+	errno = 0;
+	if (ptrace(PT_WRITE_D, pid, (caddr_t)addr, (int)data) == -1)
+		return -errno;
+
+	return 0;
 }
 
 static int ptrace_attach(pid_t pid)
 {
-	return -EOPNOTSUPP;
+	errno = 0;
+	if (ptrace(PT_ATTACH, pid, NULL, 0) == -1)
+		return -errno;
+
+	return 0;
 }
 
 static int ptrace_detach(pid_t pid)
 {
-	return -EOPNOTSUPP;
+	errno = 0;
+	if (ptrace(PT_DETACH, pid, (caddr_t)1, 0) == -1)
+		return -errno;
+
+	return 0;
 }
 
 static int get_ptrace_word_size(void)
 {
-	return -1;
+	return (int)sizeof(int);
 }

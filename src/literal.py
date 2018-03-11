@@ -192,6 +192,7 @@ enter         = FastLiteral("<ENTER>", (kbd.ENTER,), "Go [count] lines downward"
 j             = FastLiteral("j", None, "Go [count] lines downward")
 left          = FastLiteral("<LEFT>", (kbd.LEFT,), "Go [count] characters to the left")
 bspace        = FastLiteral("<BACKSPACE>", (kbd.BACKSPACE,), "Go [count] characters to the left")
+bspace2       = FastLiteral("<BACKSPACE2>", (kbd.BACKSPACE2,), "Go [count] characters to the left")
 h             = FastLiteral("h", None, "Go [count] characters to the left")
 right         = FastLiteral("<RIGHT>", (kbd.RIGHT,), "Go [count] characters to the right")
 space         = FastLiteral("<SPACE>", (kbd.SPACE,), "Go [count] characters to the right")
@@ -276,8 +277,6 @@ ctrlv         = FastLiteral("<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual
 escape        = FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode")
 resize        = FastLiteral('<RESIZE>', (kbd.RESIZE,), '')
 
-if kbd.use_bspace2:
-    bspace2   = FastLiteral("<BACKSPACE2>", (kbd.BACKSPACE2,), "Go [count] characters to the left")
 if kbd.use_alt_block_visual:
     ctrlv     = FastLiteral("<CTRL>v<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode") # the first <CTRL>v is ignored
 
@@ -470,8 +469,7 @@ def init():
     bspace.alias(
         h.alias(left)
     )
-    if kbd.use_bspace2:
-        bspace2.alias(bspace)
+    bspace2.alias(bspace)
     space.alias(
         l.alias(right)
     )

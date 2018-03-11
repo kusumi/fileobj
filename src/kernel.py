@@ -27,7 +27,6 @@ import re
 from . import filebytes
 from . import log
 from . import native
-from . import nodep
 from . import objdump
 from . import setting
 from . import util
@@ -47,6 +46,8 @@ def is_dragonflybsd():
     return __system_is("DragonFly") # No "BSD"
 def is_darwin():
     return __system_is("Darwin")
+def is_cygwin():
+    return _system.startswith("CYGWIN")
 def is_windows():
     return __system_is("Windows")
 def is_hurd():
@@ -83,9 +84,6 @@ def __is_xnix():
         return True
     except Exception:
         return False
-
-def is_cygwin():
-    return nodep.is_cygwin(_system)
 
 def is_bsd():
     return \
@@ -146,11 +144,8 @@ else:
 def get_kernel_module():
     return _kmod
 
-def is_detected():
-    return get_kernel_module() is not None
-
 def get_status_string():
-    if is_detected():
+    if get_kernel_module():
         return ""
     elif __system_is(util.UNKNOWN):
         return "Unknown OS type"
@@ -221,13 +216,6 @@ def get_size(f):
     elif path_to_pid(f) != -1:
         return util.get_address_space()
     else:
-        return -1
-
-def get_size_safe(f):
-    # return -1 if exception is raised
-    try:
-        return get_size(f)
-    except Exception:
         return -1
 
 def read_reg_size(f):

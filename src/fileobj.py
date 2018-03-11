@@ -195,7 +195,10 @@ class Fileobj (object):
 
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
-        bufsiz = kernel.get_size_safe(f)
+        try:
+            bufsiz = kernel.get_size(f)
+        except Exception:
+            bufsiz = -1
         if bufsiz == -1:
             if os.path.isfile(f):
                 log.error("Failed to stat {0}, using 0/0".format(f))

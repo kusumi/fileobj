@@ -125,6 +125,9 @@ class Console (object):
         self.co.lrepaint()
         while True:
             x = self.read_incoming()
+            if setting.use_debug:
+                if util.test_key(x):
+                    assert 0 <= util.decode_key(x) <= 0xFFFF, x
             if x == kbd.ERROR:
                 self.ope.clear()
                 continue
@@ -168,8 +171,11 @@ def init():
     if _scr:
         return -1
     _scr = screen.alloc(
-        get_size_y(), get_size_x(),
-        get_position_y(), get_position_x())
+        get_size_y(),
+        get_size_x(),
+        get_position_y(),
+        get_position_x(),
+        getch)
     if screen.use_alt_chgat():
         chgat = __alt_chgat
     else:

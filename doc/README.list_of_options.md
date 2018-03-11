@@ -49,8 +49,8 @@
                                 <bytes_per_window> are digit, "even" and "auto".
                                 Specifying "even" does not set fixed number of bytes,
                                 but makes all windows have the same size when a new
-                                window is added. If this option is not specified, the
-                                program assumes "auto" is specified.
+                                window is vertically added. If this option is not
+                                specified, the program assumes "auto" is specified.
           --fg=<color>          Set foreground color of the terminal. Available colors
                                 for <color> are "black", "blue", "cyan", "green",
                                 "magenta", "red", "white" and "yellow". If neither

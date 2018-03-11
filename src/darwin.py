@@ -23,11 +23,17 @@
 
 from __future__ import with_statement
 
-import errno
-
+from . import libc
 from . import log
 from . import unix
 from . import util
+
+PT_READ_I   = 1
+PT_READ_D   = 2
+PT_WRITE_I  = 4
+PT_WRITE_D  = 5
+PT_ATTACH   = 10
+PT_DETACH   = 11
 
 def get_term_info():
     return unix.get_term_info()
@@ -166,28 +172,28 @@ def get_pid_name(pid):
     return unix.get_pid_name_from_ps(pid)
 
 def has_ptrace():
-    return False # XXX unsupported
+    return libc.has_ptrace()
 
 def ptrace_peektext(pid, addr):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_READ_I, pid, addr, None)
 
 def ptrace_peekdata(pid, addr):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_READ_D, pid, addr, None)
 
 def ptrace_poketext(pid, addr, data):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_WRITE_I, pid, addr, data)
 
 def ptrace_pokedata(pid, addr, data):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_WRITE_D, pid, addr, data)
 
 def ptrace_attach(pid):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_ATTACH, pid, None, None)
 
 def ptrace_detach(pid):
-    return None, errno.EOPNOTSUPP
+    return libc.ptrace(PT_DETACH, pid, 1, 0)
 
 def get_ptrace_word_size():
-    return -1
+    return libc.get_ptrace_data_size()
 
 def waitpid(pid, opts):
     return unix.waitpid(pid, opts)
@@ -197,3 +203,4 @@ def parse_waitpid_result(status):
 
 def init():
     unix.init_procfs()
+    libc.init_ptrace("int")

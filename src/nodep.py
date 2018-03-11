@@ -34,23 +34,13 @@ def __test(version, name):
     s = "Using Python %s" % '.'.join([str(x) for x in version])
     if version < (2, 6, 0):
         raise Exception("%s\nPython 2.6 or above is required" % s)
-    elif name == "Windows" and not is_cygwin(name):
-        raise Exception("Windows is not supported")
+    elif name == "Windows":
+        if sys.executable[0] in "ABCDEFG":
+            raise Exception("Windows is not supported")
+        else: # assume Cygwin running Windows Python binary
+            raise Exception("Cygwin Python binary is required on Cygwin")
     import curses
     del curses
-
-def is_cygwin(name):
-    if name.startswith("CYGWIN"):
-        return True
-    if not name.startswith("Windows"):
-        return False
-    try:
-        import subprocess
-        p = subprocess.Popen(["uname"], stdout=subprocess.PIPE)
-        s = p.communicate()[0]
-        return s.startswith("CYGWIN")
-    except Exception:
-        return False
 
 def test():
     try:

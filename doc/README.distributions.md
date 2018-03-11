@@ -7,7 +7,8 @@
         $ uname
         FreeBSD
         $ sudo pkg search fileobj
-        fileobj-0.7.44                 Portable hex editor with vi like interface
+        fileobj-0.7.55                 Portable hex editor with vi like interface
+        fileobj-py36-0.7.55            Portable hex editor with vi like interface
         $ sudo pkg install fileobj
 
 ## DragonFlyBSD dports
@@ -17,7 +18,8 @@
         $ uname
         DragonFly
         $ sudo pkg search fileobj
-        fileobj-0.7.44                 Portable hex editor with vi like interface
+        fileobj-0.7.55                 Portable hex editor with vi like interface
+        fileobj-py36-0.7.55            Portable hex editor with vi like interface
         $ sudo pkg install fileobj
 
 ## Arch Linux AUR

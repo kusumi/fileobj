@@ -1,4 +1,4 @@
-# fileobj ([v0.7.59](https://github.com/kusumi/fileobj/releases/tag/v0.7.59))
+# fileobj ([v0.7.60](https://github.com/kusumi/fileobj/releases/tag/v0.7.60))
 
 ## About
 
@@ -14,9 +14,9 @@
 
 ## Supported operating systems
 
-|Linux|\*BSD|Solaris/illumos|Cygwin|Other Unix-likes|Windows|
-|:----|:----|:--------------|:-----|:---------------|:------|
-|YES  |YES  |YES            |YES   |untested        |NO     |
+|Linux|\*BSD|Darwin|Solaris/illumos|Cygwin|Other Unix-likes|Windows|
+|:----|:----|:-----|:--------------|:-----|:---------------|:------|
+|YES  |YES  |YES   |YES            |YES   |untested        |NO     |
 
 ## Install
 
@@ -40,9 +40,11 @@
 
 ## Usage
 
-+ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via */path/to/file@offset:length* or */path/to/file@offset-(offset+length)* syntax.
++ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* or *length* syntax.
 
         $ fileobj [options]... [paths]...
+        $ fileobj [options]... [paths[@offset:length]]...
+        $ fileobj [options]... [paths[@offset-(offset+length)]]...
 
 ## Resource
 

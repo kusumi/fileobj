@@ -149,7 +149,10 @@ class Allocator (object):
         return self.__alloc(f, 0, 0, cls)
 
     def __test_mmap_class(self, f, offset, length, cls):
-        size = kernel.get_size_safe(f)
+        try:
+            size = kernel.get_size(f)
+        except Exception:
+            size = -1
         if size == -1:
             log.error("Failed to stat " + f)
         elif size < kernel.get_page_size():
@@ -162,10 +165,10 @@ class Allocator (object):
     def __alloc(self, f, offset, length, cls):
         while cls:
             try:
-                log.info("Trying {0} for '{1}'".format(cls, f))
+                log.info("Attempt {0} for '{1}'".format(cls, f))
                 ret = cls(f, offset, length)
                 ret.set_magic()
-                log.info("Using {0} for '{1}'".format(cls, f))
+                log.info("Created {0} for '{1}'".format(repr(ret), f))
                 return ret
             except Exception as e:
                 log.error(e)

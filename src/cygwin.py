@@ -135,7 +135,6 @@ def has_pid(pid):
 def get_pid_name(pid):
     return unix.get_pid_name(pid)
 
-# not supported even if Cygwin has ptrace(2)
 def has_ptrace():
     return False
 

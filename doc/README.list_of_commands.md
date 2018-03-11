@@ -164,6 +164,7 @@
         <LEFT>                   Go [count] characters to the left
         h                        Go [count] characters to the left
         <BACKSPACE>              Go [count] characters to the left
+        <BACKSPACE2>             Go [count] characters to the left
         <RIGHT>                  Go [count] characters to the right
         l                        Go [count] characters to the right
         <SPACE>                  Go [count] characters to the right

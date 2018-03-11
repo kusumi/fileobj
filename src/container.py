@@ -34,6 +34,7 @@ from . import filebytes
 from . import fileops
 from . import kbd
 from . import kernel
+from . import log
 from . import marks
 from . import operand
 from . import panel
@@ -206,6 +207,11 @@ class Container (object):
         try:
             o = allocator.alloc(f)
             f = o.get_path()
+            if setting.use_debug and os.path.exists(f):
+                try:
+                    log.debug("{0} {1} {2}".format(repr(o), f, os.stat(f)))
+                except Exception as e:
+                    log.debug("{0} {1} {2}".format(repr(o), f, repr(e)))
             if self.__baks is not None and f not in self.__baks:
                 bak = util.creat_backup(f, util.get_timestamp())
                 if bak:
@@ -675,7 +681,7 @@ class Container (object):
         if self.build() == -1 and len(self) > 1:
             self.remove_other_workspace()
 
-    def wbrepaint(self, focus):
+    def brepaint(self, focus):
         self.__cur_workspace.brepaint(focus)
 
     def repaint(self, low=False):
@@ -696,6 +702,10 @@ class Container (object):
             if o.get_path() == f:
                 is_current = self.__cur_workspace is o
                 o.lrepaint(is_current and low)
+
+    def xrepaint(self):
+        for o in self.__workspaces:
+            o.xrepaint()
 
     def get_prev_context(self):
         return self.__prev_context

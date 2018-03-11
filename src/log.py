@@ -46,12 +46,13 @@ def init(name, f=None):
         return -1
 
     info('=' * 80)
-    info("Using Python {0} on {1} {2}".format(
-        util.get_python_version_string(),
+    info("{0} on {1} {2}".format(
+        util.get_python_executable_string(),
         util.get_os_name(),
         util.get_os_release()))
-    info("Running {0} ({1})".format(
-        util.get_program_path(), version.__version__))
+    info("{0} {1}".format(
+        util.get_program_path(),
+        version.get_tag_string()))
     info("argv {0}".format(sys.argv))
 
 def cleanup():
