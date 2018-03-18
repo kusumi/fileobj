@@ -73,7 +73,7 @@ CONTINUE  = util.gen_key()
 INTERRUPT = util.gen_key()
 QUIT      = util.gen_key()
 
-#                  stdout            VTxxx(XXX/DELETE)  xterm/others(XXX)
+#                  stdout            VTxxx              xterm/others(XXX)
 _keys = [
     ("TAB",        curses.ascii.TAB, curses.ascii.TAB,  curses.ascii.TAB),
     ("ENTER",      curses.ascii.LF,  curses.ascii.LF,   curses.ascii.LF),
@@ -85,7 +85,7 @@ _keys = [
     ("RIGHT",      util.gen_key(),   curses.KEY_RIGHT,  curses.KEY_RIGHT),
     ("BACKSPACE",  curses.ascii.DEL, curses.ascii.DEL,  curses.KEY_BACKSPACE),
     ("BACKSPACE2", util.gen_key(),   util.gen_key(),    curses.ascii.DEL),
-    ("DELETE",     curses.KEY_DC,    curses.KEY_DC,     curses.KEY_DC),
+    ("DELETE",     curses.KEY_DC,    util.gen_key(),    curses.KEY_DC),
     ("RESIZE",     util.gen_key(),   curses.KEY_RESIZE, curses.KEY_RESIZE),]
 
 def get_code(term):

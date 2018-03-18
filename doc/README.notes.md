@@ -18,10 +18,6 @@
 
 ## Running in a terminal multiplexer
 
-+ The editor cursor disappears when using *--fg* or *--bg*. -> **Defining an environment variable *FILEOBJ_USE_TMUX_CAVEAT* (with any value) may help. See below bash example.**
-
-        $ export FILEOBJ_USE_TMUX_CAVEAT=
-
 + Window frames disappear after once changing to a different terminal. -> **Refresh the entire screen with *CTRL-l*. This happens on some platforms.**
 
 ## Running in PuTTY on Windows

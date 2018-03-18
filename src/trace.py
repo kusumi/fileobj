@@ -23,9 +23,11 @@
 
 from __future__ import with_statement
 import os
+import random
 import sys
 
 from . import env
+from . import kbd
 from . import kernel
 from . import log
 from . import setting
@@ -41,18 +43,48 @@ def iter_trace_word(tf):
         for i in range(0, len(buf), n):
             yield util.bin_to_int(buf[i : i + n])
 
+def __get_path(trace_path):
+    trace_base = os.path.basename(trace_path)
+    uniq_path = trace_path + util.get_stamp()
+    return trace_base, uniq_path
+
 def write(trace_path, l, e, tb):
     try:
-        trace_base = os.path.basename(trace_path)
-        uniq_path = trace_path + util.get_stamp()
-        tf = uniq_path + ".bin"
-        sf = uniq_path + ".sh"
+        base, uniq = __get_path(trace_path)
+        tf = uniq + ".bin"
+        sf = uniq + ".sh"
         __write_trace(tf, l)
         __write_script(sf, tf, e, tb)
-        __creat_symlink(tf, trace_base + ".bin")
-        __creat_symlink(sf, trace_base + ".sh")
+        __creat_symlink(tf, base + ".bin")
+        __creat_symlink(sf, base + ".sh")
     except Exception as e:
         log.error(e)
+
+def creat_random(trace_path, beg, end, cnt, quit, blacklist=None):
+    try:
+        base, uniq = __get_path(trace_path)
+        tf = uniq + ".rand.bin"
+        l = []
+        for _ in range(cnt):
+            x = random.randint(beg, end)
+            if not blacklist or x not in blacklist:
+                l.append(x)
+        if quit:
+            __append_slow_cmd(l, ":only")
+            __append_slow_cmd(l, ":q!")
+        __write_trace(tf, l)
+        __creat_symlink(tf, base + ".rand.bin")
+    except Exception as e:
+        log.error(e)
+
+def __append_slow_cmd(l, s):
+    cmd = []
+    cmd.append(kbd.ESCAPE)
+    cmd.extend([ord(x) for x in s])
+    cmd.append(kbd.ENTER)
+    for x in cmd:
+        assert isinstance(x, int), x
+    l.extend(cmd)
 
 def __write_trace(tf, l):
     with kernel.fcreat(tf) as fd:
@@ -75,9 +107,9 @@ def __write_script(sf, tf, e, tb):
         log.debug("Wrote text to {0}".format(fd))
 
 def __get_cmdline(tf):
-    ret = ["FILEOBJ_FILE_NAME_STREAM=" + os.path.basename(tf)]
+    ret = ["FILEOBJ_PATH_STREAM=" + os.path.basename(tf)]
     for k, v in env.iter_defined_env():
-        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_FILE_NAME_STREAM"):
+        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_PATH_STREAM"):
             ret.append(k + "=" + v)
     for k, v in env.iter_defined_ext_env():
         ret.append(k + "=" + v)

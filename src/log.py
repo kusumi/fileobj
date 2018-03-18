@@ -99,8 +99,11 @@ def __log(l, level):
     assert util.is_seq(l), l
     if len(l) == 1:
         l = l[0]
+    s = util.obj_to_string(l)
     if _logger:
-        _logger.log(level, util.obj_to_string(l))
+        _logger.log(level, s)
+    elif setting.log_level.lower() == "stdout":
+        util.printf(s)
     else:
         return -1
 

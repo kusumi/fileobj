@@ -21,12 +21,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import collections
 import curses
 
+from . import kbd
+from . import kernel
 from . import log
+from . import setting
 from . import util
 
-_has_chgat  = True
+_has_chgat = True
+_windows = []
 
 def init(fg, bg):
     global _has_chgat
@@ -42,6 +47,7 @@ def init(fg, bg):
     return std, \
         curses.A_NORMAL, \
         curses.A_BOLD, \
+        curses.A_REVERSE, \
         curses.A_STANDOUT, \
         curses.A_UNDERLINE, \
         curses.ACS_CKBOARD, \
@@ -52,6 +58,10 @@ def cleanup():
     curses.echo()
     curses.nocbreak()
     curses.endwin()
+
+def cleanup_windows():
+    while _windows:
+        _windows[0].cleanup()
 
 def __init_curses_io():
     curses.noecho()
@@ -79,7 +89,7 @@ def __init_curses_color(fg, bg):
         return -1
 
 def __find_curses_color(fg, bg):
-    d = dict([l for l in iter_color_pair()])
+    d = dict([l for l in __iter_color_pair()])
     white = d.get("white")
     black = d.get("black")
     fg = d.get(fg, white)
@@ -105,19 +115,171 @@ def flash():
     curses.flash()
 
 def newwin(leny, lenx, begy, begx, ref=None):
-    return curses.newwin(leny, lenx, begy, begx)
+    if kernel.is_vtxxx():
+        scr = _VTxxxWindow(leny, lenx, begy, begx, ref)
+        scr.init()
+        return scr
+    else:
+        return curses.newwin(leny, lenx, begy, begx)
 
 def has_chgat():
     return _has_chgat
 
-_prefix = "COLOR_"
+def iter_color_name():
+    for k, v in __iter_color_pair():
+        yield k
 
-def iter_color_pair():
+def __iter_color_pair():
     for k, v in sorted(util.iter_dir_items(curses)):
-        if k.startswith(_prefix) and isinstance(v, int):
-            s = k[len(_prefix):].lower()
+        if k.startswith("COLOR_") and isinstance(v, int):
+            s = k[len("COLOR_"):].lower()
             yield s, v
 
-def iter_color_name():
-    for k, v in iter_color_pair():
-        yield k
+class Window (object):
+    def __init__(self, leny, lenx, begy, begx, ref):
+        self.__scr = curses.newwin(leny, lenx, begy, begx)
+
+    def init(self):
+        self.__ib = collections.deque()
+        self.__ob = collections.deque()
+        _windows.append(self)
+
+    def cleanup(self):
+        self.__clear_input()
+        self.__clear_output()
+        _windows.remove(self)
+
+    def __clear_input(self):
+        self.__ib.clear()
+
+    def __clear_output(self):
+        self.__ob.clear()
+
+    def __queue_input(self, l):
+        for x in l:
+            assert isinstance(x, int)
+        self.__ib.extend(l)
+
+    def __queue_output(self, l):
+        for x in l:
+            assert isinstance(x, int)
+        self.__ob.extend(l)
+
+    def __fetch_output(self):
+        try:
+            return self.__ob.popleft()
+        except IndexError:
+            return
+
+    def __input_to_seq(self):
+        return tuple(self.__ib)
+
+    def keypad(self, yes):
+        return self.__scr.keypad(yes)
+
+    def idlok(self, yes):
+        return self.__scr.idlok(yes)
+
+    def scrollok(self, flag):
+        return self.__scr.scrollok(flag)
+
+    def bkgd(self, ch, attr):
+        return self.__scr.bkgd(ch, attr)
+
+    def addstr(self, y, x, s, attr=0):
+        return self.__scr.addstr(y, x, s, attr)
+
+    def clrtoeol(self):
+        return self.__scr.clrtoeol()
+
+    def clear(self):
+        return self.__scr.clear()
+
+    def refresh(self):
+        return self.__scr.refresh()
+
+    def move(self, y, x):
+        return self.__scr.move(y, x)
+
+    def mvwin(self, y, x):
+        return self.__scr.mvwin(y, x)
+
+    def resize(self, y, x):
+        return self.__scr.resize(y, x)
+
+    def box(self):
+        return self.__scr.box()
+
+    def border(self, ls, rs, ts, bs, tl, tr, bl, br):
+        return self.__scr.border(ls, rs, ts, bs, tl, tr, bl, br)
+
+    def chgat(self, y, x, num, attr):
+        return self.__scr.chgat(y, x, num, attr)
+
+    def getmaxyx(self):
+        return self.__scr.getmaxyx()
+
+    def getbegyx(self):
+        return self.__scr.getbegyx()
+
+    def _getch(self):
+        return self.__scr.getch()
+
+    def getch(self):
+        x = self.__fetch_output()
+        if x is not None:
+            return x
+        x = self._getch()
+
+        l = self.__input_to_seq()
+        self.__queue_input((x,))
+        self.preprocess(x, l)
+
+        ret = None
+        if x != kbd.ERROR:
+            try:
+                ret = self.parse(x, l)
+            except ValueError as e:
+                # max chr(255) on Python 2
+                if not util.is_python2():
+                    log.debug(e, x, l)
+                    raise
+        if ret is not None:
+            if ret != kbd.CONTINUE:
+                self.__clear_input()
+            return ret
+
+        #if l and x == l[-1]: # XXX
+        #    l = l[:-1]
+        self.__queue_output(l)
+        self.__queue_output((x,))
+        self.__clear_input()
+        return kbd.CONTINUE
+
+    def preprocess(self, x, l):
+        return
+
+    def parse(self, x, l):
+        return
+
+    def test_env(self, s):
+        name = "key_{0}".format(s.lower())
+        if getattr(setting, name) is None:
+            return getattr(kbd, s.upper())
+
+class _VTxxxWindow (Window):
+    def parse(self, x, l):
+        x = chr(x)
+        s = ''.join([chr(_) for _ in l])
+        if x == "\x1B": # ESC
+            if not s:
+                return kbd.CONTINUE
+        elif x == "[":
+            if s == "\x1B": # ESC
+                return kbd.CONTINUE # CSI
+        elif x == "3":
+            if s == "\x1B[": # CSI
+                return kbd.CONTINUE
+        elif x == "~":
+            if s == "\x1B[3":
+                return self.test_env("delete")

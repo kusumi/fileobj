@@ -68,6 +68,7 @@ class Container (object):
         self.__marks = marks.Marks(None)
         self.__cur_workspace = None
         self.__in_vertical = False
+        self.__in_random = False
         self.set_prev_context(None)
 
     def __getattr__(self, name):
@@ -222,6 +223,8 @@ class Container (object):
 
     def add_buffer(self, f, reload=False):
         """Add buffer and make current workspace focus that"""
+        if self.__in_random:
+            self.__raise_random_stream("Add {0}".format(f))
         if not self.has_buffer(f):
             o = self.__alloc_buffer(f, reload)
             if o:
@@ -636,6 +639,11 @@ class Container (object):
         else:
             return self.__workspaces[i - 1]
 
+    def flush(self, f=None):
+        if self.__in_random:
+            self.__raise_random_stream("Flush {0}".format(f))
+        return self.__cur_workspace.flush(f)
+
     def read(self, x, n):
         return self.__cur_workspace.read(x, n)
     def read_current(self, n):
@@ -727,8 +735,15 @@ class Container (object):
     def buffer_input(self, l):
         self.__stream.extend(l)
 
+    def __raise_random_stream(self, s):
+        log.warning(s)
+        raise KeyboardInterrupt(s) # not derived from Exception
+
     def __load_stream(self):
         f = setting.get_stream_path()
+        if f.endswith("rand.bin"):
+            self.__in_random = True
+            log.warning("Random stream {0}".format(f))
         if os.path.isfile(f):
             try:
                 l = trace.read(f)
@@ -1010,6 +1025,15 @@ class Container (object):
             return -1
         prev = self.__bpw
         self.__bpw = ret
+
+        # shrink bpl if bpw < bpl
+        if self.__bpw < self.__cur_workspace.get_bytes_per_line():
+            prev_bpl = self.get_bytes_per_line()
+            if self.set_bytes_per_line(self.__bpw) != -1:
+                return
+            else:
+                assert self.set_bytes_per_line(prev_bpl) != -1, prev_bpl
+                self.__bpw = prev
 
         if self.__build(self.__in_vertical, True) == workspace.BUILD_FAILED:
             # expand bpl if possible and retry

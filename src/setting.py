@@ -29,9 +29,6 @@ from . import env
 def get_trace_path():
     return os.path.join(this.user_dir, "trace")
 
-def get_stream_path():
-    return get_path("stream")
-
 def get_log_path():
     return os.path.join(this.user_dir, "log")
 
@@ -41,20 +38,22 @@ def get_history_path():
 def get_marks_path():
     return os.path.join(this.user_dir, "marks")
 
-def get_path(s):
-    return __get_path("file_name_{0}".format(s))
+def get_stream_path():
+    return __get_path("path_stream")
 
 def get_ext_path(s):
-    return __get_path("ext_file_name_{0}".format(s))
+    return __get_path("ext_path_{0}".format(s))
 
+# use the setting if already a complete path,
+# otherwise consider it as a file name.
 def __get_path(s):
-    b = getattr(this, s) # "(ext_)file_name_xxx"
+    s = getattr(this, s) # e.g. "(ext_)path_xxx"
+    if s and os.path.isfile(s):
+        return s
     d = this.user_dir
-    if d is None:
-        return ''
-    if b is None:
-        return ''
-    return os.path.join(d, b)
+    if s and d and os.path.isdir(d):
+        return os.path.join(d, s)
+    return ''
 
 USER_DIR_NONE         = -1
 USER_DIR_NO_READ      = -2

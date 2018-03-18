@@ -26,10 +26,7 @@ import os
 import sys
 
 def __iter_env_name():
-    """These variables will be renamed or removed without notice,
-except for the ones already appeared in documentation.
-Many of them are for debugging which could be removed at some point.
-"""
+    """These variables may be renamed or removed without notice."""
     yield "FILEOBJ_USE_DEBUG" # --debug, unittest (true)
     yield "FILEOBJ_USE_FORCE" # --force
     yield "FILEOBJ_USE_GETCH" # unittest (false)
@@ -81,11 +78,10 @@ Many of them are for debugging which could be removed at some point.
     yield "FILEOBJ_USE_BSD_CAVEAT"
     yield "FILEOBJ_USE_ILLUMOS_CAVEAT"
     yield "FILEOBJ_USE_CYGWIN_CAVEAT"
-    yield "FILEOBJ_USE_TMUX_CAVEAT" # doc/README.notes.md
     yield "FILEOBJ_USE_PUTTY_CAVEAT" # doc/README.notes.md
     yield "FILEOBJ_BUFFER_SIZE"
     yield "FILEOBJ_USER_DIR"
-    yield "FILEOBJ_FILE_NAME_STREAM"
+    yield "FILEOBJ_PATH_STREAM"
     yield "FILEOBJ_KEY_DOWN"
     yield "FILEOBJ_KEY_UP"
     yield "FILEOBJ_KEY_LEFT"
@@ -375,9 +371,6 @@ def __get_setting_use_illumos_caveat():
 def __get_setting_use_cygwin_caveat():
     return test_bool("FILEOBJ_USE_CYGWIN_CAVEAT", False)
 
-def __get_setting_use_tmux_caveat():
-    return test_bool("FILEOBJ_USE_TMUX_CAVEAT", False)
-
 def __get_setting_use_putty_caveat():
     return test_bool("FILEOBJ_USE_PUTTY_CAVEAT", False)
 
@@ -388,8 +381,8 @@ def __get_setting_user_dir():
     d = os.path.join(os.path.expanduser("~"), ".fileobj")
     return test_name("FILEOBJ_USER_DIR", d)
 
-def __get_setting_file_name_stream():
-    return getenv("FILEOBJ_FILE_NAME_STREAM")
+def __get_setting_path_stream():
+    return getenv("FILEOBJ_PATH_STREAM")
 
 def __get_setting_key_down():
     return __get_setting_key("FILEOBJ_KEY_DOWN")

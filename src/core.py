@@ -132,9 +132,20 @@ def dispatch(optargs=None):
             util.printf(x)
         return
 
+    msg = [None, None, None]
     targs = util.Namespace(e=None, tb=[], done=False, baks={})
     atexit.register(__cleanup, targs)
+
     ret = setting.init_user()
+    if ret == setting.USER_DIR_NONE:
+        msg[0] = "Not using user directory"
+    elif ret == setting.USER_DIR_NO_READ:
+        msg[0] = "Permission denied (read): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_NO_WRITE:
+        msg[0] = "Permission denied (write): {0}".format(setting.user_dir)
+    elif ret == setting.USER_DIR_MKDIR_FAILED:
+        msg[0] = "Failed to create user directory {0}".format(setting.user_dir)
+
     log.init(util.get_program_name())
 
     for s in allocator.iter_module_name():
@@ -155,6 +166,11 @@ def dispatch(optargs=None):
     if opts.verbose_window:
         setting.use_verbose_status_window = True
         setting.use_status_window_frame = True
+    if kernel.is_vtxxx() and (opts.fg or opts.bg):
+        msg[2] = "Terminal color unsupported on {0}".format(
+            kernel.get_term_info())
+        opts.fg = None
+        opts.bg = None
 
     # hidden options
     if opts.terminal_height > 0:
@@ -187,33 +203,21 @@ def dispatch(optargs=None):
         l.append("{0}={1}".format(*_))
     log.debug("settings {0}".format(l))
 
-    msg1 = ''
-    if ret == setting.USER_DIR_NONE:
-        msg1 = "Not using user directory"
-    elif ret == setting.USER_DIR_NO_READ:
-        msg1 = "Permission denied (read): {0}".format(setting.user_dir)
-    elif ret == setting.USER_DIR_NO_WRITE:
-        msg1 = "Permission denied (write): {0}".format(setting.user_dir)
-    elif ret == setting.USER_DIR_MKDIR_FAILED:
-        msg1 = "Failed to create user directory {0}".format(setting.user_dir)
-    if msg1:
-        log.error(msg1)
-
-    msg2 = ''
-    s = " caveat enabled on {0}".format(util.get_os_name())
+    s = "{{0}} caveat enabled on {0}".format(util.get_os_name())
     if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
-        msg2 = "BSD" + s
+        msg[1] = s.format("BSD")
     if not kernel.is_illumos() and setting.use_illumos_caveat:
-        msg2 = "illumos" + s
+        msg[1] = s.format("illumos")
     if not kernel.is_cygwin() and setting.use_cygwin_caveat:
-        msg2 = "Cygwin" + s
-    if msg2:
-        log.error(msg2)
+        msg[1] = s.format("Cygwin")
 
     log.debug(util.get_os_name(), util.get_os_release(), util.get_cpu_name())
     log.debug(kernel.get_term_info(), kernel.get_lang_info())
     log.debug("RAM {0}".format(methods.get_meminfo_string()))
     log.debug(methods.get_osdep_string())
+    for s in msg:
+        if s:
+            log.error(s)
 
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)
@@ -261,16 +265,17 @@ def dispatch(optargs=None):
             opts.bytes_per_line, opts.bytes_per_window) == -1:
             __error("Terminal ({0},{1}) does not have enough room".format(
                 screen.get_size_y(), screen.get_size_x()))
+
         if setting.use_debug:
             d = util.get_import_exceptions()
             assert not d, d
-        if msg1:
-            co.flash(msg1) # higher priority than msg2
-        elif msg2:
-            co.flash(msg2)
+        for s in msg:
+            if s:
+                co.flash(s)
+                break # only the first one (highest priority)
         co.xrepaint()
         co.dispatch()
-    except Exception as e:
+    except BaseException as e: # not Exception
         tb = sys.exc_info()[2]
         targs.e = e
         targs.tb = util.get_traceback(tb)

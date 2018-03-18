@@ -21,47 +21,77 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import collections
 import sys
 
 from . import filebytes
 from . import kbd
 from . import kernel
 from . import log
+from . import ncurses
 from . import setting
 from . import util
 
 _stdin = sys.stdin
-_windows = []
+_count = 0
 
 A_DEFAULT   = 0
 A_BOLD      = 1
-A_STANDOUT  = 2
-A_UNDERLINE = 4
+A_REVERSE   = 2
+A_STANDOUT  = 4
+A_UNDERLINE = 8
 A_FOCUS     = 0
 A_COLOR     = 0
 
-class _window (object):
+def init(fg, bg):
+    from . import screen
+    return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
+        A_DEFAULT, \
+        A_BOLD, \
+        A_REVERSE, \
+        A_STANDOUT, \
+        A_UNDERLINE, \
+        A_FOCUS, \
+        A_COLOR
+
+def cleanup():
+    ncurses.cleanup_windows()
+
+def flash():
+    return
+
+def newwin(leny, lenx, begy, begx, ref=None):
+    scr = _window(leny, lenx, begy, begx, ref)
+    scr.init()
+    return scr
+
+def has_chgat():
+    return True
+
+def iter_color_name():
+    yield "black"
+    yield "white"
+
+class _window (ncurses.Window):
     def __init__(self, leny, lenx, begy, begx, ref):
         self.__siz = util.Pair(leny, lenx)
         self.__pos = util.Pair(begy, begx)
         self.__ref = ref
 
     def init(self):
-        if not _windows:
+        global _count
+        super(_window, self).init()
+        if _count == 0:
             kernel.get_tc(_stdin)
             log.debug("Save tty attr")
             kernel.set_cbreak(_stdin)
             log.debug("Set tty cbreak")
-        _windows.append(self)
-        self.__ib = collections.deque()
-        self.__ob = collections.deque()
+        _count += 1
 
     def cleanup(self):
-        self.__clear_input()
-        self.__clear_output()
-        _windows.remove(self)
-        if not _windows:
+        global _count
+        super(_window, self).cleanup()
+        _count -= 1
+        if _count == 0:
             kernel.set_tc(_stdin)
             log.debug("Restore tty attr")
 
@@ -84,7 +114,7 @@ class _window (object):
     def addstr(self, y, x, s, attr=A_DEFAULT):
         if setting.stdout_verbose > 0:
             util.printf(self.__mkstr(y, x, s))
-        if setting.stdout_verbose > 1:
+        if setting.stdout_verbose > 2:
             for x in util.iter_traceback():
                 util.printf(x)
 
@@ -121,36 +151,19 @@ class _window (object):
     def getbegyx(self):
         return self.__pos.y, self.__pos.x
 
-    def __clear_input(self):
-        self.__ib.clear()
+    def _getch(self):
+        return ord(_stdin.read(1))
 
-    def __clear_output(self):
-        self.__ob.clear()
+    def preprocess(self, x, l):
+        if setting.stdout_verbose > 1:
+            if kbd.isprint(x):
+                util.printf("{0} {1}".format(x, chr(x)))
+            else:
+                util.printf(x)
 
-    def __append_input(self, s):
-        self.__ib.extend(s)
-
-    def __append_output(self, s):
-        self.__ob.extend(s)
-
-    def __get_output(self):
-        try:
-            return self.__ob.popleft()
-        except IndexError:
-            return -1
-
-    def __input_to_string(self):
-        return ''.join(self.__ib)
-
-    def getch(self):
-        x = self.__get_output()
-        if x != -1:
-            return ord(x)
-        x = _stdin.read(1)
-        util.printf(repr(x))
-
-        s = self.__input_to_string()
-        self.__append_input(x)
+    def parse(self, x, l):
+        x = chr(x)
+        s = ''.join([chr(_) for _ in l])
         if x == "\x1B": # ESC
             if not s:
                 return kbd.CONTINUE
@@ -159,59 +172,19 @@ class _window (object):
                 return kbd.CONTINUE # CSI
         elif x == "A":
             if s == "\x1B[": # CSI
-                self.__clear_input()
-                return kbd.UP
+                return self.test_env("up")
         elif x == "B":
             if s == "\x1B[": # CSI
-                self.__clear_input()
-                return kbd.DOWN
+                return self.test_env("down")
         elif x == "C":
             if s == "\x1B[": # CSI
-                self.__clear_input()
-                return kbd.RIGHT
+                return self.test_env("right")
         elif x == "D":
             if s == "\x1B[": # CSI
-                self.__clear_input()
-                return kbd.LEFT
+                return self.test_env("left")
         elif x == "3":
             if s == "\x1B[": # CSI
                 return kbd.CONTINUE
         elif x == "~":
             if s == "\x1B[3":
-                self.__clear_input()
-                return kbd.DELETE
-        if s and x == s[-1]:
-            s = s[:-1]
-        self.__append_output(s)
-        self.__append_output(x)
-        self.__clear_input()
-        return kbd.CONTINUE
-
-def init(fg, bg):
-    from . import screen
-    return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
-        A_DEFAULT, \
-        A_BOLD, \
-        A_STANDOUT, \
-        A_UNDERLINE, \
-        A_FOCUS, \
-        A_COLOR
-
-def cleanup():
-    while _windows:
-        _windows[0].cleanup()
-
-def flash():
-    return
-
-def newwin(leny, lenx, begy, begx, ref=None):
-    scr = _window(leny, lenx, begy, begx, ref)
-    scr.init()
-    return scr
-
-def has_chgat():
-    return True
-
-def iter_color_name():
-    yield "black"
-    yield "white"
+                return self.test_env("delete")

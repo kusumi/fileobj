@@ -41,6 +41,7 @@ terminal = util.Namespace(height=-1, width=-1)
 
 A_DEFAULT   = 0
 A_BOLD      = 0
+A_REVERSE   = 0
 A_STANDOUT  = 0
 A_UNDERLINE = 0
 A_FOCUS     = 0
@@ -50,6 +51,7 @@ def init(fg='', bg=''):
     global _std, \
         A_DEFAULT, \
         A_BOLD, \
+        A_REVERSE, \
         A_STANDOUT, \
         A_UNDERLINE, \
         A_FOCUS, \
@@ -61,6 +63,7 @@ def init(fg='', bg=''):
     _std, \
     A_DEFAULT, \
     A_BOLD, \
+    A_REVERSE, \
     A_STANDOUT, \
     A_UNDERLINE, \
     A_FOCUS, \

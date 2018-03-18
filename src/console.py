@@ -176,6 +176,7 @@ def init():
         get_position_y(),
         get_position_x(),
         getch)
+    log.debug(_scr)
     if screen.use_alt_chgat():
         chgat = __alt_chgat
     else:

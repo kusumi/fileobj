@@ -305,14 +305,12 @@ class DisplayCanvas (Canvas):
         attr_cursor = []
         attr_search = []
         attr_visual = []
-        # A_STANDOUT may disappear
-        if setting.use_tmux_caveat and \
-            kernel.is_in_tmux() and \
-            screen.use_color():
-            attr_cursor.append("bold")
-            attr_visual.append("bold")
-        # A_BOLD may disappear
+        if kernel.is_in_tmux() and screen.use_color():
+            # use A_REVERSE in addition to A_STANDOUT
+            attr_cursor.append("reverse")
+            attr_visual.append("reverse")
         if setting.use_putty_caveat:
+            # XXX A_BOLD may disappear
             attr_posstr.append("standout")
             attr_search.append("underline")
         # initialize attributes
@@ -329,6 +327,11 @@ class DisplayCanvas (Canvas):
             n += self.bufmap.x
 
     def fill(self, low):
+        # XXX with vt2xx, self.clrl() via super's fill() may not work against
+        # consecutive lines in the final page, so clear the entire screen.
+        if kernel.is_vt2xx() and \
+            self.fileops.get_max_pos() < self.get_next_page_offset():
+            self.scr.clear()
         self.fill_posstr()
         super(DisplayCanvas, self).fill(low)
         pos = self.fileops.get_pos()
@@ -591,11 +594,11 @@ class StatusCanvas (Canvas, default_addon):
                 a += "N"
             if a:
                 s += "{0}|".format(a)
-            cls = self.fileops.get_type()
-            x = util.get_class_repr(cls)
-            if not x:
-                x = cls
-            s += "{0}|{1}|{2} ".format(
+            x = self.fileops.get_type().__module__
+            if x.startswith("fileobj."):
+                x = x[len("fileobj."):]
+            s += "{0}|{1}|{2}|{3} ".format(
+                kernel.get_term_info(),
                 util.get_python_executable_string(),
                 version.__version__,
                 x)
@@ -797,9 +800,9 @@ def _parse_attr(config, default):
     attr = zero = screen.A_DEFAULT
     for s in config:
         name = "A_" + s.upper()
-        if hasattr(screen, name):
+        if hasattr(screen, name): # valid config
             attr |= getattr(screen, name)
-    # return default if config had nothing
+    # return default if config empty or invalid
     if attr == zero:
         return default
     else:

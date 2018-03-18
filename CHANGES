@@ -1,3 +1,11 @@
+v0.7.61
+=======
+- Minor fixes and improvement
+- Improve VTxxx support
+- Add FILEOBJ_PATH_STREAM
+- Remove FILEOBJ_USE_TMUX_CAVEAT
+- Remove FILEOBJ_FILE_NAME_STREAM
+
 v0.7.60
 =======
 - Minor fixes and improvement

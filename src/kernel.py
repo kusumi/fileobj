@@ -159,6 +159,13 @@ def get_term_info():
     else:
         return ''
 
+def is_vtxxx():
+    return re.match(r"vt\d\d\d", get_term_info())
+def is_vt1xx():
+    return re.match(r"vt1\d\d", get_term_info())
+def is_vt2xx():
+    return re.match(r"vt2\d\d", get_term_info())
+
 def get_lang_info():
     o = get_kernel_module()
     if o:
