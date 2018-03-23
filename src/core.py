@@ -31,6 +31,7 @@ from . import allocator
 from . import console
 from . import container
 from . import env
+from . import kbd
 from . import kernel
 from . import literal
 from . import log
@@ -108,6 +109,7 @@ def dispatch(optargs=None):
     parser.add_option("--verbose_window", action="store_true", default=(setting.use_verbose_status_window and setting.use_status_window_frame), help=usage.verbose_window)
     parser.add_option("--backup", action="store_true", default=setting.use_backup, help=usage.backup)
     parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
+    parser.add_option("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_option("--command", action="store_true", default=False, help=usage.command)
     parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
 
@@ -240,6 +242,10 @@ def dispatch(optargs=None):
             else:
                 __error(str(e))
 
+        if opts.test_screen:
+            test_screen()
+            return
+
         if opts.B:
             tot = 0
             for x in args:
@@ -287,3 +293,61 @@ def dispatch(optargs=None):
         __cleanup(targs)
     if targs.e:
         return -1
+
+def test_screen():
+    scr = screen.alloc_all()
+    l = [kbd.ERROR, ""]
+    while True:
+        siz = screen.get_size_y() - 2 # frame
+        scr.clear()
+        scr.box()
+        if siz >= 13:
+            scr.addstr(1, 1, "Running {0} on {1}".format(
+                util.get_python_executable_string(),
+                kernel.get_term_info()))
+            scr.addstr(3, 1, "This should look normal.", screen.A_DEFAULT)
+            scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
+            scr.addstr(5, 1, "This should look reversed.", screen.A_REVERSE)
+            if kernel.is_screen() and screen.use_color():
+                s = "may not"
+            else:
+                s = "should"
+            scr.addstr(6, 1, "This {0} look reversed.".format(s),
+                screen.A_STANDOUT)
+            if kernel.is_screen() and screen.use_color():
+                s = "may not"
+            else:
+                s = "should"
+            scr.addstr(7, 1, "This {0} be underlined.".format(s),
+                screen.A_UNDERLINE)
+            scr.addstr(8, 1, "This frame should resize if the terminal "
+                "emulator is resized.")
+            scr.addstr(10, 1, "Check if above appear as they should.")
+            scr.addstr(12, 1, "Press {0} to exit.".format(literal.ctrlc.str))
+            if l[0] != kbd.ERROR:
+                scr.addstr(13, 1, "{0:3} {1}".format(*l))
+        elif siz >= 3:
+            scr.addstr(1, 1, "Not enough room.")
+            scr.addstr(2, 1, "Press {0} to exit.".format(literal.ctrlc.str))
+            if l[0] != kbd.ERROR:
+                scr.addstr(3, 1, "{0:3} {1}".format(*l))
+        scr.refresh()
+
+        ret = scr.getch()
+        if ret == kbd.RESIZE:
+            screen.update_size()
+            scr.resize(screen.get_size_y(), screen.get_size_x())
+        if screen.test_signal():
+            break
+
+        li = literal.find_literal((ret,))
+        l[0] = ret
+        if li:
+            l[1] = li.str
+        else:
+            try:
+                l[1] = chr(ret)
+            except ValueError:
+                l[1] = ""
+        if util.test_key(l[0]) and not kbd.isprints(l[1]): # VTxxx
+            l[0] = kbd.ERROR

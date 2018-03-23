@@ -877,11 +877,11 @@ def clear_dict(d, cond=None):
     else:
         d.clear()
 
-_max_key = 0
+_key_cnt = 0
 def gen_key():
-    global _max_key
-    _max_key += 1
-    return encode_key(_max_key)
+    global _key_cnt
+    _key_cnt += 1
+    return encode_key(_key_cnt)
 
 def encode_key(x):
     assert isinstance(x, int), x
@@ -891,7 +891,7 @@ def encode_key(x):
 def decode_key(x):
     assert isinstance(x, int), x
     ret = x >> 16
-    assert 0 <= ret <= _max_key, ret
+    assert 0 <= ret <= _key_cnt, ret
     return ret
 
 def test_key(x):

@@ -305,14 +305,10 @@ class DisplayCanvas (Canvas):
         attr_cursor = []
         attr_search = []
         attr_visual = []
-        if kernel.is_in_tmux() and screen.use_color():
+        if kernel.is_screen() and screen.use_color():
             # use A_REVERSE in addition to A_STANDOUT
             attr_cursor.append("reverse")
             attr_visual.append("reverse")
-        if setting.use_putty_caveat:
-            # XXX A_BOLD may disappear
-            attr_posstr.append("standout")
-            attr_search.append("underline")
         # initialize attributes
         self.attr_posstr = _parse_attr(attr_posstr, screen.A_BOLD)
         self.attr_cursor = _parse_attr(attr_cursor, screen.A_STANDOUT)

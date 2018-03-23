@@ -21,17 +21,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import curses
-import curses.ascii
 import sys
 
+from . import ascii
 from . import kernel
 from . import setting
 from . import util
 
+def _(c):
+    if isinstance(c, int):
+        return c
+    else:
+        return ord(c)
+
 def ctrl(c):
-    """Take str/bytes and return int"""
-    return curses.ascii.ctrl(ord(c))
+    return _(c) & 0x1F
 
 #           isspace(3) isgraph(3) isprint(3)
 # 0x09 '\t' True       False      False
@@ -42,15 +46,18 @@ def ctrl(c):
 # 0x20 ' '  True       False      True
 
 def isspace(c):
-    return curses.ascii.isspace(c)
+    x = _(c)
+    return x in (0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x20)
 
 def isgraph(c):
-    return curses.ascii.isgraph(c)
+    x = _(c)
+    return x >= 0x21 and x <= 0x7E
 
 def isprint(c):
     # return True if isgraph(3) or 0x20
     # this isn't same as isgraph(3) + isspace(3) see above for details
-    return curses.ascii.isprint(c)
+    x = _(c)
+    return isgraph(x) or x == 0x20
 
 def isprints(l):
     return len(l) > 0 and all(isprint(x) for x in l)
@@ -68,25 +75,46 @@ def to_chr_repr(c):
 use_alt_block_visual = setting.use_bsd_caveat or \
     setting.use_illumos_caveat
 
-ERROR     = curses.ERR
 CONTINUE  = util.gen_key()
 INTERRUPT = util.gen_key()
 QUIT      = util.gen_key()
 
-#                  stdout            VTxxx              xterm/others(XXX)
+try:
+    import curses
+    ERROR          = curses.ERR
+    _KEY_DOWN      = curses.KEY_DOWN
+    _KEY_UP        = curses.KEY_UP
+    _KEY_LEFT      = curses.KEY_LEFT
+    _KEY_RIGHT     = curses.KEY_RIGHT
+    _KEY_BACKSPACE = curses.KEY_BACKSPACE
+    _KEY_DC        = curses.KEY_DC
+    _KEY_RESIZE    = curses.KEY_RESIZE
+except ImportError:
+    if setting.use_debug:
+        raise
+    ERROR          = -1
+    _KEY_DOWN      = 258
+    _KEY_UP        = 259
+    _KEY_LEFT      = 260
+    _KEY_RIGHT     = 261
+    _KEY_BACKSPACE = 263
+    _KEY_DC        = 330
+    _KEY_RESIZE    = 410
+
+#                  stdout          VTxxx           xterm/others(XXX)
 _keys = [
-    ("TAB",        curses.ascii.TAB, curses.ascii.TAB,  curses.ascii.TAB),
-    ("ENTER",      curses.ascii.LF,  curses.ascii.LF,   curses.ascii.LF),
-    ("ESCAPE",     curses.ascii.ESC, curses.ascii.ESC,  curses.ascii.ESC),
-    ("SPACE",      curses.ascii.SP,  curses.ascii.SP,   curses.ascii.SP),
-    ("DOWN",       util.gen_key(),   curses.KEY_DOWN,   curses.KEY_DOWN),
-    ("UP",         util.gen_key(),   curses.KEY_UP,     curses.KEY_UP),
-    ("LEFT",       util.gen_key(),   curses.KEY_LEFT,   curses.KEY_LEFT),
-    ("RIGHT",      util.gen_key(),   curses.KEY_RIGHT,  curses.KEY_RIGHT),
-    ("BACKSPACE",  curses.ascii.DEL, curses.ascii.DEL,  curses.KEY_BACKSPACE),
-    ("BACKSPACE2", util.gen_key(),   util.gen_key(),    curses.ascii.DEL),
-    ("DELETE",     curses.KEY_DC,    util.gen_key(),    curses.KEY_DC),
-    ("RESIZE",     util.gen_key(),   curses.KEY_RESIZE, curses.KEY_RESIZE),]
+    ("TAB",        ascii.HT,       ascii.HT,       ascii.HT),
+    ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF),
+    ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC),
+    ("SPACE",      ascii.SP,       ascii.SP,       ascii.SP),
+    ("DOWN",       util.gen_key(), _KEY_DOWN,      _KEY_DOWN),
+    ("UP",         util.gen_key(), _KEY_UP,        _KEY_UP),
+    ("LEFT",       util.gen_key(), _KEY_LEFT,      _KEY_LEFT),
+    ("RIGHT",      util.gen_key(), _KEY_RIGHT,     _KEY_RIGHT),
+    ("BACKSPACE",  ascii.DEL,      ascii.DEL,      _KEY_BACKSPACE),
+    ("BACKSPACE2", util.gen_key(), util.gen_key(), ascii.DEL),
+    ("DELETE",     _KEY_DC,        util.gen_key(), _KEY_DC),
+    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE),]
 
 def get_code(term):
     if term == "stdout":

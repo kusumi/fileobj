@@ -78,7 +78,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_BSD_CAVEAT"
     yield "FILEOBJ_USE_ILLUMOS_CAVEAT"
     yield "FILEOBJ_USE_CYGWIN_CAVEAT"
-    yield "FILEOBJ_USE_PUTTY_CAVEAT" # doc/README.notes.md
     yield "FILEOBJ_BUFFER_SIZE"
     yield "FILEOBJ_USER_DIR"
     yield "FILEOBJ_PATH_STREAM"
@@ -370,9 +369,6 @@ def __get_setting_use_illumos_caveat():
 
 def __get_setting_use_cygwin_caveat():
     return test_bool("FILEOBJ_USE_CYGWIN_CAVEAT", False)
-
-def __get_setting_use_putty_caveat():
-    return test_bool("FILEOBJ_USE_PUTTY_CAVEAT", False)
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE", -1)

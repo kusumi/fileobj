@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 14, 2018" "FILEOBJ 0.7.61"
+.TH FILEOBJ 1 "March 20, 2018" "FILEOBJ 0.7.62"
 .nh
 .ad l
 .SH NAME
@@ -109,6 +109,7 @@ If this option is not specified, the program assumes "auto" is specified.
 Set foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
 If neither this option nor \fB\-\-bg\fP option is specified, the program assumes "black" is specified.
+This option is not supported on VT1xx and VT2xx terminals.
 .RE
 .PP
 \fB\-\-bg\fP=\fI<color>\fP
@@ -116,6 +117,7 @@ If neither this option nor \fB\-\-bg\fP option is specified, the program assumes
 Set background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
 If neither this option nor \fB\-\-fg\fP option is specified, the program assumes "white" is specified.
+This option is not supported on VT1xx and VT2xx terminals.
 .RE
 .PP
 \fB\-\-verbose_window\fP
@@ -131,6 +133,11 @@ Create backup files for regular files. The program keeps consistency of backing 
 \fB\-\-force\fP
 .RS 4
 Ignore warnings which can be ignored by specifying this option and proceed.
+.RE
+.PP
+\fB\-\-test_screen\fP
+.RS 4
+Enter \fBncurses\fP\|(3) screen test mode.
 .RE
 .PP
 \fB\-\-command\fP

@@ -242,6 +242,7 @@ ctrlg         = FastLiteral("<CTRL>g", (kbd.ctrl('g'),), "Print current size and
 g_ctrlg       = FastLiteral("g<CTRL>g", (ord('g'), kbd.ctrl('g'),), "Print current size and position in sector for block device")
 ctrla         = FastLiteral("<CTRL>a", (kbd.ctrl('a'),), "Add [count] to the number at cursor")
 ctrlx         = FastLiteral("<CTRL>x", (kbd.ctrl('x'),), "Subtract [count] from the number at cursor")
+ctrlc         = FastLiteral("<CTRL>c", (kbd.ctrl('c'),), "")
 period        = FastLiteral(".", None, "Repeat last change")
 toggle        = FastLiteral("~", None, "Switch case of the [count] characters under and after the cursor")
 ror           = FastLiteral(">>", None, "Rotate [count] bits to right")

@@ -365,7 +365,7 @@ def refresh_container(self, amp, opc, args, raw):
     # frame issue which happens after once changing to a different terminal.
     # e.g. Frames disappear on *BSD, and corrupt on Cygwin.
     # Not confirmed on Linux and Solaris.
-    if kernel.is_in_tmux():
+    if kernel.is_screen():
         self.co.resize()
     else:
         self.co.refresh()

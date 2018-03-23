@@ -159,12 +159,15 @@ def get_term_info():
     else:
         return ''
 
+# don't use regex here, e.g. panel checks VTxxx in fill()
 def is_vtxxx():
-    return re.match(r"vt\d\d\d", get_term_info())
+    return get_term_info().startswith("vt")
 def is_vt1xx():
-    return re.match(r"vt1\d\d", get_term_info())
+    return get_term_info().startswith("vt1")
 def is_vt2xx():
-    return re.match(r"vt2\d\d", get_term_info())
+    return get_term_info().startswith("vt2")
+def is_screen():
+    return get_term_info() == "screen"
 
 def get_lang_info():
     o = get_kernel_module()
@@ -172,13 +175,6 @@ def get_lang_info():
         return o.get_lang_info()
     else:
         return ''
-
-def is_in_tmux():
-    o = get_kernel_module()
-    if o:
-        return o.is_in_tmux()
-    else:
-        return False
 
 def get_blkdev_info(f):
     if f in _blkdev_info_cache:

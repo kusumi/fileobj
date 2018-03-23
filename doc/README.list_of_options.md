@@ -55,12 +55,14 @@
                                 for <color> are "black", "blue", "cyan", "green",
                                 "magenta", "red", "white" and "yellow". If neither
                                 this option nor --bg option is specified, the program
-                                assumes "black" is specified.
+                                assumes "black" is specified. This option is not
+                                supported on VT1xx and VT2xx terminals.
           --bg=<color>          Set background color of the terminal. Available colors
                                 for <color> are "black", "blue", "cyan", "green",
                                 "magenta", "red", "white" and "yellow". If neither
                                 this option nor --fg option is specified, the program
-                                assumes "white" is specified.
+                                assumes "white" is specified. This option is not
+                                supported on VT1xx and VT2xx terminals.
           --verbose_window      Use verbose status window format instead of the
                                 default one.
           --backup              Create backup files for regular files. The program
@@ -72,6 +74,7 @@
                                 files start with '.'.
           --force               Ignore warnings which can be ignored by specifying
                                 this option and proceed.
+          --test_screen         Enter ncurses(3) screen test mode.
           --command             Print the list of available editor commands and exit.
           --sitepkg             Print Python's site-package directory being used by
                                 the program and exit.

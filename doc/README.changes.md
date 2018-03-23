@@ -1,3 +1,9 @@
+## v0.7.62
++ Minor fixes and improvement
++ Improve terminal multiplexer support
++ Add --test_screen
++ Remove FILEOBJ_USE_PUTTY_CAVEAT
+
 ## v0.7.61
 + Minor fixes and improvement
 + Improve VTxxx support

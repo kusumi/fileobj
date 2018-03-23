@@ -160,6 +160,9 @@ def iter_color_name():
     for s in _screen.iter_color_name():
         yield s
 
+def alloc_all(ref=None):
+    return alloc(get_size_y(), get_size_x(), 0, 0)
+
 def alloc(leny, lenx, begy, begx, ref=None):
     scr = _screen.newwin(leny, lenx, begy, begx, ref)
     scr.scrollok(0)

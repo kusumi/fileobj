@@ -22,10 +22,6 @@
 
 ## Running in PuTTY on Windows
 
-+ Bold characters are not in bold. -> **Defining an environment variable *FILEOBJ_USE_PUTTY_CAVEAT* (with any value) may help. See below bash example.**
-
-        $ export FILEOBJ_USE_PUTTY_CAVEAT=
-
 + Window frame characters are broken. -> **Modify the section *"Window -> Appearance"*. Modify the section *"Window -> Translation"* to use *"Use font encoding"*.**
 
 ## *BSD

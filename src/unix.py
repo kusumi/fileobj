@@ -43,9 +43,6 @@ def get_term_info():
 def get_lang_info():
     return os.getenv("LANG", "")
 
-def is_in_tmux():
-    return ("STY" in os.environ) or ("TMUX" in os.environ) # screen or tmux
-
 def read_reg_size(f):
     if not os.path.isfile(f): # only for regfile
         return -1

@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import platform
 import sys
 
@@ -43,13 +44,19 @@ def __test(version, name):
     del curses
 
 def test():
+    e = os.getenv("FILEOBJ_USE_DEBUG")
+    if e is None:
+        debug = False
+    else:
+        debug = e.lower() != "false"
     try:
         __test(None, None)
     except Exception:
         e = sys.exc_info()[1]
         for s in str(e).split("\n"):
             sys.stderr.write("### %s\n" % s)
-        sys.exit(1)
+        if not debug:
+            sys.exit(1)
 
 if __name__ == '__main__':
     test()

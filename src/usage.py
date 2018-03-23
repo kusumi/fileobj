@@ -94,6 +94,7 @@ fg = _("""
 Set foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
 If neither this option nor \fB\-\-bg\fP option is specified, the program assumes "black" is specified.
+This option is not supported on VT1xx and VT2xx terminals.
 """)
 fg_metavar = _metavar("color")
 
@@ -101,6 +102,7 @@ bg = _("""
 Set background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
 If neither this option nor \fB\-\-fg\fP option is specified, the program assumes "white" is specified.
+This option is not supported on VT1xx and VT2xx terminals.
 """)
 bg_metavar = _metavar("color")
 
@@ -114,6 +116,10 @@ Create backup files for regular files. The program keeps consistency of backing 
 
 force = _("""
 Ignore warnings which can be ignored by specifying this option and proceed.
+""")
+
+test_screen = _("""
+Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
 command = _("""
