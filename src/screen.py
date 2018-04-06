@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -161,7 +161,7 @@ def iter_color_name():
         yield s
 
 def alloc_all(ref=None):
-    return alloc(get_size_y(), get_size_x(), 0, 0)
+    return alloc(get_size_y(), get_size_x(), 0, 0, ref)
 
 def alloc(leny, lenx, begy, begx, ref=None):
     scr = _screen.newwin(leny, lenx, begy, begx, ref)

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,7 @@ Use verbose status window format instead of the default one.
 """)
 
 backup = _("""
-Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of regular files before loading them. Backup files are created under \fI~/.fileobj\fP by default, and removed if the program terminates normally. Backup files start with '.'.
+Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of files. Backup files are created under \fI~/.fileobj\fP, and removed if the program terminates normally. Backup files start with '.'. This option only applies to regular files.
 """)
 
 force = _("""
@@ -127,5 +127,5 @@ Print the list of available editor commands and exit.
 """)
 
 sitepkg = _("""
-Print Python's site\-package directory being used by the program and exit.
+Print \fBpython\fP\|(1) site\-package directory being used by the program and exit.
 """)

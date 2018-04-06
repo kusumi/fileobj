@@ -68,13 +68,13 @@
           --backup              Create backup files for regular files. The program
                                 keeps consistency of backing files if it terminates
                                 normally, but this option guarantees safety by
-                                creating a copy of regular files before loading them.
-                                Backup files are created under ~/.fileobj by default,
-                                and removed if the program terminates normally. Backup
-                                files start with '.'.
+                                creating a copy of files. Backup files are created
+                                under ~/.fileobj, and removed if the program
+                                terminates normally. Backup files start with '.'. This
+                                option only applies to regular files.
           --force               Ignore warnings which can be ignored by specifying
                                 this option and proceed.
           --test_screen         Enter ncurses(3) screen test mode.
           --command             Print the list of available editor commands and exit.
-          --sitepkg             Print Python's site-package directory being used by
+          --sitepkg             Print python(1) site-package directory being used by
                                 the program and exit.

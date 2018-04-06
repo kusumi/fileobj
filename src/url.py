@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@ _ = version.get_version()
 def get_project_url():
     return "https://sourceforge.net/projects/fileobj/"
 
-def get_project_archive_url():
-    return "https://downloads.sourceforge.net/project/fileobj/fileobj-{0}.{1}.{2}.tar.gz".format(*_)
+#def get_project_archive_url():
+#    return "https://downloads.sourceforge.net/project/fileobj/fileobj-{0}.{1}.{2}.tar.gz".format(*_)
 
 def get_repository_url():
     return "https://github.com/kusumi/fileobj/"

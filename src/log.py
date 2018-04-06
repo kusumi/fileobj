@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-import sys
 
 from . import setting
 from . import util
-from . import version
 
 def init(name, f=None):
     global _logger
@@ -44,16 +42,6 @@ def init(name, f=None):
         _logger = logger
     except Exception:
         return -1
-
-    info('=' * 80)
-    info("{0} on {1} {2}".format(
-        util.get_python_executable_string(),
-        util.get_os_name(),
-        util.get_os_release()))
-    info("{0} {1}".format(
-        util.get_program_path(),
-        version.get_tag_string()))
-    info("argv {0}".format(sys.argv))
 
 def cleanup():
     global _logger

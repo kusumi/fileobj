@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2012, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,6 @@ def __iter_env_name():
     yield "FILEOBJ_STDOUT_VERBOSE" # unittest (0)
     yield "FILEOBJ_USE_PATH_ATTR"
     yield "FILEOBJ_USE_PID_PATH"
-    yield "FILEOBJ_USE_SHELL"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_TRACE_WORD_SIZE"
     yield "FILEOBJ_USE_READONLY" # -R
@@ -63,7 +62,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SIPREFIX" # :set
     yield "FILEOBJ_BYTES_PER_LINE" # --bytes_per_line, :set
     yield "FILEOBJ_BYTES_PER_WINDOW" # --bytes_per_window, :set
-    yield "FILEOBJ_USE_ALLOC_NOENT_RWBUF"
     yield "FILEOBJ_USE_AUTO_FILEOPS_ADJUST" # unittest (false)
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP" # unittest (false)
     yield "FILEOBJ_REGFILE_SOFT_LIMIT"
@@ -79,7 +77,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ILLUMOS_CAVEAT"
     yield "FILEOBJ_USE_CYGWIN_CAVEAT"
     yield "FILEOBJ_BUFFER_SIZE"
-    yield "FILEOBJ_USER_DIR"
     yield "FILEOBJ_PATH_STREAM"
     yield "FILEOBJ_KEY_DOWN"
     yield "FILEOBJ_KEY_UP"
@@ -89,8 +86,6 @@ def __iter_env_name():
     yield "FILEOBJ_KEY_DELETE"
     yield "FILEOBJ_KEY_RESIZE"
 
-# use this instead of os.getenv(),
-# since setting expects None for not existing envs
 def getenv(envname):
     return os.getenv(envname)
 
@@ -164,9 +159,6 @@ def __get_setting_use_path_attr():
 
 def __get_setting_use_pid_path():
     return test_bool("FILEOBJ_USE_PID_PATH", True)
-
-def __get_setting_use_shell():
-    return test_bool("FILEOBJ_USE_SHELL", False)
 
 def __get_setting_use_trace():
     return test_bool("FILEOBJ_USE_TRACE", False)
@@ -302,9 +294,6 @@ def __get_setting_bytes_per_window():
     else:
         return e.lower() # return str even if e is \d+
 
-def __get_setting_use_alloc_noent_rwbuf():
-    return test_bool("FILEOBJ_USE_ALLOC_NOENT_RWBUF", True)
-
 def __get_setting_use_auto_fileops_adjust():
     return test_bool("FILEOBJ_USE_AUTO_FILEOPS_ADJUST", True)
 
@@ -372,10 +361,6 @@ def __get_setting_use_cygwin_caveat():
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE", -1)
-
-def __get_setting_user_dir():
-    d = os.path.join(os.path.expanduser("~"), ".fileobj")
-    return test_name("FILEOBJ_USER_DIR", d)
 
 def __get_setting_path_stream():
     return getenv("FILEOBJ_PATH_STREAM")

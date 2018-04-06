@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -306,7 +306,7 @@ class Container (object):
 
     def __assert_attr_key(self, f):
         # should have been renamed already or using the same name
-        if util.is_running_fileobj():
+        if util.is_running_fileobj() or util.is_running_profile():
             assert fileattr.has_key(f), fileattr.get_keys()
 
     def __get_buffer(self, f, cond=None):

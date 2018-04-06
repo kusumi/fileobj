@@ -1,3 +1,12 @@
+## v0.7.63
++ Minor fixes and improvement
++ Remove FILEOBJ_USE_SHELL
++ Remove FILEOBJ_USER_DIR
++ Remove FILEOBJ_USE_ALLOC_NOENT_RWBUF
++ Fix script/profile.py with Python 3.4 or above
++ Rename script/profile.py to script/profile (avoid conflict with built-in)
++ Rename script/autogen.py to script/autogen
+
 ## v0.7.62
 + Minor fixes and improvement
 + Improve terminal multiplexer support

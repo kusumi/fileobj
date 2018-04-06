@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -75,10 +75,7 @@ _python_version = tuple(sys.version_info[:3])
 def get_python_version():
     return _python_version
 
-def get_python_version_string():
-    return '.'.join([str(x) for x in get_python_version()])
-
-def get_python_executable_string():
+def get_python_string():
     return "python{0}.{1}".format(*get_python_version()[:2])
 
 def is_python2():
@@ -124,10 +121,13 @@ def is_running_script(name=None):
         return os.path.isfile(f)
 
 def is_running_fileobj():
-    return is_running_script("fileobj") or is_running_script("profile")
+    return is_running_script("fileobj")
 
-def is_imported_module():
-    return not is_running_fileobj()
+def is_running_profile():
+    return is_running_script("profile")
+
+def is_executable():
+    return is_running_fileobj() or is_running_profile()
 
 _Xregex = re.compile(r"\\X[{0}]{{1,}}$".format(string.hexdigits))
 _xregex = re.compile(r"\\x([{0}]{{1,2}})".format(string.hexdigits))
@@ -523,7 +523,7 @@ __mktmp_no_delete = tempfile.mkstemp
 
 def open_temp_file(binary=True, delete=True):
     mode = 'w+b' if binary else 'w+'
-    dir = setting.user_dir
+    dir = setting.get_user_dir()
     if not os.path.isdir(dir):
         dir = '.'
     if is_python_version_or_ht(2, 6):
@@ -640,12 +640,12 @@ def __get_path_attribute(s):
         return ret
 
 def creat_backup(f, timestamp=""):
-    if os.path.isfile(f):
+    if os.path.isfile(f): # regular files (follows symlink)
         x = f.replace("/", "-")
         while x.startswith("-"):
             x = x[1:]
         x = "{0}.{1}.bak".format(timestamp, x)
-        dst = os.path.join(setting.user_dir, x)
+        dst = os.path.join(setting.get_user_dir(), x)
         shutil.copy(f, dst) # not copy2 (don't preserve ctime/mtime)
         if setting.use_debug:
             siz = os.stat(f).st_size
@@ -664,7 +664,7 @@ def get_stamp(prefix=''):
     # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
     return "{0}.{1}.pid{2}".format(
         get_timestamp(prefix),
-        get_python_executable_string(),
+        get_python_string(),
         os.getpid())
 
 def get_md5(b):

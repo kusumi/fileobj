@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2013, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,8 @@ class Allocator (object):
         is_pid = setting.use_pid_path and kernel.is_pid_path(f)
 
         if is_non and not is_pid:
-            return self.__alloc_noent(f)
+            # always use rwbuf (rwmap is conditionally available)
+            return self.__alloc(f, 0, 0, self.rwbuf)
 
         ret = path.get_path_failure_message(o)
         if ret:
@@ -139,14 +140,6 @@ class Allocator (object):
                 return self.__alloc(f, offset, length, cls)
             cls = self.__get_alt_class(cls)
         assert False, "Failed to allocate fileobj"
-
-    def __alloc_noent(self, f):
-        if setting.use_alloc_noent_rwbuf or \
-            not self.__is_valid_class(self.rwmap, 0, 0):
-            cls = self.rwbuf
-        else:
-            cls = self.rwmap
-        return self.__alloc(f, 0, 0, cls)
 
     def __test_mmap_class(self, f, offset, length, cls):
         try:

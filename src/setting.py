@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2010, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,17 +26,20 @@ import sys
 
 from . import env
 
+def get_user_dir():
+    return _user_dir
+
 def get_trace_path():
-    return os.path.join(this.user_dir, "trace")
+    return os.path.join(get_user_dir(), "trace")
 
 def get_log_path():
-    return os.path.join(this.user_dir, "log")
+    return os.path.join(get_user_dir(), "log")
 
 def get_history_path():
-    return os.path.join(this.user_dir, "history")
+    return os.path.join(get_user_dir(), "history")
 
 def get_marks_path():
-    return os.path.join(this.user_dir, "marks")
+    return os.path.join(get_user_dir(), "marks")
 
 def get_stream_path():
     return __get_path("path_stream")
@@ -50,7 +53,7 @@ def __get_path(s):
     s = getattr(this, s) # e.g. "(ext_)path_xxx"
     if s and os.path.isfile(s):
         return s
-    d = this.user_dir
+    d = get_user_dir()
     if s and d and os.path.isdir(d):
         return os.path.join(d, s)
     return ''
@@ -61,7 +64,7 @@ USER_DIR_NO_WRITE     = -3
 USER_DIR_MKDIR_FAILED = -4
 
 def init_user():
-    d = this.user_dir
+    d = get_user_dir()
     if not d:
         return USER_DIR_NONE
     elif os.path.isdir(d):
@@ -168,7 +171,9 @@ def __ext_get(k):
     e = "FILEOBJ_EXT_" + k.upper()
     return s, e
 
+_user_dir = os.path.join(os.path.expanduser("~"), ".fileobj")
 _attr = {}
 _snap = dict(_attr)
+
 this = sys.modules[__name__]
 init()

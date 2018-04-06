@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2011, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -518,7 +518,7 @@ def __parse_objdump_path(f):
         pid = int(m.group(1))
         section = m.group(2)
         elf = get_pid_name(pid)
-        if not os.path.isfile(elf) and setting.use_shell:
+        if not os.path.isfile(elf):
             ret = util.execute_sh("which {0} 2>/dev/null".format(elf))
             if not ret.retval:
                 elf = ret.stdout.rstrip()

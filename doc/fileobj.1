@@ -1,4 +1,4 @@
-.\" Copyright (c) 2010-2018, Tomohiro Kusumi
+.\" Copyright (c) 2016, Tomohiro Kusumi
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 20, 2018" "FILEOBJ 0.7.62"
+.TH FILEOBJ 1 "April 6, 2018" "FILEOBJ 0.7.63"
 .nh
 .ad l
 .SH NAME
@@ -36,9 +36,9 @@ fileobj \- Hex Editor
 .PD
 .SH DESCRIPTION
 \fBfileobj\fP is a portable console hex editor with vi interface.
-\fBfileobj\fP requires Python 2.6 or above, and runs on Unix-like operating systems with ncurses.
+\fBfileobj\fP requires \fBpython\fP\|(1) version 2.6 or above, and runs on Unix-like operating systems with \fBncurses\fP\|(3).
 \fBfileobj\fP provides basic vi commands for binary editing.
-Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
+Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, \fBptrace\fP\|(2) based userspace editing, data in C struct view, etc.
 .SH OPTIONS
 .PP
 \fB\-\-version\fP
@@ -127,7 +127,7 @@ Use verbose status window format instead of the default one.
 .PP
 \fB\-\-backup\fP
 .RS 4
-Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of regular files before loading them. Backup files are created under \fI~/.fileobj\fP by default, and removed if the program terminates normally. Backup files start with '.'.
+Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of files. Backup files are created under \fI~/.fileobj\fP, and removed if the program terminates normally. Backup files start with '.'. This option only applies to regular files.
 .RE
 .PP
 \fB\-\-force\fP
@@ -147,7 +147,7 @@ Print the list of available editor commands and exit.
 .PP
 \fB\-\-sitepkg\fP
 .RS 4
-Print Python's site\-package directory being used by the program and exit.
+Print \fBpython\fP\|(1) site\-package directory being used by the program and exit.
 .RE
 .SH COMMANDS
 See \fBDOCUMENTATION\fP for details of available editor commands.
@@ -185,34 +185,6 @@ A file contains per\-file marks marked by an editor command.
 .RS 4
 A temporary backup file. See \fB\-\-backup\fP option in \fBOPTIONS\fP.
 .RE
-.PP
-.PD 0
-\fI/usr/share/licenses/fileobj/COPYING\fP
-.PP
-\fI/usr/share/doc/fileobj/CHANGES\fP
-.PP
-\fI/usr/share/doc/fileobj/CONTRIBUTORS\fP
-.PP
-\fI/usr/share/doc/fileobj/PKG\-INFO\fP
-.PP
-\fI/usr/share/doc/fileobj/README.md\fP
-.PD
-.RS 4
-These files may or may not be installed depending on the installation package.
-.RE
-.PP
-.PD 0
-\fI/usr/local/share/man/man1/fileobj.1.gz\fP or
-.PP
-\fI/usr/local/share/man/man1/fileobj.1\fP or
-.PP
-\fI/usr/share/man/man1/fileobj.1.gz\fP or
-.PP
-\fI/usr/share/man/man1/fileobj.1\fP
-.PD
-.RS 4
-This manpage.
-.RE
 .SH RESOURCE
 .PD 0
 \fIhttps://sourceforge.net/projects/fileobj/\fP
@@ -227,4 +199,4 @@ This manpage.
 Copyright (c) 2010\-2018, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).
 .SH AUTHORS
-Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
+Tomohiro Kusumi <\fIkusumi.tomohiro@gmail.com\fP>

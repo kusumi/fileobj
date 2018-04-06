@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -138,17 +138,31 @@ def dispatch(optargs=None):
     targs = util.Namespace(e=None, tb=[], done=False, baks={})
     atexit.register(__cleanup, targs)
 
+    user_dir = setting.get_user_dir()
     ret = setting.init_user()
     if ret == setting.USER_DIR_NONE:
         msg[0] = "Not using user directory"
     elif ret == setting.USER_DIR_NO_READ:
-        msg[0] = "Permission denied (read): {0}".format(setting.user_dir)
+        msg[0] = "Permission denied (read): {0}".format(user_dir)
     elif ret == setting.USER_DIR_NO_WRITE:
-        msg[0] = "Permission denied (write): {0}".format(setting.user_dir)
+        msg[0] = "Permission denied (write): {0}".format(user_dir)
     elif ret == setting.USER_DIR_MKDIR_FAILED:
-        msg[0] = "Failed to create user directory {0}".format(setting.user_dir)
+        msg[0] = "Failed to create user directory {0}".format(user_dir)
 
     log.init(util.get_program_name())
+
+    log.info("-" * 50)
+    log.info("{0} {1}".format(
+        util.get_program_path(),
+        version.get_tag_string()))
+    log.info("{0} {1}".format(util.get_python_string(), sys.executable))
+    log.info("UNAME {0} {1}".format(util.get_os_name(), util.get_os_release()))
+    log.info("CPU {0}".format(util.get_cpu_name()))
+    log.info("RAM {0}".format(methods.get_meminfo_string()))
+    log.info("TERM {0}".format(kernel.get_term_info()))
+    log.info("LANG {0}".format(kernel.get_lang_info()))
+    log.info(methods.get_osdep_string())
+    log.info("argv {0}".format(sys.argv))
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
@@ -213,10 +227,6 @@ def dispatch(optargs=None):
     if not kernel.is_cygwin() and setting.use_cygwin_caveat:
         msg[1] = s.format("Cygwin")
 
-    log.debug(util.get_os_name(), util.get_os_release(), util.get_cpu_name())
-    log.debug(kernel.get_term_info(), kernel.get_lang_info())
-    log.debug("RAM {0}".format(methods.get_meminfo_string()))
-    log.debug(methods.get_osdep_string())
     for s in msg:
         if s:
             log.error(s)
@@ -290,20 +300,50 @@ def dispatch(optargs=None):
             co.cleanup()
 
     if not util.is_running_fileobj():
-        __cleanup(targs)
+        __cleanup(targs) # script/profile hits here
     if targs.e:
         return -1
 
 def test_screen():
     scr = screen.alloc_all()
+    repaint = True
     l = [kbd.ERROR, ""]
+
     while True:
-        siz = screen.get_size_y() - 2 # frame
-        scr.clear()
-        scr.box()
-        if siz >= 13:
+        if repaint:
+            scr.clear()
+            scr.box()
+        __update_screen(scr, repaint, l)
+        scr.refresh()
+
+        ret = scr.getch()
+        if ret == kbd.RESIZE:
+            screen.update_size()
+            scr.resize(screen.get_size_y(), screen.get_size_x())
+            repaint = True
+        else:
+            repaint = False
+        if screen.test_signal():
+            break
+
+        li = literal.find_literal((ret,))
+        l[0] = ret
+        if li:
+            l[1] = li.str
+        else:
+            try:
+                l[1] = chr(ret)
+            except ValueError:
+                l[1] = ""
+        if util.test_key(l[0]) and not kbd.isprints(l[1]): # VTxxx
+            l[0] = kbd.ERROR
+
+def __update_screen(scr, repaint, l):
+    siz = screen.get_size_y() - 2 # frame
+    if siz >= 13:
+        if repaint:
             scr.addstr(1, 1, "Running {0} on {1}".format(
-                util.get_python_executable_string(),
+                util.get_python_string(),
                 kernel.get_term_info()))
             scr.addstr(3, 1, "This should look normal.", screen.A_DEFAULT)
             scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
@@ -324,30 +364,15 @@ def test_screen():
                 "emulator is resized.")
             scr.addstr(10, 1, "Check if above appear as they should.")
             scr.addstr(12, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-            if l[0] != kbd.ERROR:
-                scr.addstr(13, 1, "{0:3} {1}".format(*l))
-        elif siz >= 3:
+        if l[0] != kbd.ERROR:
+            scr.move(13, 1)
+            scr.clrtoeol()
+            scr.addstr(13, 1, "{0:3} {1}".format(*l))
+    elif siz >= 3:
+        if repaint:
             scr.addstr(1, 1, "Not enough room.")
             scr.addstr(2, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-            if l[0] != kbd.ERROR:
-                scr.addstr(3, 1, "{0:3} {1}".format(*l))
-        scr.refresh()
-
-        ret = scr.getch()
-        if ret == kbd.RESIZE:
-            screen.update_size()
-            scr.resize(screen.get_size_y(), screen.get_size_x())
-        if screen.test_signal():
-            break
-
-        li = literal.find_literal((ret,))
-        l[0] = ret
-        if li:
-            l[1] = li.str
-        else:
-            try:
-                l[1] = chr(ret)
-            except ValueError:
-                l[1] = ""
-        if util.test_key(l[0]) and not kbd.isprints(l[1]): # VTxxx
-            l[0] = kbd.ERROR
+        if l[0] != kbd.ERROR:
+            scr.move(3, 1)
+            scr.clrtoeol()
+            scr.addstr(3, 1, "{0:3} {1}".format(*l))

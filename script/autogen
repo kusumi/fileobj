@@ -1,4 +1,6 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+#!/usr/bin/env python
+
+# Copyright (c) 2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,20 +27,25 @@ if __name__ == '__main__':
     import os
     import re
     import sys
-    import fileobj.util
+
+    try:
+        import fileobj.util
+    except ImportError as e:
+        sys.stderr.write("{0}\n".format(e))
+        sys.exit(1)
 
     d = os.path.basename(os.getcwd())
     assert d.startswith("fileobj-devel"), os.getcwd()
 
-    f = "./script/autogen.py"
+    f = "./script/autogen"
     assert os.path.isfile(f), "No " + f
     assert os.path.samefile(sys.argv[0], f), "Not " + f
 
     try:
-        fileobj.util.execute_sh("which fileobj")
-        fileobj.util.execute_sh("which git")
+        fileobj.util.execute("which", "fileobj")
+        fileobj.util.execute("which", "git")
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
     def write(f, s):
@@ -69,7 +76,7 @@ if __name__ == '__main__':
         writel(f, l)
         print(f)
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
     try:
@@ -85,7 +92,7 @@ if __name__ == '__main__':
         writel(f, l)
         print(f)
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
     try:
@@ -95,7 +102,7 @@ if __name__ == '__main__':
         write(f, s)
         print(f)
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
     try:
@@ -127,7 +134,7 @@ if __name__ == '__main__':
         print(f)
         print(v)
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
     try:
@@ -136,5 +143,5 @@ if __name__ == '__main__':
         print("--")
         print(s)
     except Exception as e:
-        print(e)
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2014, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,27 +24,35 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 if __name__ == '__main__':
-    import fileobj.nodep
-    fileobj.nodep.test()
-
     import cProfile
     import os
     import pstats
     import re
     import sys
-    import fileobj.core
-    import fileobj.setting
-    import fileobj.util
 
-    d = fileobj.setting.user_dir
-    if not os.path.isdir(d):
-        print("No %s" % d)
+    try:
+        import fileobj.core
+        import fileobj.nodep
+        import fileobj.screen
+        import fileobj.setting
+        import fileobj.util
+    except ImportError as e:
+        sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
+
+    fileobj.nodep.test()
+
+    d = fileobj.setting.get_user_dir()
+    if not os.path.isdir(d):
+        os.mkdir(d)
+        if not os.path.isdir(d):
+            sys.stderr.write("No %s\n" % d)
+            sys.exit(1)
 
     s = fileobj.util.get_stamp("profile")
     f = os.path.join(d, s) + ".txt"
     if os.path.isfile(f):
-        print("%s exists" % f)
+        sys.stderr.write("%s exists\n" % f)
         sys.exit(1)
 
     keys = "time",
@@ -58,15 +66,16 @@ if __name__ == '__main__':
 
     profile = cProfile.Profile()
     profile.enable()
+    assert fileobj.util.is_running_profile()
     ret = fileobj.core.dispatch()
+    assert fileobj.screen.cleanup() == -1
     profile.disable()
 
     fd = open(f, "w")
     stats = pstats.Stats(profile, stream=fd)
     try:
         stats.sort_stats(*keys)
-    except KeyError:
-        e = sys.exc_info()[1]
+    except KeyError as e:
         print(repr(e))
         keys = (1,) # time
         stats.sort_stats(*keys)

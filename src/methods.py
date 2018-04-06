@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2011, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -1999,7 +1999,7 @@ def __overwrite_buffer(self, f, buf):
         with util.do_atomic_write(f, fsync=kernel.fsync) as fd:
             fd.write(buf)
         msg = "{0} {1}[B] overwritten".format(f, kernel.get_size(f))
-        return msg, None
+        return msg, None # XXX (msg, f) to be compatible with vim ?
     except Exception as e:
         raise fileobj.FileobjError("Failed to overwrite: " +
             util.e_to_string(e, verbose=False))

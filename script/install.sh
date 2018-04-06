@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 2017, Tomohiro Kusumi
+# Copyright (c) 2016, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

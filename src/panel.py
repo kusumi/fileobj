@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Tomohiro Kusumi
+# Copyright (c) 2009, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -595,7 +595,7 @@ class StatusCanvas (Canvas, default_addon):
                 x = x[len("fileobj."):]
             s += "{0}|{1}|{2}|{3} ".format(
                 kernel.get_term_info(),
-                util.get_python_executable_string(),
+                util.get_python_string(),
                 version.__version__,
                 x)
         s += self.__get_buffer_name()
