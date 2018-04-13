@@ -103,9 +103,6 @@ def is_python2_version_or_ht(*l):
 def is_python3_version_or_ht(*l):
     return is_python3() and is_python_version_or_ht(*l)
 
-def get_home():
-    return os.path.expanduser("~")
-
 def get_program_path():
     return sys.argv[0]
 
@@ -163,14 +160,6 @@ def pack_hex_string(s):
         else:
             return s
 
-def escape_regex_pattern(s):
-    l = list(s)
-    while "(" in l:
-        l[l.index("(")] = "\("
-    while ")" in l:
-        l[l.index(")")] = "\)"
-    return ''.join(l)
-
 # start == 0 means find from head
 def find_string(src, sub, start=0):
     if setting.use_ignorecase:
@@ -190,9 +179,6 @@ def rfind_string(src, sub, start=0):
     return src.rfind(sub, 0, start)
 
 def get_os_name():
-    # for debugging to pretend other platforms
-    if setting.os_uname:
-        return setting.os_uname
     # e.g. 'Linux'
     ret = platform.system()
     return ret if ret else UNKNOWN
@@ -386,7 +372,7 @@ def __get_endianness_prefix(s):
         return ''
 
 def __fail_unknown_byteorder():
-    assert 0, "unknown byteorder: " + sys.byteorder
+    assert False, "unknown byteorder: " + sys.byteorder
 
 def byte_to_int(b, sign=False):
     if is_le_cpu():
@@ -437,7 +423,7 @@ def __pad_bin(prefix, b, sign):
                 elif prefix == ">" or prefix == "!":
                     return __get_padding(i, b, 0, sign) + b
                 else:
-                    assert 0, "unknown prefix " + prefix
+                    assert False, "unknown prefix " + prefix
             else:
                 if is_le_cpu():
                     return b + __get_padding(i, b, len(b) - 1, sign)
@@ -509,7 +495,7 @@ def __strip_bin(prefix, b, size):
         elif prefix == ">" or prefix == "!":
             return b[len(b)-size:]
         else:
-            assert 0, "unknown prefix " + prefix
+            assert False, "unknown prefix " + prefix
     else:
         if is_le_cpu():
             return b[:size]
@@ -868,14 +854,6 @@ def get_class_repr(cls):
 
 def get_builtin(name):
     return getattr(_builtin, name, None)
-
-def clear_dict(d, cond=None):
-    if cond:
-        for k in list(d.keys()): # Python 3 needs cast here
-            if not cond or cond(k):
-                del d[k]
-    else:
-        d.clear()
 
 _key_cnt = 0
 def gen_key():

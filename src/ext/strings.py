@@ -24,39 +24,48 @@
 import fileobj.env
 import fileobj.filebytes
 import fileobj.kbd
+import fileobj.kernel
+import fileobj.screen
 import fileobj.setting
 import fileobj.util
 
 def get_text(co, fo, args):
-    siz = fo.get_size()
-    if not siz:
+    tot = fo.get_size()
+    if not tot:
         return "Empty buffer"
 
-    pos = args.pop()
-    siz -= pos
-    if siz > fileobj.setting.ext_strings_range:
-        siz = fileobj.setting.ext_strings_range
+    beg = args.pop()
+    pos = beg
+    rem = tot - pos
 
+    siz = fileobj.kernel.get_buffer_size()
     l = []
-    b = fo.read(pos, siz)
-    if b:
-        n = 0
-        for i, c in enumerate(b):
-            if fileobj.kbd.isprint(c):
-                n += 1
-            else:
-                if n >= fileobj.setting.ext_strings_thresh:
-                    s = fileobj.filebytes.str(b[i - n:i])
-                    l.append((pos + i - n, s))
-                    if len(l) >= fileobj.setting.ext_strings_count:
-                        break
-                n = 0
-        if len(b) == n:
-            l = [(pos, b)]
+
+    while True:
+        b = fo.read(pos, siz)
+        if b:
+            n = 0
+            for i, c in enumerate(b):
+                if fileobj.kbd.isprint(c):
+                    n += 1
+                else:
+                    if n >= fileobj.setting.ext_strings_thresh:
+                        s = fileobj.filebytes.str(b[i - n:i])
+                        l.append((pos + i - n, s))
+                    n = 0
+            if len(b) == n:
+                l = [(pos, b)]
+        pos += len(b)
+        rem -= len(b)
+        if rem <= 0:
+            break
+        if fileobj.screen.test_signal():
+            co.flash("Interrupted ({0})".format(pos))
+            break
 
     sl = ["Range {0}-{1}".format(
-        fileobj.util.get_size_repr(pos),
-        fileobj.util.get_size_repr(pos + siz))]
+        fileobj.util.get_size_repr(beg),
+        fileobj.util.get_size_repr(pos - 1))]
     sl.append("Found {0} strings".format(len(l)))
 
     if l:
@@ -68,13 +77,9 @@ def get_text(co, fo, args):
     return sl
 
 def init():
-    fileobj.setting.ext_add_gt_zero("strings_range", 1024)
-    fileobj.setting.ext_add_gt_zero("strings_count", 1024)
     fileobj.setting.ext_add_gt_zero("strings_thresh", 3)
 
 def cleanup():
-    fileobj.setting.ext_delete("strings_range")
-    fileobj.setting.ext_delete("strings_count")
     fileobj.setting.ext_delete("strings_thresh")
 
 init()

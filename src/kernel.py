@@ -601,8 +601,8 @@ def parse_waitpid_result(status):
         return ''
 
 def init():
-    util.clear_dict(_blkdev_info_cache)
-    util.clear_dict(_inode_cache)
+    _blkdev_info_cache.clear()
+    _inode_cache.clear()
     o = get_kernel_module()
     if o:
         try:
@@ -612,8 +612,8 @@ def init():
     return -1
 
 def cleanup():
-    util.clear_dict(_blkdev_info_cache)
-    util.clear_dict(_inode_cache)
+    _blkdev_info_cache.clear()
+    _inode_cache.clear()
 
 _blkdev_info_cache = {}
 _inode_cache = {}

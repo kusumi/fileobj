@@ -66,8 +66,7 @@ def fcreat_text(f):
     return -1
 
 def symlink(source, link_name):
-    if util.is_python_version_or_ht(3, 2) and \
-        not os.path.exists(link_name):
+    if util.is_python_version_or_ht(3, 2) and not os.path.exists(link_name):
         os.symlink(source, link_name)
         if not os.path.islink(link_name):
             return -1

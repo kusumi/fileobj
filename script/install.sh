@@ -24,7 +24,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 if [ ! -f ./doc/fileobj.1 ]; then
-	echo "### Missing ./doc/fileobj.1"
+	echo "Missing ./doc/fileobj.1"
 	exit 1
 fi
 
@@ -36,7 +36,7 @@ if [ "${MANDIR_USER}" != "" ]; then
 	if [ -d ${MANDIR_USER} ]; then
 		MANDIR=${MANDIR_USER}
 	else
-		echo "### No such directory ${MANDIR_USER}"
+		echo "No such directory ${MANDIR_USER}"
 		exit 1
 	fi
 elif [ -d ${MANDIR_LOCAL} ]; then
@@ -44,7 +44,7 @@ elif [ -d ${MANDIR_LOCAL} ]; then
 elif [ -d ${MANDIR_SYSTEM} ]; then
 	MANDIR=${MANDIR_SYSTEM}
 else
-	echo "### Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
+	echo "Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
 	exit 1
 fi
 
@@ -52,17 +52,17 @@ UNAME=`uname`
 case "${UNAME}" in
 	Linux | *BSD | DragonFly | CYGWIN*)
 		if [ -f ./doc/fileobj.1.gz ]; then
-			echo "### ./doc/fileobj.1.gz exists"
+			echo "./doc/fileobj.1.gz exists"
 			exit 1
 		fi
 		cat ./doc/fileobj.1 | gzip -9 -n > ./doc/fileobj.1.gz
 		if [ $? -ne 0 ]; then
-			echo "### Failed to gzip manpage"
+			echo "Failed to gzip manpage"
 			exit 1
 		fi
 		install -m 644 ./doc/fileobj.1.gz ${MANDIR}/fileobj.1.gz
 		if [ $? -ne 0 ]; then
-			echo "### Failed to install manpage"
+			echo "Failed to install manpage"
 			exit 1
 		fi
 		file ${MANDIR}/fileobj.1.gz
@@ -71,7 +71,7 @@ case "${UNAME}" in
 	Darwin)
 		install -m 644 ./doc/fileobj.1 ${MANDIR}/fileobj.1
 		if [ $? -ne 0 ]; then
-			echo "### Failed to install manpage"
+			echo "Failed to install manpage"
 			exit 1
 		fi
 		file ${MANDIR}/fileobj.1
@@ -79,7 +79,7 @@ case "${UNAME}" in
 	SunOS)
 		install -m 644 -f ${MANDIR} ./doc/fileobj.1
 		if [ $? -ne 0 ]; then
-			echo "### Failed to install manpage"
+			echo "Failed to install manpage"
 			exit 1
 		fi
 		file ${MANDIR}/fileobj.1

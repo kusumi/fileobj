@@ -182,7 +182,7 @@ class Fileobj (fileobj.Fileobj):
                     beg = i + 1
                 if beg > end:
                     break
-        assert 0, pos
+        assert False, pos
 
     def read(self, x, n):
         if not n:

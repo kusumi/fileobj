@@ -134,7 +134,7 @@ def dispatch(optargs=None):
             util.printf(x)
         return
 
-    msg = [None, None, None]
+    msg = [None, None]
     targs = util.Namespace(e=None, tb=[], done=False, baks={})
     atexit.register(__cleanup, targs)
 
@@ -183,7 +183,7 @@ def dispatch(optargs=None):
         setting.use_verbose_status_window = True
         setting.use_status_window_frame = True
     if kernel.is_vtxxx() and (opts.fg or opts.bg):
-        msg[2] = "Terminal color unsupported on {0}".format(
+        msg[1] = "Terminal color unsupported on {0}".format(
             kernel.get_term_info())
         opts.fg = None
         opts.bg = None
@@ -219,14 +219,7 @@ def dispatch(optargs=None):
         l.append("{0}={1}".format(*_))
     log.debug("settings {0}".format(l))
 
-    s = "{{0}} caveat enabled on {0}".format(util.get_os_name())
-    if not kernel.is_bsd_derived() and setting.use_bsd_caveat:
-        msg[1] = s.format("BSD")
-    if not kernel.is_illumos() and setting.use_illumos_caveat:
-        msg[1] = s.format("illumos")
-    if not kernel.is_cygwin() and setting.use_cygwin_caveat:
-        msg[1] = s.format("Cygwin")
-
+    # log all error messages
     for s in msg:
         if s:
             log.error(s)

@@ -46,13 +46,13 @@ if __name__ == '__main__':
     if not os.path.isdir(d):
         os.mkdir(d)
         if not os.path.isdir(d):
-            sys.stderr.write("No %s\n" % d)
+            sys.stderr.write("No {0}\n".format(d))
             sys.exit(1)
 
     s = fileobj.util.get_stamp("profile")
     f = os.path.join(d, s) + ".txt"
     if os.path.isfile(f):
-        sys.stderr.write("%s exists\n" % f)
+        sys.stderr.write("{0} exists\n".format(f))
         sys.exit(1)
 
     keys = "time",

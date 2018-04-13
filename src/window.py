@@ -114,7 +114,7 @@ def get_status_window_height(scls, fcls):
     elif util.is_subclass(scls, panel.SingleStatusCanvas):
         height = 1
     else:
-        assert 0, scls
+        assert False, scls
     return height + _get_diff_y(lf, lc)
 
 def get_width(cls, bytes_per_line):

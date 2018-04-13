@@ -767,7 +767,7 @@ def get_min_size(cls):
         y = _MIN_SIZE_Y
         x = _MIN_SIZE_X
     else:
-        assert 0, cls
+        assert False, cls
     if not setting.use_status_window_frame and \
         util.is_subclass(cls, StatusFrame):
         y -= _FRAME_MARGIN_Y * 2
@@ -784,7 +784,7 @@ def get_min_position(cls):
         y = _FRAME_MARGIN_Y
         x = _FRAME_MARGIN_X
     else:
-        assert 0, cls
+        assert False, cls
     if not setting.use_status_window_frame and \
         util.is_subclass(cls, StatusCanvas):
         y -= _FRAME_MARGIN_Y

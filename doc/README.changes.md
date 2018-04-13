@@ -1,3 +1,12 @@
+## v0.7.64
++ Minor fixes and improvement
++ Remove FILEOBJ_USE_CURSOR_FALL_THROUGH
++ Remove FILEOBJ_USE_PS_AUX
++ Remove FILEOBJ_OS_UNAME
++ Remove FILEOBJ_USE_BSD_CAVEAT
++ Remove FILEOBJ_USE_ILLUMOS_CAVEAT
++ Remove FILEOBJ_USE_CYGWIN_CAVEAT
+
 ## v0.7.63
 + Minor fixes and improvement
 + Remove FILEOBJ_USE_SHELL

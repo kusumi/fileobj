@@ -1,10 +1,10 @@
-# fileobj ([v0.7.63](https://github.com/kusumi/fileobj/releases/tag/v0.7.63))
+# fileobj ([v0.7.64](https://github.com/kusumi/fileobj/releases/tag/v0.7.64))
 
 ## About
 
-+ fileobj is a portable console hex editor with vi interface. Requires Python 2.6 or above, and runs on Unix-like operating systems with ncurses.
++ fileobj is an ncurses based hex editor with vi interface.
 
-+ Provides basic vi commands for binary editing. Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
++ fileobj provides basic vi commands for binary editing. Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
 
 ## Supported Python versions
 

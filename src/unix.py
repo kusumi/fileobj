@@ -34,7 +34,7 @@ import termios
 import tty
 
 from . import filebytes
-from . import setting
+from . import log
 from . import util
 
 def get_term_info():
@@ -313,20 +313,27 @@ def kill_sig_zero(pid):
         return False
 
 def ps_has_pid(pid):
-    for l in iter_ps():
+    for l in iter_ps("aux"):
+        if pid == l[0]:
+            return True
+    log.debug("ps aux failed, try ps ax for pid{0}".format(pid))
+    for l in iter_ps("ax"):
         if pid == l[0]:
             return True
     return False
 
 def get_pid_name_from_ps(pid):
-    for i, s, in iter_ps():
+    for i, s, in iter_ps("aux"):
+        if pid == i:
+            return s.split(" ")[0] # prefer abs (no basename)
+    log.debug("ps aux failed, try ps ax for pid{0} name".format(pid))
+    for i, s, in iter_ps("ax"):
         if pid == i:
             return s.split(" ")[0] # prefer abs (no basename)
     return ''
 
 def iter_ps(opt=None):
-    if not opt:
-        opt = "aux" if setting.use_ps_aux else "ax"
+    assert opt in ("aux", "ax"), opt
     try:
         s = util.execute("ps", opt).stdout
     except Exception:

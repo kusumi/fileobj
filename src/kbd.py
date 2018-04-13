@@ -72,8 +72,7 @@ def to_chr_repr(c):
         return '.'
 
 # XXX alternative for block visual mode
-use_alt_block_visual = setting.use_bsd_caveat or \
-    setting.use_illumos_caveat
+use_alt_block_visual = kernel.is_bsd_derived() or kernel.is_solaris()
 
 CONTINUE  = util.gen_key()
 INTERRUPT = util.gen_key()

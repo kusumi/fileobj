@@ -353,8 +353,7 @@ class Fileobj (object):
                 break
 
     def raise_no_support(self, s):
-        if setting.use_readonly and \
-            s in ("insert", "replace", "delete"):
+        if setting.use_readonly and s in ("insert", "replace", "delete"):
             raise FileobjError("Using readonly mode")
         else:
             raise FileobjError(self.get_no_support_string(s))
@@ -435,7 +434,10 @@ class Fileobj (object):
             del self.__attr.marks[k]
 
     def clear_marks(self, cond):
-        util.clear_dict(self.__attr.marks, cond)
+        # Python 3 needs to cast to list or tuple
+        for k in tuple(self.__attr.marks.keys()):
+            if not cond or cond(k):
+                del self.__attr.marks[k]
 
     def get_barrier(self, ret, offset, size):
         try:

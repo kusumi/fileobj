@@ -126,7 +126,7 @@ if __name__ == '__main__':
             if m:
                 l.append("+ {0}".format(m.group(1)))
                 continue
-            assert 0, "Invalid line " + s
+            assert False, "Invalid line " + s
         assert l and v
 
         f = "./doc/README.changes.md"

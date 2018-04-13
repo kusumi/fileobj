@@ -53,8 +53,7 @@ def test():
         __test(None, None)
     except Exception:
         e = sys.exc_info()[1]
-        for s in str(e).split("\n"):
-            sys.stderr.write("### %s\n" % s)
+        sys.stderr.write("%s\n" % e)
         if not debug:
             sys.exit(1)
 

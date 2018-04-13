@@ -26,6 +26,9 @@ import sys
 
 from . import env
 
+def get_home_dir():
+    return _home_dir
+
 def get_user_dir():
     return _user_dir
 
@@ -89,8 +92,7 @@ def __init(g):
         add(*_)
 
 def cleanup():
-    from . import util # util imports setting
-    util.clear_dict(_attr)
+    _attr.clear()
 
 def add(k, v):
     if k not in _attr:
@@ -171,7 +173,9 @@ def __ext_get(k):
     e = "FILEOBJ_EXT_" + k.upper()
     return s, e
 
-_user_dir = os.path.join(os.path.expanduser("~"), ".fileobj")
+_home_dir = os.path.expanduser("~")
+_user_dir = os.path.join(_home_dir, ".fileobj")
+
 _attr = {}
 _snap = dict(_attr)
 

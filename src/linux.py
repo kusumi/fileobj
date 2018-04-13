@@ -131,7 +131,9 @@ def get_meminfo(s):
     if not f:
         return -1
     try:
-        s = util.escape_regex_pattern(s)
+        # e.g. "Active(anon):      24116 kB"
+        s = s.replace("(", "\(")
+        s = s.replace(")", "\)")
         for l in fopen_text(f):
             m = re.match(r"^{0}.*\s+(\d+)".format(s), l)
             if m:

@@ -103,7 +103,7 @@ def __create_builtin_class(name, size):
         def to_int(self, b):
             return fileobj.util.be_to_int(b, sign)
     else:
-        assert 0, m.group(0)
+        assert False, m.group(0)
     cls = type(name, (_builtin,),
         dict(get_size=get_size, to_int=to_int,),)
     assert cls not in _classes
@@ -117,10 +117,8 @@ def __init_class():
             for suffix in ("", "le", "be"):
                 name = "{0}{1}{2}".format(sign, size * 8, suffix)
                 __create_builtin_class(name, size)
-
-    if fileobj.setting.ext_use_cstruct_libc:
-        for name, func_name, fn in fileobj.libc.iter_defined_type():
-            __create_builtin_class(name, fn())
+    for name, func_name, fn in fileobj.libc.iter_defined_type():
+        __create_builtin_class(name, fn())
 
 # A node for this class can't be added on import
 class _string (_node):
@@ -266,7 +264,6 @@ def get_text(co, fo, args):
 
 def init():
     fileobj.setting.ext_add_name("path_cstruct", "cstruct")
-    fileobj.setting.ext_add_bool("use_cstruct_libc", True)
     __init_class()
     # create an empty file
     f = fileobj.setting.get_ext_path("cstruct")
@@ -278,6 +275,5 @@ def init():
 
 def cleanup():
     fileobj.setting.ext_delete("path_cstruct")
-    fileobj.setting.ext_delete("use_cstruct_libc")
 
 init()

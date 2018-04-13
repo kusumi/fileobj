@@ -25,7 +25,7 @@
 
 CMD=$1
 if [ "${CMD}" != "build" -a "${CMD}" != "clean" ]; then
-	echo "### Usage: bash ${0} [build|clean] [python]"
+	echo "Usage: bash ${0} [build|clean] [python]"
 	exit 1
 fi
 
@@ -36,13 +36,13 @@ fi
 
 which ${PYTHON} >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-	echo "### ${PYTHON} does not exist"
+	echo "${PYTHON} does not exist"
 	exit 1
 fi
 
 ${PYTHON} ./setup.py clean --all
 if [ $? -ne 0 ]; then
-	echo "### Failed to clean"
+	echo "Failed to clean"
 	exit 1
 fi
 if [ "${CMD}" = "clean" ]; then
@@ -51,6 +51,6 @@ fi
 
 ${PYTHON} ./setup.py build
 if [ $? -ne 0 ]; then
-	echo "### Failed to build"
+	echo "Failed to build"
 	exit 1
 fi

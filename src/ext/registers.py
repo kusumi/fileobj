@@ -25,9 +25,9 @@ import string
 
 import fileobj.filebytes
 import fileobj.kbd
-import fileobj.setting
 
 def get_text(co, fo, args):
+    max_print_size = 1024
     sl = []
     d = co.get_registers()
     for k in sorted(d.keys()):
@@ -35,8 +35,8 @@ def get_text(co, fo, args):
         assert isinstance(b, fileobj.filebytes.TYPE)
         if b:
             s = fileobj.filebytes.str(b)
-            if len(s) > fileobj.setting.ext_registers_max_string:
-                s = s[:fileobj.setting.ext_registers_max_string] + "..."
+            if len(s) > max_print_size:
+                s = s[:max_print_size] + "..."
         elif k == '"' or (k in string.digits): # always show " and 0-9
             s = "(not used)"
         else:
@@ -47,11 +47,3 @@ def get_text(co, fo, args):
         return sl
     else:
         return "No register" # should never come here
-
-def init():
-    fileobj.setting.ext_add_gt_zero("registers_max_string", 1024)
-
-def cleanup():
-    fileobj.setting.ext_delete("registers_max_string")
-
-init()

@@ -24,6 +24,7 @@
 import os
 
 from . import kernel
+from . import setting
 from . import util
 
 # no os.path.relpath till Python 2.6
@@ -41,7 +42,7 @@ _t_error   = 1 << 8
 
 _sep = os.path.sep
 _cwd = os.getcwd()
-_home = util.get_home()
+_home = setting.get_home_dir()
 
 class Path (object):
     def __init__(self, f):

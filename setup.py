@@ -26,9 +26,7 @@ if __name__ == '__main__':
     import sys
 
     if not os.path.isfile("./setup.py") or not os.path.isdir("./src"):
-        sys.stderr.write("### Invalid current directory %s\n" % os.getcwd())
-        sys.stderr.write("### Change directory to %s and try again\n" %
-            os.path.abspath(os.path.dirname(sys.argv[0])))
+        sys.stderr.write("Invalid current directory %s\n" % os.getcwd())
         sys.exit(1)
 
     import src.nodep
@@ -55,7 +53,7 @@ if __name__ == '__main__':
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
         url         = "https://sourceforge.net/projects/fileobj/",
-        description = "Console hex editor for Linux/BSD with vi interface",
+        description = "Ncurses based hex editor with vi interface",
         license     = "BSD License (2-clause)",
         scripts     = ["script/fileobj"],
         packages    = ["fileobj", "fileobj.ext"],

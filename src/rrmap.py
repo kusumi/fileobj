@@ -117,7 +117,7 @@ class Fileobj (romap.Fileobj):
         elif setting.use_debug:
             try:
                 self.map.resize(self.get_size())
-                assert 0, "mmap resize should fail"
+                assert False, "mmap resize should fail"
             except Exception as e:
                 return "{0}, {1}".format(repr(e), msg)
         else:

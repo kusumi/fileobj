@@ -59,7 +59,7 @@ class Fileops (object):
             pos = l[0]
             siz = l[1] - l[0]
         else:
-            assert 0, arg
+            assert False, arg
         assert self.__trail == 0
         pos = self.__get_normalized_pos(pos)
         siz = self.__get_normalized_size(siz)
@@ -100,12 +100,10 @@ class Fileops (object):
     def is_empty(self):
         return self.__ref.is_empty()
     def is_dirty(self):
-        return self.__ref.is_dirty() or \
-            self.__ref.is_barrier_dirty()
+        return self.__ref.is_dirty() or self.__ref.is_barrier_dirty()
 
     def get_size(self):
-        return self.__ref.get_size() + \
-            self.__ref.get_barrier_delta()
+        return self.__ref.get_size() + self.__ref.get_barrier_delta()
     def get_sector_size(self):
         return self.__ref.get_sector_size()
     def get_id(self):
@@ -153,14 +151,14 @@ class Fileops (object):
     def __set_pos(self, pos):
         self.__ppos = self.__pos
         if pos > self.get_max_pos():
-            if self.__fall_through():
+            if False: # fall through disabled
                 self.__pos = pos - self.get_max_pos() - 1
                 if self.__pos > self.get_max_pos():
                     self.__pos = self.get_max_pos()
             else:
                 self.__pos = self.get_max_pos()
         elif pos < 0:
-            if self.__fall_through():
+            if False: # fall through disabled
                 self.__pos = self.get_max_pos() + pos + 1
                 if self.__pos < 0:
                     self.__pos = 0
@@ -168,10 +166,6 @@ class Fileops (object):
                 self.__pos = 0
         else:
             self.__pos = pos
-
-    def __fall_through(self):
-        return setting.use_cursor_fall_through and \
-            not self.__ref.is_barrier_active()
 
     def discard_eof(self):
         self.__trail = self.test_insert() * 1

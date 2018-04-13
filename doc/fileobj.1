@@ -21,34 +21,32 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "April 6, 2018" "FILEOBJ 0.7.63"
+.TH FILEOBJ 1 "April 14, 2018" "FILEOBJ 0.7.64"
 .nh
 .ad l
 .SH NAME
-fileobj \- Hex Editor
+fileobj \- ncurses based hex editor with vi interface
 .SH SYNOPSIS
 .PD 0
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
 .PP
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset:length\fP]]...
 .PP
-\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset-(offset+length)\fP]]...
+\fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset\-(offset+length)\fP]]...
 .PD
 .SH DESCRIPTION
-\fBfileobj\fP is a portable console hex editor with vi interface.
-\fBfileobj\fP requires \fBpython\fP\|(1) version 2.6 or above, and runs on Unix-like operating systems with \fBncurses\fP\|(3).
 \fBfileobj\fP provides basic vi commands for binary editing.
 Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, \fBptrace\fP\|(2) based userspace editing, data in C struct view, etc.
 .SH OPTIONS
 .PP
 \fB\-\-version\fP
 .RS 4
-Print program's version number and exit.
+Print version and exit.
 .RE
 .PP
 \fB\-h\fP, \fB\-\-help\fP
 .RS 4
-Print this help message and exit.
+Print help message and exit.
 .RE
 .PP
 \fB\-R\fP
@@ -58,16 +56,13 @@ Use read\-only mode.
 .PP
 \fB\-B\fP
 .RS 4
-Use \fBmalloc\fP\|(3) based buffer for regular files.
-Regular files internally use \fBmmap\fP\|(2) based buffer by default, and relies on \fBmremap\fP\|(2) when resizing (i.e. insertion or deletion) the buffer.
-This option is used when the system does not support \fBmremap\fP\|(2), but need to resize the buffer for regular files.
+Use \fBmalloc\fP\|(3) based buffer for regular files instead of the default \fBmmap\fP\|(2) based buffer.
+This option is required to resize (i.e. insert or delete) regular files on platforms without \fBmremap\fP\|(2).
 .RE
 .PP
 \fB\-d\fP
 .RS 4
-Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
-Using \fI@offset:length\fP or \fI@offset\-(offset+length)\fP syntax right after the path without space (i.e. /path/to/file\fI@offset:length\fP or /path/to/file\fI@offset\-(offset+length)\fP) allows partial buffer loading.
-See \fBDOCUMENTATION\fP for details of the syntax.
+Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
 .RE
 .PP
 \fB\-x\fP
@@ -77,62 +72,65 @@ Show the buffer size and current position in hexadecimal.
 .PP
 \fB\-o\fP
 .RS 4
-Start the program with each buffer given by \fIpaths\fP in horizontally splitted windows, as long as the terminal has enough size to accommodate windows.
+Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size to accommodate windows.
 .RE
 .PP
 \fB\-O\fP
 .RS 4
-Start the program with each buffer given by \fIpaths\fP in vertically splitted windows, as long as the terminal has enough size to accommodate windows.
+Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size to accommodate windows.
 .RE
 .PP
 \fB\-\-bytes_per_line\fP=\fI<bytes_per_line>\fP, \fB\-\-bpl\fP=\fI<bytes_per_line>\fP
 .RS 4
 Set fixed number of bytes printed per line.
-The program prints \fI<bytes_per_line>\fP bytes for each line as long as the terminal has enough width to accommodate.
+Each line prints \fI<bytes_per_line>\fP bytes, if the terminal has enough width to accommodate.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
-If this option is not specified, the program assumes "auto" is specified.
-Using "auto" sets the value to the maximum 2^N that fits in the terminal width.
+"auto" sets the value to the maximum 2^N that fits in the terminal width.
+"auto" is used by default.
 .RE
 .PP
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
 .RS 4
 Set fixed number of bytes printed per window.
-The program prints \fI<bytes_per_window>\fP bytes for each window as long as the terminal has enough size to accommodate.
-This option technically sets number of lines printed per window, based on the number of bytes per line which can also manually be specified by \fB\-\-bytes_per_line\fP option.
+Each window prints \fI<bytes_per_window>\fP bytes, if the terminal has enough size to accommodate.
+This option sets number of lines printed per window, based on the number of bytes printed per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-Specifying "even" does not set fixed number of bytes, but makes all windows have the same size when a new window is vertically added.
-If this option is not specified, the program assumes "auto" is specified.
+"even" does not set a fixed number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
+"auto" is used by default.
 .RE
 .PP
 \fB\-\-fg\fP=\fI<color>\fP
 .RS 4
 Set foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-bg\fP option is specified, the program assumes "black" is specified.
-This option is not supported on VT1xx and VT2xx terminals.
+"black" is used by default.
+This option is not supported on VTxxx terminal emulators.
 .RE
 .PP
 \fB\-\-bg\fP=\fI<color>\fP
 .RS 4
 Set background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-If neither this option nor \fB\-\-fg\fP option is specified, the program assumes "white" is specified.
-This option is not supported on VT1xx and VT2xx terminals.
+"white" is used by default.
+This option is not supported on VTxxx terminal emulators.
 .RE
 .PP
 \fB\-\-verbose_window\fP
 .RS 4
-Use verbose status window format instead of the default one.
+Use verbose status window instead of the default format.
 .RE
 .PP
 \fB\-\-backup\fP
 .RS 4
-Create backup files for regular files. The program keeps consistency of backing files if it terminates normally, but this option guarantees safety by creating a copy of files. Backup files are created under \fI~/.fileobj\fP, and removed if the program terminates normally. Backup files start with '.'. This option only applies to regular files.
+Explicitly create backup files for regular files.
+Backup files are created under \fI~/.fileobj\fP when the program starts, and removed when the program terminates.
+Backup files start with '.'.
+This option only applies to regular files.
 .RE
 .PP
 \fB\-\-force\fP
 .RS 4
-Ignore warnings which can be ignored by specifying this option and proceed.
+Ignore warnings which can be ignored by specifying this option.
 .RE
 .PP
 \fB\-\-test_screen\fP
@@ -142,28 +140,25 @@ Enter \fBncurses\fP\|(3) screen test mode.
 .PP
 \fB\-\-command\fP
 .RS 4
-Print the list of available editor commands and exit.
+Print list of editor commands and exit.
 .RE
 .PP
 \fB\-\-sitepkg\fP
 .RS 4
-Print \fBpython\fP\|(1) site\-package directory being used by the program and exit.
+Print \fBpython\fP\|(1) site\-package directory and exit.
 .RE
 .SH COMMANDS
-See \fBDOCUMENTATION\fP for details of available editor commands.
-Also see \fB\-\-command\fP option in \fBOPTIONS\fP.
+See \fB\-\-command\fP option in \fBOPTIONS\fP.
 .SH FILES
 .PP
 \fI~/.fileobj\fP
 .RS 4
 A directory automatically created by the program.
-Some editor commands use a configuration file in this directory.
 .RE
 .PP
 \fI~/.fileobj/cstruct\fP
 .RS 4
 A default file path for \fB:cstruct\fP command.
-See \fBDOCUMENTATION\fP for details of \fB:cstruct\fP command.
 .RE
 .PP
 \fI~/.fileobj/history\fP
@@ -173,7 +168,7 @@ A file contains history of executed editor commands.
 .PP
 \fI~/.fileobj/log\fP
 .RS 4
-A file contains information and warning messages logged by the program.
+A file contains logged messages.
 .RE
 .PP
 \fI~/.fileobj/marks\fP
@@ -181,9 +176,9 @@ A file contains information and warning messages logged by the program.
 A file contains per\-file marks marked by an editor command.
 .RE
 .PP
-\fI~/.fileobj/.YYYY-MM-DD-HH:MM:SS.path-to-file.bak\fP
+\fI~/.fileobj/.YYYY\-MM\-DD\-HH:MM:SS.path\-to\-file.bak\fP
 .RS 4
-A temporary backup file. See \fB\-\-backup\fP option in \fBOPTIONS\fP.
+Temporary backup file format for \fB\-\-backup\fP option.
 .RE
 .SH RESOURCE
 .PD 0
@@ -193,8 +188,6 @@ A temporary backup file. See \fB\-\-backup\fP option in \fBOPTIONS\fP.
 .PD
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/master/README.md\fP
-.SH EXAMPLES
-\fIhttps://github.com/kusumi/fileobj/blob/master/doc/README.examples.md\fP
 .SH COPYING
 Copyright (c) 2010\-2018, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).

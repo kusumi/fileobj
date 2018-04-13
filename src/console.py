@@ -138,8 +138,7 @@ class Console (object):
             elif x == kbd.QUIT:
                 return -1
 
-            li, amp, opc, arg, raw, msg, cursor = \
-                self.ope.process_incoming(x)
+            li, amp, opc, arg, raw, msg, cursor = self.ope.process_incoming(x)
             if li:
                 set_message(msg)
             else:

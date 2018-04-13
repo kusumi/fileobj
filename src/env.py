@@ -44,7 +44,6 @@ def __iter_env_name():
     yield "FILEOBJ_MAX_HISTORY"
     yield "FILEOBJ_BARRIER_SIZE"
     yield "FILEOBJ_BARRIER_EXTEND"
-    yield "FILEOBJ_USE_CURSOR_FALL_THROUGH"
     yield "FILEOBJ_USE_ALT_CHGAT"
     yield "FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "FILEOBJ_USE_SINGLE_OPERATION"
@@ -66,16 +65,11 @@ def __iter_env_name():
     yield "FILEOBJ_USE_AUTO_FILEOPS_CLEANUP" # unittest (false)
     yield "FILEOBJ_REGFILE_SOFT_LIMIT"
     yield "FILEOBJ_USE_RRVM_SYNC_ON_EDIT"
-    yield "FILEOBJ_USE_PS_AUX"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
     yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
     yield "FILEOBJ_USE_NATIVE"
-    yield "FILEOBJ_OS_UNAME"
-    yield "FILEOBJ_USE_BSD_CAVEAT"
-    yield "FILEOBJ_USE_ILLUMOS_CAVEAT"
-    yield "FILEOBJ_USE_CYGWIN_CAVEAT"
     yield "FILEOBJ_BUFFER_SIZE"
     yield "FILEOBJ_PATH_STREAM"
     yield "FILEOBJ_KEY_DOWN"
@@ -206,9 +200,6 @@ def __get_setting_barrier_size():
 def __get_setting_barrier_extend():
     return test_gt_zero("FILEOBJ_BARRIER_EXTEND", 1024)
 
-def __get_setting_use_cursor_fall_through():
-    return test_bool("FILEOBJ_USE_CURSOR_FALL_THROUGH", False)
-
 def __get_setting_use_alt_chgat():
     return test_bool("FILEOBJ_USE_ALT_CHGAT", False)
 
@@ -307,9 +298,6 @@ def __get_setting_regfile_soft_limit():
 def __get_setting_use_rrvm_sync_on_edit():
     return test_bool("FILEOBJ_USE_RRVM_SYNC_ON_EDIT", False)
 
-def __get_setting_use_ps_aux():
-    return test_bool("FILEOBJ_USE_PS_AUX", True)
-
 def __get_setting_robuf_chunk_size():
     try:
         siz = os.sysconf("SC_PAGE_SIZE")
@@ -346,18 +334,6 @@ def __get_setting_rwbuf_chunk_size_high():
 
 def __get_setting_use_native():
     return test_bool("FILEOBJ_USE_NATIVE", True)
-
-def __get_setting_os_uname():
-    return getenv("FILEOBJ_OS_UNAME")
-
-def __get_setting_use_bsd_caveat():
-    return test_bool("FILEOBJ_USE_BSD_CAVEAT", False)
-
-def __get_setting_use_illumos_caveat():
-    return test_bool("FILEOBJ_USE_ILLUMOS_CAVEAT", False)
-
-def __get_setting_use_cygwin_caveat():
-    return test_bool("FILEOBJ_USE_CYGWIN_CAVEAT", False)
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE", -1)
