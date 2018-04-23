@@ -70,8 +70,7 @@ class _visual_addon (object):
         if type == VISUAL_LINE:
             beg -= beg % mapx
             end += (mapx - 1 - end % mapx)
-        self.fileops.set_region_range(
-            beg, end, self.bufmap)
+        self.fileops.set_region_range(beg, end, self.bufmap)
 
         pgo = self.get_page_offset()
         npgo = self.get_next_page_offset()
@@ -135,8 +134,7 @@ class _visual_addon (object):
         lend = end - d2
         if d1 > d2:
             d2, d1 = d1, d2
-        self.fileops.set_region_range(
-            lbeg + d1, lend + d2, self.bufmap)
+        self.fileops.set_region_range(lbeg + d1, lend + d2, self.bufmap)
 
         lcur = self.get_page_offset()
         lpos = self.get_line_offset(pos)

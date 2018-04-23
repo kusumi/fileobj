@@ -26,8 +26,7 @@ from . import util
 _ = util.str_to_bytes
 
 def input_to_bytes(l):
-    return util.str_to_bytes(
-        ''.join([chr(x) for x in l]))
+    return util.str_to_bytes(''.join([chr(x) for x in l]))
 
 def bytes_to_input(b):
     return ords(b)

@@ -90,8 +90,7 @@ def get_text(co, fo, args):
     return l
 
 def __get_bar(n, word):
-    addr = fileobj.util.le_to_int(
-        fileobj.filebytes.input_to_bytes(word))
+    addr = fileobj.util.le_to_int(fileobj.filebytes.input_to_bytes(word))
     if word[0] & 0x01:
         s = "I/O {0:04X}".format(addr & 0xFFFFFFFC)
     elif word[0] & 0x06:

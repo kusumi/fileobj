@@ -353,8 +353,7 @@ U2F = _struct_ufmts.get(2)
 U4F = _struct_ufmts.get(4)
 U8F = _struct_ufmts.get(8)
 
-_struct_sfmts = dict(
-    [(k, v.lower()) for k, v in _struct_ufmts.items()])
+_struct_sfmts = dict([(k, v.lower()) for k, v in _struct_ufmts.items()])
 S1F = _struct_sfmts.get(1)
 S2F = _struct_sfmts.get(2)
 S4F = _struct_sfmts.get(4)

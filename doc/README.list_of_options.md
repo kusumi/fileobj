@@ -21,10 +21,10 @@
                                 hexadecimal.
           -o                    Initially assign buffers given by paths to
                                 horizontally splitted windows, if the terminal has
-                                enough size to accommodate windows.
+                                enough size to accommodate.
           -O                    Initially assign buffers given by paths to vertically
                                 splitted windows, if the terminal has enough size to
-                                accommodate windows.
+                                accommodate.
           --bytes_per_line=<bytes_per_line>, --bpl=<bytes_per_line>
                                 Set fixed number of bytes printed per line. Each line
                                 prints <bytes_per_line> bytes, if the terminal has
@@ -56,10 +56,10 @@
           --verbose_window      Use verbose status window instead of the default
                                 format.
           --backup              Explicitly create backup files for regular files.
-                                Backup files are created under ~/.fileobj when the
-                                program starts, and removed when the program
-                                terminates. Backup files start with '.'. This option
-                                only applies to regular files.
+                                Backup files are created under ~/.fileobj when fileobj
+                                starts, and removed when fileobj terminates. Backup
+                                files start with '.'. This option only applies to
+                                regular files.
           --force               Ignore warnings which can be ignored by specifying
                                 this option.
           --test_screen         Enter ncurses(3) screen test mode.

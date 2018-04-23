@@ -74,8 +74,7 @@ class Fileobj (fileobj.Fileobj):
         if self.is_mappable():
             self.init_mapping(self.get_path())
         else:
-            raise fileobj.FileobjError(
-                "Can not mmap(2) " + self.get_path())
+            raise fileobj.FileobjError("Can not mmap(2) " + self.get_path())
 
     def dtr(self):
         self.cleanup_mapping()
@@ -105,8 +104,7 @@ class Fileobj (fileobj.Fileobj):
         return self.test_partial() and offset > 0
 
     def __do_mmap(self, fileno, length):
-        return kernel.mmap_partial(
-            fileno, 0, length, self.is_readonly())
+        return kernel.mmap_partial(fileno, 0, length, self.is_readonly())
 
     def __do_mmap_at(self, fileno, offset, length):
         start = util.align_head(offset, kernel.get_page_size())
@@ -114,8 +112,7 @@ class Fileobj (fileobj.Fileobj):
         self.__set_delta(delta, offset)
         if length:
             length += delta
-        return kernel.mmap_partial(
-            fileno, start, length, self.is_readonly())
+        return kernel.mmap_partial(fileno, start, length, self.is_readonly())
 
     def __set_delta(self, delta, offset):
         self.__offset_delta = delta
@@ -187,8 +184,7 @@ class Fileobj (fileobj.Fileobj):
             if i < 0:
                 i = 0
                 n = x + 1
-            pos = util.rfind_string(
-                self.read(i, n), s)
+            pos = util.rfind_string(self.read(i, n), s)
             if pos >= 0:
                 return i + pos
             elif not i:

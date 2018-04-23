@@ -134,3 +134,16 @@ def get_index_width(l):
         n //= 10
         x += 1
     return x
+
+def set_dryrun():
+    global _dryrun
+    _dryrun = True
+
+def clear_dryrun():
+    global _dryrun
+    _dryrun = False
+
+def test_dryrun():
+    return _dryrun
+
+_dryrun = False

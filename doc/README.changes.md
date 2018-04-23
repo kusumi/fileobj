@@ -1,3 +1,11 @@
+## v0.7.65
++ Minor fixes and cleanups
++ Fix initial frame focus bug with multiple windows (since v0.7.60)
++ Simplify offset column design
++ Add ~/.fileobj/session to save session information
++ Preserve last cursor position
++ Add FILEOBJ_USE_SESSION_POSITION
+
 ## v0.7.64
 + Minor fixes and improvement
 + Remove FILEOBJ_USE_CURSOR_FALL_THROUGH

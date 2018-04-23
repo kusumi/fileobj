@@ -58,8 +58,7 @@ class Console (console.Console):
         if arg.start != -1:
             methods.go_to(self, arg.start)
         self.go_right(arg.delta)
-        assert self.co.get_barrier(
-            setting.barrier_size) != -1
+        assert self.co.get_barrier(setting.barrier_size) != -1
 
         l = []
         while True:
@@ -114,8 +113,7 @@ class Console (console.Console):
                 self.go_left()
                 break
             if setting.use_debug:
-                console.set_banner(
-                    self.co.get_barrier_range())
+                console.set_banner(self.co.get_barrier_range())
 
     def __enqueue(self, l, key, x):
         if key == EDIT:
@@ -261,14 +259,12 @@ class BR (_binary, _replace):
 
 class RangeBR (BR):
     def write_buffer(self, n, seq):
-        methods.range_replace(
-            self, None, None, get_ascii(*seq[:2]), None)
+        methods.range_replace(self, None, None, get_ascii(*seq[:2]), None)
         return -1
 
 class BlockBR (BR):
     def write_buffer(self, n, seq):
-        methods.block_replace(
-            self, None, None, get_ascii(*seq[:2]), None)
+        methods.block_replace(self, None, None, get_ascii(*seq[:2]), None)
         return -1
 
 class _ascii (Console):
@@ -333,14 +329,12 @@ class AR (_ascii, _replace):
 
 class RangeAR (AR):
     def write_buffer(self, n, seq):
-        methods.range_replace(
-            self, None, None, seq[0], None)
+        methods.range_replace(self, None, None, seq[0], None)
         return -1
 
 class BlockAR (AR):
     def write_buffer(self, n, seq):
-        methods.block_replace(
-            self, None, None, seq[0], None)
+        methods.block_replace(self, None, None, seq[0], None)
         return -1
 
 def get_ascii(upper, lower):

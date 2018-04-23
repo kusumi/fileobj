@@ -30,6 +30,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_DEBUG" # --debug, unittest (true)
     yield "FILEOBJ_USE_FORCE" # --force
     yield "FILEOBJ_USE_GETCH" # unittest (false)
+    yield "FILEOBJ_USE_SESSION_POSITION" # unittest (false)
     yield "FILEOBJ_USE_STDOUT" # unittest (true)
     yield "FILEOBJ_STDOUT_VERBOSE" # unittest (0)
     yield "FILEOBJ_USE_PATH_ATTR"
@@ -141,6 +142,9 @@ def __get_setting_use_force():
 
 def __get_setting_use_getch():
     return test_bool("FILEOBJ_USE_GETCH", True)
+
+def __get_setting_use_session_position():
+    return test_bool("FILEOBJ_USE_SESSION_POSITION", True)
 
 def __get_setting_use_stdout():
     return test_bool("FILEOBJ_USE_STDOUT", False)

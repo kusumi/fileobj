@@ -65,7 +65,8 @@ class Container (object):
         self.__delayed_input = []
         self.__stream = collections.deque()
         self.__operand = operand.Operand()
-        self.__marks = marks.Marks(None)
+        self.__marks = marks.Marks(setting.get_marks_path())
+        self.__session = marks.Marks(setting.get_session_path())
         self.__cur_workspace = None
         self.__in_vertical = False
         self.__in_random = False
@@ -94,8 +95,7 @@ class Container (object):
             10: "{0:d}",
             8 : "{0:o}",
         }.get(setting.address_num_radix)
-        s = fmt.format(
-            max([_.get_size() for _ in self.__fileobjs]))
+        s = fmt.format(max([_.get_size() for _ in self.__fileobjs]))
         if len(s) > panel.address_num_width:
             for x in [2 ** i for i in range(10)]:
                 if x > len(s):
@@ -107,7 +107,7 @@ class Container (object):
         wsp = self.__workspaces[0]
         self.__set_workspace(wsp)
         for i, o in enumerate(self.__fileobjs):
-            wsp.add_buffer(i, fileops.Fileops(o), self.__get_console())
+            self.__workspace_add_buffer(wsp, i, o, self.__get_console())
 
         # bytes_per_window must be set after the first workspace
         # is registered but before the next one is registered
@@ -130,6 +130,8 @@ class Container (object):
             self.__store_ondisk_marks(o)
             o.cleanup()
         self.__marks.flush()
+        self.__store_session()
+        self.__session.flush()
         self.__operand.cleanup()
 
     def dispatch(self):
@@ -184,15 +186,36 @@ class Container (object):
             o.reconnect_window()
 
     def __load_ondisk_marks(self, o):
-        # load marks read from ~/.fileobj/marks
         d = self.__marks.get(o.get_path())
         if d:
             o.set_marks(d)
 
     def __store_ondisk_marks(self, o):
-        # store marks to later write to ~/.fileobj/marks
         d = o.get_marks()
         self.__marks.set(o.get_path(), d)
+
+    def __load_session(self, o):
+        d = self.__session.get(o.get_path())
+        if d:
+            o.set_session(d)
+
+    def __store_session(self, o=None):
+        if not o:
+            o = self.__cur_workspace
+        if self.__set_session_position(o) != -1: # changed
+            self.__session.set(o.get_path(), o.get_session())
+
+    def __get_session_position(self, o):
+        if setting.use_session_position:
+            return o.get_session_value('@')
+        else:
+            return -1
+
+    def __set_session_position(self, o):
+        if setting.use_session_position:
+            return o.set_session_value('@', o.get_pos())
+        else:
+            return -1
 
     def __alloc_buffer(self, f, reload=False):
         if not self.has_buffer(f):
@@ -230,8 +253,7 @@ class Container (object):
             if o:
                 return self.__add_buffer(o, self.__get_console())
         else:
-            self.__cur_workspace.switch_to_buffer(
-                self.__get_buffer_index(f))
+            self.__cur_workspace.switch_to_buffer(self.__get_buffer_index(f))
 
     def add_extension(self, fn, args):
         try:
@@ -254,13 +276,22 @@ class Container (object):
             i = 0
         self.__fileobjs.insert(i, o)
         for wsp in self.__workspaces:
-            wsp.add_buffer(i, fileops.Fileops(o), con)
+            self.__workspace_add_buffer(wsp, i, o, con)
         self.__cur_workspace.switch_to_buffer(i)
         return o.get_path()
+
+    def __workspace_add_buffer(self, wsp, i, o, con):
+        fop = fileops.Fileops(o)
+        self.__load_session(o)
+        pos = self.__get_session_position(o)
+        if pos != -1:
+            fop.set_pos(pos)
+        wsp.add_buffer(i, fop, con)
 
     def remove_buffer(self, f, reload=False):
         o = self.__get_buffer(f)
         if o:
+            self.__store_session()
             for wsp in self.__workspaces:
                 wsp.remove_buffer(self.__fileobjs.index(o))
             if reload:
@@ -277,11 +308,28 @@ class Container (object):
             return -1
 
     def switch_to_buffer(self, f):
+        self.__store_session()
         i = self.__get_buffer_index(f)
         if i != -1:
             self.__cur_workspace.switch_to_buffer(i)
         else:
             return -1
+
+    def switch_to_first_buffer(self):
+        self.__store_session()
+        self.__cur_workspace.switch_to_first_buffer()
+
+    def switch_to_last_buffer(self):
+        self.__store_session()
+        self.__cur_workspace.switch_to_last_buffer()
+
+    def switch_to_next_buffer(self):
+        self.__store_session()
+        self.__cur_workspace.switch_to_next_buffer()
+
+    def switch_to_prev_buffer(self):
+        self.__store_session()
+        self.__cur_workspace.switch_to_prev_buffer()
 
     def reload_buffer(self, new):
         return self.__reload_buffer(self.get_path(), new)
@@ -574,6 +622,7 @@ class Container (object):
 
     def remove_workspace(self):
         if len(self) > 1:
+            self.__store_session()
             o = self.__cur_workspace
             if self.__workspaces.index(o) == len(self) - 1:
                 self.switch_to_prev_workspace()
@@ -591,6 +640,7 @@ class Container (object):
             l = [o for o in self.__workspaces
                 if o is not self.__cur_workspace]
             for o in l:
+                self.__store_session(o)
                 self.__remove_workspace(o)
             assert len(self) == 1
             self.__set_workspace(self.__workspaces[0])
@@ -713,7 +763,8 @@ class Container (object):
 
     def xrepaint(self):
         for o in self.__workspaces:
-            o.xrepaint()
+            is_current = self.__cur_workspace is o
+            o.xrepaint(is_current and len(self) > 1)
 
     def get_prev_context(self):
         return self.__prev_context

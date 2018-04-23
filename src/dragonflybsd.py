@@ -142,6 +142,7 @@ def get_total_ram():
 def get_free_ram():
     return linux.get_free_ram()
 
+# FreeBSD 4.0 dropped block device
 def is_blkdev(f):
     return unix.stat_is_blkdev_or_chrdev(f)
 

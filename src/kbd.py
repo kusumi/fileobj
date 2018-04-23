@@ -101,7 +101,7 @@ except ImportError:
     _KEY_RESIZE    = 410
 
 #                  stdout          VTxxx           xterm/others(XXX)
-_keys = [
+_keys = (
     ("TAB",        ascii.HT,       ascii.HT,       ascii.HT),
     ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF),
     ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC),
@@ -113,7 +113,7 @@ _keys = [
     ("BACKSPACE",  ascii.DEL,      ascii.DEL,      _KEY_BACKSPACE),
     ("BACKSPACE2", util.gen_key(), util.gen_key(), ascii.DEL),
     ("DELETE",     _KEY_DC,        util.gen_key(), _KEY_DC),
-    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE),]
+    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE),)
 
 def get_code(term):
     if term == "stdout":

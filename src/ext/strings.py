@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import fileobj.env
+import fileobj.extension
 import fileobj.filebytes
 import fileobj.kbd
 import fileobj.kernel
@@ -37,6 +38,9 @@ def get_text(co, fo, args):
     beg = args.pop()
     pos = beg
     rem = tot - pos
+    if fileobj.extension.test_dryrun():
+        if rem > 1024:
+            rem = 1024
 
     siz = fileobj.kernel.get_buffer_size()
     l = []

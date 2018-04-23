@@ -60,8 +60,7 @@ class Fileobj (rrbuf.Fileobj, vm.methods):
         self.test_access()
         ret = 0
         while self.__sbuf:
-            ret += self.__sync_buffer(
-                *self.__sbuf.pop())
+            ret += self.__sync_buffer(*self.__sbuf.pop())
         self.sync_undo()
         return "Poke {0}".format(ret), None
 

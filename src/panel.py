@@ -131,7 +131,7 @@ class binary_addon (object):
     def get_cell(self):
         return 3, 1
     def get_offset(self):
-        return 1, address_num_width + 3
+        return 1, address_num_width + 1
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
@@ -252,8 +252,7 @@ class Canvas (_panel):
         return pos - pos % self.bufmap.x
 
     def read_page(self):
-        return self.fileops.read(
-            self.get_page_offset(), self.get_capacity())
+        return self.fileops.read(self.get_page_offset(), self.get_capacity())
 
     def go_up(self, n):
         return self.sync_cursor()
@@ -421,10 +420,6 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             10: "{0:02d}",
             8 : "{0:02o}", }
         self.__lstr = {
-            16: "|{0}| ",
-            10: " {0}| ",
-            8 : "<{0}> ", }
-        self.__lstr_fmt = {
             16: "{{0:0{0}X}}".format(address_num_width),
             10: "{{0:{0}d}}".format(address_num_width),
             8 : "{{0:0{0}o}}".format(address_num_width), }
@@ -507,8 +502,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         if setting.use_address_num_offset:
             n += self.fileops.get_mapping_offset()
         return self.__lstr[setting.address_num_radix].format(
-            self.__lstr_fmt[setting.address_num_radix].format(
-                n)[-address_num_width:])
+            n)[-address_num_width:]
 
 class TextCanvas (DisplayCanvas, text_addon):
     def __init__(self, siz, pos):
@@ -563,8 +557,7 @@ class TextCanvas (DisplayCanvas, text_addon):
             self.printl(y, x, s, attr2)
 
     def fill_posstr(self):
-        s = ''.join([self.__get_column_posstr(x) for x in
-            range(self.bufmap.x)])
+        s = ''.join([self.__get_column_posstr(x) for x in range(self.bufmap.x)])
         self.printl(0, self.offset.x, s, screen.A_UNDERLINE)
 
     def __get_column_posstr(self, n):

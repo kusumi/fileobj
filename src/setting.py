@@ -44,6 +44,9 @@ def get_history_path():
 def get_marks_path():
     return os.path.join(get_user_dir(), "marks")
 
+def get_session_path():
+    return os.path.join(get_user_dir(), "session")
+
 def get_stream_path():
     return __get_path("path_stream")
 

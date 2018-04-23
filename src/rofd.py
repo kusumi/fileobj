@@ -140,8 +140,7 @@ class Fileobj (fileobj.Fileobj):
             if i < 0:
                 i = 0
                 n = x + 1
-            pos = util.rfind_string(
-                self.read(i, n), s)
+            pos = util.rfind_string(self.read(i, n), s)
             if pos >= 0:
                 return i + pos
             elif not i:
@@ -166,8 +165,7 @@ class Fileobj (fileobj.Fileobj):
             end += n * self.__ra_window[1]
 
             if self.__align:
-                beg, end = util.align_range(
-                    beg, end, self.__align)
+                beg, end = util.align_range(beg, end, self.__align)
             try:
                 self.fd.seek(beg)
                 b = self.fd.read(end - beg)

@@ -87,13 +87,15 @@ class Fileobj (rrbuf.Fileobj):
             if size >= merge_thresh:
                 ll = l[:l.index(o) + 1]
                 if len(ll) > 1:
-                    b = filebytes.join(
-                        [o.read(o.offset, len(o)) for o in ll])
+                    b = filebytes.join([o.read(o.offset, len(o)) for o in ll])
                     new = self.alloc_chunk(beg.offset, b)
                     self.cbuf.insert(self.cbuf.index(beg), new)
                     log.debug("Merge {0} chunks -> #{1}/{2} ({3},{4})".format(
-                        len(ll), self.cbuf.index(new), len(self.cbuf),
-                        new.offset, len(new)))
+                        len(ll),
+                        self.cbuf.index(new),
+                        len(self.cbuf),
+                        new.offset,
+                        len(new)))
                     for o in ll:
                         self.cbuf.remove(o)
                 self.mark_chunk()
@@ -113,8 +115,11 @@ class Fileobj (rrbuf.Fileobj):
             size -= len(b)
             i += 1
         log.debug("Split into {0} chunks <- #{1}/{2} ({3},{4})".format(
-            i, self.cbuf.index(beg), len(self.cbuf) - i,
-            beg.offset, len(beg)))
+            i,
+            self.cbuf.index(beg),
+            len(self.cbuf) - i,
+            beg.offset,
+            len(beg)))
         self.cbuf.remove(beg)
         self.mark_chunk()
 

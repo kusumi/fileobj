@@ -26,8 +26,7 @@ import fileobj.util
 
 def get_text(co, fo, args):
     d = fileobj.util.get_import_modules()
-    f = "{{0:{0}}} {{1}}".format(
-        fileobj.extension.get_index_width(d.keys()))
+    f = "{{0:{0}}} {{1}}".format(fileobj.extension.get_index_width(d.keys()))
     if d:
         g = enumerate(sorted(d.keys()))
         return [f.format(i + 1, d[k]) for i, k in g]

@@ -34,8 +34,7 @@ def get_text(co, fo, args):
                 l.append(x)
     if not l:
         return "No class"
-    f = "{{0:{0}}} {{1}}".format(
-        fileobj.extension.get_index_width(l))
+    f = "{{0:{0}}} {{1}}".format(fileobj.extension.get_index_width(l))
     sl = []
     for i, cls in enumerate(l):
         x = inspect.getmro(cls)

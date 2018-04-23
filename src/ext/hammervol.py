@@ -42,8 +42,8 @@ def get_text(co, fo, args):
 
     sig = b[:8]
     if sig not in (HAMMER_FSBUF_VOLUME, HAMMER_FSBUF_VOLUME_REV):
-        fileobj.extension.fail(
-            "Invalid signature: '{0}'".format(fileobj.filebytes.str(sig)))
+        fileobj.extension.fail("Invalid signature: '{0}'".format(
+            fileobj.filebytes.str(sig)))
     if fileobj.filebytes.ord(sig[:1]) == 0x31:
         endian = "LE"
     else:

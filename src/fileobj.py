@@ -337,10 +337,8 @@ class Fileobj (object):
     def readall(self):
         return self.read(0, self.get_size())
 
-    buffer = property(
-        lambda self: self.readall())
-    binary = property(
-        lambda self: filebytes.ords(self.buffer))
+    buffer = property(lambda self: self.readall())
+    binary = property(lambda self: filebytes.ords(self.buffer))
 
     def iter_read(self, x, n):
         while True:
@@ -421,6 +419,8 @@ class Fileobj (object):
         return self.__attr.marks.get(k, -1)
 
     def set_mark(self, k, v):
+        if self.get_mark(k) == v:
+            return -1
         self.__attr.marks[k] = v
 
     def get_marks(self):
@@ -438,6 +438,20 @@ class Fileobj (object):
         for k in tuple(self.__attr.marks.keys()):
             if not cond or cond(k):
                 del self.__attr.marks[k]
+
+    def get_session_value(self, k):
+        return self.__attr.session.get(k, -1)
+
+    def set_session_value(self, k, v):
+        if self.get_session_value(k) == v:
+            return -1
+        self.__attr.session[k] = v
+
+    def get_session(self):
+        return dict(self.__attr.session)
+
+    def set_session(self, d):
+        self.__attr.session = d
 
     def get_barrier(self, ret, offset, size):
         try:

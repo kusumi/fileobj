@@ -53,12 +53,10 @@ class methods (object):
         if not length:
             length = util.get_address_space() # will fail
             length -= offset
-        self.init_chunk(
-            self.__load_buffer(offset, length))
+        self.init_chunk(self.__load_buffer(offset, length))
 
     def __load_buffer(self, offset, length):
-        beg, end = util.align_range(
-            offset, offset + length, self.word)
+        beg, end = util.align_range(offset, offset + length, self.word)
         buf = self.read_vm(beg, end - beg)
         x = offset - beg
         b = buf[x : x + length]

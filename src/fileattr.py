@@ -50,6 +50,7 @@ def __alloc_new():
         length = 0,
         word = util.str_to_bytes(''),
         marks = {},
+        session = {},
         undo = undo.Undo())
 
 def remove(f):

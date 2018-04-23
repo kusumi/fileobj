@@ -49,8 +49,7 @@ class _node (object):
 
 class _builtin (_node):
     def __init__(self):
-        super(_builtin, self).__init__(
-            fileobj.util.get_class_name(self))
+        super(_builtin, self).__init__(fileobj.util.get_class_name(self))
 
     def get_repr(self, buf, name, indent):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
@@ -73,14 +72,10 @@ class _builtin (_node):
         else:
             return str(n)
 
-_toplevel_regex = re.compile(
-    r"\s*struct\s+(\S+)\s*{([\s\S]+?)}\s*;")
-_struct_member_regex = re.compile(
-    r"^(\S+)\[([0-9]+)\]$")
-_builtin_type_regex = re.compile(
-    r"^(u|s|x)(8|16|32|64)(le|be)$")
-_builtin_xtype_regex = re.compile(
-    r"^x(8|16|32|64)") # only to detect x, but not be|le
+_toplevel_regex = re.compile(r"\s*struct\s+(\S+)\s*{([\s\S]+?)}\s*;")
+_struct_member_regex = re.compile(r"^(\S+)\[([0-9]+)\]$")
+_builtin_type_regex = re.compile(r"^(u|s|x)(8|16|32|64)(le|be)$")
+_builtin_xtype_regex = re.compile(r"^x(8|16|32|64)") # only to detect x
 
 # XXX
 # This is necessary as this module uses int()
@@ -124,8 +119,7 @@ def __init_class():
 class _string (_node):
     def __init__(self, size):
         self.__size = size
-        super(_string, self).__init__(
-            _string_type(self.__size))
+        super(_string, self).__init__(_string_type(self.__size))
 
     def get_size(self):
         return self.__size

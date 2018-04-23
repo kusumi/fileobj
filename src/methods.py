@@ -313,7 +313,8 @@ def __cursor_prev_matched(self, cnt, fn):
 
 def start_read_delayed_input(self, amp, opc, args, raw):
     self.co.start_read_delayed_input(
-        literal.bracket2_beg.seq[0], literal.bracket2_end.seq[0])
+        literal.bracket2_beg.seq[0],
+        literal.bracket2_end.seq[0])
     self.co.show(opc[0])
 
 def end_read_delayed_input(self, amp, opc, args, raw):
@@ -643,8 +644,7 @@ def __get_screen_string(self):
         self.co.get_build_size())
 
 def show_platform(self, amp, opc, args, raw):
-    self.co.show("{0} {1}".format(
-        util.get_os_name(), util.get_os_release()))
+    self.co.show("{0} {1}".format(util.get_os_name(), util.get_os_release()))
 
 def show_hostname(self, amp, opc, args, raw):
     self.co.show(platform.node())
@@ -1286,8 +1286,7 @@ def __single_rotate_right(self, shift, beg, end):
         car = x << car_shift
         pos += 1
         if screen.test_signal():
-            self.co.flash(
-                "Rotate right interrupted ({0}/{1})".format(pos, end))
+            self.co.flash("Rotate right interrupted ({0}/{1})".format(pos, end))
             return -1
     return end - beg + 1
 
@@ -1746,7 +1745,7 @@ def __single_logical_bit_operation(self, pos, amp, fn):
         if screen.test_signal():
             self.co.flash(
                 "Single bitwise operation interrupted ({0}/{1})".format(
-                x, amp))
+                    x, amp))
             return -1
     return amp
 

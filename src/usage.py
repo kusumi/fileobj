@@ -64,11 +64,11 @@ Show the buffer size and current position in hexadecimal.
 """)
 
 o = _("""
-Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size to accommodate windows.
+Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size to accommodate.
 """)
 
 O = _("""
-Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size to accommodate windows.
+Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size to accommodate.
 """)
 
 bytes_per_line = _("""
@@ -112,7 +112,7 @@ Use verbose status window instead of the default format.
 
 backup = _("""
 Explicitly create backup files for regular files.
-Backup files are created under \fI~/.fileobj\fP when the program starts, and removed when the program terminates.
+Backup files are created under \fI~/.fileobj\fP when \fBfileobj\fP starts, and removed when \fBfileobj\fP terminates.
 Backup files start with '.'.
 This option only applies to regular files.
 """)

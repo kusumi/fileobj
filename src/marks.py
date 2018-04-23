@@ -35,8 +35,6 @@ from . import util
 
 class Marks (object):
     def __init__(self, f):
-        if not f:
-            f = setting.get_marks_path()
         self.__path = path.Path(f)
         self.__data = {}
         if _is_valid_path(self.__path):

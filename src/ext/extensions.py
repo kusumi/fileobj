@@ -26,8 +26,15 @@ import fileobj.literal
 import fileobj.util
 
 def get_text(co, fo, args):
-    l = [__test_module(co, fo, li) for li in
-        fileobj.literal.get_ext_literals()]
+    try:
+        fileobj.extension.set_dryrun()
+        l = [__test_module(co, fo, li) for li in
+            fileobj.literal.get_ext_literals()]
+    except Exception:
+        pass
+    finally:
+        fileobj.extension.clear_dryrun()
+
     if not l:
         return "No extension"
     f = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3}}".format(
