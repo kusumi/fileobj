@@ -60,8 +60,12 @@ class _candidate (object):
         return o
 
 class LiteralCandidate (_candidate):
-    def __init__(self, literals):
+    def __init__(self, literals=None):
         super(LiteralCandidate, self).__init__()
+        self.__literals = literals
+
+    def init(self, literals):
+        self.clear()
         self.__literals = literals
 
     def _get_generator(self, arg):
@@ -74,9 +78,12 @@ class PathCandidate (_candidate):
         p = path.Path(arg)
         d, b = os.path.split(p.path)
         if util.is_readable(d) and (p.is_dir or p.is_reg or p.is_noent):
-            for s in sorted(os.listdir(d)):
-                if s.startswith(b):
-                    yield os.path.join(d, s)
+            l = [x for x in sorted(os.listdir(d)) if x.startswith(b)]
+            for s in l:
+                f = os.path.join(d, s)
+                if os.path.isdir(f) and not f.endswith("/"):
+                    f = f + "/"
+                yield f, len(l)
 
     def _get_item(self, o):
-        return path.get_short_path(o)
+        return path.get_short_path(o[0]), o[1]

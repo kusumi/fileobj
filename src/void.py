@@ -80,6 +80,7 @@ class _console (console.Console):
         self.add_method(literal.s_bnext      , methods, "switch_to_next_buffer")
         self.add_method(literal.s_bprev      , methods, "switch_to_prev_buffer")
         self.add_method(literal.s_set        , methods, "set_option")
+        self.add_method(literal.s_auto       , methods, "set_auto")
         self.add_method(literal.ctrlg        , methods, "show_current")
         self.add_method(literal.g_ctrlg      , methods, "show_current_sector")
         self.add_method(literal.s_self       , methods, "show_self")

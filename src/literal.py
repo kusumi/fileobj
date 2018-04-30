@@ -342,6 +342,7 @@ s_x           = SlowLiteral(":x", None, "Like :wq, but write only when changes h
 s_q           = SlowLiteral(":q", None, "Close current window if more than 1 windows exist else quit program")
 s_qneg        = SlowLiteral(":q!", None, "Close current window if more than 1 windows exist else quit program without writing")
 s_bind        = SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(atsign_colon.str))
+s_auto        = SlowLiteral(":auto", None, "Short for :set bpl and bpw to \"auto\"")
 s_fsearch     = SearchLiteral('/', None, "Search forward")
 s_rsearch     = SearchLiteral('?', None, "Search backward")
 

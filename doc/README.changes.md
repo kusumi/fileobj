@@ -1,3 +1,8 @@
+## v0.7.66
++ Minor fixes and cleanups
++ Improve tab completion behavior
++ Add :auto
+
 ## v0.7.65
 + Minor fixes and cleanups
 + Fix initial frame focus bug with multiple windows (since v0.7.60)

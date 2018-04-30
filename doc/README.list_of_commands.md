@@ -44,6 +44,7 @@
         $                        Go to the end of the line. If a count is given go [count]-1 lines downward
         :args                    Print buffer list with the current buffer in brackets
         :argv                    Print arguments of this program
+        :auto                    Short for :set bpl and bpw to "auto"
         :bfirst                  Go to the first buffer in buffer list
         :brewind                 Go to the first buffer in buffer list
         :bind                    Run/bind given :command in argument, replayable with @:

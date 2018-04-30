@@ -1,4 +1,4 @@
-# fileobj ([v0.7.65](https://github.com/kusumi/fileobj/releases/tag/v0.7.65))
+# fileobj ([v0.7.66](https://github.com/kusumi/fileobj/releases/tag/v0.7.66))
 
 ## About
 

@@ -1,4 +1,4 @@
-## FAQ
+## General
 
 + Can not install due to a missing header file *Python.h*. -> **Install *Python.h* via *python-devel* package for the Python version in use. The name may differ among platforms, however it's generally called *python-devel* or *python2-devel* or *python3-devel* or something along these lines. On Debian based Linux distributions, these are probably called *libpython-dev* or *libpython3-dev*.**
 

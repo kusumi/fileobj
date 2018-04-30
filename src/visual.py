@@ -341,6 +341,7 @@ class _console (console.Console):
         self.add_method(literal.s_bnext      , this,    "_buffer_input")
         self.add_method(literal.s_bprev      , this,    "_buffer_input")
         self.add_method(literal.s_set        , methods, "set_option")
+        self.add_method(literal.s_auto       , methods, "set_auto")
         self.add_method(literal.ctrlg        , this,    "_buffer_input")
         self.add_method(literal.g_ctrlg      , this,    "_buffer_input")
         self.add_method(literal.s_self       , this,    "_buffer_input")

@@ -33,31 +33,21 @@ from . import util
 class Operand (object):
     def __init__(self):
         self.__history = history.History(None)
-        self.__prev = util.Namespace(
-            key=kbd.ERROR, opc='', arg='', raw=[])
+        self.__prev = util.Namespace(key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
 
     def init(self, rl, fl, sl):
-        # args must be sorted
         self.__regxs = rl
         self.__fasts = fl
         self.__slows = sl
-        self.__cand = {
-            None : candidate.LiteralCandidate(self.__slows), }
-        l = literal.get_arg_literals()
-        a = candidate.LiteralCandidate(l)
-        p = candidate.PathCandidate()
+        _li_cand.init(self.__slows)
+        self.__cand = {None : _li_cand}
+        _arg_cand.init(literal.get_arg_literals())
         for li in self.__slows:
             if li is literal.s_set:
-                self.__cand[li.str] = a
-            if  li is literal.s_e or \
-                li is literal.s_w or \
-                li is literal.s_wneg or \
-                li is literal.s_wq or \
-                li is literal.s_split or \
-                li is literal.s_vsplit or \
-                li is literal.s_bdelete:
-                self.__cand[li.str] = p
+                self.__cand[li.str] = _arg_cand
+            if li in _path_li:
+                self.__cand[li.str] = _path_cand
         self.clear()
 
     def cleanup(self):
@@ -160,13 +150,7 @@ class Operand (object):
 
     def process_incoming(self, x):
         if _is_null(self.__buf) and not self.__scan_amp(x):
-            return  None, \
-                    None, \
-                    None, \
-                    None, \
-                    None, \
-                    None, \
-                    -1
+            return None, None, None, None, None, None, -1
 
         _type = _get_type(self.__buf)
         if _type == _null:
@@ -180,13 +164,7 @@ class Operand (object):
                 msg = _to_string(self.__buf)
             else:
                 msg = None
-            return  None, \
-                    None, \
-                    None, \
-                    None, \
-                    None, \
-                    msg, \
-                    self.__pos
+            return None, None, None, None, None, msg, self.__pos
 
         _type = _get_type(self.__buf)
         if _type == _null:
@@ -212,13 +190,7 @@ class Operand (object):
             msg = ''
         else:
             msg = None
-        return  li, \
-                amp, \
-                opc, \
-                self.__arg[:], \
-                self.__buf[:], \
-                msg, \
-                self.__pos
+        return li, amp, opc, self.__arg[:], self.__buf[:], msg, self.__pos
 
     def __scan_amp(self, x):
         if self.__amp:
@@ -328,13 +300,30 @@ class Operand (object):
         opc = self.__prev.opc
         arg = self.__prev.arg
         if not arg:
+            # XXX support path candidates without arg
             s = self.__cand[None].get(opc)
             if s:
                 self.__set_string(s)
         elif len(arg) == 1 and opc in self.__cand:
-            s = self.__cand[opc].get(arg[0])
-            if s:
-                self.__set_string(opc + " " + s)
+            cand = self.__cand[opc]
+            if isinstance(cand, candidate.PathCandidate):
+                l = cand.get(arg[0])
+                if l is not None:
+                    s, n = l
+                    if s:
+                        self.__set_string(opc + " " + s)
+                        if n == 1:
+                            # This is the only candidate, so update buffer for
+                            # the next iteration which may need to start from
+                            # beginning with a different input (e.g. change from
+                            # a dir path without trailing / to with trailing /).
+                            self.__parse_buffer()
+                            # XXX refactor, should avoid updating __prev here
+                            self.__prev.arg = self.__arg[:]
+            else:
+                s = cand.get(arg[0])
+                if s:
+                    self.__set_string(opc + " " + s)
         return False
 
     def __delete_slow(self):
@@ -416,6 +405,7 @@ def _is_digit(x):
 
 def _is_null(l):
     return _get_type(l) == _null
+
 def _is_slow(l):
     return _get_type(l) == _slow
 
@@ -426,3 +416,10 @@ def _get_type(l):
         return _slow
     else:
         return _fast
+
+_li_cand = candidate.LiteralCandidate()
+_arg_cand = candidate.LiteralCandidate()
+_path_cand = candidate.PathCandidate()
+
+_path_li_names = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete",
+_path_li = tuple(getattr(literal, "s_" + s) for s in _path_li_names)

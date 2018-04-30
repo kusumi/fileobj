@@ -501,9 +501,7 @@ def __set_bytes_per_line(self, args):
     elif self.co.set_bytes_per_line(args[1]) == -1:
         self.co.flash("Invalid arg: " + args[1])
     elif self.co.get_bytes_per_line() != prev:
-        screen.clear()
-        self.co.build()
-        self.co.repaint()
+        __rebuild(self)
 
 def __set_bytes_per_window(self, args):
     prev = self.co.get_bytes_per_window()
@@ -519,9 +517,12 @@ def __set_bytes_per_window(self, args):
         except ValueError:
             self.co.flash("Invalid arg: {0}".format(args[1]))
     elif self.co.get_bytes_per_window() != prev:
-        screen.clear()
-        self.co.build()
-        self.co.repaint()
+        __rebuild(self)
+
+def __rebuild(self):
+    screen.clear()
+    self.co.build()
+    self.co.repaint()
 
 _set_methods = {
     literal.s_set_binary.seq:  __set_binary,
@@ -564,6 +565,16 @@ def set_option(self, amp, opc, args, raw):
         self.co.lrepaint()
     else:
         self.co.flash("Unknown option: " + args[0])
+
+def set_auto(self, amp, opc, args, raw):
+    if self.co.set_bytes_per_line("auto") == -1:
+        self.co.flash("Failed to reset bytes per line")
+        return
+    if self.co.set_bytes_per_window("auto") == -1:
+        __rebuild(self)
+        self.co.flash("Failed to reset bytes per window")
+        return
+    __rebuild(self)
 
 def show_current(self, amp, opc, args, raw):
     self.co.show("{0} {1} at {2}".format(

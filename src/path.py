@@ -41,7 +41,6 @@ _t_unknown = 1 << 7
 _t_error   = 1 << 8
 
 _sep = os.path.sep
-_cwd = os.getcwd()
 _home = setting.get_home_dir()
 
 class Path (object):
@@ -125,18 +124,20 @@ def get_short_path(f):
     return _get_short_path(get_path(f))
 
 def _get_short_path(f):
+    # unittests cd to other dirs, so get cwd for each call
+    cwd = os.getcwd()
     if not f:
         return ''
-    if f == _cwd:
+    if f == cwd:
         return '.'
-    if f.startswith(_cwd + _sep): # no os.path.join here
-        return f.replace(_cwd, '.')
+    if f.startswith(cwd + _sep): # no os.path.join here
+        return f.replace(cwd, '.')
     if f == _home:
         return '~'
     if f.startswith(_home + _sep): # no os.path.join here
         return f.replace(_home, '~')
     if _has_relpath:
-        rel = os.path.relpath(f, _cwd)
+        rel = os.path.relpath(f, cwd)
         if len(rel) < len(f):
             return rel
     return f
