@@ -286,6 +286,10 @@ class Container (object):
         pos = self.__get_session_position(o)
         if pos != -1:
             fop.set_pos(pos)
+            cur_pos = fop.get_pos()
+            if cur_pos != pos:
+                self.flash("Failed to locate at {0}:{1}".format(
+                    path.get_short_path(fop.get_path()), pos))
         wsp.add_buffer(i, fop, con)
 
     def remove_buffer(self, f, reload=False):
@@ -609,8 +613,8 @@ class Container (object):
         cur_workspace = self.__cur_workspace
         new_workspace = self.__cur_workspace.clone()
         self.__clear_workspace_delta()
-        self.__workspaces.insert(
-            self.__workspaces.index(cur_workspace), new_workspace)
+        self.__workspaces.insert(self.__workspaces.index(cur_workspace),
+            new_workspace)
         self.__set_workspace(new_workspace)
         if self.build(vertical) != -1:
             new_workspace.switch_to_buffer(i)

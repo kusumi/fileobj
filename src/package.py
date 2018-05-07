@@ -72,8 +72,7 @@ def iter_module_name():
     for s in _mod_name:
         yield s
 
-if (_major == 2 and _minor >= 7) or \
-    (_major == 3 and _minor >= 2):
+if (_major == 2 and _minor >= 7) or (_major == 3 and _minor >= 2):
     import site
     def get_sites():
         l = [site.getusersitepackages()]
@@ -82,8 +81,7 @@ if (_major == 2 and _minor >= 7) or \
 else:
     get_sites = None
 
-if (_major == 2 and _minor >= 7) or \
-    (_major == 3 and _minor >= 1):
+if (_major == 2 and _minor >= 7) or (_major == 3 and _minor >= 1):
     import importlib
     def import_module(s):
         return importlib.import_module(s)
@@ -98,8 +96,8 @@ else:
 try:
     _pkg_name = []
     _mod_name = []
-    for loader, name, ispkg in pkgutil.walk_packages(
-        get_paths(), get_prefix()): # sorted
+    for loader, name, ispkg in pkgutil.walk_packages(get_paths(), get_prefix()):
+        # sorted
         if ispkg:
             _pkg_name.append(name)
         else:

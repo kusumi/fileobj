@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
 import os
 
 from . import filebytes
@@ -64,18 +65,28 @@ class Fileobj (rrbuf.Fileobj):
 
     def __balance_chunk(self):
         for o in self.cbuf:
-            if len(o) < setting.rwbuf_chunk_size_low:
+            if len(o) < self.__get_chunk_size_low():
                 if self.__merge_chunk(o, self.get_chunk_size()) != -1:
                     break
         for o in self.cbuf:
-            if len(o) > setting.rwbuf_chunk_size_high:
+            if len(o) > self.__get_chunk_size_high():
                 if self.__split_chunk(o, self.get_chunk_size()) != -1:
                     break
         if setting.use_debug:
             l = [len(o) for o in self.cbuf]
-            log.debug("{0} chunks exist min={1}[B] max={2}[B]".format(
-                len(l), min(l), max(l)))
+            log.debug("{0} chunks exist min={1}[B] max={2}[B]".format(len(l),
+                min(l), max(l)))
         self.set_search_thresh()
+
+    def __get_chunk_size_low(self):
+        ret = self.get_chunk_size() // 10
+        assert ret > 0, ret
+        return ret
+
+    def __get_chunk_size_high(self):
+        ret = self.get_chunk_size() * 10
+        assert ret > 0, ret
+        return ret
 
     def __merge_chunk(self, beg, merge_thresh):
         if len(beg) >= merge_thresh:
@@ -91,11 +102,8 @@ class Fileobj (rrbuf.Fileobj):
                     new = self.alloc_chunk(beg.offset, b)
                     self.cbuf.insert(self.cbuf.index(beg), new)
                     log.debug("Merge {0} chunks -> #{1}/{2} ({3},{4})".format(
-                        len(ll),
-                        self.cbuf.index(new),
-                        len(self.cbuf),
-                        new.offset,
-                        len(new)))
+                        len(ll), self.cbuf.index(new), len(self.cbuf),
+                        new.offset, len(new)))
                     for o in ll:
                         self.cbuf.remove(o)
                 self.mark_chunk()
@@ -114,12 +122,8 @@ class Fileobj (rrbuf.Fileobj):
             offset += len(b)
             size -= len(b)
             i += 1
-        log.debug("Split into {0} chunks <- #{1}/{2} ({3},{4})".format(
-            i,
-            self.cbuf.index(beg),
-            len(self.cbuf) - i,
-            beg.offset,
-            len(beg)))
+        log.debug("Split into {0} chunks <- #{1}/{2} ({3},{4})".format(i,
+            self.cbuf.index(beg), len(self.cbuf) - i, beg.offset, len(beg)))
         self.cbuf.remove(beg)
         self.mark_chunk()
 

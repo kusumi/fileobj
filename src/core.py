@@ -152,8 +152,7 @@ def dispatch(optargs=None):
     log.init(util.get_program_name())
 
     log.info("-" * 50)
-    log.info("{0} {1}".format(
-        util.get_program_path(),
+    log.info("{0} {1}".format(util.get_program_path(),
         version.get_tag_string()))
     log.info("{0} {1}".format(util.get_python_string(), sys.executable))
     log.info("UNAME {0} {1}".format(util.get_os_name(), util.get_os_release()))
@@ -336,8 +335,7 @@ def __update_screen(scr, repaint, l):
     if siz >= 13:
         if repaint:
             scr.addstr(1, 1, "Running {0} on {1}".format(
-                util.get_python_string(),
-                kernel.get_term_info()))
+                util.get_python_string(), kernel.get_term_info()))
             scr.addstr(3, 1, "This should look normal.", screen.A_DEFAULT)
             scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
             scr.addstr(5, 1, "This should look reversed.", screen.A_REVERSE)

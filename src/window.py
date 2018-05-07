@@ -29,11 +29,9 @@ from . import util
 
 class Window (object):
     def __init__(self, canvas, frame):
-        self.__frame = frame(
-            panel.get_min_size(frame),
+        self.__frame = frame(panel.get_min_size(frame),
             panel.get_min_position(frame))
-        self.__canvas = canvas(
-            panel.get_min_size(canvas),
+        self.__canvas = canvas(panel.get_min_size(canvas),
             panel.get_min_position(canvas))
 
     def __getattr__(self, name):
@@ -82,8 +80,7 @@ class Window (object):
 
     def resize(self, siz, pos):
         self.__frame.resize(siz, pos)
-        self.__canvas.resize(
-            self.__get_canvas_size(),
+        self.__canvas.resize(self.__get_canvas_size(),
             self.__get_canvas_position())
 
 def _get_diff_y(a, b):

@@ -54,8 +54,7 @@ def __get_blkdev_info(fd):
         size = util.host_to_int(buf) * sector_size
         return size, sector_size, ''
     except Exception as e:
-        log.error("ioctl({0}, {1}) failed, {2}".format(
-            fd.name, "DKIOCGMEDIAINFO", e))
+        log.error("ioctl({0}, DKIOCGMEDIAINFO) failed, {1}".format(fd.name, e))
         raise
 
 def read_reg_size(f):

@@ -169,12 +169,8 @@ def init():
     global _scr, chgat
     if _scr:
         return -1
-    _scr = screen.alloc(
-        get_size_y(),
-        get_size_x(),
-        get_position_y(),
-        get_position_x(),
-        getch)
+    _scr = screen.alloc(get_size_y(), get_size_x(), get_position_y(),
+        get_position_x(), getch)
     log.debug(_scr)
     if screen.use_alt_chgat():
         chgat = __alt_chgat

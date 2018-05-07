@@ -1,4 +1,6 @@
-# Copyright (c) 2013, Tomohiro Kusumi
+#!/bin/sh
+
+# Copyright (c) 2018, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,18 +23,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.literal
+USER_DIR=~/.fileobj
 
-def get_text(co, fo, args):
-    li = fileobj.literal.get_literals()[0]
-    while li.ref:
-        li = li.ref
-    def _(l, o, i, level):
-        l.append("{0:>3} {1}{2} \"{3}\"".format(i, ' ' * 8 * level, repr(o), o))
-        i += 1
-        for li in sorted(o.children):
-            i = _(l, li, i, level + 1)
-        return i
-    l = []
-    _(l, li, 0, 0)
-    return l
+if [ ! -d ${USER_DIR} ]; then
+	echo "No ${USER_DIR} directory"
+	exit 1
+fi
+
+dump_json() {
+	USER_FILE=$1
+	if [ -f "${USER_FILE}" ]; then
+		echo ${USER_FILE}
+		cat ${USER_FILE} | python -m json.tool
+	fi
+}
+
+dump_json ${USER_DIR}/history
+dump_json ${USER_DIR}/marks
+dump_json ${USER_DIR}/session

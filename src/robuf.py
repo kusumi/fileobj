@@ -78,7 +78,11 @@ class Fileobj (fileobj.Fileobj):
         self.__size = size
 
     def get_chunk_size(self):
-        return setting.robuf_chunk_size
+        ret = setting.robuf_chunk_size
+        if ret != -1:
+            return ret
+        else:
+            return kernel.get_page_size()
 
     def set_search_thresh(self):
         # heuristic
@@ -92,9 +96,7 @@ class Fileobj (fileobj.Fileobj):
             r = 0.5
         self.__thresh = int(self.get_size() * r)
         log.debug("{0} has search thresh at {1}[B]/{2}[B]".format(
-            self.get_short_path(),
-            self.__thresh,
-            self.get_size()))
+            self.get_short_path(), self.__thresh, self.get_size()))
 
     def alloc_chunk(self, offset, buf):
         return chunk.Chunk(offset, buf)

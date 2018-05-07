@@ -56,7 +56,7 @@ This option is required to resize (i.e. insert or delete) regular files on platf
 """)
 
 d = _("""
-Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
+Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
 """)
 
 x = _("""

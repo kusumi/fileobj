@@ -76,8 +76,7 @@ def __get_blkdev_info(fd):
         label = util.bytes_to_str(filebytes.rstrip(d_typename))
         return d_secperunit * d_secsize, d_secsize, label
     except Exception as e:
-        log.error("ioctl({0}, {1}) failed, {2}".format(
-            fd.name, "DIOCGDINFO", e))
+        log.error("ioctl({0}, DIOCGDINFO) failed, {1}".format(fd.name, e))
         raise
 
 def read_reg_size(f):

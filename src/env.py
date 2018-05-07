@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division
 import os
 import sys
 
@@ -68,15 +67,9 @@ def __iter_env_name():
     yield "FILEOBJ_USE_RRVM_SYNC_ON_EDIT"
     yield "FILEOBJ_ROBUF_CHUNK_SIZE"
     yield "FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL"
-    yield "FILEOBJ_RWBUF_CHUNK_SIZE_LOW"
-    yield "FILEOBJ_RWBUF_CHUNK_SIZE_HIGH"
     yield "FILEOBJ_USE_NATIVE"
     yield "FILEOBJ_BUFFER_SIZE"
     yield "FILEOBJ_PATH_STREAM"
-    yield "FILEOBJ_KEY_DOWN"
-    yield "FILEOBJ_KEY_UP"
-    yield "FILEOBJ_KEY_LEFT"
-    yield "FILEOBJ_KEY_RIGHT"
     yield "FILEOBJ_KEY_BACKSPACE"
     yield "FILEOBJ_KEY_DELETE"
     yield "FILEOBJ_KEY_RESIZE"
@@ -303,38 +296,10 @@ def __get_setting_use_rrvm_sync_on_edit():
     return test_bool("FILEOBJ_USE_RRVM_SYNC_ON_EDIT", False)
 
 def __get_setting_robuf_chunk_size():
-    try:
-        siz = os.sysconf("SC_PAGE_SIZE")
-    except Exception:
-        siz = 4096
-    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", siz)
+    return test_gt_zero("FILEOBJ_ROBUF_CHUNK_SIZE", -1)
 
 def __get_setting_rwbuf_chunk_balance_interval():
     return test_gt_zero("FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL", 100)
-
-def __get_setting_rwbuf_chunk_size_low():
-    e = getenv("FILEOBJ_RWBUF_CHUNK_SIZE_LOW")
-    chunk_size = __get_setting_robuf_chunk_size()
-    _ = chunk_size // 5
-    if e is None:
-        return _
-    x = __env_gt_zero(e)
-    if x is None or x >= chunk_size:
-        return _
-    else:
-        return x
-
-def __get_setting_rwbuf_chunk_size_high():
-    e = getenv("FILEOBJ_RWBUF_CHUNK_SIZE_HIGH")
-    chunk_size = __get_setting_robuf_chunk_size()
-    _ = chunk_size * 5
-    if e is None:
-        return _
-    x = __env_gt_zero(e)
-    if x is None or x <= chunk_size:
-        return _
-    else:
-        return x
 
 def __get_setting_use_native():
     return test_bool("FILEOBJ_USE_NATIVE", True)
@@ -344,18 +309,6 @@ def __get_setting_buffer_size():
 
 def __get_setting_path_stream():
     return getenv("FILEOBJ_PATH_STREAM")
-
-def __get_setting_key_down():
-    return __get_setting_key("FILEOBJ_KEY_DOWN")
-
-def __get_setting_key_up():
-    return __get_setting_key("FILEOBJ_KEY_UP")
-
-def __get_setting_key_left():
-    return __get_setting_key("FILEOBJ_KEY_LEFT")
-
-def __get_setting_key_right():
-    return __get_setting_key("FILEOBJ_KEY_RIGHT")
 
 def __get_setting_key_backspace():
     return __get_setting_key("FILEOBJ_KEY_BACKSPACE")

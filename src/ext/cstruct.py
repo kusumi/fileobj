@@ -99,8 +99,7 @@ def __create_builtin_class(name, size):
             return fileobj.util.be_to_int(b, sign)
     else:
         assert False, m.group(0)
-    cls = type(name, (_builtin,),
-        dict(get_size=get_size, to_int=to_int,),)
+    cls = type(name, (_builtin,), dict(get_size=get_size, to_int=to_int,),)
     assert cls not in _classes
     _classes.append(cls)
     setattr(sys.modules[__name__], name, cls)

@@ -641,15 +641,12 @@ def creat_backup(f, timestamp=""):
 
 def get_timestamp(prefix=''):
     # e.g. profile.2014-07-03-00:24:32
-    return "{0}.{1}".format(
-        prefix,
-        time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()))
+    return "{0}.{1}".format(prefix, time.strftime("%Y-%m-%d-%H:%M:%S",
+        time.localtime()))
 
 def get_stamp(prefix=''):
     # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
-    return "{0}.{1}.pid{2}".format(
-        get_timestamp(prefix),
-        get_python_string(),
+    return "{0}.{1}.pid{2}".format(get_timestamp(prefix), get_python_string(),
         os.getpid())
 
 def get_md5(b):
@@ -679,10 +676,9 @@ def __execute(shell, l):
         out = _('')
     if err is None:
         err = _('')
-    return Namespace(
-        stdout=bytes_to_str(out),
-        stderr=bytes_to_str(err),
-        retval=p.returncode)
+    out = bytes_to_str(out)
+    err = bytes_to_str(err)
+    return Namespace(stdout=out, stderr=err, retval=p.returncode)
 
 def __iter_next_2k(g):
     return g.next()

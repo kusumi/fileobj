@@ -62,8 +62,7 @@ def __get_blkdev_info(fd):
         sector_size = util.host_to_int(b[24:28])
         return size, sector_size, ''
     except Exception as e:
-        log.error("ioctl({0}, {1}) failed, {2}".format(
-            fd.name, "DIOCGPART", e))
+        log.error("ioctl({0}, DIOCGPART) failed, {1}".format(fd.name, e))
         raise
 
 def read_reg_size(f):

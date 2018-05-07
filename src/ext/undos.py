@@ -41,10 +41,7 @@ def get_text(co, fo, args):
 
     f = "{{0:{0}}} {{1}} {{2:<{1}}} {{3:{2}}} {{4:{3}}} {{5:{4}}}".format(
         fileobj.extension.get_index_width(l),
-        max(l1),
-        max(l2),
-        max(l3),
-        max(l4))
+        max(l1), max(l2), max(l3), max(l4))
     sl = [f.format(*title)]
     for i, o in enumerate(l):
         c = " " if os.path.exists(o.get_path()) else "!"

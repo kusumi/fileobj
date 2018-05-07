@@ -208,11 +208,9 @@ class Fileops (object):
         return self.__ref.rsearch(x, word, end)
 
     def iter_search(self, x, word):
-        return self.__ref.iter_search(
-            self.__get_normalized_pos(x), word)
+        return self.__ref.iter_search(self.__get_normalized_pos(x), word)
     def iter_rsearch(self, x, word):
-        return self.__ref.iter_rsearch(
-            self.__get_normalized_pos(x), word)
+        return self.__ref.iter_rsearch(self.__get_normalized_pos(x), word)
 
     def __init_ops(self):
         if setting.use_debug:

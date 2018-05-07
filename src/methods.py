@@ -312,8 +312,7 @@ def __cursor_prev_matched(self, cnt, fn):
             return
 
 def start_read_delayed_input(self, amp, opc, args, raw):
-    self.co.start_read_delayed_input(
-        literal.bracket2_beg.seq[0],
+    self.co.start_read_delayed_input(literal.bracket2_beg.seq[0],
         literal.bracket2_end.seq[0])
     self.co.show(opc[0])
 
@@ -577,8 +576,7 @@ def set_auto(self, amp, opc, args, raw):
     __rebuild(self)
 
 def show_current(self, amp, opc, args, raw):
-    self.co.show("{0} {1} at {2}".format(
-        self.co.get_short_path(),
+    self.co.show("{0} {1} at {2}".format(self.co.get_short_path(),
         util.get_size_repr(self.co.get_size()),
         util.get_size_repr(self.co.get_pos())))
 
@@ -587,8 +585,7 @@ def show_current_sector(self, amp, opc, args, raw):
     if sector_size == -1:
         show_current(self, amp, opc, args, raw)
     else:
-        self.co.show("{0} {1}[sectors] at {2}".format(
-            self.co.get_short_path(),
+        self.co.show("{0} {1}[sectors] at {2}".format(self.co.get_short_path(),
             self.co.get_size() // sector_size,
             self.co.get_pos() // sector_size))
 
@@ -617,9 +614,7 @@ def show_meminfo(self, amp, opc, args, raw):
     self.co.show(get_meminfo_string())
 
 def get_meminfo_string():
-    return "total={0}," \
-        "free={1}," \
-        "page={2}".format(
+    return "total={0},free={1},page={2}".format(
         util.get_size_repr(kernel.get_total_ram()),
         util.get_size_repr(kernel.get_free_ram()),
         util.get_size_repr(kernel.get_page_size()))
@@ -637,21 +632,19 @@ def get_osdep_string():
         "native={4}," \
         "has_chgat={5}," \
         "use_alt_chgat={6}".format(
-        _(kernel.has_mmap()),
-        _(kernel.has_mremap()),
-        _(kernel.is_blkdev_supported()),
-        _(kernel.has_ptrace()),
-        _(native.is_enabled()),
-        _(screen.has_chgat()),
-        _(screen.use_alt_chgat()))
+            _(kernel.has_mmap()),
+            _(kernel.has_mremap()),
+            _(kernel.is_blkdev_supported()),
+            _(kernel.has_ptrace()),
+            _(native.is_enabled()),
+            _(screen.has_chgat()),
+            _(screen.use_alt_chgat()))
 
 def show_screen(self, amp, opc, args, raw):
     self.co.show(__get_screen_string(self))
 
 def __get_screen_string(self):
-    return "({0},{1}),{2}".format(
-        screen.get_size_y(),
-        screen.get_size_x(),
+    return "({0},{1}),{2}".format(screen.get_size_y(), screen.get_size_x(),
         self.co.get_build_size())
 
 def show_platform(self, amp, opc, args, raw):
@@ -1605,16 +1598,16 @@ def repeat(self, amp, opc, args, raw):
             self.co.set_prev_context(fn, xfn)
 
 def undo(self, amp, opc, args, raw):
-    __undo(self, amp, self.co.undo,
-        "Already at oldest change", "Undo interrupted")
+    __undo(self, amp, self.co.undo, "Already at oldest change",
+        "Undo interrupted")
 
 def undo_all(self, amp, opc, args, raw):
     siz = self.co.get_undo_size()
     undo(self, siz if siz else 1, opc, args, raw)
 
 def redo(self, amp, opc, args, raw):
-    __undo(self, amp, self.co.redo,
-        "Already at newest change", "Redo interrupted")
+    __undo(self, amp, self.co.redo, "Already at newest change",
+        "Redo interrupted")
 
 def __undo(self, amp, fn, msg_notfound, msg_interrupt):
     ret, msg = fn(get_int(amp))
@@ -1755,8 +1748,7 @@ def __single_logical_bit_operation(self, pos, amp, fn):
             break
         if screen.test_signal():
             self.co.flash(
-                "Single bitwise operation interrupted ({0}/{1})".format(
-                    x, amp))
+                "Single bitwise operation interrupted ({0}/{1})".format(x, amp))
             return -1
     return amp
 

@@ -103,8 +103,7 @@ def get_text(co, fo, args):
     l.append("vol_rootvol = {0}".format(vol_rootvol))
     if print_rsv:
         for x in range(8):
-            l.append("vol_reserved[{0}] = 0x{1:08X}".format(
-                x, vol_reserved[x]))
+            l.append("vol_reserved[{0}] = 0x{1:08X}".format(x, vol_reserved[x]))
     l.append("")
 
     vol0_stat_bigblocks = _int(b[200:208])

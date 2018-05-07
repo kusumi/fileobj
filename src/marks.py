@@ -22,15 +22,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
-import csv
+import json
 import os
-import re
-import time
 
 from . import kernel
 from . import log
 from . import path
-from . import setting
 from . import util
 
 class Marks (object):
@@ -41,8 +38,8 @@ class Marks (object):
             self.__read_marks()
 
     def __iter__(self):
-        for f in sorted(self.__data):
-            yield f, dict(self.__data.get(f))
+        for f, d in sorted(self.__data.items()):
+            yield f, dict(d)
 
     def flush(self):
         if _is_valid_path(self.__path):
@@ -56,22 +53,14 @@ class Marks (object):
             return -1
         try:
             with kernel.fopen_text(f) as fd:
-                fd.readline() # time
-                for ff, d in self.__iter_csv(fd):
-                    self.__data[ff] = d
+                self.__data = self.__load_db(fd)
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))
 
-    def __iter_csv(self, fd):
-        for l in csv.reader(fd):
-            ff = l[0]
-            d = {}
-            for s in l[1:]:
-                k, v = _string_to_data(s)
-                d[k] = v
-            assert ff, ff
-            assert d, d
-            yield ff, d
+    def __load_db(self, fd):
+        d = json.load(fd)
+        assert isinstance(d, dict), d
+        return d
 
     def __write_marks(self):
         assert _is_valid_path(self.__path)
@@ -79,19 +68,16 @@ class Marks (object):
         try:
             fsync = kernel.fsync
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
-                fd.write("# {0}\n".format(time.ctime()))
-                self.__store_csv(fd)
+                self.__store_db(fd)
         except Exception as e:
             log.error("Failed to write to {0}, {1}".format(f, e))
 
-    def __store_csv(self, fd):
-        writer = csv.writer(fd, lineterminator=os.linesep)
-        for ff, d in self:
-            if (os.path.isfile(ff) or kernel.is_blkdev(ff)) and d:
-                l = [ff]
-                for x in d.items():
-                    l.append(_data_to_string(*x))
-                writer.writerow(l)
+    def __store_db(self, fd):
+        d = {}
+        for k, v in self:
+            if (os.path.isfile(k) or kernel.is_blkdev(k)) and v:
+                d[k] = v
+        json.dump(d, fd)
 
     def get(self, f):
         d = self.__data.get(f)
@@ -102,19 +88,6 @@ class Marks (object):
 
 def _is_valid_path(o):
     return o.is_reg or o.is_noent
-
-def _string_to_data(s):
-    m = re.match(r"^(\S)(\d+)$", s)
-    assert m
-    k = m.group(1)
-    v = int(m.group(2))
-    return k, v
-
-def _data_to_string(k, v):
-    assert isinstance(k, str)
-    assert isinstance(v, int)
-    assert len(k) == 1
-    return k + str(v)
 
 def get_mark_repr(k, v):
     return "  '{0}' {1}[B]".format(k, v)

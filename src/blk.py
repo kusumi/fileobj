@@ -32,10 +32,9 @@ enabled = kernel.is_blkdev_supported()
 class methods (object):
     def get_string(self):
         l = []
-        l.append("device size {0}".format(
-            util.get_size_repr(self.get_size())))
-        l.append("sector size {0}".format(
-            util.get_size_repr(self.get_sector_size())))
+        l.append("device size {0}".format(util.get_size_repr(self.get_size())))
+        l.append("sector size {0}".format(util.get_size_repr(
+            self.get_sector_size())))
         l.append("label '{0}'".format(self.blk_label))
         return '\n'.join(l)
 

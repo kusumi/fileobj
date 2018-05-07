@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     d = fileobj.setting.get_user_dir()
     if not os.path.isdir(d):
-        os.mkdir(d)
+        os.makedirs(d)
         if not os.path.isdir(d):
             sys.stderr.write("No {0}\n".format(d))
             sys.exit(1)

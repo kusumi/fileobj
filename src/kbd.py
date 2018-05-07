@@ -137,7 +137,7 @@ def init(term):
     for s, v in d.items():
         config = getattr(setting, "key_" + s.lower(), None)
         if config is not None:
-            v = config
+            v = config # override
         setattr(this, s, v)
         if s.startswith("BACKSPACE"):
             bs.append(v)

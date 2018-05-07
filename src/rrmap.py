@@ -121,5 +121,4 @@ class Fileobj (romap.Fileobj):
             except Exception as e:
                 return "{0}, {1}".format(repr(e), msg)
         else:
-            return "{0} has no mremap(2), {1}".format(
-                util.get_os_name(), msg)
+            return "{0} has no mremap(2), {1}".format(util.get_os_name(), msg)

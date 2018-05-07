@@ -23,9 +23,8 @@
 
 from __future__ import with_statement
 import collections
-import time
+import json
 
-from . import kbd
 from . import kernel
 from . import literal
 from . import log
@@ -99,7 +98,6 @@ class History (object):
             f = setting.get_history_path()
         if not prefix:
             prefix = literal.get_slow_strings()
-        assert "#" not in prefix
         self.__path = path.Path(f)
         self.__data = dict([(k, _data(k)) for k in prefix])
         if _is_valid_path(self.__path):
@@ -119,16 +117,20 @@ class History (object):
                 log.error("Can not read " + f)
             return -1
         try:
-            prefix = list(self.__data.keys())
-            for s in kernel.fopen_text(f): # from old to new
-                s = s.rstrip()
-                if not s or s.startswith("#"):
-                    continue
-                k, v = _string_to_data(s)
-                if k in prefix and kbd.isprints(v):
-                    self.append(k, v)
+            with kernel.fopen_text(f) as fd:
+                d = self.__load_db(fd)
+            for k in self.__data.keys():
+                l = d.get(k)
+                if l:
+                    for v in l:
+                        self.append(k, v)
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))
+
+    def __load_db(self, fd):
+        d = json.load(fd)
+        assert isinstance(d, dict), d
+        return d
 
     def __write_history(self):
         assert _is_valid_path(self.__path)
@@ -136,13 +138,17 @@ class History (object):
         try:
             fsync = kernel.fsync
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
-                fd.write("# {0}\n".format(time.ctime()))
-                for k, v in self:
-                    for s in reversed(list(v)): # from old to new
-                        assert kbd.isprints(s)
-                        fd.write(_data_to_string(k, s))
+                self.__store_db(fd)
         except Exception as e:
             log.error("Failed to write to {0}, {1}".format(f, e))
+
+    def __store_db(self, fd):
+        d = {}
+        for k, v in self:
+            l = list(reversed(list(v))) # from old to new
+            if l:
+                d[k] = l
+        json.dump(d, fd)
 
     def reset_cursor(self, k):
         self.__data[k].reset_cursor()
@@ -167,9 +173,3 @@ class History (object):
 
 def _is_valid_path(o):
     return o.is_reg or o.is_noent
-
-def _string_to_data(s):
-    return s.split(' ', 1)
-
-def _data_to_string(k, v):
-    return "{0} {1}\n".format(k, v)

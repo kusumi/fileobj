@@ -1,3 +1,18 @@
+## v0.7.67
++ Minor fixes and cleanups
++ Improve tab completion behavior
++ Underline line offset strings in binary window
++ Change ~/.fileobj/history to use json (break existing one from previous versions)
++ Change ~/.fileobj/marks to use json from csv (break existing one from previous versions)
++ Change ~/.fileobj/session to use json from csv (break existing one from previous versions)
++ Add script/dump.sh
++ Remove FILEOBJ_RWBUF_CHUNK_SIZE_LOW
++ Remove FILEOBJ_RWBUF_CHUNK_SIZE_HIGH
++ Remove FILEOBJ_KEY_DOWN
++ Remove FILEOBJ_KEY_UP
++ Remove FILEOBJ_KEY_LEFT
++ Remove FILEOBJ_KEY_RIGHT
+
 ## v0.7.66
 + Minor fixes and cleanups
 + Improve tab completion behavior

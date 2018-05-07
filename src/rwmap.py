@@ -85,8 +85,7 @@ class Fileobj (rrmap.Fileobj):
         self.__anon.seek(0)
         self.__die()
         log.debug("Create backing file {0} for {1}".format(
-            self.__get_backing_path(),
-            self.get_path()))
+            self.__get_backing_path(), self.get_path()))
 
     def __copy_anon(self):
         kernel.fsync(self.__anon)

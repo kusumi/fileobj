@@ -48,8 +48,8 @@ class Chunk (object):
         return len(self.buffer)
 
     def __str__(self):
-        return "{0} {1}{2}".format(
-            self.offset, len(self), " <last>" * self.islast)
+        return "{0} {1}{2}".format(self.offset, len(self),
+            " <last>" * self.islast)
 
     def search(self, x, s, next_buffer):
         b = self.read(x, len(self))

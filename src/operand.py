@@ -294,13 +294,23 @@ class Operand (object):
         self.__prev.key = x
 
     def __scan_slow_tab(self):
-        if not self.__at_tail_cursor() or \
-            self.__buf[self.__get_tail_cursor() - 1] == 0x20: # ' '
-            return False
         opc = self.__prev.opc
         arg = self.__prev.arg
+
+        # handle a special case (ends with space) first
+        if self.__buf[self.__get_tail_cursor() - 1] == 0x20:
+            if not arg and opc in _path_li_str:
+                # e.g. ":e <TAB>"
+                self.__set_string(opc + " ./")
+                self.__parse_buffer_update_arg()
+                return self.__scan_slow_tab()
+            else:
+                return False
+        # ignore unless at tail, but test this after above
+        if not self.__at_tail_cursor():
+            return False
+
         if not arg:
-            # XXX support path candidates without arg
             s = self.__cand[None].get(opc)
             if s:
                 self.__set_string(s)
@@ -317,14 +327,17 @@ class Operand (object):
                             # the next iteration which may need to start from
                             # beginning with a different input (e.g. change from
                             # a dir path without trailing / to with trailing /).
-                            self.__parse_buffer()
-                            # XXX refactor, should avoid updating __prev here
-                            self.__prev.arg = self.__arg[:]
+                            self.__parse_buffer_update_arg()
             else:
                 s = cand.get(arg[0])
                 if s:
                     self.__set_string(opc + " " + s)
         return False
+
+    # XXX needs refactoring, should avoid updating __prev here
+    def __parse_buffer_update_arg(self):
+        self.__parse_buffer()
+        self.__prev.arg = self.__arg[:]
 
     def __delete_slow(self):
         key = chr(self.__buf[0])
@@ -422,4 +435,5 @@ _arg_cand = candidate.LiteralCandidate()
 _path_cand = candidate.PathCandidate()
 
 _path_li_names = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete",
-_path_li = tuple(getattr(literal, "s_" + s) for s in _path_li_names)
+_path_li = tuple(getattr(literal, "s_" + _) for _ in _path_li_names)
+_path_li_str = tuple(_.str for _ in _path_li)

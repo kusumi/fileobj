@@ -346,8 +346,7 @@ class DisplayCanvas (Canvas):
         self.refresh()
 
     def sync_cursor(self):
-        if self.in_same_page(
-            self.fileops.get_pos(),
+        if self.in_same_page(self.fileops.get_pos(),
             self.fileops.get_prev_pos()):
             self.update_highlight()
         else:
@@ -436,7 +435,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         d = pos % self.bufmap.x
         self.chgat(0, self.offset.x + self.get_cell_width(d),
             self.get_cell_edge(1), screen.A_UNDERLINE | attr)
-        self.chgat(y, 0, self.offset.x - 1, attr)
+        self.chgat(y, 0, self.offset.x - 1, screen.A_UNDERLINE | attr)
 
     def alt_chgat_posstr(self, pos, attr):
         """Alternative for Python 2.5"""
@@ -445,7 +444,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         self.printl(0, self.offset.x + self.get_cell_width(d),
             self.__get_column_posstr(d), screen.A_UNDERLINE | attr)
         s = self.__get_line_posstr(self.get_line_offset(pos))[:-1]
-        self.printl(y, 0, s, attr)
+        self.printl(y, 0, s, screen.A_UNDERLINE | attr)
 
     def chgat_cursor(self, pos, attr, low):
         y, x = self.get_coordinate(pos)
@@ -492,7 +491,8 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
                 self.__get_column_posstr(x), screen.A_UNDERLINE)
         n = self.get_page_offset()
         for i in range(self.bufmap.y):
-            self.printl(self.offset.y + i, 0, self.__get_line_posstr(n))
+            self.printl(self.offset.y + i, 0, self.__get_line_posstr(n),
+                screen.A_UNDERLINE)
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
@@ -586,11 +586,8 @@ class StatusCanvas (Canvas, default_addon):
             x = self.fileops.get_type().__module__
             if x.startswith("fileobj."):
                 x = x[len("fileobj."):]
-            s += "{0}|{1}|{2}|{3} ".format(
-                kernel.get_term_info(),
-                util.get_python_string(),
-                version.__version__,
-                x)
+            s += "{0}|{1}|{2}|{3} ".format(kernel.get_term_info(),
+                util.get_python_string(), version.__version__, x)
         s += self.__get_buffer_name()
 
         offset = self.fileops.get_mapping_offset()
@@ -646,8 +643,8 @@ class StatusCanvas (Canvas, default_addon):
         if not c:
             return ""
         n = filebytes.ord(c)
-        return "hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(
-            n, n, n, ascii.get_symbol(n))
+        return "hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(n, n, n,
+            ascii.get_symbol(n))
 
     def __get_size_format(self):
         n = len(str(self.__cur_size))
@@ -785,7 +782,7 @@ def get_min_position(cls):
     return y, x
 
 def _parse_attr(config, default):
-    assert isinstance(config, list), list
+    assert util.is_seq(config)
     attr = zero = screen.A_DEFAULT
     for s in config:
         name = "A_" + s.upper()

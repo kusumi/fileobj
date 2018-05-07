@@ -96,8 +96,8 @@ class _window (ncurses.Window):
             log.debug("Restore tty attr")
 
     def __mkstr(self, y, x, s):
-        return "{0} ({1:2}, {2:3}) {3}".format(
-            repr(self.__ref), y, x, filebytes.str(s))
+        return "{0} ({1:2}, {2:3}) {3}".format(repr(self.__ref), y, x,
+            filebytes.str(s))
 
     def keypad(self, yes):
         return

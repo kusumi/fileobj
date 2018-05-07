@@ -360,8 +360,7 @@ def get_block_replace_class():
     return __get_class("Block{0}R")
 
 def __get_class(s):
-    return getattr(sys.modules[__name__],
-        s.format(setting.editmode))
+    return getattr(sys.modules[__name__], s.format(setting.editmode))
 
 def get_input_limit():
     if setting.editmode == 'B':
