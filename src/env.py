@@ -47,7 +47,6 @@ def __iter_env_name():
     yield "FILEOBJ_USE_ALT_CHGAT"
     yield "FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "FILEOBJ_USE_SINGLE_OPERATION"
-    yield "FILEOBJ_USE_EVEN_SIZE_WINDOW"
     yield "FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
     yield "FILEOBJ_USE_VERBOSE_STATUS_WINDOW" # --verbose_window
     yield "FILEOBJ_USE_STATUS_WINDOW_FRAME" # --verbose_window
@@ -205,9 +204,6 @@ def __get_setting_use_circular_bit_shift():
 
 def __get_setting_use_single_operation():
     return test_bool("FILEOBJ_USE_SINGLE_OPERATION", False)
-
-def __get_setting_use_even_size_window():
-    return test_bool("FILEOBJ_USE_EVEN_SIZE_WINDOW", False)
 
 def __get_setting_use_downward_window_adjust():
     return test_bool("FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST", True)

@@ -26,5 +26,5 @@ import fileobj.ascii
 def get_text(co, fo, args):
     n = max([len(x) for x in fileobj.ascii.iter_ascii_symbol()])
     f = "{{0:<{0}}} {{1:3d}} 0{{2:03o}} 0x{{3:02X}} {{4:08b}}".format(n)
-    return [f.format(fileobj.ascii.get_symbol(x), x, x, x, x)
-        for x in range(128)]
+    return [f.format(fileobj.ascii.get_symbol(x), x, x, x, x) for x in
+        range(128)]

@@ -174,7 +174,7 @@ class Canvas (_panel):
         if c:
             return self.get_form_single(c)
         else:
-            d = self.__cell[1] - self.__cell[0]
+            d = self.__cell[0] - self.__cell[1]
             return ' ' * d
 
     def get_cell_width(self, x):
@@ -427,8 +427,7 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         return "{0:02X}".format(filebytes.ord(x) & 0xFF)
 
     def get_form_line(self, buf):
-        return ' '.join([self.get_form_single(x)
-            for x in filebytes.iter(buf)])
+        return ' '.join([self.get_form_single(x) for x in filebytes.iter(buf)])
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
@@ -516,8 +515,7 @@ class TextCanvas (DisplayCanvas, text_addon):
         return kbd.to_chr_repr(util.bytes_to_str(x))
 
     def get_form_line(self, buf):
-        return ''.join([self.get_form_single(x)
-            for x in filebytes.iter(buf)])
+        return ''.join([self.get_form_single(x) for x in filebytes.iter(buf)])
 
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x

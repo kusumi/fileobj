@@ -15,7 +15,7 @@
                                 required to resize (i.e. insert or delete) regular
                                 files on platforms without mremap(2).
           -d                    Show the buffer offset from offset to offset+length
-                                rather than from from 0 to length, when the buffer is
+                                rather than from 0 to length, when the buffer is
                                 partially loaded.
           -x                    Show the buffer size and current position in
                                 hexadecimal.

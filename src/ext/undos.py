@@ -46,6 +46,5 @@ def get_text(co, fo, args):
     for i, o in enumerate(l):
         c = " " if os.path.exists(o.get_path()) else "!"
         sl.append(f.format(i + 1, c, fileobj.extension.get_verbose_path(o),
-            o.get_undo_size(), o.get_redo_size(),
-            o.get_rollback_log_size()))
+            o.get_undo_size(), o.get_redo_size(), o.get_rollback_log_size()))
     return sl

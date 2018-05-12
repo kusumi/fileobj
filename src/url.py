@@ -28,9 +28,6 @@ _ = version.get_version()
 def get_project_url():
     return "https://sourceforge.net/projects/fileobj/"
 
-#def get_project_archive_url():
-#    return "https://downloads.sourceforge.net/project/fileobj/fileobj-{0}.{1}.{2}.tar.gz".format(*_)
-
 def get_repository_url():
     return "https://github.com/kusumi/fileobj/"
 

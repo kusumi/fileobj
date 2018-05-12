@@ -466,15 +466,12 @@ def init():
     # alias
     k.alias(up)
     enter.alias(
-        j.alias(down)
-    )
+        j.alias(down))
     bspace.alias(
-        h.alias(left)
-    )
+        h.alias(left))
     bspace2.alias(bspace)
     space.alias(
-        l.alias(right)
-    )
+        l.alias(right))
     ctrlw_ctrlw.alias(ctrlw_w)
     ctrlw_ctrlt.alias(ctrlw_t)
     ctrlw_ctrlb.alias(ctrlw_b)
@@ -482,45 +479,35 @@ def init():
     ctrlw_ctrlv.alias(ctrlw_v)
     ctrlw_c.alias(s_close)
     ctrlw_ctrlo.alias(
-        ctrlw_o.alias(s_only)
-    )
+        ctrlw_o.alias(s_only))
     ctrlw_q.alias(s_q)
     tab.alias(s_bnext)
     d.alias(
-        x.alias(delete)
-    )
+        x.alias(delete))
     ZZ.alias(s_x)
     ZQ.alias(s_qneg)
     s_brewind.alias(s_bfirst)
     s_bNext.alias(s_bprev)
     s_set_bpw_.alias(
-        s_set_bpw.refer(s_set)
-    )
+        s_set_bpw.refer(s_set))
     s_set_bpl_.alias(
-        s_set_bpl.refer(s_set)
-    )
+        s_set_bpl.refer(s_set))
 
     # refer
     gg.refer(G)
     doller.refer(zero)
     L.refer(
-        M.refer(H)
-    )
+        M.refer(H))
     b.refer(w)
     bracket2_beg.refer(
         bracket2_end.refer(
             bracket1_beg.refer(
                 bracket1_end.refer(
-                    parens_beg.refer(parens_end)
-                )
-            )
-        )
-    )
+                    parens_beg.refer(parens_end)))))
     ctrlu.refer(ctrlb)
     ctrld.refer(ctrlf)
     ctrlv.refer(
-        V.refer(v)
-    )
+        V.refer(v))
     g_ctrlg.refer(ctrlg)
     rol.refer(ror)
     y.refer(Y)
@@ -531,39 +518,28 @@ def init():
         R.refer(
             A.refer(
                 a.refer(
-                    I.refer(i)
-                )
-            )
-        )
-    )
+                    I.refer(i)))))
     backtick_reg.refer(m_reg)
     q.refer(q_reg)
     atsign_at.refer(atsign_reg)
     bit_xor.refer(
-        bit_or.refer(bit_and)
-    )
+        bit_or.refer(bit_and))
     s_bdelete.refer(s_e)
     s_cmpneg.refer(s_cmp)
     s_delmarksneg.refer(s_delmarks)
     s_rsearch.refer(s_fsearch)
     s_set_ascii.refer(
-        s_set_binary.refer(s_set)
-    )
+        s_set_binary.refer(s_set))
     s_set_be.refer(
-        s_set_le.refer(s_set)
-    )
+        s_set_le.refer(s_set))
     s_set_nows.refer(
-        s_set_ws.refer(s_set)
-    )
+        s_set_ws.refer(s_set))
     s_set_noic.refer(
-        s_set_ic.refer(s_set)
-    )
+        s_set_ic.refer(s_set))
     s_set_nosi.refer(
-        s_set_si.refer(s_set)
-    )
+        s_set_si.refer(s_set))
     s_set_status.refer(
-        s_set_address.refer(s_set)
-    )
+        s_set_address.refer(s_set))
 
     def fn(l, o, cls):
         for li in sorted(o.children):

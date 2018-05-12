@@ -641,8 +641,7 @@ class Container (object):
 
     def remove_other_workspace(self):
         if len(self) > 1:
-            l = [o for o in self.__workspaces
-                if o is not self.__cur_workspace]
+            l = [o for o in self.__workspaces if o is not self.__cur_workspace]
             for o in l:
                 self.__store_session(o)
                 self.__remove_workspace(o)

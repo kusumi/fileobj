@@ -59,10 +59,10 @@ class Undo (object):
             self.__rollback.pop()
         self.__cursor -= n
 
-        undos = [l[i][0] for i in
-            util.get_xrange(0, len(l))] # new to old
-        redos = [l[i][1] for i in
-            util.get_xrange(len(l) - 1, -1, -1)] # old to new
+        # new to old
+        undos = [l[i][0] for i in util.get_xrange(0, len(l))]
+        # old to new
+        redos = [l[i][1] for i in util.get_xrange(len(l) - 1, -1, -1)]
         def ufn(ref):
             return [fn(ref) for fn in undos][-1] # oldest
         def rfn(ref):

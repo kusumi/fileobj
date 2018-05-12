@@ -34,9 +34,7 @@ class Fileobj (rwfd.Fileobj, blk.methods):
     _partial = True
 
     def __str__(self):
-        return super(Fileobj, self).__str__() + \
-            "\n\n" + \
-            self.get_string()
+        return super(Fileobj, self).__str__() + "\n\n" + self.get_string()
 
     def ctr(self):
         self.init_blk()

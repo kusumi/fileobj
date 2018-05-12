@@ -1,4 +1,4 @@
-# fileobj ([v0.7.67](https://github.com/kusumi/fileobj/releases/tag/v0.7.67))
+# fileobj ([v0.7.68](https://github.com/kusumi/fileobj/releases/tag/v0.7.68))
 
 ## About
 
@@ -53,8 +53,6 @@
 + Repository [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
 
 ## [Reporting issues](https://github.com/kusumi/fileobj/issues)
-
-## [Changes](doc/README.changes.md)
 
 ## [Notes](doc/README.notes.md)
 

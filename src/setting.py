@@ -176,6 +176,9 @@ def __ext_get(k):
     e = "FILEOBJ_EXT_" + k.upper()
     return s, e
 
+# non env based settings
+use_even_size_window = False
+
 _home_dir = os.path.expanduser("~")
 _user_dir = os.path.join(_home_dir, ".fileobj")
 
