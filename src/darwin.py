@@ -28,12 +28,12 @@ from . import log
 from . import unix
 from . import util
 
-PT_READ_I   = 1
-PT_READ_D   = 2
-PT_WRITE_I  = 4
-PT_WRITE_D  = 5
-PT_ATTACH   = 10
-PT_DETACH   = 11
+PT_READ_I  = 1
+PT_READ_D  = 2
+PT_WRITE_I = 4
+PT_WRITE_D = 5
+PT_ATTACH  = 10
+PT_DETACH  = 11
 
 def get_term_info():
     return unix.get_term_info()

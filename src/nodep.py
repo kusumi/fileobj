@@ -32,15 +32,23 @@ def __test(version, name):
     if not name:
         name = platform.system()
 
-    s = "Using Python %s" % '.'.join([str(x) for x in version])
-    if version < (2, 6, 0):
-        raise Exception("%s\nPython 2.6 or above is required" % s)
-    elif name == "Windows":
+    if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
+        try:
+            import argparse # test if backported
+            argparse
+            del argparse
+        except ImportError:
+            if version[0] == 2:
+                raise Exception("Python 2.7 is required")
+            else:
+                raise Exception("Python 3.2 or above is required")
+    if name == "Windows":
         if sys.executable[0] in "ABCDEFG":
             raise Exception("Windows is not supported")
         else: # assume Cygwin running Windows Python binary
             raise Exception("Cygwin Python binary is required on Cygwin")
     import curses
+    curses
     del curses
 
 def test():

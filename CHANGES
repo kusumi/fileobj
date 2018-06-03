@@ -1,3 +1,10 @@
+v0.7.69
+=======
+- Minor fixes and cleanups
+- Drop Python 2.6, 3.0, 3.1 support
+- Allow -o to omit value
+- Allow -O to omit value
+
 v0.7.68
 =======
 - Minor fixes and cleanups

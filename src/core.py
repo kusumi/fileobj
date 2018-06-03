@@ -21,8 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
 import atexit
-import optparse
 import os
 import signal
 import sys
@@ -92,37 +92,40 @@ def dispatch(optargs=None):
     if setting.use_debug:
         suppress_help = "<This is supposed to be suppressed>"
     else:
-        suppress_help = optparse.SUPPRESS_HELP
-    parser = optparse.OptionParser(version=version.__version__, usage=usage.help)
+        suppress_help = argparse.SUPPRESS
+    parser = argparse.ArgumentParser(usage=usage.help)
 
-    parser.add_option("-R", action="store_true", default=False, help=usage.R)
-    parser.add_option("-B", action="store_true", default=False, help=usage.B)
-    parser.add_option("-d", action="store_true", default=False, help=usage.d)
-    parser.add_option("-x", action="store_true", default=False, help=usage.x)
-    parser.add_option("-o", action="store_true", default=False, help=usage.o)
-    parser.add_option("-O", action="store_true", default=False, help=usage.O)
+    parser.add_argument("-R", action="store_true", default=False, help=usage.R)
+    parser.add_argument("-B", action="store_true", default=False, help=usage.B)
+    parser.add_argument("-d", action="store_true", default=False, help=usage.d)
+    parser.add_argument("-x", action="store_true", default=False, help=usage.x)
+    parser.add_argument("-o", nargs="?", type=int, const=-1, metavar=usage.o_metavar, help=usage.o)
+    parser.add_argument("-O", nargs="?", type=int, const=-1, metavar=usage.O_metavar, help=usage.O)
 
-    parser.add_option("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
-    parser.add_option("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
-    parser.add_option("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
-    parser.add_option("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_option("--verbose_window", action="store_true", default=(setting.use_verbose_status_window and setting.use_status_window_frame), help=usage.verbose_window)
-    parser.add_option("--backup", action="store_true", default=setting.use_backup, help=usage.backup)
-    parser.add_option("--force", action="store_true", default=setting.use_force, help=usage.force)
-    parser.add_option("--test_screen", action="store_true", default=False, help=usage.test_screen)
-    parser.add_option("--command", action="store_true", default=False, help=usage.command)
-    parser.add_option("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
+    parser.add_argument("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
+    parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
+    parser.add_argument("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
+    parser.add_argument("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
+    parser.add_argument("--verbose_window", action="store_true", default=(setting.use_verbose_status_window and setting.use_status_window_frame), help=usage.verbose_window)
+    parser.add_argument("--backup", action="store_true", default=setting.use_backup, help=usage.backup)
+    parser.add_argument("--force", action="store_true", default=setting.use_force, help=usage.force)
+    parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
+    parser.add_argument("--command", action="store_true", default=False, help=usage.command)
+    parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
+    parser.add_argument('--version', action='version', version=version.__version__)
+
+    parser.add_argument("values", nargs="*", help=suppress_help)
 
     # hidden options
-    parser.add_option("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
-    parser.add_option("--terminal_height", type="int", default=-1, metavar="<terminal_height>", help=suppress_help)
-    parser.add_option("--terminal_width", type="int", default=-1, metavar="<terminal_width>", help=suppress_help)
-    parser.add_option("--wspnum", type="int", default=1, help=suppress_help)
+    parser.add_argument("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
+    parser.add_argument("--terminal_height", type=int, default=-1, metavar="<terminal_height>", help=suppress_help)
+    parser.add_argument("--terminal_width", type=int, default=-1, metavar="<terminal_width>", help=suppress_help)
 
     for s in allocator.iter_module_name():
-        parser.add_option("--" + s, action="store_true", default=False, help=suppress_help)
+        parser.add_argument("--" + s, action="store_true", default=False, help=suppress_help)
 
-    opts, args = parser.parse_args(optargs)
+    opts = parser.parse_args(optargs)
+    args = opts.values
     if opts.debug:
         setting.use_debug = True
 
@@ -174,8 +177,16 @@ def dispatch(optargs=None):
         setting.use_address_num_offset = True
     if opts.x:
         setting.status_num_radix = 16
-    if opts.o or opts.O:
-        wspnum = len(args)
+    if opts.o is not None:
+        if opts.o == -1:
+            wspnum = len(args)
+        else:
+            wspnum = opts.o
+    elif opts.O is not None:
+        if opts.O == -1:
+            wspnum = len(args)
+        else:
+            wspnum = opts.O
     else:
         wspnum = 1
     if opts.verbose_window:
@@ -192,19 +203,6 @@ def dispatch(optargs=None):
         screen.terminal.height = opts.terminal_height
     if opts.terminal_width > 0:
         screen.terminal.width = opts.terminal_width
-    absnum = abs(opts.wspnum)
-    if absnum != 1: # force wspnum and split direction
-        if absnum > wspnum:
-            wspnum = absnum
-        if opts.wspnum < 0:
-            opts.O = True
-
-    l = []
-    for o in parser.option_list:
-        if isinstance(o.dest, str):
-            a = getattr(opts, o.dest, None)
-            l.append("{0}={1}".format(o.dest, a))
-    log.debug("options {0}".format(l))
 
     l = []
     for _ in env.iter_defined_env():

@@ -30,6 +30,8 @@
 
 + Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* if *CTRL-v* does not work.**
 
++ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed. Some platforms have backported package.**
+
 ## Terminal multiplexer
 
 + Window frames are corrupted with Python 3. -> **Try different *TERM* variable other than *"screen"*.**

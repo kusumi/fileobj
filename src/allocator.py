@@ -125,7 +125,7 @@ class Allocator (object):
             raise AllocatorError(ret)
 
         cls = self.__def_class
-        if setting.use_readonly or (not is_pid and not util.is_writable(f)):
+        if setting.use_readonly or (not is_pid and not util.is_write_ok(f)):
             cls = self.__get_ro_class(cls)
         if kernel.is_blkdev(f):
             cls = self.__get_blk_class(cls)

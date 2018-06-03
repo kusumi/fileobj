@@ -77,7 +77,7 @@ class PathCandidate (_candidate):
     def _get_generator(self, arg):
         p = path.Path(arg)
         d, b = os.path.split(p.path)
-        if util.is_readable(d) and (p.is_dir or p.is_reg or p.is_noent):
+        if util.is_read_ok(d) and (p.is_dir or p.is_reg or p.is_noent):
             l = [x for x in sorted(os.listdir(d)) if x.startswith(b)]
             for s in l:
                 f = os.path.join(d, s)

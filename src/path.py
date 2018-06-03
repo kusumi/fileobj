@@ -172,7 +172,7 @@ def _get_type_real(f):
                         return _t_error
                 else:
                     return _t_noperm
-            a = util.is_readable(s)
+            a = util.is_read_ok(s)
     ret = 0
     d = kernel.stat_type(f)
     if d.get("REG", False):

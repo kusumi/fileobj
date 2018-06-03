@@ -56,7 +56,7 @@ def cleanup():
         _logger = None
 
 def __get_attr(default=None):
-    return getattr(logging, setting.log_level, default)
+    return getattr(logging, setting.log_level.upper(), default)
 
 def __add_handler(logger, f):
     if not logger.handlers:

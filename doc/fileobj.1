@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "May 7, 2018" "FILEOBJ 0.7.68"
+.TH FILEOBJ 1 "June 3, 2018" "FILEOBJ 0.7.69"
 .nh
 .ad l
 .SH NAME
@@ -70,20 +70,22 @@ Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from
 Show the buffer size and current position in hexadecimal.
 .RE
 .PP
-\fB\-o\fP
+\fB\-o\fP=[\fI<number_of_windows>\fP]
 .RS 4
-Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size to accommodate.
+Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size.
+When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 .RE
 .PP
-\fB\-O\fP
+\fB\-O\fP=[\fI<number_of_windows>\fP]
 .RS 4
-Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size to accommodate.
+Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size.
+When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 .RE
 .PP
 \fB\-\-bytes_per_line\fP=\fI<bytes_per_line>\fP, \fB\-\-bpl\fP=\fI<bytes_per_line>\fP
 .RS 4
 Set fixed number of bytes printed per line.
-Each line prints \fI<bytes_per_line>\fP bytes, if the terminal has enough width to accommodate.
+Each line prints \fI<bytes_per_line>\fP bytes, if the terminal has enough width.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
 "auto" is used by default.
@@ -92,7 +94,7 @@ Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
 .RS 4
 Set fixed number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes, if the terminal has enough size to accommodate.
+Each window prints \fI<bytes_per_window>\fP bytes, if the terminal has enough size.
 This option sets number of lines printed per window, based on the number of bytes printed per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 "even" does not set a fixed number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.

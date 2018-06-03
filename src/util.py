@@ -566,10 +566,10 @@ def is_same_file(a, b):
     else:
         return False
 
-def is_readable(f):
+def is_read_ok(f):
     return os.access(f, os.R_OK)
 
-def is_writable(f):
+def is_write_ok(f):
     return os.access(f, os.W_OK)
 
 def is_file_path_partial(f):
@@ -662,7 +662,8 @@ def execute_sh(cmd):
     return __execute(True, (cmd,))
 
 def __execute(shell, l):
-    p = subprocess.Popen(l, stdout=subprocess.PIPE, shell=shell)
+    p = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        shell=shell)
     if is_python_version_or_ht(3, 3):
         # https://docs.python.org/3.6/library/subprocess.html
         try:
