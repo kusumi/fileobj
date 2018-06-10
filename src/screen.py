@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import shutil
 
 from . import kernel
@@ -85,8 +86,14 @@ def clear():
     _std.clear()
     _std.refresh()
 
+# XXX adhoc way to find if in stream
+def __test_stream():
+    return os.path.isfile(setting.get_stream_path())
+
 def flash():
-    _screen.flash()
+    # ignore flash if in stream (too slow depending on stream size)
+    if not __test_stream():
+        _screen.flash()
 
 def get_size_y():
     return _size.y

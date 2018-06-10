@@ -36,6 +36,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_PID_PATH"
     yield "FILEOBJ_USE_TRACE"
     yield "FILEOBJ_TRACE_WORD_SIZE"
+    yield "FILEOBJ_USE_CONSOLE_LOG" # unittest (false)
     yield "FILEOBJ_USE_READONLY" # -R
     yield "FILEOBJ_USE_BACKUP" # --backup
     yield "FILEOBJ_COLOR_FG" # --fg
@@ -163,6 +164,9 @@ def __get_setting_trace_word_size():
         return x
     else:
         return _
+
+def __get_setting_use_console_log():
+    return test_bool("FILEOBJ_USE_CONSOLE_LOG", False)
 
 def __get_setting_use_readonly():
     return test_bool("FILEOBJ_USE_READONLY", False)

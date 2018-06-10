@@ -21,7 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 from . import kbd
+from . import kernel
 from . import literal
 from . import log
 from . import methods
@@ -51,11 +54,21 @@ Console
                 edit.BlockAR
 """
 
+seqno = 0
+
 class Console (object):
     def __init__(self, co, ope):
         self.co = co
         self.ope = ope
+        self.__fd = None
         self.__fn = {}
+
+        if setting.use_console_log:
+            s = util.get_timestamp(util.get_class_repr(self))
+            s += ".log"
+            f = os.path.join(setting.get_user_dir(), s)
+            self.__fd = kernel.fcreat_text(f)
+
         if self.init_method() != -1:
             rl, fl, sl = [], [], []
             for seq in sorted(self.__fn.keys()):
@@ -70,6 +83,10 @@ class Console (object):
             def fn():
                 self.ope.init(rl, fl, sl)
             self.set_operand = fn
+
+    def cleanup(self):
+        if self.__fd:
+            self.__fd.close()
 
     def init_method(self):
         return -1
@@ -107,8 +124,18 @@ class Console (object):
     def set_operand(self):
         return
 
+    def log(self, *l):
+        if self.__fd:
+            s = ""
+            for x in l:
+                s += str(x)
+                s += " "
+            self.__fd.write("{0} {1}\n".format(seqno, s))
+
     def read_incoming(self):
+        global seqno
         refresh()
+        seqno += 1
         x = self.co.getch()
         if setting.use_trace:
             _log.append(x)
@@ -123,6 +150,7 @@ class Console (object):
         self.set_banner()
         self.set_operand()
         self.co.lrepaint()
+
         while True:
             x = self.read_incoming()
             if setting.use_debug:
@@ -136,6 +164,7 @@ class Console (object):
             elif x == kbd.INTERRUPT:
                 return
             elif x == kbd.QUIT:
+                self.cleanup()
                 return -1
 
             li, amp, opc, arg, raw, msg, cursor = self.ope.process_incoming(x)
@@ -147,7 +176,9 @@ class Console (object):
 
             fn = self.__fn.get(li.seq)
             if fn:
-                ret = fn(amp, opc, arg, raw)
+                l = amp, opc, arg, raw
+                self.log(li.str, l)
+                ret = fn(*l)
             else:
                 ret = self.handle_invalid_literal(li)
             if ret == methods.HANDLED:
@@ -160,6 +191,7 @@ class Console (object):
             elif ret == methods.RETURN:
                 return
             elif ret == methods.QUIT:
+                self.cleanup()
                 return -1
 
 _scr = None

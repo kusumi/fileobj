@@ -182,7 +182,7 @@ def dispatch(optargs=None):
             wspnum = len(args)
         else:
             wspnum = opts.o
-    elif opts.O is not None:
+    if opts.O is not None: # not elif
         if opts.O == -1:
             wspnum = len(args)
         else:

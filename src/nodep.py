@@ -25,6 +25,8 @@ import os
 import platform
 import sys
 
+support_if_argparse = True # unittest (false)
+
 def __test(version, name):
     if not version:
         version = sys.version_info
@@ -34,9 +36,12 @@ def __test(version, name):
 
     if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
         try:
-            import argparse # test if backported
-            argparse
-            del argparse
+            if support_if_argparse:
+                import argparse # test if backported
+                argparse
+                del argparse
+            else:
+                raise ImportError("")
         except ImportError:
             if version[0] == 2:
                 raise Exception("Python 2.7 is required")

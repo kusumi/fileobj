@@ -51,7 +51,7 @@ Use read\-only mode.
 """)
 
 B = _("""
-Use \fBmalloc\fP\|(3) based buffer for regular files instead of the default \fBmmap\fP\|(2) based buffer.
+Use Python bytes based buffer for regular files instead of the default \fBmmap\fP\|(2) based buffer.
 This option is required to resize (i.e. insert or delete) regular files on platforms without \fBmremap\fP\|(2).
 """)
 
@@ -64,20 +64,20 @@ Show the buffer size and current position in hexadecimal.
 """)
 
 o = _("""
-Initially assign buffers given by \fIpaths\fP to horizontally splitted windows, if the terminal has enough size.
+Initially assign buffers given by \fIpaths\fP to horizontally splitted windows.
 When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 """)
 o_metavar = _metavar("number_of_windows")
 
 O = _("""
-Initially assign buffers given by \fIpaths\fP to vertically splitted windows, if the terminal has enough size.
+Initially assign buffers given by \fIpaths\fP to vertically splitted windows.
 When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 """)
 O_metavar = _metavar("number_of_windows")
 
 bytes_per_line = _("""
 Set fixed number of bytes printed per line.
-Each line prints \fI<bytes_per_line>\fP bytes, if the terminal has enough width.
+Each line prints \fI<bytes_per_line>\fP bytes.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
 "auto" is used by default.
@@ -86,7 +86,7 @@ bytes_per_line_metavar = _metavar("bytes_per_line")
 
 bytes_per_window = _("""
 Set fixed number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes, if the terminal has enough size.
+Each window prints \fI<bytes_per_window>\fP bytes.
 This option sets number of lines printed per window, based on the number of bytes printed per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 "even" does not set a fixed number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.

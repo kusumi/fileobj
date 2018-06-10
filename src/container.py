@@ -782,10 +782,6 @@ class Container (object):
         self.__prev_context = fn
         self.__xprev_context = xfn
 
-    def buffer_string_input(self, s):
-        l = [ord(x) for x in s]
-        self.buffer_input(l)
-
     def buffer_input(self, l):
         self.__stream.extend(l)
 
@@ -803,6 +799,7 @@ class Container (object):
                 l = trace.read(f)
                 if l:
                     self.buffer_input(l)
+                    setting.use_console_log = True
                 else:
                     self.flash("Failed to read " + f)
             except Exception as e:

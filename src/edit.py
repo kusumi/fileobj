@@ -33,7 +33,9 @@ from . import methods
 from . import setting
 from . import util
 
-EDIT, MOTION, ESCAPE = range(3)
+EDIT   = "EDIT"
+MOTION = "MOTION"
+ESCAPE = "ESCAPE"
 
 class Console (console.Console):
     def handle_signal(self):
@@ -64,6 +66,7 @@ class Console (console.Console):
         while True:
             if arg.limit == 0:
                 x = kbd.ESCAPE
+                console.seqno += 1
             else:
                 x = self.read_incoming()
             ret = None
@@ -112,6 +115,8 @@ class Console (console.Console):
                     self.co.reconnect_workspace()
                 self.go_left()
                 break
+            if ret is not None:
+                self.log(ret, x)
             if setting.use_debug:
                 console.set_banner(self.co.get_barrier_range())
 

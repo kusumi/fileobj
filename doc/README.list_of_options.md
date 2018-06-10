@@ -9,10 +9,10 @@
         optional arguments:
           -h, --help            show this help message and exit
           -R                    Use read-only mode.
-          -B                    Use malloc(3) based buffer for regular files instead
-                                of the default mmap(2) based buffer. This option is
-                                required to resize (i.e. insert or delete) regular
-                                files on platforms without mremap(2).
+          -B                    Use Python bytes based buffer for regular files
+                                instead of the default mmap(2) based buffer. This
+                                option is required to resize (i.e. insert or delete)
+                                regular files on platforms without mremap(2).
           -d                    Show the buffer offset from offset to offset+length
                                 rather than from 0 to length, when the buffer is
                                 partially loaded.
@@ -20,28 +20,25 @@
                                 hexadecimal.
           -o [<number_of_windows>]
                                 Initially assign buffers given by paths to
-                                horizontally splitted windows, if the terminal has
-                                enough size. When <number_of_windows> is omitted,
-                                assign one window for each buffer.
+                                horizontally splitted windows. When
+                                <number_of_windows> is omitted, assign one window for
+                                each buffer.
           -O [<number_of_windows>]
                                 Initially assign buffers given by paths to vertically
-                                splitted windows, if the terminal has enough size.
-                                When <number_of_windows> is omitted, assign one window
-                                for each buffer.
+                                splitted windows. When <number_of_windows> is omitted,
+                                assign one window for each buffer.
           --bytes_per_line <bytes_per_line>, --bpl <bytes_per_line>
                                 Set fixed number of bytes printed per line. Each line
-                                prints <bytes_per_line> bytes, if the terminal has
-                                enough width. Available formats for <bytes_per_line>
-                                are digit, "max", "min" and "auto". "auto" sets the
-                                value to the maximum 2^N that fits in the terminal
-                                width. "auto" is used by default.
+                                prints <bytes_per_line> bytes. Available formats for
+                                <bytes_per_line> are digit, "max", "min" and "auto".
+                                "auto" sets the value to the maximum 2^N that fits in
+                                the terminal width. "auto" is used by default.
           --bytes_per_window <bytes_per_window>, --bpw <bytes_per_window>
                                 Set fixed number of bytes printed per window. Each
-                                window prints <bytes_per_window> bytes, if the
-                                terminal has enough size. This option sets number of
-                                lines printed per window, based on the number of bytes
-                                printed per line. Available formats for
-                                <bytes_per_window> are digit, "even" and "auto".
+                                window prints <bytes_per_window> bytes. This option
+                                sets number of lines printed per window, based on the
+                                number of bytes printed per line. Available formats
+                                for <bytes_per_window> are digit, "even" and "auto".
                                 "even" does not set a fixed number of bytes printed
                                 per window, but makes all windows have the same size
                                 when a new window is vertically added. "auto" is used
