@@ -37,6 +37,7 @@ static int get_blkdev_info(const char *path, blkdev_info_t *b)
 {
 	int fd;
 
+	errno = 0;
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
 		return -errno;

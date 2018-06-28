@@ -1,4 +1,4 @@
-# fileobj ([v0.7.70](https://github.com/kusumi/fileobj/releases/tag/v0.7.70))
+# fileobj ([v0.7.71](https://github.com/kusumi/fileobj/releases/tag/v0.7.71))
 
 ## About
 
@@ -8,7 +8,7 @@
 
 ## Supported Python versions
 
-|-2.6|2.7|3.0|3.1|3.2-3.6|
+|-2.6|2.7|3.0|3.1|3.2-3.7|
 |:---|:--|:--|:--|-------|
 |NO  |YES|NO |NO |YES    |
 

@@ -114,7 +114,7 @@ def dispatch(optargs=None):
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
     parser.add_argument('--version', action='version', version=version.__version__)
 
-    parser.add_argument("values", nargs="*", help=suppress_help)
+    parser.add_argument("args", nargs="*", help=suppress_help)
 
     # hidden options
     parser.add_argument("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
@@ -124,8 +124,12 @@ def dispatch(optargs=None):
     for s in allocator.iter_module_name():
         parser.add_argument("--" + s, action="store_true", default=False, help=suppress_help)
 
-    opts = parser.parse_args(optargs)
-    args = opts.values
+    if util.is_python_version_or_ht(3, 7):
+        parse_args = parser.parse_intermixed_args
+    else:
+        parse_args = parser.parse_args
+    opts = parse_args(optargs)
+    args = opts.args
     if opts.debug:
         setting.use_debug = True
 
@@ -165,6 +169,8 @@ def dispatch(optargs=None):
     log.info("LANG {0}".format(kernel.get_lang_info()))
     log.info(methods.get_osdep_string())
     log.info("argv {0}".format(sys.argv))
+    log.info("opts {0}".format(opts))
+    log.info("args {0}".format(args))
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
