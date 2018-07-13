@@ -160,6 +160,71 @@ def cursor_ptail(self, amp, opc, args, raw):
 def cursor_to(self, amp, opc, args, raw):
     go_to(self, amp)
 
+def __get_logical_sector_size(self):
+    ret = self.co.get_sector_size()
+    if ret == -1:
+        ret = 512
+    return ret
+
+def cursor_sector_left(self, amp, opc, args, raw):
+    n = get_int(amp) if amp else 1
+    assert n != 0, amp
+    if n >= 0:
+        __cursor_sector_left(self, n)
+    else:
+        __cursor_sector_right(self, -n)
+
+def cursor_sector_right(self, amp, opc, args, raw):
+    n = get_int(amp) if amp else 1
+    assert n != 0, amp
+    if n >= 0:
+        __cursor_sector_right(self, n)
+    else:
+        __cursor_sector_left(self, -n)
+
+def __cursor_sector_left(self, n):
+    sector_size = __get_logical_sector_size(self)
+    cur = self.co.get_pos()
+    if cur % sector_size == 0:
+        pos = cur
+        pos -= sector_size * n
+    else:
+        pos = util.align_head(cur, sector_size)
+        assert n > 0, n
+        pos -= sector_size * (n - 1)
+    go_to(self, pos)
+
+def __cursor_sector_right(self, n):
+    sector_size = __get_logical_sector_size(self)
+    cur = self.co.get_pos()
+    if cur % sector_size == 0:
+        pos = cur
+        pos += sector_size * n
+    else:
+        pos = util.align_tail(cur, sector_size)
+        assert n > 0, n
+        pos += sector_size * (n - 1)
+    go_to(self, pos)
+
+def cursor_sector_shead(self, amp, opc, args, raw):
+    sector_size = __get_logical_sector_size(self)
+    pos = util.align_head(self.co.get_pos(), sector_size)
+    go_to(self, pos)
+
+def cursor_sector_stail(self, amp, opc, args, raw):
+    n = get_int(amp) if amp else 1
+    sector_size = __get_logical_sector_size(self)
+    pos = util.align_head(self.co.get_pos(), sector_size)
+    pos += (sector_size - 1)
+    if n > 1:
+        pos += sector_size * (n - 1)
+    go_to(self, pos)
+
+def cursor_sector_to(self, amp, opc, args, raw):
+    n = get_int(amp) if amp else 0
+    sector_size = __get_logical_sector_size(self)
+    go_to(self, sector_size * n)
+
 def go_up(self, amp=None):
     if self.co.go_up(get_int(amp)) == -1:
         self.co.lrepaintf()
@@ -320,7 +385,7 @@ def end_read_delayed_input(self, amp, opc, args, raw):
     s = self.co.end_read_delayed_input()
     self.co.show('')
     self.ope.clear()
-    ret = util.parse_size_repr(s, self.co.get_sector_size())
+    ret = util.eval_size_repr(s, self.co.get_sector_size())
     if ret == 0:
         return
     elif ret is None:
@@ -600,9 +665,6 @@ def show_date(self, amp, opc, args, raw):
 
 def show_kernel_module(self, amp, opc, args, raw):
     self.co.show(str(kernel.get_kernel_module()))
-
-def show_fileobj_class(self, amp, opc, args, raw):
-    self.co.show(str(self.co.get_type()))
 
 def show_fileobj_object(self, amp, opc, args, raw):
     self.co.show(self.co.get_repr())

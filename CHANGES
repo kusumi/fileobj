@@ -1,3 +1,21 @@
+v0.7.72
+=======
+- Minor fixes and cleanups
+- Fix a bug (<CTRL>w+/- with vertical split)
+- Add sh
+- Add s<BACKSPACE>
+- Add sl
+- Add s<SPACE>
+- Add s0
+- Add s$
+- Add sgo
+- Remove :fcls
+- Remove +
+- Remove -
+- Allow positive [count] value via + prefix
+- Allow negative [count] value via - prefix
+- Allow math within [] input
+
 v0.7.71
 =======
 - Minor fixes and cleanups

@@ -112,7 +112,7 @@ def dispatch(optargs=None):
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
-    parser.add_argument('--version', action='version', version=version.__version__)
+    parser.add_argument("--version", action="version", version=version.__version__)
 
     parser.add_argument("args", nargs="*", help=suppress_help)
 

@@ -152,34 +152,40 @@ class Operand (object):
         if _is_null(self.__buf) and not self.__scan_amp(x):
             return None, None, None, None, None, None, -1
 
-        _type = _get_type(self.__buf)
-        if _type == _null:
+        typ = _get_type(self.__buf)
+        if typ == _null:
             ret = self.__scan_null(x)
-        elif _type == _fast:
+        elif typ == _fast:
             ret = self.__scan_fast(x)
         else:
             ret = self.__scan_slow(x)
         if not ret:
-            if _type != _fast:
+            if typ != _fast:
                 msg = _to_string(self.__buf)
             else:
                 msg = None
             return None, None, None, None, None, msg, self.__pos
 
-        _type = _get_type(self.__buf)
-        if _type == _null:
+        typ = _get_type(self.__buf)
+        if typ == _null:
             li = self.__match_null()
-        elif _type == _fast:
+        elif typ == _fast:
             li = self.__match_fast()
         else:
             li = self.__match_slow()
 
         if self.__amp:
-            amp = int(_to_string(self.__amp))
-            if amp > util.MAX_INT:
-                amp = util.MAX_INT
-            elif amp < util.MIN_INT:
-                amp = util.MIN_INT
+            s = _to_string(self.__amp)
+            if s == '+':
+                amp = 1
+            elif s == '-':
+                amp = -1
+            else:
+                amp = int(s)
+                if amp > util.MAX_INT:
+                    amp = util.MAX_INT
+                elif amp < util.MIN_INT:
+                    amp = util.MIN_INT
         else:
             amp = None
         if kbd.isprints(self.__opc):
@@ -196,7 +202,10 @@ class Operand (object):
         if self.__amp:
             if not _is_digit(x):
                 return True
-        elif x == 0x30 or not _is_digit(x): # '0'
+        elif x == ord('+') or x == ord('-'):
+            self.__amp.append(x)
+            return False
+        elif x == ord('0') or not _is_digit(x):
             return True # 0 for literal.zero
         self.__amp.append(x)
         return False
@@ -298,7 +307,7 @@ class Operand (object):
         arg = self.__prev.arg
 
         # handle a special case (ends with space) first
-        if self.__buf[self.__get_tail_cursor() - 1] == 0x20:
+        if self.__buf[self.__get_tail_cursor() - 1] == ord(' '):
             if not arg and opc in _path_li_str:
                 # e.g. ":e <TAB>"
                 self.__set_string(opc + " ./")
@@ -414,7 +423,7 @@ def _to_string(l):
     return ''.join([chr(x) for x in l])
 
 def _is_digit(x):
-    return 0x30 <= x <= 0x39 # '0' <= x <= '9'
+    return ord('0') <= x <= ord('9')
 
 def _is_null(l):
     return _get_type(l) == _null

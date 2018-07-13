@@ -126,6 +126,27 @@ def is_running_profile():
 def is_executable():
     return is_running_fileobj() or is_running_profile()
 
+_key_cnt = 0
+def gen_key():
+    global _key_cnt
+    _key_cnt += 1
+    return encode_key(_key_cnt)
+
+def encode_key(x):
+    assert isinstance(x, int), x
+    assert 0 <= x <= 0xFFFF, x
+    return 0xDEAD | (x << 16)
+
+def decode_key(x):
+    assert isinstance(x, int), x
+    ret = x >> 16
+    assert 0 <= ret <= _key_cnt, ret
+    return ret
+
+def test_key(x):
+    assert isinstance(x, int), x
+    return x & 0xFFFF == 0xDEAD
+
 _Xregex = re.compile(r"\\X[{0}]{{1,}}$".format(string.hexdigits))
 _xregex = re.compile(r"\\x([{0}]{{1,2}})".format(string.hexdigits))
 
@@ -210,6 +231,47 @@ TiB = 1 << 40
 PiB = 1 << 50
 EiB = 1 << 60
 
+def parse_size_repr(s, sector_size=-1):
+    if not s:
+        return None
+    if s.startswith("+"):
+        s = s[1:]
+        sign = 1
+    elif s.startswith("-"):
+        s = s[1:]
+        sign = -1
+    else:
+        sign = 1
+    if "+" in s or "-" in s:
+        return None
+    s, n = __extract_size_unit(s, sector_size)
+    base = 10
+    if s == "0":
+        s, base = "0", 10
+    elif s.startswith("0b"):
+        s, base = s[2:], 2
+    elif s.startswith("0x"):
+        s, base = s[2:], 16
+    elif s.startswith("0"):
+        s, base = s[1:], 8
+    if not s:
+        s = "1"
+    try:
+        return sign * n * int(s, base)
+    except ValueError:
+        return None
+
+def eval_size_repr(s, sector_size=-1):
+    if not s:
+        return None
+    s, n = __extract_size_unit(s, sector_size)
+    if not s:
+        s = "1"
+    try:
+        return eval(s) * n
+    except Exception:
+        return None
+
 _str_size_dict = {
     "KB" : KB,
     "MB" : MB,
@@ -224,51 +286,21 @@ _str_size_dict = {
     "PIB": PiB,
     "EIB": EiB, }
 
-def parse_size_repr(s, sector_size=-1):
-    if not s:
-        return None
-    if s.startswith("+"):
-        s = s[1:]
-        sign = 1
-    elif s.startswith("-"):
-        s = s[1:]
-        sign = -1
-    else:
-        sign = 1
+def __extract_size_unit(s, sector_size):
     for k, v in _str_size_dict.items():
         if s[-len(k):].upper() == k:
-            n = v
             s = s[:-len(k)]
-            break
+            return s, v
     else:
-        # no longer support "xxxB" for "xxx byte"
-        # since this makes it unable to parse hexadcimal B as 11
-        if s[-3:].upper() == "LBA":
-            if sector_size == -1:
-                return None
-            n = sector_size
-            s = s[:-3]
-        else:
-            n = 1
-    base = 10
-    if s == "0":
-        s, base = "0", 10
-    elif s.startswith("0b"):
-        s, base = s[2:], 2
-    elif s.startswith("0x"):
-        s, base = s[2:], 16
-    elif s.startswith("0"):
-        s, base = s[1:], 8
-    if not s:
-        s = "1"
-    try:
-        ret = sign * n * int(s, base)
-        if ret >= 0:
-            return ret
-        else:
-            return 0
-    except ValueError:
-        return None
+        # The "xxxB" syntax for "xxx bytes" is not supported.
+        # (unable to parse hexadecimal B as 11)
+        for x in "LBA", "SECTOR":
+            if s[-len(x):].upper() == x:
+                if sector_size == -1:
+                    return None
+                s = s[:-len(x)]
+                return s, sector_size
+    return s, 1
 
 _si_str_dict = {
     1 : "B",
@@ -850,24 +882,3 @@ def get_class_repr(cls):
 
 def get_builtin(name):
     return getattr(_builtin, name, None)
-
-_key_cnt = 0
-def gen_key():
-    global _key_cnt
-    _key_cnt += 1
-    return encode_key(_key_cnt)
-
-def encode_key(x):
-    assert isinstance(x, int), x
-    assert 0 <= x <= 0xFFFF, x
-    return 0xDEAD | (x << 16)
-
-def decode_key(x):
-    assert isinstance(x, int), x
-    ret = x >> 16
-    assert 0 <= ret <= _key_cnt, ret
-    return ret
-
-def test_key(x):
-    assert isinstance(x, int), x
-    return x & 0xFFFF == 0xDEAD

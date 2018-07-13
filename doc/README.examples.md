@@ -4,6 +4,10 @@
 
 + Note that *offset 0* of the buffer means the first byte of the buffer. *offset 1* is the second byte.
 
++ Note that *sector 0* of the buffer means the first sector of the buffer. *sector 1* is the second sector.
+
++ Note that sector based commands use 512 bytes sector if the buffer is not block device.
+
 ### Command line options (also see *[List of options](README.list_of_options.md)*)
 
 + Print help message and exit.
@@ -185,7 +189,7 @@
         $ fileobj ./a.out
           (command)CTRL-u
 
-+ Open a file *./a.out* and move the cursor to offset 0x10000.
++ Open a file *./a.out* and move the cursor to offset 0x10000. The [...] syntax gets evaluated by eval(...) function in Python. If Python3 runs fileobj, [...] syntax requires 0o prefix for an octal value.
 
         $ fileobj ./a.out
           (command)[0x10000]go
@@ -693,7 +697,7 @@
         $ fileobj ./a.out
           (command):set nows<ENTER>
 
-### Open a block device
+### Block device
 
 + Open a loop device */dev/loop0* on Linux.
 
@@ -732,7 +736,32 @@
           (command)(move the cursor)
           (command)gCTRL-g
 
-### Open address space of a user process (experimental and platform specific feature)
++ Open a block device */dev/sdb* and move the cursor to the previous sector. If currently not at the beginning of the sector, move to the beginning of the current sector. This is sector based version of `h`.
+
+        $ sudo fileobj /dev/sdb
+          (command)sh
+
++ Open a block device */dev/sdb* and move the cursor to the next sector. This is sector based version of `l`.
+
+        $ sudo fileobj /dev/sdb
+          (command)sl
+
++ Open a block device */dev/sdb* and move the cursor to sector 128. This is sector based version of `go`.
+
+        $ sudo fileobj /dev/sdb
+          (command)128sgo
+
++ Open a block device */dev/sdb* and move the cursor to the first byte of the current sector. This is sector based version of `0`.
+
+        $ sudo fileobj /dev/sdb
+          (command)s0
+
++ Open a block device */dev/sdb* and move the cursor to the last byte of the current sector. This is sector based version of `$`.
+
+        $ sudo fileobj /dev/sdb
+          (command)s$
+
+### Address space of a user process (experimental and platform specific feature)
 
 + Prepare a test program *test1* which continues to print "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 

@@ -584,8 +584,10 @@ class Container (object):
             self.__add_workspace_delta(prev, -n, 0)
 
     def __add_workspace_delta(self, wsp, h, b):
+        if self.__in_vertical:
+            return -1
         if wsp.build_dryrun_delta(h, b) == workspace.BUILD_FAILED:
-            self.flash("Not enough room")
+            self.flash("Not enough room for delta")
             return -1
         if wsp in self.__workspace_delta:
             self.__workspace_delta[wsp][0] += h
@@ -594,10 +596,10 @@ class Container (object):
             self.__workspace_delta[wsp] = [h, b]
 
     def __clear_workspace_delta(self):
-        if not self.__in_vertical:
-            self.__workspace_delta.clear()
-        else:
+        if self.__in_vertical:
             assert not self.__workspace_delta, self.__workspace_delta
+        else:
+            self.__workspace_delta.clear()
 
     def add_workspace(self, vertical):
         if len(self) > 1:

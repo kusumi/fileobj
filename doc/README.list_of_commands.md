@@ -35,8 +35,6 @@
         {                        Go to the previous non zero character
         ]                        End reading buffered [count] value
         [                        Start reading buffered [count] value
-        +                        Go [count] lines downward, on the first character of the line
-        -                        Go [count] lines upward, on the first character of the line
         .                        Repeat last change
         /                        Search forward
         ?                        Search backward
@@ -70,7 +68,6 @@
         :e                       Open a buffer
         :bdelete                 Close a buffer
         :extensions              Show list of extensions
-        :fcls                    Print Python class name of the current buffer
         :fobj                    Print Python object name of the current buffer
         :help                    Show list of commands
         :hostname                Print hostname
@@ -123,8 +120,8 @@
         @[0-9a-zA-Z]             Execute the contents of register [count] times
         @@                       Execute the previous @ command [count] times
         D                        Delete characters under the cursor until the end of buffer
-        G                        Go to line [count] where default is last
-        gg                       Go to line [count] where default is first
+        G                        Go to line [count] (default last line)
+        gg                       Go to line [count] (default first line)
         H                        Go to line [count] from top of window
         M                        Go to the middle line of window
         L                        Go to line [count] from bottom of window
@@ -138,7 +135,7 @@
         X                        Delete [count] characters before the cursor
         Y                        Yank characters under the cursor until the end of buffer
         y                        Yank [count] characters
-        go                       Go to [count] byte in the buffer where default is start of the buffer
+        go                       Go to [count] byte in the buffer (default first byte)
         i                        Start insert edit mode
         I                        Start insert edit mode at the first byte of buffer
         a                        Start append edit mode
@@ -149,7 +146,15 @@
         `[0-9a-zA-Z]             Go to marked position
         q[0-9a-zA-Z]             Record typed characters into register
         q                        Stop recording
+        s$                       Go to the end of the sector. If a count is given go [count]-1 sectors downward
+        s0                       Go to the first character of the sector
         sb                       Swap byte order of [count] characters
+        sgo                      Go to [count] sector in the buffer (default first sector)
+        sh                       Go [count] sectors to the left
+        s<BACKSPACE>             Go [count] sectors to the left
+        s<BACKSPACE2>            Go [count] sectors to the left
+        sl                       Go [count] sectors to the right
+        s<SPACE>                 Go [count] sectors to the right
         u                        Undo changes
         v                        Start/End visual mode
         V                        Start/End line visual mode

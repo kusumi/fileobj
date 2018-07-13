@@ -190,7 +190,7 @@ class Workspace (object):
         return window.get_status_window_height(
             *self.__get_status_window_class())
 
-    # horizontal split (default)
+    # horizontal split
     def build_dryrun_delta(self, hei_delta, beg_delta):
         hei = self.__def_twindow.get_size_y() + self.__def_swindow.get_size_y()
         beg = self.__def_bwindow.get_position_y()
