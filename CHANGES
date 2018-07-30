@@ -1,3 +1,10 @@
+v0.7.73
+=======
+- Minor fixes and cleanups
+- Change default line offset width to 4 characters
+- Update line offset width when opening/closing/saving a buffer
+- Update line offset width on :auto
+
 v0.7.72
 =======
 - Minor fixes and cleanups

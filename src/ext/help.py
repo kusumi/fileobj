@@ -27,7 +27,7 @@ import fileobj.url
 
 def get_text(co, fo, args):
     l = [fileobj.url.get_doc_url("list_of_commands")]
-    l.extend(fileobj.literal.get_lines(fileobj.literal.get_literals()))
+    l.extend(fileobj.literal.get_lines())
     return l
 
 def get_description():

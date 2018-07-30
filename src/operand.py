@@ -35,6 +35,9 @@ class Operand (object):
         self.__history = history.History(None)
         self.__prev = util.Namespace(key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
+        l = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete",
+        self.__path_li = tuple(getattr(literal, "s_" + _) for _ in l)
+        self.__path_li_str = tuple(_.str for _ in self.__path_li)
 
     def init(self, rl, fl, sl):
         self.__regxs = rl
@@ -46,7 +49,7 @@ class Operand (object):
         for li in self.__slows:
             if li is literal.s_set:
                 self.__cand[li.str] = _arg_cand
-            if li in _path_li:
+            if li in self.__path_li:
                 self.__cand[li.str] = _path_cand
         self.clear()
 
@@ -308,7 +311,7 @@ class Operand (object):
 
         # handle a special case (ends with space) first
         if self.__buf[self.__get_tail_cursor() - 1] == ord(' '):
-            if not arg and opc in _path_li_str:
+            if not arg and opc in self.__path_li_str:
                 # e.g. ":e <TAB>"
                 self.__set_string(opc + " ./")
                 self.__parse_buffer_update_arg()
@@ -442,7 +445,3 @@ def _get_type(l):
 _li_cand = candidate.LiteralCandidate()
 _arg_cand = candidate.LiteralCandidate()
 _path_cand = candidate.PathCandidate()
-
-_path_li_names = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete",
-_path_li = tuple(getattr(literal, "s_" + _) for _ in _path_li_names)
-_path_li_str = tuple(_.str for _ in _path_li)

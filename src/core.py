@@ -328,7 +328,7 @@ def test_screen():
             l[1] = li.str
         else:
             try:
-                l[1] = chr(ret)
+                l[1] = chr(ret) # may not be printable with Python 3
             except ValueError:
                 l[1] = ""
         if util.test_key(l[0]) and not kbd.isprints(l[1]): # VTxxx
@@ -338,7 +338,7 @@ def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
     if siz >= 13:
         if repaint:
-            scr.addstr(1, 1, "Running {0} on {1}".format(
+            scr.addstr(1, 1, "Running {0} on {1}.".format(
                 util.get_python_string(), kernel.get_term_info()))
             scr.addstr(3, 1, "This should look normal.", screen.A_DEFAULT)
             scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
@@ -359,15 +359,18 @@ def __update_screen(scr, repaint, l):
                 "emulator is resized.")
             scr.addstr(10, 1, "Check if above appear as they should.")
             scr.addstr(12, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-        if l[0] != kbd.ERROR:
-            scr.move(13, 1)
-            scr.clrtoeol()
-            scr.addstr(13, 1, "{0:3} {1}".format(*l))
+        __update_input(scr, 13, l)
     elif siz >= 3:
         if repaint:
             scr.addstr(1, 1, "Not enough room.")
             scr.addstr(2, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-        if l[0] != kbd.ERROR:
-            scr.move(3, 1)
-            scr.clrtoeol()
-            scr.addstr(3, 1, "{0:3} {1}".format(*l))
+        __update_input(scr, 3, l)
+
+def __update_input(scr, y, l):
+    if l[0] != kbd.ERROR:
+        scr.move(y, 1)
+        scr.clrtoeol()
+        try:
+            scr.addstr(y, 1, "{0:3} {1}".format(*l)) # may raise with Python 3
+        except Exception:
+            scr.addstr(y, 1, "{0:3}".format(l[0]))

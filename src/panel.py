@@ -58,9 +58,6 @@ _panel
             SingleStatusCanvas
 """
 
-# XXX This needs to be per workspace for vertical split.
-address_num_width = 8
-
 class _panel (object):
     def __init__(self, siz, pos):
         assert (siz and pos) or (not siz and not pos), (siz, pos)
@@ -68,6 +65,9 @@ class _panel (object):
             siz = get_min_size(self)
             pos = get_min_position(self)
         self.scr = screen.alloc(siz[0], siz[1], pos[0], pos[1], self)
+
+    def update(self):
+        return
 
     def get_size_y(self):
         return self.scr.getmaxyx()[0]
@@ -146,10 +146,14 @@ class text_addon (object):
 class Canvas (_panel):
     def __init__(self, siz, pos):
         super(Canvas, self).__init__(siz, pos)
-        self.__cell = self.get_cell() # size, distance
+        self.update()
+        self.fileops = None
+
+    def update(self):
+        super(Canvas, self).update()
+        self.cell = self.get_cell() # size, distance
         self.offset = util.Pair(*self.get_offset())
         self.bufmap = util.Pair()
-        self.fileops = None
 
     def set_buffer(self, fileops):
         self.fileops = fileops
@@ -174,14 +178,14 @@ class Canvas (_panel):
         if c:
             return self.get_form_single(c)
         else:
-            d = self.__cell[0] - self.__cell[1]
+            d = self.cell[0] - self.cell[1]
             return ' ' * d
 
     def get_cell_width(self, x):
-        return self.__cell[0] * x
+        return self.cell[0] * x
 
     def get_cell_edge(self, x):
-        return self.get_cell_width(x) - self.__cell[1]
+        return self.get_cell_width(x) - self.cell[1]
 
     def fill(self, low):
         x = self.offset.x
@@ -414,6 +418,10 @@ class DisplayCanvas (Canvas):
 class BinaryCanvas (DisplayCanvas, binary_addon):
     def __init__(self, siz, pos):
         super(BinaryCanvas, self).__init__(siz, pos)
+        self.update()
+
+    def update(self):
+        super(BinaryCanvas, self).update()
         self.__cstr = {
             16: "{0:02X}",
             10: "{0:02d}",
@@ -485,13 +493,18 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
 
     def fill_posstr(self):
         self.printl(0, 0, ' ' * self.offset.x) # blank part
+        extra = ' ' * self.cell[1]
         for x in range(self.bufmap.x):
             self.printl(0, self.offset.x + self.get_cell_width(x),
                 self.__get_column_posstr(x), screen.A_UNDERLINE)
+            self.printl(0, self.offset.x + self.get_cell_width(x + 1)
+                - len(extra), extra)
+
         n = self.get_page_offset()
         for i in range(self.bufmap.y):
-            self.printl(self.offset.y + i, 0, self.__get_line_posstr(n),
-                screen.A_UNDERLINE)
+            s = self.__get_line_posstr(n)
+            self.printl(self.offset.y + i, 0, s, screen.A_UNDERLINE)
+            self.printl(self.offset.y + i, len(s), ' ')
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
@@ -727,6 +740,12 @@ class SingleStatusCanvas (StatusCanvas):
 
     def sync_cursor(self):
         self.repaint(False)
+
+def get_min_address_num_width():
+    return 4 # 65536 bytes buffer
+
+# XXX needs to be per workspace for vertical split
+address_num_width = get_min_address_num_width()
 
 def get_status_frame_class():
     if setting.use_status_window_frame:

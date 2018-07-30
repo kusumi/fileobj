@@ -319,11 +319,23 @@ class Workspace (object):
             self.__build_window(o, siz, pos)
         self.__do_build(vfn, bfn, tfn, sfn)
 
+    # common for both horizontal and vertical split
     def __do_build(self, vfn, bfn, tfn, sfn):
         self.__build_virtual_window = vfn
         self.__build_binary_window = bfn
         self.__build_text_window = tfn
         self.__build_status_window = sfn
+
+        # update first for potential window parameter changes
+        # (if yes, dryrun must have been done with new parameters)
+        for o in self.__vwindows.values():
+            o.update()
+        for o in self.__bwindows.values():
+            o.update()
+        for o in self.__twindows.values():
+            o.update()
+        for o in self.__swindows.values():
+            o.update()
 
         for o in self.__vwindows.values():
             self.__build_virtual_window(o)

@@ -89,18 +89,7 @@ class Container (object):
         if not self.__fileobjs:
             self.__fileobjs.append(self.__alloc_buffer(''))
         assert self.__fileobjs[0] is not None
-
-        fmt = {
-            16: "{0:X}",
-            10: "{0:d}",
-            8 : "{0:o}",
-        }.get(setting.address_num_radix)
-        s = fmt.format(max([_.get_size() for _ in self.__fileobjs]))
-        if len(s) > panel.address_num_width:
-            for x in [2 ** i for i in range(10)]:
-                if x > len(s):
-                    panel.address_num_width = x
-                    break
+        self.update_address_num_width() # after fileobj allocation
 
         bpl = self.__find_bytes_per_line(optbpl)
         self.__workspaces.append(workspace.Workspace(bpl))
@@ -339,7 +328,6 @@ class Container (object):
         return self.__reload_buffer(self.get_path(), new)
 
     def __reload_buffer(self, old, new):
-        """This method has nothing to do with buffer contents"""
         if not self.has_buffer(old):
             return -1
         if old == new:
@@ -399,6 +387,12 @@ class Container (object):
         return tuple(l)
 
     def build(self, vertical=-1):
+        return self._build(False, vertical)
+
+    def build_quiet(self, vertical=-1):
+        return self._build(True, vertical)
+
+    def _build(self, quiet, vertical):
         if not len(self): # nothing to do
             return
         if vertical == -1:
@@ -408,7 +402,8 @@ class Container (object):
         if self.__build(vertical, True) == workspace.BUILD_FAILED:
             self.__clear_workspace_delta()
             if self.__build(vertical, True) == workspace.BUILD_FAILED:
-                self.flash("Not enough room")
+                if not quiet:
+                    self.flash("Not enough room")
                 return -1
         if setting.use_even_size_window or self.__bpw != -1 or vertical:
             screen.clear()
@@ -801,7 +796,6 @@ class Container (object):
                 l = trace.read(f)
                 if l:
                     self.buffer_input(l)
-                    setting.use_console_log = True
                 else:
                     self.flash("Failed to read " + f)
             except Exception as e:
@@ -999,6 +993,49 @@ class Container (object):
             return filebytes.join(self.__yank_buffer[reg])
         else:
             return filebytes.BLANK
+
+    def set_address_num_width(self, width):
+        assert width >= panel.get_min_address_num_width(), width
+        orig = panel.address_num_width
+        panel.address_num_width = width
+        return orig
+
+    def update_address_num_width(self):
+        width = panel.address_num_width
+        min_width = panel.get_min_address_num_width()
+        assert width >= min_width, width
+        fmt = {
+            16: "{0:X}",
+            10: "{0:d}",
+            8 : "{0:o}",
+        }.get(setting.address_num_radix)
+        n = max([o.get_size() for o in self.__fileobjs])
+        if n > 0:
+            n -= 1
+        s = fmt.format(n)
+
+        l = [2 ** i for i in range(10)] # max 512 (large enough)
+        l = [x for x in l if x >= min_width]
+
+        if len(s) > width:
+            for x in l:
+                if x > len(s):
+                    return self.set_address_num_width(x)
+        elif width > len(s) >= min_width:
+            l = tuple(reversed(l))
+            for x in l:
+                if len(s) > x:
+                    i = l.index(x)
+                    if i:
+                        i -= 1
+                    x = l[i]
+                    return self.set_address_num_width(x)
+            return self.set_address_num_width(l[-1])
+        elif min_width > len(s):
+            return self.set_address_num_width(min_width)
+        else:
+            assert len(s) == width, (s, len(s), width)
+        return -1
 
     def set_bytes_per_line(self, arg, power_of_two=False):
         ret = self.__find_bytes_per_line(arg)

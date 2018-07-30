@@ -294,7 +294,7 @@ class Fileobj (object):
         return self.__attr.word
 
     def set_search_word(self, s):
-        assert isinstance(s, filebytes.TYPE)
+        assert isinstance(s, filebytes.TYPE), (s, type(s))
         self.__attr.word = s
 
     def search(self, x, s, end=-1):

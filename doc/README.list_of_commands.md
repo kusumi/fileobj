@@ -27,14 +27,14 @@
         <ESCAPE>                 Clear input or escape from current mode
         "[0-9a-zA-Z"]            Use register {0-9a-zA-Z"} for next delete, yank or put (use uppercase character to append with delete and yank)
         &[0-9a-fA-F]{2}          Replace [count] bytes with bitwise and-ed bytes
-        |[0-9a-fA-F]{2}          Replace [count] bytes with bitwise or-ed bytes
         ^[0-9a-fA-F]{2}          Replace [count] bytes with bitwise xor-ed bytes
+        |[0-9a-fA-F]{2}          Replace [count] bytes with bitwise or-ed bytes
         )                        Go to the next zero (\x00)
         (                        Go to the previous zero (\x00)
-        }                        Go to the next non zero character
-        {                        Go to the previous non zero character
-        ]                        End reading buffered [count] value
         [                        Start reading buffered [count] value
+        ]                        End reading buffered [count] value
+        {                        Go to the previous non zero character
+        }                        Go to the next non zero character
         .                        Repeat last change
         /                        Search forward
         ?                        Search backward
@@ -42,7 +42,7 @@
         $                        Go to the end of the line. If a count is given go [count]-1 lines downward
         :args                    Print buffer list with the current buffer in brackets
         :argv                    Print arguments of this program
-        :auto                    Short for :set bpl and bpw to "auto"
+        :auto                    Optimize editor window size based on the current terminal size
         :bfirst                  Go to the first buffer in buffer list
         :brewind                 Go to the first buffer in buffer list
         :bind                    Run/bind given :command in argument, replayable with @:
@@ -123,8 +123,8 @@
         G                        Go to line [count] (default last line)
         gg                       Go to line [count] (default first line)
         H                        Go to line [count] from top of window
-        M                        Go to the middle line of window
         L                        Go to line [count] from bottom of window
+        M                        Go to the middle line of window
         N                        Repeat the latest search toward backward
         n                        Repeat the latest search
         O                        Replace the text befor the cursor [count] times
@@ -137,10 +137,10 @@
         y                        Yank [count] characters
         go                       Go to [count] byte in the buffer (default first byte)
         i                        Start insert edit mode
-        I                        Start insert edit mode at the first byte of buffer
-        a                        Start append edit mode
         A                        Start append edit mode at the end of buffer
+        I                        Start insert edit mode at the first byte of buffer
         R                        Start replace edit mode
+        a                        Start append edit mode
         r                        Replace [count] characters under the cursor
         m[0-9a-zA-Z]             Set mark at cursor position, uppercase marks are valid between buffers
         `[0-9a-zA-Z]             Go to marked position
@@ -151,29 +151,29 @@
         sb                       Swap byte order of [count] characters
         sgo                      Go to [count] sector in the buffer (default first sector)
         sh                       Go [count] sectors to the left
-        s<BACKSPACE>             Go [count] sectors to the left
         s<BACKSPACE2>            Go [count] sectors to the left
+        s<BACKSPACE>             Go [count] sectors to the left
         sl                       Go [count] sectors to the right
         s<SPACE>                 Go [count] sectors to the right
         u                        Undo changes
         v                        Start/End visual mode
-        V                        Start/End line visual mode
         <CTRL>v                  Start/End block visual mode
+        V                        Start/End line visual mode
         w                        Go to the next printable character
         b                        Go to the previous printable character
         ~                        Switch case of the [count] characters under and after the cursor
         <DOWN>                   Go [count] lines downward
-        j                        Go [count] lines downward
         <ENTER>                  Go [count] lines downward
+        j                        Go [count] lines downward
         <UP>                     Go [count] lines upward
         k                        Go [count] lines upward
         <LEFT>                   Go [count] characters to the left
         h                        Go [count] characters to the left
-        <BACKSPACE>              Go [count] characters to the left
         <BACKSPACE2>             Go [count] characters to the left
+        <BACKSPACE>              Go [count] characters to the left
         <RIGHT>                  Go [count] characters to the right
-        l                        Go [count] characters to the right
         <SPACE>                  Go [count] characters to the right
+        l                        Go [count] characters to the right
         <DELETE>                 Delete [count] characters under and after the cursor
-        x                        Delete [count] characters under and after the cursor
         d                        Delete [count] characters under and after the cursor
+        x                        Delete [count] characters under and after the cursor

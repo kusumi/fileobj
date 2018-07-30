@@ -588,23 +588,23 @@ def __rebuild(self):
     self.co.build()
     self.co.repaint()
 
-_set_methods = {
-    literal.s_set_binary.seq:  __set_binary,
-    literal.s_set_ascii.seq:   __set_ascii,
-    literal.s_set_le.seq:      __set_le,
-    literal.s_set_be.seq:      __set_be,
-    literal.s_set_ws.seq:      __set_ws,
-    literal.s_set_nows.seq:    __set_nows,
-    literal.s_set_ic.seq:      __set_ic,
-    literal.s_set_noic.seq:    __set_noic,
-    literal.s_set_si.seq:      __set_si,
-    literal.s_set_nosi.seq:    __set_nosi,
-    literal.s_set_address.seq: __set_address,
-    literal.s_set_status.seq:  __set_status,
-    literal.s_set_bpl.seq:     __set_bytes_per_line,
-    literal.s_set_bpw.seq:     __set_bytes_per_window, }
-
 def set_option(self, amp, opc, args, raw):
+    _set_methods = {
+        literal.s_set_binary.seq:  __set_binary,
+        literal.s_set_ascii.seq:   __set_ascii,
+        literal.s_set_le.seq:      __set_le,
+        literal.s_set_be.seq:      __set_be,
+        literal.s_set_ws.seq:      __set_ws,
+        literal.s_set_nows.seq:    __set_nows,
+        literal.s_set_ic.seq:      __set_ic,
+        literal.s_set_noic.seq:    __set_noic,
+        literal.s_set_si.seq:      __set_si,
+        literal.s_set_nosi.seq:    __set_nosi,
+        literal.s_set_address.seq: __set_address,
+        literal.s_set_status.seq:  __set_status,
+        literal.s_set_bpl.seq:     __set_bytes_per_line,
+        literal.s_set_bpw.seq:     __set_bytes_per_window, }
+
     if not args:
         self.co.flash("Argument required")
         return
@@ -622,7 +622,7 @@ def set_option(self, amp, opc, args, raw):
         fn = _set_methods.get(li.seq)
         if not fn: # li is an alias
             for o in argl:
-                if literal.test_alias(li, o): # li is an alias of o
+                if li.is_alias(o):
                     fn = _set_methods.get(o.seq)
                     assert fn, (li.str, o.str)
         fn(self, args)
@@ -638,7 +638,18 @@ def set_auto(self, amp, opc, args, raw):
         __rebuild(self)
         self.co.flash("Failed to reset bytes per window")
         return
-    __rebuild(self)
+    if __try_update_address_num_width(self) == -1:
+        __rebuild(self)
+
+def __try_update_address_num_width(self):
+    orig = self.co.update_address_num_width()
+    if orig == -1:
+        return -1 # no change
+    screen.clear()
+    if self.co.build_quiet() == -1:
+        self.co.set_address_num_width(orig)
+        self.co.build()
+    self.co.repaint()
 
 def show_current(self, amp, opc, args, raw):
     self.co.show("{0} {1} at {2}".format(self.co.get_short_path(),
@@ -1084,7 +1095,7 @@ def __do_search_next(self, _is_forward, is_last):
         self.co.flash("No previous search")
         return
     pos = self.co.get_pos()
-    # The direction is set based on the previous regualr search.
+    # The direction is set based on the previous regular search.
     # If searched forward (/xxx) and forward next (n), then forward.
     # If searched forward (/xxx) and backward next (N), then backward.
     # If searched backward (?xxx) and forward next (n), then backward.
@@ -1618,8 +1629,8 @@ def __block_read_swap_buffer(self, pos, mapx, siz, cnt):
         if pos > self.co.get_max_pos():
             break
         if screen.test_signal():
-            self.co.flash("Read swap buffer interrupted "
-                "({0}/{1},{2})".format(i, cnt, len(buf)))
+            self.co.flash("Read swap buffer interrupted ({0}/{1},{2})".format(
+                i, cnt, len(buf)))
             return -1
     return __swap_buffer_to_input(self, buf)
 
@@ -1772,10 +1783,11 @@ def __get_or_ops(mask):
 def __get_xor_ops(mask):
     return lambda b: filebytes.ord(b) ^ mask
 
-_bit_ops = {
-    literal.bit_and.key: __get_and_ops,
-    literal.bit_or.key : __get_or_ops,
-    literal.bit_xor.key: __get_xor_ops, }
+def _get_bit_ops():
+    return {
+        literal.bit_and.key: __get_and_ops,
+        literal.bit_or.key : __get_or_ops,
+        literal.bit_xor.key: __get_xor_ops, }
 
 @_cleanup
 def logical_bit_operation(self, amp, opc, arg, raw):
@@ -1784,7 +1796,7 @@ def logical_bit_operation(self, amp, opc, arg, raw):
     amp = get_int(amp)
     mask = (int(opc[1], 16) << 4) | int(opc[2], 16)
     assert 0 <= mask <= 255
-    bops = _bit_ops.get(opc[0])(mask)
+    bops = _get_bit_ops().get(opc[0])(mask)
     def fn(_):
         und = self.co.get_undo_size()
         pos = self.co.get_pos()
@@ -1836,7 +1848,7 @@ def block_logical_bit_operation(self, amp, opc, args, raw):
     test_empty_raise(self)
     mask = (int(opc[1], 16) << 4) | int(opc[2], 16)
     assert 0 <= mask <= 255
-    bops = _bit_ops.get(opc[0])(mask)
+    bops = _get_bit_ops.get(opc[0])(mask)
     beg, end, mapx, siz, cnt = __get_block(self)
     self.co.set_pos(beg)
     def fn(_):
@@ -2001,9 +2013,11 @@ def open_buffer(self, amp, opc, args, raw):
                     self.co.flash(f + " partially exists, can't open")
                 else:
                     show_current(self, amp, opc, args, raw)
+                    __try_update_address_num_width(self)
         else:
             self.co.add_buffer(ff)
-            self.co.lrepaintf()
+            if __try_update_address_num_width(self) == -1:
+                self.co.lrepaintf()
             return RETURN
 
 def open_extension(self, amp, opc, args, raw):
@@ -2027,7 +2041,8 @@ def close_buffer(self, amp, opc, args, raw):
             self.co.flash("No write since last change: " + f)
         else:
             self.co.remove_buffer(f)
-            self.co.lrepaint()
+            if __try_update_address_num_width(self) == -1:
+                self.co.lrepaint()
             return RETURN
 
 def save_buffer(self, amp, opc, args, raw):
@@ -2051,7 +2066,8 @@ def __save_buffer(self, args, force):
             self.co.show(msg)
         if new and os.path.isfile(new):
             __rename_buffer(self, new)
-        self.co.lrepaintf()
+        if __try_update_address_num_width(self) == -1:
+            self.co.lrepaintf()
     except Exception as e:
         self.co.flash(e)
         return -1

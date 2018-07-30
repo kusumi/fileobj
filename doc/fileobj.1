@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "July 11, 2018" "FILEOBJ 0.7.72"
+.TH FILEOBJ 1 "July 25, 2018" "FILEOBJ 0.7.73"
 .nh
 .ad l
 .SH NAME
@@ -35,7 +35,7 @@ fileobj \- ncurses based hex editor with vi interface
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset\-(offset+length)\fP]]...
 .PD
 .SH DESCRIPTION
-\fBfileobj\fP provides basic vi commands for binary editing.
+\fBfileobj\fP\|(1) provides basic vi commands for binary editing.
 Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, \fBptrace\fP\|(2) based userspace editing, data in C struct view, etc.
 .SH OPTIONS
 .PP
@@ -125,7 +125,7 @@ Use verbose status window instead of the default format.
 \fB\-\-backup\fP
 .RS 4
 Explicitly create backup files for regular files.
-Backup files are created under \fI~/.fileobj\fP when \fBfileobj\fP starts, and removed when \fBfileobj\fP terminates.
+Backup files are created under \fI~/.fileobj\fP when \fBfileobj\fP\|(1) starts, and removed when \fBfileobj\fP\|(1) terminates.
 Backup files start with '.'.
 This option only applies to regular files.
 .RE
@@ -155,12 +155,12 @@ See \fB\-\-command\fP option in \fBOPTIONS\fP.
 .PP
 \fI~/.fileobj\fP
 .RS 4
-A directory automatically created by \fBfileobj\fP.
+A directory automatically created by \fBfileobj\fP\|(1).
 .RE
 .PP
 \fI~/.fileobj/cstruct\fP
 .RS 4
-A default file path for \fB:cstruct\fP command.
+A default path for configuration file for \fB:cstruct\fP command.
 .RE
 .PP
 \fI~/.fileobj/history\fP
@@ -170,7 +170,7 @@ A JSON file contains history of executed editor commands.
 .PP
 \fI~/.fileobj/log\fP
 .RS 4
-A file contains logged messages.
+A text file contains logged messages.
 .RE
 .PP
 \fI~/.fileobj/marks\fP

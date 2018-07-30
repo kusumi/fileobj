@@ -92,17 +92,17 @@ class Console (object):
         return -1
 
     def add_method(self, li, module, name):
-        assert li.is_top_level(), li.str
+        assert li.is_origin(), (li.str, li.seq)
         self.__add_method(li, module, name)
 
     def __add_method(self, li, module, name):
-        assert li.seq not in self.__fn, li
+        assert li.seq not in self.__fn, (li.str, li.seq)
         if module is not self:
             fn = getattr(module, name)
             util.add_method(self, fn, name)
         self.__fn[li.seq] = getattr(self, name)
         for o in li.children:
-            if literal.test_alias(o, li): # o is an alias of li
+            if o.is_alias(li):
                 self.__add_method(o, module, name)
 
     def handle_signal():
@@ -131,6 +131,7 @@ class Console (object):
                 s += str(x)
                 s += " "
             self.__fd.write("{0} {1}\n".format(seqno, s))
+            kernel.fsync(self.__fd)
 
     def read_incoming(self):
         global seqno

@@ -39,6 +39,10 @@ class Window (object):
             raise AttributeError(name)
         return getattr(self.__canvas, name)
 
+    def update(self):
+        self.__frame.update()
+        self.__canvas.update()
+
     def __get_canvas_size(self):
         lf = panel.get_min_size(self.__frame)
         lc = panel.get_min_size(self.__canvas)

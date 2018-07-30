@@ -115,8 +115,8 @@ class Allocator (object):
         is_non = not f or o.is_noent
         is_pid = setting.use_pid_path and kernel.is_pid_path(f)
 
+        # always use rwbuf for noent (rwmap is not supported by all platforms)
         if is_non and not is_pid:
-            # always use rwbuf (rwmap is conditionally available)
             return self.__alloc(f, 0, 0, self.rwbuf)
 
         ret = path.get_path_failure_message(o)

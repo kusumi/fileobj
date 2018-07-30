@@ -52,6 +52,14 @@ class Literal (object):
         self.ali = None
         self.children = []
 
+        if self.str == "": # root
+            assert self.desc == "", self.desc
+            self.refer(None)
+        else:
+            self.refer(this._root)
+            assert self.ref, self.ref
+            assert self in self.ref.children, self.ref.children
+
     def __str__(self):
         if setting.use_debug:
             return str(self.seq)
@@ -69,31 +77,40 @@ class Literal (object):
     def __le__(self, o):
         return self.seq.__le__(o.seq)
 
-    def init(self):
-        if self is _tree_root:
-            self.refer(None)
-        else:
-            self.refer(_tree_root)
-
     def cleanup(self):
         if self.ref and self in self.ref.children:
             self.ref.children.remove(self)
         self.ref = None
 
-    def is_top_level(self):
+    def is_origin(self):
         return self.ali is None
+
+    def is_alias(self, ref):
+        return (self.ali is ref) and ref.desc and ref.desc == self.desc
 
     def refer(self, ref):
         self.cleanup()
         self.ref = ref
         if self.ref:
             self.ref.children.append(self)
-        return self
+            self.ref.children.sort()
+        return ref
 
     def alias(self, ref):
         assert self.desc == ref.desc
         self.ali = ref # ref is the original of self
         return self.refer(ref)
+
+    def create_alias(self, str, seq):
+        cls = util.get_class(self)
+        o = cls(str, seq, self.desc) # XXX may raise due to arg mismatch
+        assert o.str
+        if o.str[0] == ':':
+            assert str[0] == ':', (o.str, str)
+        else:
+            assert str[0] != ':', (o.str, str)
+        o.alias(self)
+        return o
 
     def match(self, l):
         """Return True if self.seq equals sequence l"""
@@ -182,198 +199,6 @@ class ArgLiteral (Literal):
 class InvalidLiteral (Literal):
     pass
 
-_tree_root = Literal('', None, '')
-
-# descriptions are taken from vim help
-up            = FastLiteral("<UP>", (kbd.UP,), "Go [count] lines upward")
-k             = FastLiteral("k", None, "Go [count] lines upward")
-down          = FastLiteral("<DOWN>", (kbd.DOWN,), "Go [count] lines downward")
-enter         = FastLiteral("<ENTER>", (kbd.ENTER,), "Go [count] lines downward")
-j             = FastLiteral("j", None, "Go [count] lines downward")
-left          = FastLiteral("<LEFT>", (kbd.LEFT,), "Go [count] characters to the left")
-bspace        = FastLiteral("<BACKSPACE>", (kbd.BACKSPACE,), "Go [count] characters to the left")
-bspace2       = FastLiteral("<BACKSPACE2>", (kbd.BACKSPACE2,), "Go [count] characters to the left")
-h             = FastLiteral("h", None, "Go [count] characters to the left")
-right         = FastLiteral("<RIGHT>", (kbd.RIGHT,), "Go [count] characters to the right")
-space         = FastLiteral("<SPACE>", (kbd.SPACE,), "Go [count] characters to the right")
-l             = FastLiteral("l", None, "Go [count] characters to the right")
-gg            = FastLiteral("gg", None, "Go to line [count] (default first line)")
-G             = FastLiteral("G", None, "Go to line [count] (default last line)")
-zero          = FastLiteral("0", None, "Go to the first character of the line")
-doller        = FastLiteral("$", None, "Go to the end of the line. If a count is given go [count]-1 lines downward")
-H             = FastLiteral("H", None, "Go to line [count] from top of window")
-M             = FastLiteral("M", None, "Go to the middle line of window")
-L             = FastLiteral("L", None, "Go to line [count] from bottom of window")
-w             = FastLiteral("w", None, "Go to the next printable character")
-b             = FastLiteral("b", None, "Go to the previous printable character")
-parens_end    = FastLiteral(")", None, "Go to the next zero (\\x00)")
-parens_beg    = FastLiteral("(", None, "Go to the previous zero (\\x00)")
-bracket1_end  = FastLiteral("}", None, "Go to the next non zero character")
-bracket1_beg  = FastLiteral("{", None, "Go to the previous non zero character")
-bracket2_end  = FastLiteral("]", None, "End reading buffered [count] value")
-bracket2_beg  = FastLiteral("[", None, "Start reading buffered [count] value")
-go            = FastLiteral("go", None, "Go to [count] byte in the buffer (default first byte)")
-sbspace       = FastLiteral("s<BACKSPACE>", (ord('s'), kbd.BACKSPACE,), "Go [count] sectors to the left")
-sbspace2      = FastLiteral("s<BACKSPACE2>", (ord('s'), kbd.BACKSPACE2,), "Go [count] sectors to the left")
-sh            = FastLiteral("sh", None, "Go [count] sectors to the left")
-sspace        = FastLiteral("s<SPACE>", (ord('s'), kbd.SPACE,), "Go [count] sectors to the right")
-sl            = FastLiteral("sl", None, "Go [count] sectors to the right")
-szero         = FastLiteral("s0", None, "Go to the first character of the sector")
-sdoller       = FastLiteral("s$", None, "Go to the end of the sector. If a count is given go [count]-1 sectors downward")
-sgo           = FastLiteral("sgo", None, "Go to [count] sector in the buffer (default first sector)")
-ctrlb         = FastLiteral("<CTRL>b", (kbd.ctrl('b'),), "Scroll window [count] pages backward in the buffer")
-ctrlu         = FastLiteral("<CTRL>u", (kbd.ctrl('u'),), "Scroll window [count] half pages backward in the buffer")
-ctrlf         = FastLiteral("<CTRL>f", (kbd.ctrl('f'),), "Scroll window [count] pages forward in the buffer")
-ctrld         = FastLiteral("<CTRL>d", (kbd.ctrl('d'),), "Scroll window [count] half pages forward in the buffer")
-ctrll         = FastLiteral("<CTRL>l", (kbd.ctrl('l'),), "Refresh screen")
-ctrlw_w       = FastLiteral("<CTRL>ww", (kbd.ctrl('w'), ord('w')), "Change to the next window")
-ctrlw_ctrlw   = FastLiteral("<CTRL>w<CTRL>w", (kbd.ctrl('w'), kbd.ctrl('w')), "Change to the next window")
-ctrlw_W       = FastLiteral("<CTRL>wW", (kbd.ctrl('w'), ord('W')), "Change to the prev window")
-ctrlw_t       = FastLiteral("<CTRL>wt", (kbd.ctrl('w'), ord('t')), "Change to the top window")
-ctrlw_ctrlt   = FastLiteral("<CTRL>w<CTRL>t", (kbd.ctrl('w'), kbd.ctrl('t')), "Change to the top window")
-ctrlw_b       = FastLiteral("<CTRL>wb", (kbd.ctrl('w'), ord('b')), "Change to the bottom window")
-ctrlw_ctrlb   = FastLiteral("<CTRL>w<CTRL>b", (kbd.ctrl('w'), kbd.ctrl('b')), "Change to the bottom window")
-ctrlw_s       = FastLiteral("<CTRL>ws", (kbd.ctrl('w'), ord('s')), "Split current window")
-ctrlw_ctrls   = FastLiteral("<CTRL>w<CTRL>s", (kbd.ctrl('w'), kbd.ctrl('s')), "Split current window")
-ctrlw_v       = FastLiteral("<CTRL>wv", (kbd.ctrl('w'), ord('v')), "Split current window vertically")
-ctrlw_ctrlv   = FastLiteral("<CTRL>w<CTRL>v", (kbd.ctrl('w'), kbd.ctrl('v')), "Split current window vertically")
-ctrlw_plus    = FastLiteral("<CTRL>w+", (kbd.ctrl('w'), ord('+')), "Increase current window height [count] lines")
-ctrlw_minus   = FastLiteral("<CTRL>w-", (kbd.ctrl('w'), ord('-')), "Decrease current window height [count] lines")
-ctrlw_c       = FastLiteral("<CTRL>wc", (kbd.ctrl('w'), ord('c')), "Close current window")
-ctrlw_o       = FastLiteral("<CTRL>wo", (kbd.ctrl('w'), ord('o')), "Make the current window the only one")
-ctrlw_ctrlo   = FastLiteral("<CTRL>w<CTRL>o", (kbd.ctrl('w'), kbd.ctrl('o')), "Make the current window the only one")
-ctrlw_q       = FastLiteral("<CTRL>wq", (kbd.ctrl('w'), ord('q')), "Close current window if more than 1 windows exist else quit program")
-tab           = FastLiteral("<TAB>", (kbd.TAB,), "Change buffer to the next")
-ctrlg         = FastLiteral("<CTRL>g", (kbd.ctrl('g'),), "Print current size and position")
-g_ctrlg       = FastLiteral("g<CTRL>g", (ord('g'), kbd.ctrl('g'),), "Print current size and position in sector for block device")
-ctrla         = FastLiteral("<CTRL>a", (kbd.ctrl('a'),), "Add [count] to the number at cursor")
-ctrlx         = FastLiteral("<CTRL>x", (kbd.ctrl('x'),), "Subtract [count] from the number at cursor")
-ctrlc         = FastLiteral("<CTRL>c", (kbd.ctrl('c'),), "")
-period        = FastLiteral(".", None, "Repeat last change")
-toggle        = FastLiteral("~", None, "Switch case of the [count] characters under and after the cursor")
-ror           = FastLiteral(">>", None, "Rotate [count] bits to right")
-rol           = FastLiteral("<<", None, "Rotate [count] bits to left")
-bswap         = FastLiteral("sb", None, "Swap byte order of [count] characters")
-delete        = FastLiteral("<DELETE>", (kbd.DELETE,), "Delete [count] characters under and after the cursor")
-x             = FastLiteral("x", None, "Delete [count] characters under and after the cursor")
-X             = FastLiteral("X", None, "Delete [count] characters before the cursor")
-d             = FastLiteral("d", None, "Delete [count] characters under and after the cursor")
-D             = FastLiteral("D", None, "Delete characters under the cursor until the end of buffer")
-u             = FastLiteral("u", None, "Undo changes")
-U             = FastLiteral("U", None, "Undo all changes")
-ctrlr         = FastLiteral("<CTRL>r", (kbd.ctrl('r'),), "Redo changes")
-y             = FastLiteral("y", None, "Yank [count] characters")
-Y             = FastLiteral("Y", None, "Yank characters under the cursor until the end of buffer")
-P             = FastLiteral("P", None, "Put the text before the cursor [count] times")
-p             = FastLiteral("p", None, "Put the text after the cursor [count] times")
-O             = FastLiteral("O", None, "Replace the text befor the cursor [count] times")
-o             = FastLiteral("o", None, "Replace the text after the cursor [count] times")
-ZZ            = FastLiteral("ZZ", None, "Like :wq, but write only when changes have been made")
-ZQ            = FastLiteral("ZQ", None, "Close current window if more than 1 windows exist else quit program without writing")
-n             = FastLiteral("n", None, "Repeat the latest search")
-N             = FastLiteral("N", None, "Repeat the latest search toward backward")
-i             = FastLiteral("i", None, "Start insert edit mode")
-I             = FastLiteral("I", None, "Start insert edit mode at the first byte of buffer")
-a             = FastLiteral("a", None, "Start append edit mode")
-A             = FastLiteral("A", None, "Start append edit mode at the end of buffer")
-R             = FastLiteral("R", None, "Start replace edit mode")
-r             = FastLiteral("r", None, "Replace [count] characters under the cursor")
-v             = FastLiteral("v", None, "Start/End visual mode")
-V             = FastLiteral("V", None, "Start/End line visual mode")
-ctrlv         = FastLiteral("<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode")
-escape        = FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode")
-resize        = FastLiteral('<RESIZE>', (kbd.RESIZE,), '')
-
-if kbd.use_alt_block_visual:
-    ctrlv     = FastLiteral("<CTRL>v<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode") # the first <CTRL>v is ignored
-
-reg_reg       = RegexLiteral(2, "\"[0-9a-zA-Z\"]", r"^\"[0-9a-zA-Z\"]", "Use register {0-9a-zA-Z\"} for next delete, yank or put (use uppercase character to append with delete and yank)")
-m_reg         = RegexLiteral(2, "m[0-9a-zA-Z]", r"^m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers")
-backtick_reg  = RegexLiteral(2, "`[0-9a-zA-Z]", r"^`[0-9a-zA-Z]", "Go to marked position")
-q             = FastLiteral("q", None, "Stop recording")
-q_reg         = StateLiteral(2, "q[0-9a-zA-Z]", r"^q[0-9a-zA-Z]", q, "Record typed characters into register")
-atsign_reg    = RegexLiteral(2, "@[0-9a-zA-Z]", r"^@[0-9a-zA-Z]", "Execute the contents of register [count] times")
-atsign_at     = FastLiteral("@@", None, "Execute the previous @ command [count] times")
-atsign_colon  = FastLiteral("@:", None, "Execute the binded command")
-bit_and       = RegexLiteral(3, "&[0-9a-fA-F]{2}", r"^&[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise and-ed bytes")
-bit_or        = RegexLiteral(3, "|[0-9a-fA-F]{2}", r"^\|[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise or-ed bytes")
-bit_xor       = RegexLiteral(3, "^[0-9a-fA-F]{2}", r"^\^[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise xor-ed bytes")
-
-s_e           = SlowLiteral(":e", None, "Open a buffer")
-s_bdelete     = SlowLiteral(":bdelete", None, "Close a buffer")
-s_bfirst      = SlowLiteral(":bfirst", None, "Go to the first buffer in buffer list")
-s_brewind     = SlowLiteral(":brewind", None, "Go to the first buffer in buffer list")
-s_blast       = SlowLiteral(":blast", None, "Go to the last buffer in buffer list")
-s_bnext       = SlowLiteral(":bnext", None, "Change buffer to the next")
-s_bprev       = SlowLiteral(":bprevious", None, "Change buffer to the previous")
-s_bNext       = SlowLiteral(":bNext", None, "Change buffer to the previous")
-s_set         = SlowLiteral(":set", None, "Set option")
-s_self        = SlowLiteral(":self", None, "Print current console instance string")
-s_pwd         = SlowLiteral(":pwd", None, "Print the current directory name")
-s_date        = SlowLiteral(":date", None, "Print date")
-s_kmod        = SlowLiteral(":kmod", None, "Print Python module name for the platform OS")
-s_fobj        = SlowLiteral(":fobj", None, "Print Python object name of the current buffer")
-s_bufsiz      = SlowLiteral(":bufsiz", None, "Print temporary buffer size")
-s_meminfo     = SlowLiteral(":meminfo", None, "Print free/total physical memory")
-s_osdep       = SlowLiteral(":osdep", None, "Print OS dependent information")
-s_screen      = SlowLiteral(":screen", None, "Print screen information")
-s_platform    = SlowLiteral(":platform", None, "Print platform")
-s_hostname    = SlowLiteral(":hostname", None, "Print hostname")
-s_term        = SlowLiteral(":term", None, "Print terminal type")
-s_lang        = SlowLiteral(":lang", None, "Print locale type")
-s_sector      = SlowLiteral(":sector", None, "Print sector size for block device")
-s_version     = SlowLiteral(":version", None, "Print version")
-s_argv        = SlowLiteral(":argv", None, "Print arguments of this program")
-s_args        = SlowLiteral(":args", None, "Print buffer list with the current buffer in brackets")
-s_md5         = SlowLiteral(":md5", None, "Print md5 message digest of the current buffer")
-s_cmp         = SlowLiteral(":cmp", None, "Compare two buffers and go to the first non matching byte")
-s_cmpneg      = SlowLiteral(":cmp!", None, "Compare two buffers and go to the first matching byte")
-s_cmpnext     = SlowLiteral(":cmpnext", None, "Compare two buffers starting from the next byte and go to the first non matching byte")
-s_cmpnextneg  = SlowLiteral(":cmpnext!", None, "Compare two buffers starting from the next byte and go to the first matching byte")
-s_cmpr        = SlowLiteral(":cmpr", None, "Compare two buffers from the end and go to the first non matching byte")
-s_cmprneg     = SlowLiteral(":cmpr!", None, "Compare two buffers from the end and go to the first matching byte")
-s_cmprnext    = SlowLiteral(":cmprnext", None, "Compare two buffers starting from the previous byte and go to the first non matching byte")
-s_cmprnextneg = SlowLiteral(":cmprnext!", None, "Compare two buffers starting from the previous byte and go to the first matching byte")
-s_delmarks    = SlowLiteral(":delmarks", None, "Delete the specified marks")
-s_delmarksneg = SlowLiteral(":delmarks!", None, "Delete all marks for the current buffer except for uppercase marks")
-s_split       = SlowLiteral(":split", None, "Split current window")
-s_vsplit      = SlowLiteral(":vsplit", None, "Split current window vertically")
-s_close       = SlowLiteral(":close", None, "Close current window")
-s_only        = SlowLiteral(":only", None, "Make the current window the only one")
-s_w           = SlowLiteral(":w", None, "Write the whole buffer to the file")
-s_wneg        = SlowLiteral(":w!", None, "Like :w, but overwrite an existing file")
-s_wq          = SlowLiteral(":wq", None, "Write the current file and quit")
-s_x           = SlowLiteral(":x", None, "Like :wq, but write only when changes have been made")
-s_q           = SlowLiteral(":q", None, "Close current window if more than 1 windows exist else quit program")
-s_qneg        = SlowLiteral(":q!", None, "Close current window if more than 1 windows exist else quit program without writing")
-s_bind        = SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(atsign_colon.str))
-s_auto        = SlowLiteral(":auto", None, "Short for :set bpl and bpw to \"auto\"")
-s_fsearch     = SearchLiteral('/', None, "Search forward")
-s_rsearch     = SearchLiteral('?', None, "Search backward")
-
-s_set_binary  = ArgLiteral("binary", None, "Set binary edit mode (unset ascii edit mode)")
-s_set_ascii   = ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)")
-s_set_le      = ArgLiteral("le", None, "Set endianness to little (unset big endian if set)")
-s_set_be      = ArgLiteral("be", None, "Set endianness to big (unset little endian if set)")
-s_set_ws      = ArgLiteral("ws", None, "Set wrapscan mode (search wrap around the end of the buffer)")
-s_set_nows    = ArgLiteral("nows", None, "Unset wrapscan mode")
-s_set_ic      = ArgLiteral("ic", None, "Set ic mode (ignore the case of alphabets on search)")
-s_set_noic    = ArgLiteral("noic", None, "Unset ic mode")
-s_set_si      = ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)")
-s_set_nosi    = ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)")
-s_set_address = ArgLiteral("address", None, "Set address radix to {16,10,8}")
-s_set_status  = ArgLiteral("status", None, "Set buffer size and current position radix to {16,10,8}")
-s_set_bpl     = ArgLiteral("bytes_per_line", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}")
-s_set_bpl_    = ArgLiteral("bpl", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}")
-s_set_bpw     = ArgLiteral("bytes_per_window", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}")
-s_set_bpw_    = ArgLiteral("bpw", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}")
-
-# test if li is an alias of o
-def test_alias(li, o):
-    assert li, li.str
-    assert o, o.str
-    return (li.ali is o) and o.desc and o.desc == li.desc
-
 def get_slow_strings():
     return tuple(":/?")
 
@@ -381,24 +206,24 @@ _slow_ords = tuple(map(ord, get_slow_strings()))
 def get_slow_ords():
     return _slow_ords
 
-_literals = {}
+_ld = {}
 def get_literals():
-    return _literals.get(Literal, ())
+    return _ld.get(Literal, ())
 
 def get_fast_literals():
-    return _literals.get(FastLiteral, ())
+    return _ld.get(FastLiteral, ())
 
 def get_slow_literals():
-    return _literals.get(SlowLiteral, ())
+    return _ld.get(SlowLiteral, ())
 
 def get_arg_literals():
-    return _literals.get(ArgLiteral, ())
+    return _ld.get(ArgLiteral, ())
 
 def get_ext_literals():
-    return _literals.get(ExtLiteral, ())
+    return _ld.get(ExtLiteral, ())
 
 def get_sorted_literals():
-    return _literals.get(None, ())
+    return _ld.get(None, ())
 
 def find_literal(seq):
     l = get_sorted_literals()
@@ -420,29 +245,24 @@ def find_literal(seq):
         if beg > end:
             break
 
-def get_lines(l):
+def get_lines(l=None):
     if not l:
-        return []
+        l = get_literals()
     n = max([len(str(o)) for o in l])
     f = "{{0:<{0}}} {{1}}".format(n)
-    ret = []
-    for o in l:
-        if o.desc:
-            ret.append(f.format(str(o), o.desc))
-    return ret
+    return [f.format(str(o), o.desc) for o in l if o.desc]
 
 def print_literal():
-    init()
-    s = get_lines(get_literals())
-    util.printf('\n'.join(s).rstrip())
-    cleanup()
+    assert init() != -1
+    util.printf('\n'.join(get_lines()).rstrip())
+    assert cleanup() != -1
 
 # keep this separated from init()
-def __register_ext_literal(o, fn):
+def __alloc_ext_literals(o, fn):
     try:
         desc = o.get_description()
     except Exception:
-        desc = ''
+        desc = ""
     s = o.__name__.rpartition('.')[2]
     li = ExtLiteral(':' + s, fn, desc)
     setattr(this, "s_" + s, li)
@@ -453,122 +273,272 @@ def __register_is_function(cls):
         return isinstance(li, cls)
     setattr(this, "is_" + util.get_class_name(cls), fn)
 
+def __register_alias(*args):
+    for l, o in args:
+        assert isinstance(o, Literal)
+        if isinstance(l, Literal):
+            l = (l,)
+        for _ in l:
+            _.alias(o)
+
+def __register_refer(*args):
+    for l, o in args:
+        assert isinstance(o, Literal)
+        if isinstance(l, Literal):
+            l = (l,)
+        for _ in l:
+            _.refer(o)
+
 def init():
-    if _tree_root.children:
+    if hasattr(this, "_root"):
         return -1
+    setattr(this, "_root", Literal("", None, ""))
+
+    setattr(this, "up", FastLiteral("<UP>", (kbd.UP,), "Go [count] lines upward"))
+    setattr(this, "k", this.up.create_alias("k", None))
+    setattr(this, "down", FastLiteral("<DOWN>", (kbd.DOWN,), "Go [count] lines downward"))
+    setattr(this, "enter", this.down.create_alias("<ENTER>", (kbd.ENTER,)))
+    setattr(this, "j", this.down.create_alias("j", None))
+    setattr(this, "left", FastLiteral("<LEFT>", (kbd.LEFT,), "Go [count] characters to the left"))
+    setattr(this, "bspace", this.left.create_alias("<BACKSPACE>", (kbd.BACKSPACE,)))
+    setattr(this, "bspace2", this.left.create_alias("<BACKSPACE2>", (kbd.BACKSPACE2,)))
+    setattr(this, "h", this.left.create_alias("h", None))
+    setattr(this, "right", FastLiteral("<RIGHT>", (kbd.RIGHT,), "Go [count] characters to the right"))
+    setattr(this, "space", this.right.create_alias("<SPACE>", (kbd.SPACE,)))
+    setattr(this, "l", this.right.create_alias("l", None))
+    setattr(this, "gg", FastLiteral("gg", None, "Go to line [count] (default first line)"))
+    setattr(this, "G", FastLiteral("G", None, "Go to line [count] (default last line)"))
+    setattr(this, "zero", FastLiteral("0", None, "Go to the first character of the line"))
+    setattr(this, "doller", FastLiteral("$", None, "Go to the end of the line. If a count is given go [count]-1 lines downward"))
+    setattr(this, "H", FastLiteral("H", None, "Go to line [count] from top of window"))
+    setattr(this, "M", FastLiteral("M", None, "Go to the middle line of window"))
+    setattr(this, "L", FastLiteral("L", None, "Go to line [count] from bottom of window"))
+    setattr(this, "w", FastLiteral("w", None, "Go to the next printable character"))
+    setattr(this, "b", FastLiteral("b", None, "Go to the previous printable character"))
+    setattr(this, "parens_end", FastLiteral(")", None, "Go to the next zero (\\x00)"))
+    setattr(this, "parens_beg", FastLiteral("(", None, "Go to the previous zero (\\x00)"))
+    setattr(this, "bracket1_end", FastLiteral("}", None, "Go to the next non zero character"))
+    setattr(this, "bracket1_beg", FastLiteral("{", None, "Go to the previous non zero character"))
+    setattr(this, "bracket2_end", FastLiteral("]", None, "End reading buffered [count] value"))
+    setattr(this, "bracket2_beg", FastLiteral("[", None, "Start reading buffered [count] value"))
+    setattr(this, "go", FastLiteral("go", None, "Go to [count] byte in the buffer (default first byte)"))
+    setattr(this, "sh", FastLiteral("sh", None, "Go [count] sectors to the left"))
+    setattr(this, "sbspace", this.sh.create_alias("s<BACKSPACE>", (ord('s'), kbd.BACKSPACE,)))
+    setattr(this, "sbspace2", this.sh.create_alias("s<BACKSPACE2>", (ord('s'), kbd.BACKSPACE2,)))
+    setattr(this, "sl", FastLiteral("sl", None, "Go [count] sectors to the right"))
+    setattr(this, "sspace", this.sl.create_alias("s<SPACE>", (ord('s'), kbd.SPACE,)))
+    setattr(this, "szero", FastLiteral("s0", None, "Go to the first character of the sector"))
+    setattr(this, "sdoller", FastLiteral("s$", None, "Go to the end of the sector. If a count is given go [count]-1 sectors downward"))
+    setattr(this, "sgo", FastLiteral("sgo", None, "Go to [count] sector in the buffer (default first sector)"))
+    setattr(this, "ctrlb", FastLiteral("<CTRL>b", (kbd.ctrl('b'),), "Scroll window [count] pages backward in the buffer"))
+    setattr(this, "ctrlu", FastLiteral("<CTRL>u", (kbd.ctrl('u'),), "Scroll window [count] half pages backward in the buffer"))
+    setattr(this, "ctrlf", FastLiteral("<CTRL>f", (kbd.ctrl('f'),), "Scroll window [count] pages forward in the buffer"))
+    setattr(this, "ctrld", FastLiteral("<CTRL>d", (kbd.ctrl('d'),), "Scroll window [count] half pages forward in the buffer"))
+    setattr(this, "ctrll", FastLiteral("<CTRL>l", (kbd.ctrl('l'),), "Refresh screen"))
+    setattr(this, "ctrlw_w", FastLiteral("<CTRL>ww", (kbd.ctrl('w'), ord('w')), "Change to the next window"))
+    setattr(this, "ctrlw_ctrlw", this.ctrlw_w.create_alias("<CTRL>w<CTRL>w", (kbd.ctrl('w'), kbd.ctrl('w'))))
+    setattr(this, "ctrlw_W", FastLiteral("<CTRL>wW", (kbd.ctrl('w'), ord('W')), "Change to the prev window"))
+    setattr(this, "ctrlw_t", FastLiteral("<CTRL>wt", (kbd.ctrl('w'), ord('t')), "Change to the top window"))
+    setattr(this, "ctrlw_ctrlt", this.ctrlw_t.create_alias("<CTRL>w<CTRL>t", (kbd.ctrl('w'), kbd.ctrl('t'))))
+    setattr(this, "ctrlw_b", FastLiteral("<CTRL>wb", (kbd.ctrl('w'), ord('b')), "Change to the bottom window"))
+    setattr(this, "ctrlw_ctrlb", this.ctrlw_b.create_alias("<CTRL>w<CTRL>b", (kbd.ctrl('w'), kbd.ctrl('b'))))
+    setattr(this, "ctrlw_s", FastLiteral("<CTRL>ws", (kbd.ctrl('w'), ord('s')), "Split current window"))
+    setattr(this, "ctrlw_ctrls", this.ctrlw_s.create_alias("<CTRL>w<CTRL>s", (kbd.ctrl('w'), kbd.ctrl('s'))))
+    setattr(this, "ctrlw_v", FastLiteral("<CTRL>wv", (kbd.ctrl('w'), ord('v')), "Split current window vertically"))
+    setattr(this, "ctrlw_ctrlv", this.ctrlw_v.create_alias("<CTRL>w<CTRL>v", (kbd.ctrl('w'), kbd.ctrl('v'))))
+    setattr(this, "ctrlw_plus", FastLiteral("<CTRL>w+", (kbd.ctrl('w'), ord('+')), "Increase current window height [count] lines"))
+    setattr(this, "ctrlw_minus", FastLiteral("<CTRL>w-", (kbd.ctrl('w'), ord('-')), "Decrease current window height [count] lines"))
+    setattr(this, "ctrlw_c", FastLiteral("<CTRL>wc", (kbd.ctrl('w'), ord('c')), "Close current window"))
+    setattr(this, "ctrlw_o", FastLiteral("<CTRL>wo", (kbd.ctrl('w'), ord('o')), "Make the current window the only one"))
+    setattr(this, "ctrlw_ctrlo", this.ctrlw_o.create_alias("<CTRL>w<CTRL>o", (kbd.ctrl('w'), kbd.ctrl('o'))))
+    setattr(this, "ctrlw_q", FastLiteral("<CTRL>wq", (kbd.ctrl('w'), ord('q')), "Close current window if more than 1 windows exist else quit program"))
+    setattr(this, "tab", FastLiteral("<TAB>", (kbd.TAB,), "Change buffer to the next"))
+    setattr(this, "ctrlg", FastLiteral("<CTRL>g", (kbd.ctrl('g'),), "Print current size and position"))
+    setattr(this, "g_ctrlg", FastLiteral("g<CTRL>g", (ord('g'), kbd.ctrl('g'),), "Print current size and position in sector for block device"))
+    setattr(this, "ctrla", FastLiteral("<CTRL>a", (kbd.ctrl('a'),), "Add [count] to the number at cursor"))
+    setattr(this, "ctrlx", FastLiteral("<CTRL>x", (kbd.ctrl('x'),), "Subtract [count] from the number at cursor"))
+    setattr(this, "ctrlc", FastLiteral("<CTRL>c", (kbd.ctrl('c'),), ""))
+    setattr(this, "period", FastLiteral(".", None, "Repeat last change"))
+    setattr(this, "toggle", FastLiteral("~", None, "Switch case of the [count] characters under and after the cursor"))
+    setattr(this, "ror", FastLiteral(">>", None, "Rotate [count] bits to right"))
+    setattr(this, "rol", FastLiteral("<<", None, "Rotate [count] bits to left"))
+    setattr(this, "bswap", FastLiteral("sb", None, "Swap byte order of [count] characters"))
+    setattr(this, "delete", FastLiteral("<DELETE>", (kbd.DELETE,), "Delete [count] characters under and after the cursor"))
+    setattr(this, "x", this.delete.create_alias("x", None))
+    setattr(this, "d", this.delete.create_alias("d", None))
+    setattr(this, "X", FastLiteral("X", None, "Delete [count] characters before the cursor"))
+    setattr(this, "D", FastLiteral("D", None, "Delete characters under the cursor until the end of buffer"))
+    setattr(this, "u", FastLiteral("u", None, "Undo changes"))
+    setattr(this, "U", FastLiteral("U", None, "Undo all changes"))
+    setattr(this, "ctrlr", FastLiteral("<CTRL>r", (kbd.ctrl('r'),), "Redo changes"))
+    setattr(this, "y", FastLiteral("y", None, "Yank [count] characters"))
+    setattr(this, "Y", FastLiteral("Y", None, "Yank characters under the cursor until the end of buffer"))
+    setattr(this, "P", FastLiteral("P", None, "Put the text before the cursor [count] times"))
+    setattr(this, "p", FastLiteral("p", None, "Put the text after the cursor [count] times"))
+    setattr(this, "O", FastLiteral("O", None, "Replace the text befor the cursor [count] times"))
+    setattr(this, "o", FastLiteral("o", None, "Replace the text after the cursor [count] times"))
+    setattr(this, "ZZ", FastLiteral("ZZ", None, "Like :wq, but write only when changes have been made"))
+    setattr(this, "ZQ", FastLiteral("ZQ", None, "Close current window if more than 1 windows exist else quit program without writing"))
+    setattr(this, "n", FastLiteral("n", None, "Repeat the latest search"))
+    setattr(this, "N", FastLiteral("N", None, "Repeat the latest search toward backward"))
+    setattr(this, "i", FastLiteral("i", None, "Start insert edit mode"))
+    setattr(this, "I", FastLiteral("I", None, "Start insert edit mode at the first byte of buffer"))
+    setattr(this, "a", FastLiteral("a", None, "Start append edit mode"))
+    setattr(this, "A", FastLiteral("A", None, "Start append edit mode at the end of buffer"))
+    setattr(this, "R", FastLiteral("R", None, "Start replace edit mode"))
+    setattr(this, "r", FastLiteral("r", None, "Replace [count] characters under the cursor"))
+    setattr(this, "v", FastLiteral("v", None, "Start/End visual mode"))
+    setattr(this, "V", FastLiteral("V", None, "Start/End line visual mode"))
+    setattr(this, "ctrlv", FastLiteral("<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode"))
+    setattr(this, "escape", FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode"))
+    setattr(this, "resize", FastLiteral('<RESIZE>', (kbd.RESIZE,), ""))
+
+    if kbd.use_alt_block_visual:
+        setattr(this, "", FastLiteral("<CTRL>v<CTRL>v", (kbd.ctrl('v'),), "Start/End block visual mode")) # the first <CTRL>v is ignored
+
+    setattr(this, "reg_reg", RegexLiteral(2, "\"[0-9a-zA-Z\"]", r"^\"[0-9a-zA-Z\"]", "Use register {0-9a-zA-Z\"} for next delete, yank or put (use uppercase character to append with delete and yank)"))
+    setattr(this, "m_reg", RegexLiteral(2, "m[0-9a-zA-Z]", r"^m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers"))
+    setattr(this, "backtick_reg", RegexLiteral(2, "`[0-9a-zA-Z]", r"^`[0-9a-zA-Z]", "Go to marked position"))
+    setattr(this, "q", FastLiteral("q", None, "Stop recording"))
+    setattr(this, "q_reg", StateLiteral(2, "q[0-9a-zA-Z]", r"^q[0-9a-zA-Z]", this.q, "Record typed characters into register"))
+    setattr(this, "atsign_reg", RegexLiteral(2, "@[0-9a-zA-Z]", r"^@[0-9a-zA-Z]", "Execute the contents of register [count] times"))
+    setattr(this, "atsign_at", FastLiteral("@@", None, "Execute the previous @ command [count] times"))
+    setattr(this, "atsign_colon", FastLiteral("@:", None, "Execute the binded command"))
+    setattr(this, "bit_and", RegexLiteral(3, "&[0-9a-fA-F]{2}", r"^&[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise and-ed bytes"))
+    setattr(this, "bit_or", RegexLiteral(3, "|[0-9a-fA-F]{2}", r"^\|[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise or-ed bytes"))
+    setattr(this, "bit_xor", RegexLiteral(3, "^[0-9a-fA-F]{2}", r"^\^[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise xor-ed bytes"))
+
+    setattr(this, "s_e", SlowLiteral(":e", None, "Open a buffer"))
+    setattr(this, "s_bdelete", SlowLiteral(":bdelete", None, "Close a buffer"))
+    setattr(this, "s_bfirst", SlowLiteral(":bfirst", None, "Go to the first buffer in buffer list"))
+    setattr(this, "s_brewind", this.s_bfirst.create_alias(":brewind", None))
+    setattr(this, "s_blast", SlowLiteral(":blast", None, "Go to the last buffer in buffer list"))
+    setattr(this, "s_bnext", SlowLiteral(":bnext", None, "Change buffer to the next"))
+    setattr(this, "s_bprev", SlowLiteral(":bprevious", None, "Change buffer to the previous"))
+    setattr(this, "s_bNext", this.s_bprev.create_alias(":bNext", None))
+    setattr(this, "s_set", SlowLiteral(":set", None, "Set option"))
+    setattr(this, "s_self", SlowLiteral(":self", None, "Print current console instance string"))
+    setattr(this, "s_pwd", SlowLiteral(":pwd", None, "Print the current directory name"))
+    setattr(this, "s_date", SlowLiteral(":date", None, "Print date"))
+    setattr(this, "s_kmod", SlowLiteral(":kmod", None, "Print Python module name for the platform OS"))
+    setattr(this, "s_fobj", SlowLiteral(":fobj", None, "Print Python object name of the current buffer"))
+    setattr(this, "s_bufsiz", SlowLiteral(":bufsiz", None, "Print temporary buffer size"))
+    setattr(this, "s_meminfo", SlowLiteral(":meminfo", None, "Print free/total physical memory"))
+    setattr(this, "s_osdep", SlowLiteral(":osdep", None, "Print OS dependent information"))
+    setattr(this, "s_screen", SlowLiteral(":screen", None, "Print screen information"))
+    setattr(this, "s_platform", SlowLiteral(":platform", None, "Print platform"))
+    setattr(this, "s_hostname", SlowLiteral(":hostname", None, "Print hostname"))
+    setattr(this, "s_term", SlowLiteral(":term", None, "Print terminal type"))
+    setattr(this, "s_lang", SlowLiteral(":lang", None, "Print locale type"))
+    setattr(this, "s_sector", SlowLiteral(":sector", None, "Print sector size for block device"))
+    setattr(this, "s_version", SlowLiteral(":version", None, "Print version"))
+    setattr(this, "s_argv", SlowLiteral(":argv", None, "Print arguments of this program"))
+    setattr(this, "s_args", SlowLiteral(":args", None, "Print buffer list with the current buffer in brackets"))
+    setattr(this, "s_md5", SlowLiteral(":md5", None, "Print md5 message digest of the current buffer"))
+    setattr(this, "s_cmp", SlowLiteral(":cmp", None, "Compare two buffers and go to the first non matching byte"))
+    setattr(this, "s_cmpneg", SlowLiteral(":cmp!", None, "Compare two buffers and go to the first matching byte"))
+    setattr(this, "s_cmpnext", SlowLiteral(":cmpnext", None, "Compare two buffers starting from the next byte and go to the first non matching byte"))
+    setattr(this, "s_cmpnextneg", SlowLiteral(":cmpnext!", None, "Compare two buffers starting from the next byte and go to the first matching byte"))
+    setattr(this, "s_cmpr", SlowLiteral(":cmpr", None, "Compare two buffers from the end and go to the first non matching byte"))
+    setattr(this, "s_cmprneg", SlowLiteral(":cmpr!", None, "Compare two buffers from the end and go to the first matching byte"))
+    setattr(this, "s_cmprnext", SlowLiteral(":cmprnext", None, "Compare two buffers starting from the previous byte and go to the first non matching byte"))
+    setattr(this, "s_cmprnextneg", SlowLiteral(":cmprnext!", None, "Compare two buffers starting from the previous byte and go to the first matching byte"))
+    setattr(this, "s_delmarks", SlowLiteral(":delmarks", None, "Delete the specified marks"))
+    setattr(this, "s_delmarksneg", SlowLiteral(":delmarks!", None, "Delete all marks for the current buffer except for uppercase marks"))
+    setattr(this, "s_split", SlowLiteral(":split", None, "Split current window"))
+    setattr(this, "s_vsplit", SlowLiteral(":vsplit", None, "Split current window vertically"))
+    setattr(this, "s_close", SlowLiteral(":close", None, "Close current window"))
+    setattr(this, "s_only", SlowLiteral(":only", None, "Make the current window the only one"))
+    setattr(this, "s_w", SlowLiteral(":w", None, "Write the whole buffer to the file"))
+    setattr(this, "s_wneg", SlowLiteral(":w!", None, "Like :w, but overwrite an existing file"))
+    setattr(this, "s_wq", SlowLiteral(":wq", None, "Write the current file and quit"))
+    setattr(this, "s_x", SlowLiteral(":x", None, "Like :wq, but write only when changes have been made"))
+    setattr(this, "s_q", SlowLiteral(":q", None, "Close current window if more than 1 windows exist else quit program"))
+    setattr(this, "s_qneg", SlowLiteral(":q!", None, "Close current window if more than 1 windows exist else quit program without writing"))
+    setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
+    setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
+    setattr(this, "s_fsearch", SearchLiteral('/', None, "Search forward"))
+    setattr(this, "s_rsearch", SearchLiteral('?', None, "Search backward"))
+
+    setattr(this, "s_set_binary", ArgLiteral("binary", None, "Set binary edit mode (unset ascii edit mode)"))
+    setattr(this, "s_set_ascii", ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)"))
+    setattr(this, "s_set_le", ArgLiteral("le", None, "Set endianness to little (unset big endian if set)"))
+    setattr(this, "s_set_be", ArgLiteral("be", None, "Set endianness to big (unset little endian if set)"))
+    setattr(this, "s_set_ws", ArgLiteral("ws", None, "Set wrapscan mode (search wrap around the end of the buffer)"))
+    setattr(this, "s_set_nows", ArgLiteral("nows", None, "Unset wrapscan mode"))
+    setattr(this, "s_set_ic", ArgLiteral("ic", None, "Set ic mode (ignore the case of alphabets on search)"))
+    setattr(this, "s_set_noic", ArgLiteral("noic", None, "Unset ic mode"))
+    setattr(this, "s_set_si", ArgLiteral("si", None, "Set SI prefix mode (kilo equals 10^3)"))
+    setattr(this, "s_set_nosi", ArgLiteral("nosi", None, "Unset SI prefix mode (kilo equals 2^10)"))
+    setattr(this, "s_set_address", ArgLiteral("address", None, "Set address radix to {16,10,8}"))
+    setattr(this, "s_set_status", ArgLiteral("status", None, "Set buffer size and current position radix to {16,10,8}"))
+    setattr(this, "s_set_bpl", ArgLiteral("bytes_per_line", None, "Set bytes_per_line to {[0-9]+,\"max\",\"min\",\"auto\"}"))
+    setattr(this, "s_set_bpl_", this.s_set_bpl.create_alias("bpl", None))
+    setattr(this, "s_set_bpw", ArgLiteral("bytes_per_window", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}"))
+    setattr(this, "s_set_bpw_", this.s_set_bpw.create_alias("bpw", None))
 
     for _ in util.iter_site_ext_module():
         fn = getattr(_, "get_text", None)
         if fn:
-            __register_ext_literal(_, fn)
+            __alloc_ext_literals(_, fn)
 
     for _ in util.iter_dir_values(this):
-        if isinstance(_, Literal):
-            _.init()
         if util.is_subclass(_, Literal):
             __register_is_function(_)
 
-    # alias
-    k.alias(up)
-    enter.alias(
-        j.alias(down))
-    bspace2.alias(
-        bspace.alias(
-            h.alias(left)))
-    space.alias(
-        l.alias(right))
-    sbspace2.alias(
-        sbspace.alias(sh))
-    sspace.alias(sl)
-    ctrlw_ctrlw.alias(ctrlw_w)
-    ctrlw_ctrlt.alias(ctrlw_t)
-    ctrlw_ctrlb.alias(ctrlw_b)
-    ctrlw_ctrls.alias(ctrlw_s)
-    ctrlw_ctrlv.alias(ctrlw_v)
-    ctrlw_c.alias(s_close)
-    ctrlw_ctrlo.alias(
-        ctrlw_o.alias(s_only))
-    ctrlw_q.alias(s_q)
-    tab.alias(s_bnext)
-    d.alias(
-        x.alias(delete))
-    ZZ.alias(s_x)
-    ZQ.alias(s_qneg)
-    s_brewind.alias(s_bfirst)
-    s_bNext.alias(s_bprev)
-    s_set_bpw_.alias(
-        s_set_bpw.refer(s_set))
-    s_set_bpl_.alias(
-        s_set_bpl.refer(s_set))
+    __register_alias(
+        (this.ctrlw_c, this.s_close),
+        (this.ctrlw_o, this.s_only),
+        (this.ctrlw_q, this.s_q),
+        (this.tab, this.s_bnext),
+        (this.ZZ, this.s_x),
+        (this.ZQ, this.s_qneg),)
 
-    # refer
-    gg.refer(G)
-    doller.refer(zero)
-    L.refer(
-        M.refer(H))
-    b.refer(w)
-    bracket2_beg.refer(
-        bracket2_end.refer(
-            bracket1_beg.refer(
-                bracket1_end.refer(
-                    parens_beg.refer(parens_end)))))
-    ctrlu.refer(ctrlb)
-    ctrld.refer(ctrlf)
-    ctrlv.refer(
-        V.refer(v))
-    g_ctrlg.refer(ctrlg)
-    rol.refer(ror)
-    y.refer(Y)
-    p.refer(P)
-    o.refer(O)
-    n.refer(N)
-    r.refer(
-        R.refer(
-            A.refer(
-                a.refer(
-                    I.refer(i)))))
-    backtick_reg.refer(m_reg)
-    q.refer(q_reg)
-    atsign_at.refer(atsign_reg)
-    bit_xor.refer(
-        bit_or.refer(bit_and))
-    s_bdelete.refer(s_e)
-    s_cmpneg.refer(s_cmp)
-    s_delmarksneg.refer(s_delmarks)
-    s_rsearch.refer(s_fsearch)
-    s_set_ascii.refer(
-        s_set_binary.refer(s_set))
-    s_set_be.refer(
-        s_set_le.refer(s_set))
-    s_set_nows.refer(
-        s_set_ws.refer(s_set))
-    s_set_noic.refer(
-        s_set_ic.refer(s_set))
-    s_set_nosi.refer(
-        s_set_si.refer(s_set))
-    s_set_status.refer(
-        s_set_address.refer(s_set))
+    __register_refer(
+        (this.gg, this.G),
+        (this.doller, this.zero),
+        ((this.L, this.M), this.H),
+        (this.b, this.w),
+        ((this.bracket2_beg, this.bracket2_end, this.bracket1_beg, this.bracket1_end, this.parens_beg), this.parens_end),
+        (this.ctrlu, this.ctrlb),
+        (this.ctrld, this.ctrlf),
+        ((this.ctrlv, this.V), this.v),
+        (this.g_ctrlg, this.ctrlg),
+        (this.rol, this.ror),
+        (this.y, this.Y),
+        (this.p, this.P),
+        (this.o, this.O),
+        (this.n, this.N),
+        ((this.r, this.R, this.A, this.a, this.I), this.i),
+        (this.backtick_reg, this.m_reg),
+        (this.q, this.q_reg),
+        (this.atsign_at, this.atsign_reg),
+        ((this.bit_xor, this.bit_or), this.bit_and),
+        (this.s_bdelete, this.s_e),
+        (this.s_cmpneg, this.s_cmp),
+        (this.s_delmarksneg, this.s_delmarks),
+        (this.s_rsearch, this.s_fsearch),
+        ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw), this.s_set),)
 
-    def fn(l, o, cls):
+    def __scan(l, o, cls):
         for li in sorted(o.children):
             if isinstance(li, cls):
                 l.append(li)
-            fn(l, li, cls)
-        return tuple(l)
+            __scan(l, li, cls)
 
     for cls in Literal, FastLiteral, SlowLiteral, ArgLiteral, ExtLiteral:
-        _literals[cls] = fn([], _tree_root, cls)
-    _literals[None] = tuple(sorted(get_literals()))
+        l = []
+        __scan(l, this._root, cls)
+        _ld[cls] = tuple(l)
+    _ld[None] = tuple(sorted(get_literals()))
 
 def cleanup():
-    if not _tree_root.children:
+    if not hasattr(this, "_root"):
         return -1
-
     for s, o in util.iter_dir_items(this):
         if this.is_Literal(o):
             o.cleanup()
-        if this.is_ExtLiteral(o):
             delattr(this, s)
-    _literals.clear()
+    _ld.clear()
 
 this = sys.modules[__name__]
