@@ -1000,21 +1000,32 @@ class Container (object):
         panel.address_num_width = width
         return orig
 
+    def __set_address_num_double(self):
+        # turn on double space if there is a partial buffer
+        for o in self.__fileobjs:
+            if o.get_mapping_offset():
+                panel.address_num_double = True
+                break
+        else:
+            panel.address_num_double = False
+
     def update_address_num_width(self):
         width = panel.address_num_width
         min_width = panel.get_min_address_num_width()
         assert width >= min_width, width
+        self.__set_address_num_double()
+
         fmt = {
             16: "{0:X}",
             10: "{0:d}",
             8 : "{0:o}",
-        }.get(setting.address_num_radix)
+        }.get(setting.address_radix)
         n = max([o.get_size() for o in self.__fileobjs])
         if n > 0:
             n -= 1
         s = fmt.format(n)
 
-        l = [2 ** i for i in range(10)] # max 512 (large enough)
+        l = [2 * i for i in range(100)] # max 200 (large enough)
         l = [x for x in l if x >= min_width]
 
         if len(s) > width:

@@ -57,7 +57,7 @@ class Fileobj (rrbuf.Fileobj):
         if iosize >= self.get_chunk_size():
             return True
         self.__count += 1
-        if self.__count == setting.rwbuf_chunk_balance_interval:
+        if self.__count == setting.buffer_chunk_balance_interval:
             self.__count = 0
             return True
         else:

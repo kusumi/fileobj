@@ -101,13 +101,13 @@ class Fileobj (rrbuf.Fileobj, vm.methods):
             return buf[r:]
 
     def replace(self, x, l, rec=True):
-        if setting.use_rrvm_sync_on_edit:
+        if setting.use_vm_sync_on_edit:
             self.test_access()
         if x + len(l) > self.get_size():
             l = l[:self.get_size() - x]
 
         super(Fileobj, self).replace(x, l, rec)
-        if setting.use_rrvm_sync_on_edit:
+        if setting.use_vm_sync_on_edit:
             self.__sync_buffer(x, len(l))
         else:
             ll = x, len(l)

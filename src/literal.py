@@ -464,7 +464,7 @@ def init():
     setattr(this, "s_set_ascii", ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)"))
     setattr(this, "s_set_le", ArgLiteral("le", None, "Set endianness to little (unset big endian if set)"))
     setattr(this, "s_set_be", ArgLiteral("be", None, "Set endianness to big (unset little endian if set)"))
-    setattr(this, "s_set_ws", ArgLiteral("ws", None, "Set wrapscan mode (search wrap around the end of the buffer)"))
+    setattr(this, "s_set_ws", ArgLiteral("ws", None, "Set wrapscan mode (search wraps around the end of the buffer)"))
     setattr(this, "s_set_nows", ArgLiteral("nows", None, "Unset wrapscan mode"))
     setattr(this, "s_set_ic", ArgLiteral("ic", None, "Set ic mode (ignore the case of alphabets on search)"))
     setattr(this, "s_set_noic", ArgLiteral("noic", None, "Unset ic mode"))

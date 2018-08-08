@@ -327,8 +327,8 @@ def get_page_size():
         return -1
 
 def get_buffer_size():
-    if setting.buffer_size != -1:
-        return setting.buffer_size
+    if setting.temp_size != -1:
+        return setting.temp_size
     o = get_kernel_module()
     if o:
         return o.get_buffer_size()

@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "July 25, 2018" "FILEOBJ 0.7.73"
+.TH FILEOBJ 1 "August 7, 2018" "FILEOBJ 0.7.74"
 .nh
 .ad l
 .SH NAME
@@ -56,18 +56,8 @@ Use read\-only mode.
 .PP
 \fB\-B\fP
 .RS 4
-Use Python bytes based buffer for regular files instead of the default \fBmmap\fP\|(2) based buffer.
-This option is required to resize (i.e. insert or delete) regular files on platforms without \fBmremap\fP\|(2).
-.RE
-.PP
-\fB\-d\fP
-.RS 4
-Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
-.RE
-.PP
-\fB\-x\fP
-.RS 4
-Show the buffer size and current position in hexadecimal.
+Use Python bytes based buffer for regular files.
+This option is required to insert or delete bytes on some platforms.
 .RE
 .PP
 \fB\-o\fP=[\fI<number_of_windows>\fP]
@@ -84,7 +74,7 @@ When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 .PP
 \fB\-\-bytes_per_line\fP=\fI<bytes_per_line>\fP, \fB\-\-bpl\fP=\fI<bytes_per_line>\fP
 .RS 4
-Set fixed number of bytes printed per line.
+Set number of bytes printed per line.
 Each line prints \fI<bytes_per_line>\fP bytes.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
@@ -93,11 +83,11 @@ Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 .PP
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
 .RS 4
-Set fixed number of bytes printed per window.
+Set number of bytes printed per window.
 Each window prints \fI<bytes_per_window>\fP bytes.
 This option sets number of lines printed per window, based on the number of bytes printed per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-"even" does not set a fixed number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
+"even" does not set number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
 "auto" is used by default.
 .RE
 .PP
@@ -117,22 +107,9 @@ Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magent
 This option is not supported on VTxxx terminal emulators.
 .RE
 .PP
-\fB\-\-verbose_window\fP
-.RS 4
-Use verbose status window instead of the default format.
-.RE
-.PP
-\fB\-\-backup\fP
-.RS 4
-Explicitly create backup files for regular files.
-Backup files are created under \fI~/.fileobj\fP when \fBfileobj\fP\|(1) starts, and removed when \fBfileobj\fP\|(1) terminates.
-Backup files start with '.'.
-This option only applies to regular files.
-.RE
-.PP
 \fB\-\-force\fP
 .RS 4
-Ignore warnings which can be ignored by specifying this option.
+Ignore warnings which can be ignored.
 .RE
 .PP
 \fB\-\-test_screen\fP
@@ -142,15 +119,103 @@ Enter \fBncurses\fP\|(3) screen test mode.
 .PP
 \fB\-\-command\fP
 .RS 4
-Print list of editor commands and exit.
+Print list of editor commands and exit. Also see \fB:help\fP.
 .RE
 .PP
 \fB\-\-sitepkg\fP
 .RS 4
 Print \fBpython\fP\|(1) site\-package directory and exit.
 .RE
-.SH COMMANDS
-See \fB\-\-command\fP option in \fBOPTIONS\fP.
+.SH ENVIRONMENT VARIABLES
+.PP
+\fBFILEOBJ_USE_READONLY\fP
+.RS 4
+If defined, use read\-only mode (equivalent to \fB\-R\fP).
+.RE
+.PP
+\fBFILEOBJ_USE_BYTES_BUFFER\fP
+.RS 4
+If defined, use Python bytes based buffer for regular files (equivalent to \fB\-B\fP).
+.RE
+.PP
+\fBFILEOBJ_USE_ASCII_EDIT\fP
+.RS 4
+If defined, use ASCII edit mode (equivalent to \fB:set ascii\fP).
+Defaults to binary edit mode if undefined.
+.RE
+.PP
+\fBFILEOBJ_USE_IGNORECASE\fP
+.RS 4
+If defined, search operation is case-insensitive (equivalent to \fB:set ic\fP).
+Defaults to case-sensitive if undefined.
+.RE
+.PP
+\fBFILEOBJ_USE_SIPREFIX\fP
+.RS 4
+If defined, use 10^3(K) for kilo (equivalent to \fB:set si\fP).
+Defaults to 2^10(Ki) if undefined.
+.RE
+.PP
+\fBFILEOBJ_USE_WRAPSCAN\fP
+.RS 4
+If defined, search wraps around the end of the buffer (equivalent to \fB:set ws\fP).
+Defaults to no wrap around if undefined.
+.RE
+.PP
+\fBFILEOBJ_USE_VERBOSE_WINDOW\fP
+.RS 4
+If defined, use verbose status window instead of the default format.
+.RE
+.PP
+\fBFILEOBJ_USE_BACKUP\fP
+.RS 4
+If defined, create backup files under \fI~/.fileobj\fP.
+Backup files start with '.'.
+Only applies to regular files.
+.RE
+.PP
+\fBFILEOBJ_USE_FORCE\fP
+.RS 4
+If defined, ignore warnings which can be ignored (equivalent to \fB\-\-force\fP).
+.RE
+.PP
+\fBFILEOBJ_ENDIANNESS\fP
+.RS 4
+If set to "little" or "big", set endianness for multi-bytes data (equivalent to \fB:set le\fP and \fB:set be\fP).
+Defaults to host endian if undefined.
+.RE
+.PP
+\fBFILEOBJ_ADDRESS_RADIX\fP
+.RS 4
+If set to "16", "10" or "8", show numbers in editor window in either hexadecimal, decimal or octal.
+Defaults to "16" if undefined.
+.RE
+.PP
+\fBFILEOBJ_STATUS_RADIX\fP
+.RS 4
+If set to "16", "10" or "8", show numbers in status window in either hexadecimal, decimal or octal.
+Defaults to "10" if undefined.
+.RE
+.PP
+\fBFILEOBJ_BYTES_PER_LINE\fP
+.RS 4
+Set number of bytes printed per line (equivalent to \fB\-\-bytes_per_line\fP and \fB:set bytes_per_line\fP).
+.RE
+.PP
+\fBFILEOBJ_BYTES_PER_WINDOW\fP
+.RS 4
+Set number of bytes printed per window (equivalent to \fB\-\-bytes_per_window\fP and \fB:set bytes_per_window\fP).
+.RE
+.PP
+\fBFILEOBJ_COLOR_FG\fP
+.RS 4
+Set foreground color of the terminal (equivalent to \fB\-\-fg\fP).
+.RE
+.PP
+\fBFILEOBJ_COLOR_BG\fP
+.RS 4
+Set background color of the terminal (equivalent to \fB\-\-bg\fP).
+.RE
 .SH FILES
 .PP
 \fI~/.fileobj\fP
@@ -160,7 +225,7 @@ A directory automatically created by \fBfileobj\fP\|(1).
 .PP
 \fI~/.fileobj/cstruct\fP
 .RS 4
-A default path for configuration file for \fB:cstruct\fP command.
+A default path for configuration file for \fB:cstruct\fP.
 .RE
 .PP
 \fI~/.fileobj/history\fP
@@ -185,7 +250,7 @@ A JSON file contains session information.
 .PP
 \fI~/.fileobj/.YYYY\-MM\-DD\-HH:MM:SS.path\-to\-file.bak\fP
 .RS 4
-Temporary backup file format for \fB\-\-backup\fP option.
+Temporary backup file format.
 .RE
 .SH RESOURCE
 .PD 0

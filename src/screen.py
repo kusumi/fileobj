@@ -106,8 +106,8 @@ def update_size():
         x, y = shutil.get_terminal_size() # portable ???
     else:
         y, x = kernel.get_terminal_size()
-    y = __override_size(y, terminal.height)
-    x = __override_size(x, terminal.width)
+    y = __override_size(y, setting.terminal_height)
+    x = __override_size(x, setting.terminal_width)
     if y > 0 and x > 0:
         _size.set(y, x)
     else:
@@ -115,7 +115,7 @@ def update_size():
         return -1
 
 def __override_size(term_size, cfg_size):
-    if cfg_size <= 0: # config could be 0 or -2
+    if cfg_size <= 0:
         return term_size
     if term_size == -1:
         return cfg_size

@@ -51,16 +51,8 @@ Use read\-only mode.
 """)
 
 B = _("""
-Use Python bytes based buffer for regular files instead of the default \fBmmap\fP\|(2) based buffer.
-This option is required to resize (i.e. insert or delete) regular files on platforms without \fBmremap\fP\|(2).
-""")
-
-d = _("""
-Show the buffer offset from \fIoffset\fP to \fIoffset+length\fP rather than from \fI0\fP to \fIlength\fP, when the buffer is partially loaded.
-""")
-
-x = _("""
-Show the buffer size and current position in hexadecimal.
+Use Python bytes based buffer for regular files.
+This option is required to insert or delete bytes on some platforms.
 """)
 
 o = _("""
@@ -76,7 +68,7 @@ When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 O_metavar = _metavar("number_of_windows")
 
 bytes_per_line = _("""
-Set fixed number of bytes printed per line.
+Set number of bytes printed per line.
 Each line prints \fI<bytes_per_line>\fP bytes.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
@@ -85,11 +77,11 @@ Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 bytes_per_line_metavar = _metavar("bytes_per_line")
 
 bytes_per_window = _("""
-Set fixed number of bytes printed per window.
+Set number of bytes printed per window.
 Each window prints \fI<bytes_per_window>\fP bytes.
 This option sets number of lines printed per window, based on the number of bytes printed per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-"even" does not set a fixed number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
+"even" does not set number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
 "auto" is used by default.
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
@@ -110,19 +102,8 @@ This option is not supported on VTxxx terminal emulators.
 """)
 bg_metavar = _metavar("color")
 
-verbose_window = _("""
-Use verbose status window instead of the default format.
-""")
-
-backup = _("""
-Explicitly create backup files for regular files.
-Backup files are created under \fI~/.fileobj\fP when \fBfileobj\fP starts, and removed when \fBfileobj\fP terminates.
-Backup files start with '.'.
-This option only applies to regular files.
-""")
-
 force = _("""
-Ignore warnings which can be ignored by specifying this option.
+Ignore warnings which can be ignored.
 """)
 
 test_screen = _("""
@@ -130,7 +111,7 @@ Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
 command = _("""
-Print list of editor commands and exit.
+Print list of editor commands and exit. Also see \fB:help\fP.
 """)
 
 sitepkg = _("""

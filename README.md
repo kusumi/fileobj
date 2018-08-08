@@ -1,4 +1,4 @@
-# fileobj ([v0.7.73](https://github.com/kusumi/fileobj/releases/tag/v0.7.73))
+# fileobj ([v0.7.74](https://github.com/kusumi/fileobj/releases/tag/v0.7.74))
 
 ## About
 
@@ -34,7 +34,7 @@
 
 ## Uninstall
 
-+ Remove files listed in *install.out* which was generated on installation.
++ Remove files listed in *install.out* from installation.
 
 + Remove the manpage if installed.
 
@@ -51,8 +51,6 @@
 + Upstream [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
 
 + Repository [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
-
-## [Reporting issues](https://github.com/kusumi/fileobj/issues)
 
 ## [Notes](doc/README.notes.md)
 

@@ -123,7 +123,7 @@ def is_running_fileobj():
 def is_running_profile():
     return is_running_script("profile")
 
-def is_executable():
+def is_builtin_script():
     return is_running_fileobj() or is_running_profile()
 
 _key_cnt = 0
@@ -663,7 +663,7 @@ def creat_backup(f, timestamp=""):
             x = x[1:]
         x = "{0}.{1}.bak".format(timestamp, x)
         dst = os.path.join(setting.get_user_dir(), x)
-        shutil.copy(f, dst) # not copy2 (don't preserve ctime/mtime)
+        shutil.copy2(f, dst) # preserve ctime/mtime
         if setting.use_debug:
             siz = os.stat(f).st_size
             if siz < 10 * MiB:

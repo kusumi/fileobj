@@ -78,7 +78,7 @@ class Fileobj (fileobj.Fileobj):
         self.__size = size
 
     def get_chunk_size(self):
-        ret = setting.robuf_chunk_size
+        ret = setting.buffer_chunk_size
         if ret != -1:
             return ret
         else:

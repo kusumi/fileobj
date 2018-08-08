@@ -146,11 +146,14 @@ class text_addon (object):
 class Canvas (_panel):
     def __init__(self, siz, pos):
         super(Canvas, self).__init__(siz, pos)
-        self.update()
+        self.__update()
         self.fileops = None
 
     def update(self):
         super(Canvas, self).update()
+        self.__update()
+
+    def __update(self):
         self.cell = self.get_cell() # size, distance
         self.offset = util.Pair(*self.get_offset())
         self.bufmap = util.Pair()
@@ -418,18 +421,32 @@ class DisplayCanvas (Canvas):
 class BinaryCanvas (DisplayCanvas, binary_addon):
     def __init__(self, siz, pos):
         super(BinaryCanvas, self).__init__(siz, pos)
-        self.update()
+        self.__update()
 
     def update(self):
         super(BinaryCanvas, self).update()
+        self.__update()
+
+    def __update(self):
         self.__cstr = {
             16: "{0:02X}",
             10: "{0:02d}",
             8 : "{0:02o}", }
+        lstr_fmt = {
+            16: ":0{0}X".format(address_num_width),
+            10: ":{0}d".format(address_num_width),
+            8 : ":0{0}o".format(address_num_width), }
         self.__lstr = {
-            16: "{{0:0{0}X}}".format(address_num_width),
-            10: "{{0:{0}d}}".format(address_num_width),
-            8 : "{{0:0{0}o}}".format(address_num_width), }
+            16: "{{0{0}}}".format(lstr_fmt[16]),
+            10: "{{0{0}}}".format(lstr_fmt[10]),
+            8: "{{0{0}}}".format(lstr_fmt[8]), }
+        self.__lstr_single = self.__lstr
+        if address_num_double:
+            self.offset.x += (1 + address_num_width) # oooo|oooo
+            self.__lstr = {
+                16: "{{0{0}}}|{{1{0}}}".format(lstr_fmt[16]),
+                10: "{{0{0}}}|{{1{0}}}".format(lstr_fmt[10]),
+                8: "{{0{0}}}|{{1{0}}}".format(lstr_fmt[8]), }
 
     def get_form_single(self, x):
         return "{0:02X}".format(filebytes.ord(x) & 0xFF)
@@ -508,13 +525,19 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.address_num_radix].format(n)
+        return self.__cstr[setting.address_radix].format(n)
 
     def __get_line_posstr(self, n):
-        if setting.use_address_num_offset:
-            n += self.fileops.get_mapping_offset()
-        return self.__lstr[setting.address_num_radix].format(
-            n)[-address_num_width:]
+        fmt = self.__lstr[setting.address_radix]
+        offset = self.fileops.get_mapping_offset()
+        if not address_num_double:
+            s = fmt.format(n)
+        elif not offset: # other buffer(s) need double space
+            fmt_single = self.__lstr_single[setting.address_radix]
+            s = "{0} {1}".format(' ' * address_num_width, fmt_single.format(n))
+        else:
+            s = fmt.format(n + offset, n)
+        return s[-(self.offset.x - 1):]
 
 class TextCanvas (DisplayCanvas, text_addon):
     def __init__(self, siz, pos):
@@ -572,17 +595,24 @@ class TextCanvas (DisplayCanvas, text_addon):
         self.printl(0, self.offset.x, s, screen.A_UNDERLINE)
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.address_num_radix].format(n)[-1]
+        return self.__cstr[setting.address_radix].format(n)[-1]
 
 class StatusCanvas (Canvas, default_addon):
     def __init__(self, siz, pos):
         super(StatusCanvas, self).__init__(siz, pos)
+        self.__update()
+
+    def update(self):
+        super(StatusCanvas, self).update()
+        self.__update()
+
+    def __update(self):
         self.__nstr = {
             16: "0x{0:X}",
             10: "{0:d}",
             8 : "0{0:o}", }
         self.__cur_size = 0
-        self.__cur_fmt = self.__get_size_format()
+        self.__update_size_format()
 
     def get_static_info(self):
         s = ''
@@ -603,13 +633,14 @@ class StatusCanvas (Canvas, default_addon):
 
         offset = self.fileops.get_mapping_offset()
         length = self.fileops.get_mapping_length()
-        fmt = self.__nstr[setting.status_num_radix]
+        fmt = self.__nstr[setting.status_radix] # XXX not static
         if offset or length:
-            s += " @"
+            s += "[@"
             s += fmt.format(offset)
             if length:
                 s += "-"
                 s += fmt.format(offset + length)
+            s += "]"
         if self.fileops.is_readonly():
             s += " [RO]"
         return s
@@ -635,19 +666,28 @@ class StatusCanvas (Canvas, default_addon):
             return "   "
 
     def get_status_common2(self):
-        fmt = self.__nstr[setting.status_num_radix]
+        offset = self.fileops.get_mapping_offset()
+        fmt = self.__nstr[setting.status_radix]
         siz = fmt.format(self.fileops.get_size())
         pos = fmt.format(self.fileops.get_pos())
         per = "{0:.1f}".format(self.fileops.get_pos_percentage())
         if per.endswith(".0"):
             per = per[:-2]
+
         # Update the format for e.g. on transition from 99 -> 100.
         # This also means self.__cur_fmt is formatted with the largest
         # file opened in *this* status canvas.
         if len(str(self.fileops.get_size())) > len(str(self.__cur_size)):
             self.__cur_size = self.fileops.get_size()
-            self.__cur_fmt = self.__get_size_format()
-        return self.__cur_fmt.format(siz, per, pos)
+            self.__update_size_format()
+
+        if not address_num_double:
+            return self.__cur_fmt.format(siz, per, pos)
+        elif not offset: # other buffer(s) need double space
+            return self.__cur_fmt_single.format(siz, per, pos)
+        else:
+            pos_abs = fmt.format(offset + self.fileops.get_pos())
+            return self.__cur_fmt.format(siz, per, pos_abs, pos)
 
     def get_status_common3(self):
         c = self.fileops.read(self.fileops.get_pos(), 1)
@@ -657,9 +697,13 @@ class StatusCanvas (Canvas, default_addon):
         return "hex=0x{0:02X} oct=0{1:03o} dec={2:3d} char={3}".format(n, n, n,
             ascii.get_symbol(n))
 
-    def __get_size_format(self):
+    def __update_size_format(self):
         n = len(str(self.__cur_size))
-        return "{{0:>{0}}}[B] {{1:>5}}% {{2:>{1}}}".format(n, n)
+        self.__cur_fmt = "{{0:>{0}}}[B] {{1:>5}}% {{2:>{1}}}".format(n, n)
+        self.__cur_fmt_single = self.__cur_fmt
+        if address_num_double:
+            self.__cur_fmt = \
+                "{{0:>{0}}}[B] {{1:>5}}% {{2:>{1}}}|{{3:>{2}}}".format(n, n, n)
 
 class VerboseStatusCanvas (StatusCanvas):
     def set_buffer(self, fileops):
@@ -744,8 +788,9 @@ class SingleStatusCanvas (StatusCanvas):
 def get_min_address_num_width():
     return 4 # 65536 bytes buffer
 
-# XXX needs to be per workspace for vertical split
+# needs to be per workspace for vertical split to support different width
 address_num_width = get_min_address_num_width()
+address_num_double = False
 
 def get_status_frame_class():
     if setting.use_status_window_frame:
@@ -754,7 +799,7 @@ def get_status_frame_class():
         return NullStatusFrame
 
 def get_status_canvas_class():
-    if setting.use_verbose_status_window:
+    if setting.use_status_window_verbose:
         return VerboseStatusCanvas
     else:
         return SingleStatusCanvas

@@ -95,31 +95,21 @@ def dispatch(optargs=None):
         suppress_help = argparse.SUPPRESS
     parser = argparse.ArgumentParser(usage=usage.help)
 
-    parser.add_argument("-R", action="store_true", default=False, help=usage.R)
-    parser.add_argument("-B", action="store_true", default=False, help=usage.B)
-    parser.add_argument("-d", action="store_true", default=False, help=usage.d)
-    parser.add_argument("-x", action="store_true", default=False, help=usage.x)
+    parser.add_argument("-R", action="store_true", default=setting.use_readonly, help=usage.R)
+    parser.add_argument("-B", action="store_true", default=setting.use_bytes_buffer, help=usage.B)
     parser.add_argument("-o", nargs="?", type=int, const=-1, metavar=usage.o_metavar, help=usage.o)
     parser.add_argument("-O", nargs="?", type=int, const=-1, metavar=usage.O_metavar, help=usage.O)
-
     parser.add_argument("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
     parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
     parser.add_argument("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_argument("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_argument("--verbose_window", action="store_true", default=(setting.use_verbose_status_window and setting.use_status_window_frame), help=usage.verbose_window)
-    parser.add_argument("--backup", action="store_true", default=setting.use_backup, help=usage.backup)
     parser.add_argument("--force", action="store_true", default=setting.use_force, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
     parser.add_argument("--version", action="version", version=version.__version__)
-
-    parser.add_argument("args", nargs="*", help=suppress_help)
-
-    # hidden options
     parser.add_argument("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
-    parser.add_argument("--terminal_height", type=int, default=-1, metavar="<terminal_height>", help=suppress_help)
-    parser.add_argument("--terminal_width", type=int, default=-1, metavar="<terminal_width>", help=suppress_help)
+    parser.add_argument("args", nargs="*", help=suppress_help) # optargs
 
     for s in allocator.iter_module_name():
         parser.add_argument("--" + s, action="store_true", default=False, help=suppress_help)
@@ -179,10 +169,6 @@ def dispatch(optargs=None):
         setting.use_readonly = True
     if opts.B:
         allocator.set_default_buffer_class()
-    if opts.d:
-        setting.use_address_num_offset = True
-    if opts.x:
-        setting.status_num_radix = 16
     if opts.o is not None:
         if opts.o == -1:
             wspnum = len(args)
@@ -195,20 +181,11 @@ def dispatch(optargs=None):
             wspnum = opts.O
     else:
         wspnum = 1
-    if opts.verbose_window:
-        setting.use_verbose_status_window = True
-        setting.use_status_window_frame = True
     if kernel.is_vtxxx() and (opts.fg or opts.bg):
         msg[1] = "Terminal color unsupported on {0}".format(
             kernel.get_term_info())
         opts.fg = None
         opts.bg = None
-
-    # hidden options
-    if opts.terminal_height > 0:
-        screen.terminal.height = opts.terminal_height
-    if opts.terminal_width > 0:
-        screen.terminal.width = opts.terminal_width
 
     l = []
     for _ in env.iter_defined_env():
@@ -272,7 +249,7 @@ def dispatch(optargs=None):
                 __error("{0} exceeds soft limit size {1}, {2}".format(
                     s1, util.get_size_repr(setting.regfile_soft_limit), s2))
 
-        co = container.Container(targs.baks if opts.backup else None)
+        co = container.Container(targs.baks if setting.use_backup else None)
         if co.init(args, wspnum, True if opts.O else False,
             opts.bytes_per_line, opts.bytes_per_window) == -1:
             __error("Terminal ({0},{1}) does not have enough room".format(

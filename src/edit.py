@@ -365,10 +365,12 @@ def get_block_replace_class():
     return __get_class("Block{0}R")
 
 def __get_class(s):
-    return getattr(sys.modules[__name__], s.format(setting.editmode))
+    this = sys.modules[__name__]
+    _ = 'A' if setting.use_ascii_edit else 'B'
+    return getattr(this, s.format(_))
 
 def get_input_limit():
-    if setting.editmode == 'B':
+    if not setting.use_ascii_edit: # binary
         return 2
     else:
         return 1

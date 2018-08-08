@@ -172,16 +172,16 @@ class _window (ncurses.Window):
                 return kbd.CONTINUE # CSI
         elif x == "A":
             if s == "\x1B[": # CSI
-                return self.test_env("up")
+                return kbd.UP
         elif x == "B":
             if s == "\x1B[": # CSI
-                return self.test_env("down")
+                return kbd.DOWN
         elif x == "C":
             if s == "\x1B[": # CSI
-                return self.test_env("right")
+                return kbd.RIGHT
         elif x == "D":
             if s == "\x1B[": # CSI
-                return self.test_env("left")
+                return kbd.LEFT
         elif x == "3":
             if s == "\x1B[": # CSI
                 return kbd.CONTINUE

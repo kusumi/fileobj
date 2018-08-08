@@ -514,9 +514,9 @@ def remove_other_workspace(self, amp, opc, args, raw):
         self.co.repaint()
 
 def __set_binary(self, args):
-    setting.editmode = 'B'
+    setting.use_ascii_edit = False
 def __set_ascii(self, args):
-    setting.editmode = 'A'
+    setting.use_ascii_edit = True
 
 def __set_le(self, args):
     setting.endianness = "little"
@@ -539,9 +539,15 @@ def __set_nosi(self, args):
     setting.use_siprefix = False
 
 def __set_address(self, args):
-    __set_radix_arg(self, args, "address_num_radix")
+    if __set_radix_arg(self, args, "address_radix") == -1:
+        return
+    if __try_update_address_num_width(self) == -1:
+        __rebuild(self)
+
 def __set_status(self, args):
-    __set_radix_arg(self, args, "status_num_radix")
+    if __set_radix_arg(self, args, "status_radix") == -1:
+        return
+    self.co.set_console(None, None) # XXX update offset:length in static info
 
 def __set_radix_arg(self, args, name):
     if len(args) == 1:
@@ -554,6 +560,8 @@ def __set_radix_arg(self, args, name):
         self.co.flash("Invalid arg: " + radix)
         return
     if x in (16, 10, 8):
+        if getattr(setting, name) == x:
+            return -1
         setattr(setting, name, x)
     else:
         self.co.flash("Invalid arg: {0}".format(x))
@@ -586,7 +594,7 @@ def __set_bytes_per_window(self, args):
 def __rebuild(self):
     screen.clear()
     self.co.build()
-    self.co.repaint()
+    self.co.repaint() # repaint regardless of build result
 
 def set_option(self, amp, opc, args, raw):
     _set_methods = {

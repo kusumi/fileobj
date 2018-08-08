@@ -103,7 +103,7 @@
                 be               Set endianness to big (unset little endian if set)
                 si               Set SI prefix mode (kilo equals 10^3)
                 nosi             Unset SI prefix mode (kilo equals 2^10)
-                ws               Set wrapscan mode (search wrap around the end of the buffer)
+                ws               Set wrapscan mode (search wraps around the end of the buffer)
                 nows             Unset wrapscan mode
         :split                   Split current window
         :term                    Print terminal type

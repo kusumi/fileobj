@@ -1,3 +1,30 @@
+v0.7.74
+=======
+- Minor fixes and cleanups
+- Fix stdout mode bug (since v0.7.67)
+- Show both abs and relative offsets for partially loaded buffers
+- Officially introduce env variables in manpage
+- Remove -d
+- Remove -x
+- Remove --backup
+- Remove --verbose_window
+- Remove --terminal_height
+- Remove --terminal_width
+- Add FILEOBJ_USE_BYTES_BUFFER
+- Add FILEOBJ_USE_VERBOSE_WINDOW
+- Add __FILEOBJ_TERMINAL_HEIGHT
+- Add __FILEOBJ_TERMINAL_WIDTH
+- Remove FILEOBJ_USE_ADDRESS_NUM_OFFSET
+- Remove FILEOBJ_KEY_RESIZE
+- Rename FILEOBJ_ADDRESS_NUM_RADIX to FILEOBJ_ADDRESS_RADIX
+- Rename FILEOBJ_STATUS_NUM_RADIX to FILEOBJ_STATUS_RADIX
+- Rename FILEOBJ_EDITMODE to FILEOBJ_USE_ASCII_EDIT
+- Rename FILEOBJ_USE_VERBOSE_STATUS_WINDOW to __FILEOBJ_USE_STATUS_WINDOW_VERBOSE
+- Rename FILEOBJ_USE_RRVM_SYNC_ON_EDIT to __FILEOBJ_USE_VM_SYNC_ON_EDIT
+- Rename FILEOBJ_ROBUF_CHUNK_SIZE to __FILEOBJ_BUFFER_CHUNK_SIZE
+- Rename FILEOBJ_RWBUF_CHUNK_BALANCE_INTERVAL to __FILEOBJ_BUFFER_CHUNK_BALANCE_INTERVAL
+- Rename FILEOBJ_BUFFER_SIZE to __FILEOBJ_TEMP_SIZE
+
 v0.7.73
 =======
 - Minor fixes and cleanups
