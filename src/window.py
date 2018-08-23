@@ -72,15 +72,19 @@ class Window (object):
     def get_position_x(self):
         return self.__frame.get_position_x()
 
-    def repaint(self, focus):
-        self.__frame.repaint(focus)
-        self.__canvas.repaint(False)
+    def crepaint(self, current):
+        self.__frame.crepaint(current)
+        self.__canvas.crepaint(current)
 
-    def lrepaint(self, low):
-        self.__canvas.repaint(low)
+    def repaint(self, current):
+        self.__frame.repaint(current)
+        self.__canvas.repaint(current, False)
 
-    def xrepaint(self, focus):
-        self.__frame.repaint(focus)
+    def lrepaint(self, current, low):
+        self.__canvas.repaint(current, low)
+
+    def xrepaint(self, current):
+        self.__frame.repaint(current)
 
     def resize(self, siz, pos):
         self.__frame.resize(siz, pos)

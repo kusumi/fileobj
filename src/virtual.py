@@ -26,16 +26,19 @@ from __future__ import division
 from . import panel
 
 class NullFrame (panel.Frame):
-    def repaint(self, focus):
+    def repaint(self, *arg):
         return
+
     def refresh(self):
         return
-    def box(self, focus):
+
+    def box(self, current):
         return
 
 class _canvas (panel.Canvas):
     def fill(self, low):
-        """Update position before other canvas refer to it"""
+        # update position before other canvas refer to it
+        super(_canvas, self).fill(low)
         pos = self.fileops.get_pos()
         if pos > self.fileops.get_max_pos():
             self.go_to(self.fileops.get_max_pos())

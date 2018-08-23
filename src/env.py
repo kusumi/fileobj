@@ -25,16 +25,15 @@ import os
 import sys
 
 def __iter_env_name():
-    """Stable env variables, officially appeared in fileobj(1) in v0.7.74"""
+    """Stable env variables, officially introduced in version 0.7.74"""
     yield "FILEOBJ_USE_READONLY" # -R
     yield "FILEOBJ_USE_BYTES_BUFFER" # -B
     yield "FILEOBJ_USE_ASCII_EDIT" # :set binary,ascii
     yield "FILEOBJ_USE_IGNORECASE" # :set ic
     yield "FILEOBJ_USE_SIPREFIX" # :set si
     yield "FILEOBJ_USE_WRAPSCAN" # :set ws
-    yield "FILEOBJ_USE_VERBOSE_WINDOW" # --verbose_window
-    yield "FILEOBJ_USE_BACKUP" # --backup
-    yield "FILEOBJ_USE_FORCE" # --force
+    yield "FILEOBJ_USE_VERBOSE_WINDOW"
+    yield "FILEOBJ_USE_BACKUP"
     yield "FILEOBJ_ENDIANNESS" # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX" # -x, :set address <arg>
     yield "FILEOBJ_STATUS_RADIX" # -x, :set status <arg>
@@ -42,6 +41,8 @@ def __iter_env_name():
     yield "FILEOBJ_BYTES_PER_WINDOW" # --bytes_per_window, :set bytes_per_window
     yield "FILEOBJ_COLOR_FG" # --fg
     yield "FILEOBJ_COLOR_BG" # --bg
+    yield "FILEOBJ_COLOR_CURRENT"
+    yield "FILEOBJ_COLOR_ZERO"
 
 def __iter_env_name_private():
     """Unstable env variables (debugging)"""
@@ -156,9 +157,6 @@ def __get_setting_use_verbose_window():
 def __get_setting_use_backup():
     return test_bool("FILEOBJ_USE_BACKUP", False)
 
-def __get_setting_use_force():
-    return test_bool("FILEOBJ_USE_FORCE", False)
-
 def __get_setting_endianness():
     e = getenv("FILEOBJ_ENDIANNESS")
     if e is None:
@@ -215,6 +213,20 @@ def __get_setting_color_bg():
         return None
     else:
         return e.lower()
+
+def __get_setting_color_current():
+    ret = test_name("FILEOBJ_COLOR_CURRENT", "green")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
+
+def __get_setting_color_zero():
+    ret = test_name("FILEOBJ_COLOR_ZERO", "green")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
 
 def __get_setting_use_debug():
     return test_bool("__FILEOBJ_USE_DEBUG", False)

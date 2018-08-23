@@ -303,8 +303,10 @@ def go_to(self, amp=None):
 
 def __isprint(b):
     return kbd.isprint(util.bytes_to_str(b))
+
 def __is_zero(b):
     return b == filebytes.ZERO
+
 def __is_non_zero(b):
     return b != filebytes.ZERO
 
@@ -438,30 +440,30 @@ def refresh_container(self, amp, opc, args, raw):
 
 def switch_to_next_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.brepaint(False)
+        self.co.crepaint(False)
         self.co.switch_to_next_workspace()
-        self.co.brepaint(True)
+        self.co.crepaint(True)
         return RETURN
 
 def switch_to_prev_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.brepaint(False)
+        self.co.crepaint(False)
         self.co.switch_to_prev_workspace()
-        self.co.brepaint(True)
+        self.co.crepaint(True)
         return RETURN
 
 def switch_to_top_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.brepaint(False)
+        self.co.crepaint(False)
         self.co.switch_to_top_workspace()
-        self.co.brepaint(True)
+        self.co.crepaint(True)
         return RETURN
 
 def switch_to_bottom_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.brepaint(False)
+        self.co.crepaint(False)
         self.co.switch_to_bottom_workspace()
-        self.co.brepaint(True)
+        self.co.crepaint(True)
         return RETURN
 
 def add_workspace(self, amp, opc, args, raw):
@@ -502,7 +504,7 @@ def __parse_adjust_workspace(self, ret):
     elif ret > 0: # bytes_per_window
         self.co.flash("{0}[B] fixed size window".format(ret))
     else:
-        assert 0
+        assert False
 
 def remove_workspace(self, amp, opc, args, raw):
     if self.co.remove_workspace() != -1:
@@ -515,26 +517,31 @@ def remove_other_workspace(self, amp, opc, args, raw):
 
 def __set_binary(self, args):
     setting.use_ascii_edit = False
+
 def __set_ascii(self, args):
     setting.use_ascii_edit = True
 
 def __set_le(self, args):
     setting.endianness = "little"
+
 def __set_be(self, args):
     setting.endianness = "big"
 
 def __set_ws(self, args):
     setting.use_wrapscan = True
+
 def __set_nows(self, args):
     setting.use_wrapscan = False
 
 def __set_ic(self, args):
     setting.use_ignorecase = True
+
 def __set_noic(self, args):
     setting.use_ignorecase = False
 
 def __set_si(self, args):
     setting.use_siprefix = True
+
 def __set_nosi(self, args):
     setting.use_siprefix = False
 
@@ -811,6 +818,7 @@ def __get_md5(self, l):
 
 def __is_equal(a, b):
     return a == b
+
 def __is_not_equal(a, b):
     return a != b
 
@@ -1052,8 +1060,10 @@ def __do_replace_number(self, amp, opc, siz):
     __exec(self, fn)
 
 _did_search_forward = True
+
 def search_forward(self, amp, opc, args, raw):
     __do_search_repeat(self, amp, opc, args, raw, True)
+
 def search_backward(self, amp, opc, args, raw):
     __do_search_repeat(self, amp, opc, args, raw, False)
 
@@ -1086,6 +1096,7 @@ def __do_search(self, s, is_forward, is_last):
 
 def search_next_forward(self, amp, opc, args, raw):
     __do_search_next_repeat(self, amp, True)
+
 def search_next_backward(self, amp, opc, args, raw):
     __do_search_next_repeat(self, amp, False)
 
@@ -1740,7 +1751,7 @@ def delete_mark(self, amp, opc, args, raw):
             self.co.delete_mark(k)
 
 def clear_marks(self, amp, opc, args, raw):
-    """Does not clear uniq marks"""
+    # does not clear uniq marks
     self.co.clear_marks(lambda k: not k.isupper())
 
 def start_record(self, amp, opc, args, raw):
@@ -1786,8 +1797,10 @@ def bind_command(self, amp, opc, args, raw):
 
 def __get_and_ops(mask):
     return lambda b: filebytes.ord(b) & mask
+
 def __get_or_ops(mask):
     return lambda b: filebytes.ord(b) | mask
+
 def __get_xor_ops(mask):
     return lambda b: filebytes.ord(b) ^ mask
 
@@ -1919,6 +1932,7 @@ def block_yank(self, amp, opc, args, raw):
 @_cleanup
 def put(self, amp, opc, args, raw):
     return __put(self, amp, opc, 0)
+
 @_cleanup
 def put_after(self, amp, opc, args, raw):
     return __put(self, amp, opc, 1)
@@ -1945,6 +1959,7 @@ def __put(self, amp, opc, mov):
 @_cleanup
 def put_over(self, amp, opc, args, raw):
     __put_over(self, amp, opc, 0)
+
 @_cleanup
 def put_over_after(self, amp, opc, args, raw):
     __put_over(self, amp, opc, 1)
@@ -2200,9 +2215,7 @@ def __get_save_partial_path(self, args, force):
 
 def quit(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        if self.co.remove_workspace() != -1:
-            self.co.repaint()
-        return RETURN
+        return remove_workspace(self, amp, opc, args, raw)
     else:
         def fn(o):
             return o.is_dirty()
@@ -2218,9 +2231,7 @@ def quit(self, amp, opc, args, raw):
 
 def force_quit(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        if self.co.remove_workspace() != -1:
-            self.co.repaint()
-        return RETURN
+        return remove_workspace(self, amp, opc, args, raw)
     else:
         return QUIT
 

@@ -59,7 +59,7 @@ def get_text(co, fo, args):
         elif type == PCI_HDR_PCB:
             ptr = cfg[0x14]
         else:
-            assert 0
+            assert False
         next = ptr
         while next:
             if next % 4:

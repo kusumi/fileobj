@@ -68,7 +68,7 @@ if __name__ == '__main__':
     profile.enable()
     assert fileobj.util.is_running_profile()
     ret = fileobj.core.dispatch()
-    assert fileobj.screen.cleanup() == -1
+    fileobj.screen.cleanup()
     profile.disable()
 
     fd = open(f, "w")

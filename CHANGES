@@ -1,3 +1,13 @@
+v0.7.75
+=======
+- Minor fixes and cleanups
+- Add color attribute for current cursor/status
+- Add color attribute for zero (0) bytes within buffer contents
+- Remove frame focus on multiple windows
+- Add FILEOBJ_COLOR_CURRENT
+- Add FILEOBJ_COLOR_ZERO
+- Remove FILEOBJ_USE_FORCE
+
 v0.7.74
 =======
 - Minor fixes and cleanups

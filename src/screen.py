@@ -23,8 +23,10 @@
 
 import os
 import shutil
+import sys
 
 from . import kernel
+from . import log
 from . import setting
 from . import util
 
@@ -40,47 +42,44 @@ _soft_resize = False
 
 terminal = util.Namespace(height=-1, width=-1)
 
-A_DEFAULT   = 0
-A_BOLD      = 0
-A_REVERSE   = 0
-A_STANDOUT  = 0
-A_UNDERLINE = 0
-A_FOCUS     = 0
-A_COLOR     = 0
+A_NONE          = _screen.A_NONE
+A_BOLD          = _screen.A_BOLD
+A_REVERSE       = _screen.A_REVERSE
+A_STANDOUT      = _screen.A_STANDOUT
+A_UNDERLINE     = _screen.A_UNDERLINE
+A_COLOR         = _screen.A_NONE
+A_COLOR_CURRENT = _screen.A_NONE
+A_COLOR_ZERO    = _screen.A_NONE
 
 def init(fg='', bg=''):
-    global _std, \
-        A_DEFAULT, \
-        A_BOLD, \
-        A_REVERSE, \
-        A_STANDOUT, \
-        A_UNDERLINE, \
-        A_FOCUS, \
-        A_COLOR
+    global _std, A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO
     if update_size() == -1:
         return -1
     if _std:
         return -1
-    _std, \
-    A_DEFAULT, \
-    A_BOLD, \
-    A_REVERSE, \
-    A_STANDOUT, \
-    A_UNDERLINE, \
-    A_FOCUS, \
-    A_COLOR = _screen.init(fg, bg)
+    _std, A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO = _screen.init(fg, bg)
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR)
     _std.refresh()
 
+    l = []
+    l.append("A_NONE=0x{0:X}".format(A_NONE))
+    l.append("A_BOLD=0x{0:X}".format(A_BOLD))
+    l.append("A_REVERSE=0x{0:X}".format(A_REVERSE))
+    l.append("A_STANDOUT=0x{0:X}".format(A_STANDOUT))
+    l.append("A_UNDERLINE=0x{0:X}".format(A_UNDERLINE))
+    l.append("A_COLOR=0x{0:X}".format(A_COLOR))
+    l.append("A_COLOR_CURRENT=0x{0:X}".format(A_COLOR_CURRENT))
+    l.append("A_COLOR_ZERO=0x{0:X}".format(A_COLOR_ZERO))
+    log.debug("screen {0}".format(l))
+
 def cleanup():
     global _std
     clear_size()
-    if not _std:
-        return -1
-    _std.keypad(0)
-    _std = None
-    _screen.cleanup()
+    if _std:
+        _std.keypad(0)
+        _std = None
+    _screen.cleanup() # must always cleanup regardless of _std
 
 def clear():
     _std.clear()
@@ -160,8 +159,11 @@ def has_chgat():
 def use_alt_chgat():
     return setting.use_alt_chgat or not has_chgat()
 
+def has_color():
+    return _screen.has_color()
+
 def use_color():
-    return A_COLOR != 0
+    return _screen.use_color()
 
 def iter_color_name():
     for s in _screen.iter_color_name():
@@ -177,3 +179,25 @@ def alloc(leny, lenx, begy, begx, ref=None):
     scr.keypad(1)
     scr.bkgd(' ', A_COLOR)
     return scr
+
+def parse_attr(default, extra=None):
+    if extra is None:
+        extra = []
+    assert util.is_seq(extra)
+    this = sys.modules[__name__]
+    attr = zero = A_NONE
+    for s in extra:
+        name = "A_" + s.upper()
+        if hasattr(this, name): # valid extra
+            attr |= getattr(this, name)
+
+    # handle special case
+    if kernel.is_screen() and use_color():
+        if default == A_STANDOUT: # will not standout
+            attr |= A_REVERSE
+
+    # return default if extra empty or invalid
+    if attr == zero:
+        return default
+    else:
+        return attr

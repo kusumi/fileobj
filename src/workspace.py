@@ -357,10 +357,13 @@ class Workspace (object):
 
     def __build_virtual_window(self, o):
         self.__build_window(o, None, None)
+
     def __build_binary_window(self, o):
         self.__build_window(o, None, None)
+
     def __build_text_window(self, o):
         self.__build_window(o, None, None)
+
     def __build_status_window(self, o):
         self.__build_window(o, None, None)
 
@@ -370,8 +373,10 @@ class Workspace (object):
 
     def __guess_virtual_window_width(self):
         return window.get_width(virtual.BinaryCanvas, self.__bpl)
+
     def __guess_binary_window_width(self):
         return window.get_width(panel.BinaryCanvas, self.__bpl)
+
     def __guess_text_window_width(self):
         return window.get_width(panel.TextCanvas, self.__bpl)
 
@@ -398,14 +403,13 @@ class Workspace (object):
     def __get_binary_window(self, cls):
         if cls not in self.__bwindows:
             if cls is console.get_default_class():
-                o = window.Window(panel.BinaryCanvas, panel.FocusableFrame)
+                o = window.Window(panel.BinaryCanvas, panel.Frame)
             elif cls is void.ExtConsole:
-                o = window.Window(extension.ExtBinaryCanvas,
-                    panel.FocusableFrame)
+                o = window.Window(extension.ExtBinaryCanvas, panel.Frame)
             elif cls is visual.Console:
-                o = window.Window(visual.BinaryCanvas, panel.FocusableFrame)
+                o = window.Window(visual.BinaryCanvas, panel.Frame)
             elif cls is visual.ExtConsole:
-                o = window.Window(visual.ExtBinaryCanvas, panel.FocusableFrame)
+                o = window.Window(visual.ExtBinaryCanvas, panel.Frame)
             elif util.is_subclass(cls, edit.Console):
                 o = self.__def_bwindow
             self.__build_binary_window(o)
@@ -446,40 +450,48 @@ class Workspace (object):
 
     def read(self, x, n):
         return self.__cur_fileops.read(x, n)
+
     def read_current(self, n):
         return self.__cur_fileops.read(self.get_pos(), n)
 
     def insert(self, x, l, rec=True):
         self.__cur_fileops.insert(x, l, rec)
+
     def insert_current(self, l, rec=True):
         self.__cur_fileops.insert(self.get_pos(), l, rec)
 
     def replace(self, x, l, rec=True):
         self.__cur_fileops.replace(x, l, rec)
+
     def replace_current(self, l, rec=True):
         self.__cur_fileops.replace(self.get_pos(), l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_fileops.delete(x, n, rec)
+
     def delete_current(self, n, rec=True):
         self.__cur_fileops.delete(self.get_pos(), n, rec)
 
-    def brepaint(self, focus):
+    def crepaint(self, current):
         for o in self.__windows:
             if o in self.__bwindows.values():
-                o.repaint(focus)
+                o.crepaint(current)
+            elif o in self.__twindows.values():
+                o.crepaint(current)
+            else:
+                o.lrepaint(current, False) # entire window
 
-    def repaint(self, focus):
+    def repaint(self, current):
         for o in self.__windows:
-            o.repaint(focus)
+            o.repaint(current)
 
-    def lrepaint(self, low=False):
+    def lrepaint(self, current, low):
         for o in self.__windows:
-            o.lrepaint(low)
+            o.lrepaint(current, low)
 
-    def xrepaint(self, focus):
+    def xrepaint(self, current):
         for o in self.__windows:
-            o.xrepaint(focus)
+            o.xrepaint(current)
 
     def go_up(self, n=1):
         for o in self.__windows:

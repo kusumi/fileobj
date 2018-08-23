@@ -198,12 +198,16 @@ class Console (object):
 _scr = None
 _log = []
 chgat = None
+_cursor_attr = None
+
 def init():
-    global _scr, chgat
+    # screen must be initialized
+    global _scr, _cursor_attr, chgat
     if _scr:
         return -1
     _scr = screen.alloc(get_size_y(), get_size_x(), get_position_y(),
         get_position_x(), getch)
+    _cursor_attr = screen.parse_attr(screen.A_STANDOUT) | screen.A_COLOR_CURRENT
     log.debug(_scr)
     if screen.use_alt_chgat():
         chgat = __alt_chgat
@@ -237,7 +241,7 @@ def refresh():
     if _message: # prefer _message to _banner
         printl(0, _message)
         if _cursor != -1:
-            chgat(_cursor, _message, screen.A_STANDOUT)
+            chgat(_cursor, _message, _cursor_attr)
     elif _banner:
         printl(0, ''.join(_banner))
     _scr.refresh()
@@ -260,7 +264,7 @@ def resize():
     except Exception as e:
         log.error(e)
 
-def printl(x, s, attr=screen.A_DEFAULT):
+def printl(x, s, attr=screen.A_NONE):
     try:
         _scr.addstr(0, x, s, attr | screen.A_COLOR)
     except Exception as e:

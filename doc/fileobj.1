@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "August 7, 2018" "FILEOBJ 0.7.74"
+.TH FILEOBJ 1 "August 21, 2018" "FILEOBJ 0.7.75"
 .nh
 .ad l
 .SH NAME
@@ -84,10 +84,9 @@ Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
 .RS 4
 Set number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes.
-This option sets number of lines printed per window, based on the number of bytes printed per line.
+Each window prints \fI<bytes_per_window>\fP bytes, using the current number of bytes per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-"even" does not set number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
+"even" sets all windows to have the same size.
 "auto" is used by default.
 .RE
 .PP
@@ -95,16 +94,14 @@ Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 .RS 4
 Set foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-"black" is used by default.
-This option is not supported on VTxxx terminal emulators.
+Not supported on VTxxx terminal emulators.
 .RE
 .PP
 \fB\-\-bg\fP=\fI<color>\fP
 .RS 4
 Set background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-"white" is used by default.
-This option is not supported on VTxxx terminal emulators.
+Not supported on VTxxx terminal emulators.
 .RE
 .PP
 \fB\-\-force\fP
@@ -164,7 +161,7 @@ Defaults to no wrap around if undefined.
 .PP
 \fBFILEOBJ_USE_VERBOSE_WINDOW\fP
 .RS 4
-If defined, use verbose status window instead of the default format.
+If defined, use verbose status instead of the default format.
 .RE
 .PP
 \fBFILEOBJ_USE_BACKUP\fP
@@ -172,11 +169,6 @@ If defined, use verbose status window instead of the default format.
 If defined, create backup files under \fI~/.fileobj\fP.
 Backup files start with '.'.
 Only applies to regular files.
-.RE
-.PP
-\fBFILEOBJ_USE_FORCE\fP
-.RS 4
-If defined, ignore warnings which can be ignored (equivalent to \fB\-\-force\fP).
 .RE
 .PP
 \fBFILEOBJ_ENDIANNESS\fP
@@ -187,13 +179,13 @@ Defaults to host endian if undefined.
 .PP
 \fBFILEOBJ_ADDRESS_RADIX\fP
 .RS 4
-If set to "16", "10" or "8", show numbers in editor window in either hexadecimal, decimal or octal.
+If set to "16", "10" or "8", show numbers in editor in either hexadecimal, decimal or octal (equivalent to \fB:set address\fP).
 Defaults to "16" if undefined.
 .RE
 .PP
 \fBFILEOBJ_STATUS_RADIX\fP
 .RS 4
-If set to "16", "10" or "8", show numbers in status window in either hexadecimal, decimal or octal.
+If set to "16", "10" or "8", show numbers in status in either hexadecimal, decimal or octal (equivalent to \fB:set status\fP).
 Defaults to "10" if undefined.
 .RE
 .PP
@@ -210,11 +202,29 @@ Set number of bytes printed per window (equivalent to \fB\-\-bytes_per_window\fP
 \fBFILEOBJ_COLOR_FG\fP
 .RS 4
 Set foreground color of the terminal (equivalent to \fB\-\-fg\fP).
+Defaults to no color if undefined.
 .RE
 .PP
 \fBFILEOBJ_COLOR_BG\fP
 .RS 4
 Set background color of the terminal (equivalent to \fB\-\-bg\fP).
+Defaults to no color if undefined.
+.RE
+.PP
+\fBFILEOBJ_COLOR_CURRENT\fP
+.RS 4
+Set current cursor and window color.
+Ignored if \fBFILEOBJ_COLOR_FG\fP or \fBFILEOBJ_COLOR_BG\fP is set.
+Defaults to "green" if undefined.
+Set blank string to disable.
+.RE
+.PP
+\fBFILEOBJ_COLOR_ZERO\fP
+.RS 4
+Set color for zero (0) bytes within buffer contents.
+Ignored if \fBFILEOBJ_COLOR_FG\fP or \fBFILEOBJ_COLOR_BG\fP is set.
+Defaults to "green" if undefined.
+Set blank string to disable.
 .RE
 .SH FILES
 .PP

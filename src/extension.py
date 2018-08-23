@@ -29,6 +29,7 @@ import re
 
 from . import kernel
 from . import panel
+from . import screen
 from . import util
 
 class ExtError (util.GenericError):
@@ -77,15 +78,14 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
     def get_form_line(self, buf):
         return util.bytes_to_str(buf)
 
-    def chgat_cursor(self, pos, attr, low):
+    def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
-        self.chgat(y, x, 1, attr)
+        self.chgat(y, x, 1, attr1)
 
-    def alt_chgat_cursor(self, pos, attr, low):
-        """Alternative for Python 2.5"""
+    def alt_chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
-        self.printl(y, x, s, attr)
+        self.printl(y, x, s, attr1)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
@@ -95,7 +95,6 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
             self.chgat(y, x, 1, attr2)
 
     def alt_chgat_search(self, pos, attr1, attr2, here):
-        """Alternative for Python 2.5"""
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
         if here:
@@ -107,7 +106,7 @@ class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
     def iter_buffer(self):
         s = ' ' * self.bufmap.x
         for i in range(self.bufmap.y):
-            yield i, s
+            yield i, s, screen.A_NONE
 
 def fail(s):
     raise ExtError(s)

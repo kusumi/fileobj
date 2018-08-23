@@ -56,27 +56,35 @@ class Path (object):
     @property
     def is_noent(self):
         return _test(self.__type, _t_noent)
+
     @property
     def is_noperm(self):
         return _test(self.__type, _t_noperm)
+
     @property
     def is_link(self):
         return _test(self.__type, _t_link)
+
     @property
     def is_reg(self):
         return _test(self.__type, _t_reg)
+
     @property
     def is_dir(self):
         return _test(self.__type, _t_dir)
+
     @property
     def is_blkdev(self):
         return _test(self.__type, _t_blkdev)
+
     @property
     def is_chrdev(self):
         return _test(self.__type, _t_chrdev)
+
     @property
     def is_unknown(self):
         return _test(self.__type, _t_unknown)
+
     @property
     def is_error(self):
         return _test(self.__type, _t_error)
@@ -190,20 +198,28 @@ def _get_type_real(f):
 
 def is_noent(f):
     return _test(get_type(f), _t_noent)
+
 def is_noperm(f):
     return _test(get_type(f), _t_noperm)
+
 def is_link(f):
     return _test(get_type(f), _t_link)
+
 def is_reg(f):
     return _test(get_type(f), _t_reg)
+
 def is_dir(f):
     return _test(get_type(f), _t_dir)
+
 def is_blkdev(f):
     return _test(get_type(f), _t_blkdev)
+
 def is_chrdev(f):
     return _test(get_type(f), _t_chrdev)
+
 def is_unknown(f):
     return _test(get_type(f), _t_unknown)
+
 def is_error(f):
     return _test(get_type(f), _t_error)
 

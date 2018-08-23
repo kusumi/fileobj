@@ -73,6 +73,8 @@ def __log_error(arg):
 
 def __print_error(arg):
     if not arg.e:
+        if log.has_error():
+            util.printe("*** Found error in log")
         return -1
     util.printe(arg.e)
     if not isinstance(arg.e, util.QuietError):
@@ -90,7 +92,7 @@ def __error(s):
 
 def dispatch(optargs=None):
     if setting.use_debug:
-        suppress_help = "<This is supposed to be suppressed>"
+        suppress_help = str(None)
     else:
         suppress_help = argparse.SUPPRESS
     parser = argparse.ArgumentParser(usage=usage.help)
@@ -103,7 +105,7 @@ def dispatch(optargs=None):
     parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
     parser.add_argument("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
     parser.add_argument("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
-    parser.add_argument("--force", action="store_true", default=setting.use_force, help=usage.force)
+    parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
@@ -174,16 +176,15 @@ def dispatch(optargs=None):
             wspnum = len(args)
         else:
             wspnum = opts.o
-    if opts.O is not None: # not elif
+    if opts.O is not None: # must be after opts.o test
         if opts.O == -1:
             wspnum = len(args)
         else:
             wspnum = opts.O
     else:
         wspnum = 1
-    if kernel.is_vtxxx() and (opts.fg or opts.bg):
-        msg[1] = "Terminal color unsupported on {0}".format(
-            kernel.get_term_info())
+    if not screen.has_color() and (opts.fg or opts.bg):
+        msg[1] = "Terminal color unsupported"
         opts.fg = None
         opts.bg = None
 
@@ -219,15 +220,14 @@ def dispatch(optargs=None):
             if screen.init(opts.fg, opts.bg) == -1:
                 __error("Failed to initialize terminal")
             assert console.init() != -1
+            if opts.test_screen:
+                test_screen()
+                return # done
         except Exception as e:
             if setting.use_debug:
                 raise
             else:
                 __error(str(e))
-
-        if opts.test_screen:
-            test_screen()
-            return
 
         if opts.B:
             tot = 0
@@ -273,7 +273,7 @@ def dispatch(optargs=None):
             co.cleanup()
 
     if not util.is_running_fileobj():
-        __cleanup(targs) # script/profile hits here
+        __cleanup(targs)
     if targs.e:
         return -1
 
@@ -313,30 +313,43 @@ def test_screen():
 
 def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
-    if siz >= 13:
+    if siz >= 16:
         if repaint:
             scr.addstr(1, 1, "Running {0} on {1}.".format(
                 util.get_python_string(), kernel.get_term_info()))
-            scr.addstr(3, 1, "This should look normal.", screen.A_DEFAULT)
+            scr.addstr(3, 1, "This should look normal.", screen.A_NONE)
             scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
             scr.addstr(5, 1, "This should look reversed.", screen.A_REVERSE)
             if kernel.is_screen() and screen.use_color():
-                s = "may not"
+                s = "may or may not"
             else:
                 s = "should"
             scr.addstr(6, 1, "This {0} look reversed.".format(s),
                 screen.A_STANDOUT)
             if kernel.is_screen() and screen.use_color():
-                s = "may not"
+                s = "may or may not"
             else:
                 s = "should"
             scr.addstr(7, 1, "This {0} be underlined.".format(s),
                 screen.A_UNDERLINE)
-            scr.addstr(8, 1, "This frame should resize if the terminal "
-                "emulator is resized.")
-            scr.addstr(10, 1, "Check if above appear as they should.")
-            scr.addstr(12, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-        __update_input(scr, 13, l)
+            if screen.has_color() and \
+                setting.color_current in list(screen.iter_color_name()):
+                s = "be in {0}".format(setting.color_current)
+            else:
+                s = "not have any color"
+            scr.addstr(8, 1, "This should {0}.".format(s),
+                screen.A_COLOR_CURRENT)
+            scr.addstr(9, 1, "This terminal should have a frame.")
+            scr.addstr(10, 1, "The frame should resize if the terminal is "
+                "resized.")
+            scr.addstr(12, 1, "Check if above appear as they should.")
+            if kernel.is_xnix():
+                s = "with different TERM value"
+            else:
+                s = "with different terminal environment"
+            scr.addstr(13, 1, "If not try {0}.".format(s))
+            scr.addstr(15, 1, "Press {0} to exit.".format(literal.ctrlc.str))
+        __update_input(scr, 16, l)
     elif siz >= 3:
         if repaint:
             scr.addstr(1, 1, "Not enough room.")
@@ -351,3 +364,4 @@ def __update_input(scr, y, l):
             scr.addstr(y, 1, "{0:3} {1}".format(*l)) # may raise with Python 3
         except Exception:
             scr.addstr(y, 1, "{0:3}".format(l[0]))
+        scr.box() # frame in this line was cleared

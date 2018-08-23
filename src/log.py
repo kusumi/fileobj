@@ -27,7 +27,7 @@ from . import setting
 from . import util
 
 def init(name, f=None):
-    global _logger
+    global _logger, _logmsg
     if __get_attr() is None:
         return -1
     if _logger:
@@ -40,11 +40,12 @@ def init(name, f=None):
             logger.setLevel(__get_attr(logging.WARNING))
         __add_handler(logger, f)
         _logger = logger
+        _logmsg = []
     except Exception:
         return -1
 
 def cleanup():
-    global _logger
+    global _logger, _logmsg
     if not _logger:
         return -1
     try:
@@ -53,6 +54,7 @@ def cleanup():
     except Exception:
         return -1
     finally:
+        _logmsg = None
         _logger = None
 
 def __get_attr(default=None):
@@ -74,12 +76,16 @@ def __remove_handler(logger):
 
 def debug(*l):
     return __log(l, logging.DEBUG)
+
 def info(*l):
     return __log(l, logging.INFO)
+
 def warning(*l):
     return __log(l, logging.WARNING)
+
 def error(*l):
     return __log(l, logging.ERROR)
+
 def critical(*l):
     return __log(l, logging.CRITICAL)
 
@@ -88,6 +94,7 @@ def __log(l, level):
     if len(l) == 1:
         l = l[0]
     s = util.obj_to_string(l)
+    _logmsg.append((level, s))
     if _logger:
         _logger.log(level, s)
     elif setting.log_level.lower() == "stdout":
@@ -95,4 +102,16 @@ def __log(l, level):
     else:
         return -1
 
+def get_message():
+    if _logmsg is None:
+        return []
+    return _logmsg[:]
+
+def has_error():
+    for l in _logmsg:
+        if l[0] >= logging.ERROR:
+            return True
+    return False
+
 _logger = None
+_logmsg = None

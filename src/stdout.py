@@ -34,24 +34,19 @@ from . import util
 _stdin = sys.stdin
 _count = 0
 
-A_DEFAULT   = 0
-A_BOLD      = 1
-A_REVERSE   = 2
-A_STANDOUT  = 4
-A_UNDERLINE = 8
-A_FOCUS     = 0
-A_COLOR     = 0
+A_NONE          = 0
+A_BOLD          = 1
+A_REVERSE       = 2
+A_STANDOUT      = 4
+A_UNDERLINE     = 8
+A_COLOR         = 0
+A_COLOR_CURRENT = 0
+A_COLOR_ZERO    = 0
 
 def init(fg, bg):
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
-        A_DEFAULT, \
-        A_BOLD, \
-        A_REVERSE, \
-        A_STANDOUT, \
-        A_UNDERLINE, \
-        A_FOCUS, \
-        A_COLOR
+        A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO
 
 def cleanup():
     ncurses.cleanup_windows()
@@ -66,6 +61,12 @@ def newwin(leny, lenx, begy, begx, ref=None):
 
 def has_chgat():
     return True
+
+def has_color():
+    return False
+
+def use_color():
+    return False
 
 def iter_color_name():
     yield "black"
@@ -111,7 +112,7 @@ class _window (ncurses.Window):
     def bkgd(self, ch, attr):
         return
 
-    def addstr(self, y, x, s, attr=A_DEFAULT):
+    def addstr(self, y, x, s, attr=A_NONE):
         if setting.stdout_verbose > 0:
             util.printf(self.__mkstr(y, x, s))
         if setting.stdout_verbose > 2:

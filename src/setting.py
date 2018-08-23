@@ -96,7 +96,7 @@ def __init(g):
     # initialize synthetic settings
     if this.use_verbose_window:
         this.use_status_window_verbose = True
-        this.use_status_window_frame = True
+        #this.use_status_window_frame = True
 
 def cleanup():
     _attr.clear()

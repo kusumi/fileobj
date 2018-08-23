@@ -39,25 +39,41 @@ VISUAL_BLOCK = "VISUAL BLOCK"
 
 class _visual_addon (object):
     def init_method(self):
-        if screen.use_alt_chgat():
-            self.__chgat_single = self.__alt_chgat_single
-            self.__chgat_head = self.__alt_chgat_head
-            self.__chgat_tail = self.__alt_chgat_tail
-            self.__chgat_inside = self.__alt_chgat_inside
-            self.__chgat_outside = self.__alt_chgat_outside
+        if screen.A_COLOR_ZERO == screen.A_NONE:
+            if screen.use_alt_chgat():
+                self.__chgat_head = self.__alt_chgat_head
+                self.__chgat_tail = self.__alt_chgat_tail
+                self.__chgat_single = self.__alt_chgat_single
+                self.__chgat_inside = self.__alt_chgat_inside
+                self.__chgat_outside = self.__alt_chgat_outside
+        else:
+            if screen.use_alt_chgat():
+                self.__chgat_head = self.__alt_chgat_head_attr
+                self.__chgat_tail = self.__alt_chgat_tail_attr
+                self.__chgat_single = self.__alt_chgat_single_attr
+                self.__chgat_outside = self.__alt_chgat_outside_attr
+            else:
+                self.__chgat_head = self.__chgat_head_attr
+                self.__chgat_tail = self.__chgat_tail_attr
+                self.__chgat_single = self.__chgat_single_attr
+                self.__chgat_outside = self.__chgat_outside_attr
 
     def update_visual(self, full):
-        type = self.fileops.get_region_type()
-        if type == VISUAL_BLOCK:
+        t = self.fileops.get_region_type()
+        if t == VISUAL_BLOCK:
             self.__update_block_visual(full)
         else:
-            self.__update_visual(type, full)
+            self.__update_visual(t, full)
+        pos = self.fileops.get_pos()
+        self.update_search(pos)
+        self.chgat_cursor(pos, self.attr_cursor | screen.A_COLOR_CURRENT,
+            self.attr_cursor | screen.A_COLOR_CURRENT, False)
 
-    def __update_visual(self, type, full):
+    def __update_visual(self, t, full):
         pos = self.fileops.get_pos()
         ppos = self.fileops.get_prev_pos()
         if self.in_same_page(pos, ppos):
-            self.chgat_posstr(ppos, 0)
+            self.chgat_posstr(ppos, screen.A_NONE)
         else:
             full = True
         self.chgat_posstr(pos, self.attr_posstr)
@@ -67,7 +83,7 @@ class _visual_addon (object):
         if beg > end:
             beg, end = end, beg
         mapx = self.bufmap.x
-        if type == VISUAL_LINE:
+        if t == VISUAL_LINE:
             beg -= beg % mapx
             end += (mapx - 1 - end % mapx)
         self.fileops.set_region_range(beg, end, self.bufmap)
@@ -118,7 +134,7 @@ class _visual_addon (object):
         pos = self.fileops.get_pos()
         ppos = self.fileops.get_prev_pos()
         if self.in_same_page(pos, ppos):
-            self.chgat_posstr(ppos, 0)
+            self.chgat_posstr(ppos, screen.A_NONE)
         else:
             full = True
         self.chgat_posstr(pos, self.attr_posstr)
@@ -167,6 +183,7 @@ class _visual_addon (object):
             lcur += mapx
             y += 1
 
+    # head
     def __chgat_head(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(self.bufmap.x) - pos
@@ -174,7 +191,6 @@ class _visual_addon (object):
         self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_head(self, y, x, beg, offset):
-        """Alternative for Python 2.5"""
         pos = self.get_cell_width(beg - offset)
         buf = self.fileops.read(offset, self.bufmap.x)
         s = self.get_form_line(buf)
@@ -184,6 +200,25 @@ class _visual_addon (object):
         self.printl(y, x, s[:pos])
         self.printl(y, x + pos, s[pos:], self.attr_visual)
 
+    def __chgat_head_attr(self, y, x, beg, offset):
+        pos = self.get_cell_width(beg - offset)
+        siz = self.get_cell_edge(self.bufmap.x) - pos
+        buf = self.fileops.read(offset, beg - offset)
+        self.fill_line(y, x, buf)
+        self.chgat(y, x + pos, siz, self.attr_visual)
+
+    def __alt_chgat_head_attr(self, y, x, beg, offset):
+        pos = self.get_cell_width(beg - offset)
+        buf = self.fileops.read(offset, self.bufmap.x)
+        s = self.get_form_line(buf)
+        d = self.get_cell_edge(self.bufmap.x) - len(s)
+        if d > 0:
+            s += ' ' * d
+        buf = self.fileops.read(offset, beg - offset)
+        self.fill_line(y, x, buf)
+        self.printl(y, x + pos, s[pos:], self.attr_visual)
+
+    # tail
     def __chgat_tail(self, y, x, end, offset):
         pos = self.get_cell_edge(end - offset + 1)
         siz = self.get_cell_edge(self.bufmap.x) - pos
@@ -191,7 +226,6 @@ class _visual_addon (object):
         self.chgat(y, x + pos, siz)
 
     def __alt_chgat_tail(self, y, x, end, offset):
-        """Alternative for Python 2.5"""
         pos = self.get_cell_edge(end - offset + 1)
         buf = self.fileops.read(offset, self.bufmap.x)
         s = self.get_form_line(buf)
@@ -201,6 +235,36 @@ class _visual_addon (object):
         self.printl(y, x, s[:pos], self.attr_visual)
         self.printl(y, x + pos, s[pos:])
 
+    def __chgat_tail_attr(self, y, x, end, offset):
+        siz = self.get_cell_edge(end - offset + 1)
+        self.chgat(y, x, siz, self.attr_visual)
+        if end + 1 > self.fileops.get_max_pos():
+            return
+        buf = self.fileops.read(end + 1, self.bufmap.x - (end - offset + 1))
+        pos = self.get_cell_width(end - offset + 1)
+        self.fill_line(y, x + pos, buf)
+        if (end + 1) % self.bufmap.x: # not rightmost
+            # clear left side of the fill'd line (needed when moving left/up)
+            self.printl(y, x + pos - 1, ' ' * self.cell[1])
+
+    def __alt_chgat_tail_attr(self, y, x, end, offset):
+        siz = self.get_cell_edge(end - offset + 1)
+        buf = self.fileops.read(offset, self.bufmap.x)
+        s = self.get_form_line(buf)
+        d = siz - len(s)
+        if d > 0:
+            s += ' ' * d
+        self.printl(y, x, s[:siz], self.attr_visual)
+        if end + 1 > self.fileops.get_max_pos():
+            return
+        buf = self.fileops.read(end + 1, self.bufmap.x - (end - offset + 1))
+        pos = self.get_cell_width(end - offset + 1)
+        self.fill_line(y, x + pos, buf)
+        if (end + 1) % self.bufmap.x: # not rightmost
+            # clear left side of the fill'd line (needed when moving left/up)
+            self.printl(y, x + pos - 1, ' ' * self.cell[1])
+
+    # single
     def __chgat_single(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(end - beg + 1)
@@ -209,7 +273,6 @@ class _visual_addon (object):
         self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single(self, y, x, beg, end, offset):
-        """Alternative for Python 2.5"""
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(end - beg + 1)
         end = pos + siz
@@ -222,30 +285,62 @@ class _visual_addon (object):
         self.printl(y, x + pos, s[pos:end], self.attr_visual)
         self.printl(y, x + end, s[end:])
 
+    def __chgat_single_attr(self, y, x, beg, end, offset):
+        pos = self.get_cell_width(beg - offset)
+        siz = self.get_cell_edge(end - beg + 1)
+        buf = self.fileops.read(offset, self.bufmap.x)
+        self.fill_line(y, x, buf)
+        self.chgat(y, x + pos, siz, self.attr_visual)
+
+    def __alt_chgat_single_attr(self, y, x, beg, end, offset):
+        pos = self.get_cell_width(beg - offset)
+        siz = self.get_cell_edge(end - beg + 1)
+        end = pos + siz
+        buf = self.fileops.read(offset, self.bufmap.x)
+        s = self.get_form_line(buf)
+        d = end - len(s)
+        if d > 0:
+            s += ' ' * d
+        buf = self.fileops.read(offset, self.bufmap.x)
+        self.fill_line(y, x, buf)
+        self.printl(y, x + pos, s[pos:end], self.attr_visual)
+
+    # inside
     def __chgat_inside(self, y, x, offset):
         self.__chgat_body(y, x, offset, self.attr_visual)
-
-    def __chgat_outside(self, y, x, offset):
-        self.__chgat_body(y, x, offset, screen.A_DEFAULT)
-
-    def __chgat_body(self, y, x, offset, attr):
-        siz = self.get_cell_edge(self.bufmap.x)
-        self.chgat(y, x, siz, attr)
 
     def __alt_chgat_inside(self, y, x, offset):
         self.__alt_chgat_body(y, x, offset, self.attr_visual)
 
+    # outside
+    def __chgat_outside(self, y, x, offset):
+        self.__chgat_body(y, x, offset, screen.A_NONE)
+
     def __alt_chgat_outside(self, y, x, offset):
-        self.__alt_chgat_body(y, x, offset, screen.A_DEFAULT)
+        self.__alt_chgat_body(y, x, offset, screen.A_NONE)
+
+    def __chgat_outside_attr(self, y, x, offset):
+        self.__chgat_body_attr(y, x, offset, screen.A_NONE)
+
+    def __alt_chgat_outside_attr(self, y, x, offset):
+        self.__chgat_body_attr(y, x, offset, screen.A_NONE)
+
+    # body
+    def __chgat_body(self, y, x, offset, attr):
+        siz = self.get_cell_edge(self.bufmap.x)
+        self.chgat(y, x, siz, attr)
 
     def __alt_chgat_body(self, y, x, offset, attr):
-        """Alternative for Python 2.5"""
         buf = self.fileops.read(offset, self.bufmap.x)
         s = self.get_form_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
             s += ' ' * d
         self.printl(y, x, s, attr)
+
+    def __chgat_body_attr(self, y, x, offset, attr):
+        buf = self.fileops.read(offset, self.bufmap.x)
+        self.fill_line(y, x, buf, attr)
 
 class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
     def __init__(self, siz, pos):
@@ -255,11 +350,9 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
     def fill(self, low):
         super(BinaryCanvas, self).fill(low)
         self.update_visual(True)
-        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
-        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class TextCanvas (panel.TextCanvas, _visual_addon):
@@ -270,11 +363,9 @@ class TextCanvas (panel.TextCanvas, _visual_addon):
     def fill(self, low):
         super(TextCanvas, self).fill(low)
         self.update_visual(True)
-        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
-        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
@@ -285,11 +376,9 @@ class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
     def fill(self, low):
         super(ExtBinaryCanvas, self).fill(low)
         self.update_visual(True)
-        self.update_search(self.fileops.get_pos())
 
     def update_highlight(self):
         self.update_visual(False)
-        self.update_search(self.fileops.get_pos())
         self.refresh()
 
 class _console (console.Console):

@@ -127,13 +127,16 @@ class Fileobj (object):
 
     def test_insert(self):
         return self._insert
+
     def test_replace(self):
         return self._replace
+
     def test_delete(self):
         return self._delete
 
     def test_enabled(self):
         return self._enabled
+
     def test_partial(self):
         return self._partial
 
@@ -165,20 +168,28 @@ class Fileobj (object):
 
     def get_size(self):
         util.raise_no_impl("get_size")
+
     def get_sector_size(self):
         return -1
+
     def get_id(self):
         return self.__id
+
     def get_path(self):
         return self.__path.path
+
     def get_short_path(self):
         return self.__path.short_path
+
     def get_alias(self):
         return ''
+
     def get_magic(self):
         return self.__attr.magic
+
     def get_mapping_offset(self):
         return self.__attr.offset
+
     def get_mapping_length(self):
         return self.__attr.length
 
@@ -327,10 +338,13 @@ class Fileobj (object):
 
     def read(self, x, n):
         self.raise_no_support("read")
+
     def insert(self, x, l, rec=True):
         self.raise_no_support("insert")
+
     def replace(self, x, l, rec=True):
         self.raise_no_support("replace")
+
     def delete(self, x, n, rec=True):
         self.raise_no_support("delete")
 
@@ -361,13 +375,16 @@ class Fileobj (object):
 
     def has_undo(self):
         return self.get_undo_size() > 0
+
     def has_redo(self):
         return self.get_redo_size() > 0
 
     def get_undo_size(self):
         return self.__attr.undo.get_undo_size()
+
     def get_redo_size(self):
         return self.__attr.undo.get_redo_size()
+
     def get_rollback_log_size(self):
         return self.__attr.undo.get_rollback_log_size()
 
@@ -482,13 +499,16 @@ class Fileobj (object):
 
     def is_barrier_active(self):
         return self.__bretval != -1
+
     def is_barrier_empty(self):
         return self.get_barrier_size() <= 0
+
     def is_barrier_dirty(self):
         return self.__bdirty
 
     def get_barrier_size(self):
         return len(self.__bbuffer)
+
     def get_barrier_delta(self):
         return self.get_barrier_size() - self.__bsize
 

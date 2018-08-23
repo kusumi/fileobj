@@ -36,40 +36,58 @@ class KernelError (util.GenericError):
 
 def is_linux():
     return __system_is("Linux")
+
 def is_netbsd():
     return __system_is("NetBSD")
+
 def is_openbsd():
     return __system_is("OpenBSD")
+
 def is_freebsd():
     return __system_is("FreeBSD")
+
 def is_dragonflybsd():
     return __system_is("DragonFly") # No "BSD"
+
 def is_darwin():
     return __system_is("Darwin")
+
 def is_cygwin():
     return _system.startswith("CYGWIN")
+
 def is_windows():
     return __system_is("Windows")
+
 def is_hurd():
     return __system_is("GNU") # is this right ?
+
 def is_kfreebsd():
     return __system_is("GNU/kFreeBSD")
+
 def is_minix():
     return __system_is("Minix")
+
 def is_solaris():
     return __system_is("SunOS")
+
 def is_illumos():
     return is_solaris()
+
 def is_hpux():
     return __system_is("HP-UX")
+
 def is_aix():
     return __system_is("AIX")
+
 def is_irix():
     return __system_is("IRIX") or __system_is("IRIX64")
+
 def is_qnx():
     return __system_is("QNX")
+
 def is_tru64():
     return __system_is("OSF1")
+
 def is_haiku():
     return __system_is("Haiku")
 
@@ -162,10 +180,13 @@ def get_term_info():
 # don't use regex here, e.g. panel checks VTxxx in fill()
 def is_vtxxx():
     return get_term_info().startswith("vt")
+
 def is_vt1xx():
     return get_term_info().startswith("vt1")
+
 def is_vt2xx():
     return get_term_info().startswith("vt2")
+
 def is_screen():
     return get_term_info() == "screen"
 

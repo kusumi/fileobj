@@ -234,7 +234,7 @@ class Container (object):
             self.flash(e)
 
     def add_buffer(self, f, reload=False):
-        """Add buffer and make current workspace focus that"""
+        # add buffer and make current workspace focus that
         if self.__in_random:
             self.__raise_random_stream("Add {0}".format(f))
         if not self.has_buffer(f):
@@ -630,6 +630,8 @@ class Container (object):
             else:
                 self.switch_to_next_workspace()
             self.__remove_workspace(o)
+            if self.__in_vertical:
+                self.set_bytes_per_line("auto")
             self.build()
             return self.__get_workspace_index()
         else:
@@ -644,6 +646,8 @@ class Container (object):
                 self.__remove_workspace(o)
             assert len(self) == 1
             self.__set_workspace(self.__workspaces[0])
+            if self.__in_vertical:
+                self.set_bytes_per_line("auto")
             self.build()
             return self.__get_workspace_index()
         else:
@@ -656,11 +660,13 @@ class Container (object):
 
     def switch_to_next_workspace(self):
         return self.__set_workspace(self.__get_next_workspace())
+
     def switch_to_prev_workspace(self):
         return self.__set_workspace(self.__get_prev_workspace())
 
     def switch_to_top_workspace(self):
         return self.__set_workspace(self.__workspaces[0])
+
     def switch_to_bottom_workspace(self):
         return self.__set_workspace(self.__workspaces[len(self) - 1])
 
@@ -696,21 +702,25 @@ class Container (object):
 
     def read(self, x, n):
         return self.__cur_workspace.read(x, n)
+
     def read_current(self, n):
         return self.__cur_workspace.read_current(n)
 
     def insert(self, x, l, rec=True):
         self.__cur_workspace.insert(x, l, rec)
+
     def insert_current(self, l, rec=True):
         self.__cur_workspace.insert_current(l, rec)
 
     def replace(self, x, l, rec=True):
         self.__cur_workspace.replace(x, l, rec)
+
     def replace_current(self, l, rec=True):
         self.__cur_workspace.replace_current(l, rec)
 
     def delete(self, x, n, rec=True):
         self.__cur_workspace.delete(x, n, rec)
+
     def delete_current(self, n, rec=True):
         self.__cur_workspace.delete_current(n, rec)
 
@@ -739,32 +749,30 @@ class Container (object):
         if self.build() == -1 and len(self) > 1:
             self.remove_other_workspace()
 
-    def brepaint(self, focus):
-        self.__cur_workspace.brepaint(focus)
+    def crepaint(self, current):
+        self.__cur_workspace.crepaint(current)
 
     def repaint(self, low=False):
         for o in self.__workspaces:
-            is_current = self.__cur_workspace is o
-            o.repaint(is_current and len(self) > 1)
+            o.repaint(self.__cur_workspace is o)
         if low:
             self.lrepaint(low)
 
     def lrepaint(self, low=False):
         for o in self.__workspaces:
             is_current = self.__cur_workspace is o
-            o.lrepaint(is_current and low)
+            o.lrepaint(is_current, is_current and low)
 
     def lrepaintf(self, low=False):
         f = self.get_path()
         for o in self.__workspaces:
             if o.get_path() == f:
                 is_current = self.__cur_workspace is o
-                o.lrepaint(is_current and low)
+                o.lrepaint(is_current, is_current and low)
 
     def xrepaint(self):
         for o in self.__workspaces:
-            is_current = self.__cur_workspace is o
-            o.xrepaint(is_current and len(self) > 1)
+            o.xrepaint(self.__cur_workspace is o)
 
     def get_prev_context(self):
         return self.__prev_context

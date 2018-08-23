@@ -123,9 +123,6 @@ def is_running_fileobj():
 def is_running_profile():
     return is_running_script("profile")
 
-def is_builtin_script():
-    return is_running_fileobj() or is_running_profile()
-
 _key_cnt = 0
 def gen_key():
     global _key_cnt
@@ -414,7 +411,7 @@ def byte_to_int(b, sign=False):
         __fail_unknown_byteorder()
 
 def bin_to_int(b, sign=False):
-    """Result depends on setting.endianness"""
+    # result depends on setting.endianness
     prefix = __get_endianness_prefix(setting.endianness)
     return __bin_to_int(prefix, b, sign)
 
@@ -475,7 +472,7 @@ def int_to_byte(x):
     return __int_to_bin('', x, 1)
 
 def int_to_bin(x, size):
-    """Result depends on setting.endianness"""
+    # result depends on setting.endianness
     prefix = __get_endianness_prefix(setting.endianness)
     return __int_to_bin(prefix, x, size)
 
@@ -715,21 +712,25 @@ def __execute(shell, l):
 
 def __iter_next_2k(g):
     return g.next()
+
 def __iter_next_3k(g):
     return next(g)
 
 def __get_xrange_2k(*l):
     return _builtin.xrange(*l) # silence pyflakes warning on Python 3
+
 def __get_xrange_3k(*l):
     return range(*l)
 
 def __str_to_bytes_2k(s):
     return s
+
 def __str_to_bytes_3k(s):
     return codecs.latin_1_encode(s)[0]
 
 def __bytes_to_str_2k(b):
     return b
+
 def __bytes_to_str_3k(b):
     return codecs.latin_1_decode(b)[0]
 

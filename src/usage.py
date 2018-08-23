@@ -78,10 +78,9 @@ bytes_per_line_metavar = _metavar("bytes_per_line")
 
 bytes_per_window = _("""
 Set number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes.
-This option sets number of lines printed per window, based on the number of bytes printed per line.
+Each window prints \fI<bytes_per_window>\fP bytes, using the current number of bytes per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
-"even" does not set number of bytes printed per window, but makes all windows have the same size when a new window is vertically added.
+"even" sets all windows to have the same size.
 "auto" is used by default.
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
@@ -89,16 +88,14 @@ bytes_per_window_metavar = _metavar("bytes_per_window")
 fg = _("""
 Set foreground color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-"black" is used by default.
-This option is not supported on VTxxx terminal emulators.
+Not supported on VTxxx terminal emulators.
 """)
 fg_metavar = _metavar("color")
 
 bg = _("""
 Set background color of the terminal.
 Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-"white" is used by default.
-This option is not supported on VTxxx terminal emulators.
+Not supported on VTxxx terminal emulators.
 """)
 bg_metavar = _metavar("color")
 

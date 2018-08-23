@@ -112,16 +112,19 @@ class Operand (object):
 
     def __get_min_cursor(self):
         return 1
+
     def __at_min_cursor(self):
         return self.__pos <= self.__get_min_cursor()
 
     def __get_max_cursor(self):
         return screen.get_size_x() - 2
+
     def __at_max_cursor(self):
         return self.__pos >= self.__get_max_cursor()
 
     def __get_tail_cursor(self):
         return len(self.__buf)
+
     def __at_tail_cursor(self):
         return self.__pos == self.__get_tail_cursor()
 

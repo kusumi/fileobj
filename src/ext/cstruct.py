@@ -42,8 +42,10 @@ def I(x):
 class _node (object):
     def __init__(self, type):
         self.type = type
+
     def get_size(self):
         return 0
+
     def get_repr(self, buf, name, indent):
         return []
 

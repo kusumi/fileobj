@@ -82,8 +82,10 @@ class Fileops (object):
 
     def test_insert(self):
         return self.__ref.test_insert()
+
     def test_replace(self):
         return self.__ref.test_replace()
+
     def test_delete(self):
         return self.__ref.test_delete()
 
@@ -92,36 +94,49 @@ class Fileops (object):
 
     def is_blk(self):
         return isinstance(self.__ref, blk.methods)
+
     def is_vm(self):
         return isinstance(self.__ref, vm.methods)
 
     def is_readonly(self):
         return self.__ref.is_readonly()
+
     def is_empty(self):
         return self.__ref.is_empty()
+
     def is_dirty(self):
         return self.__ref.is_dirty() or self.__ref.is_barrier_dirty()
 
     def get_size(self):
         return self.__ref.get_size() + self.__ref.get_barrier_delta()
+
     def get_sector_size(self):
         return self.__ref.get_sector_size()
+
     def get_id(self):
         return self.__ref.get_id()
+
     def get_path(self):
         return self.__ref.get_path()
+
     def get_short_path(self):
         return self.__ref.get_short_path()
+
     def get_alias(self):
         return self.__ref.get_alias()
+
     def get_magic(self):
         return self.__ref.get_magic()
+
     def get_mapping_offset(self):
         return self.__ref.get_mapping_offset()
+
     def get_mapping_length(self):
         return self.__ref.get_mapping_length()
+
     def get_type(self):
         return util.get_class(self.__ref)
+
     def get_repr(self):
         return repr(self.__ref)
 
@@ -140,11 +155,13 @@ class Fileops (object):
 
     def get_pos(self):
         return self.__pos
+
     def get_prev_pos(self):
         return self.__ppos
 
     def add_pos(self, d):
         self.__set_pos(self.__pos + d)
+
     def set_pos(self, n):
         self.__set_pos(n)
 
@@ -169,6 +186,7 @@ class Fileops (object):
 
     def discard_eof(self):
         self.__trail = self.test_insert() * 1
+
     def restore_eof(self):
         self.__trail = 0
 
@@ -186,11 +204,13 @@ class Fileops (object):
 
     def get_region_type(self):
         return self.__reg.type
+
     def set_region_type(self, type):
         self.__reg.set(type=type)
 
     def get_region_range(self):
         return self.__reg.beg, self.__reg.end, self.__reg.map
+
     def set_region_range(self, beg, end, map):
         self.__reg.set(beg=beg, end=end, map=map)
 
@@ -199,16 +219,19 @@ class Fileops (object):
 
     def get_search_word(self):
         return self.__ref.get_search_word()
+
     def set_search_word(self, s):
         self.__ref.set_search_word(s)
 
     def search(self, x, word, end=-1):
         return self.__ref.search(x, word, end)
+
     def rsearch(self, x, word, end=-1):
         return self.__ref.rsearch(x, word, end)
 
     def iter_search(self, x, word):
         return self.__ref.iter_search(self.__get_normalized_pos(x), word)
+
     def iter_rsearch(self, x, word):
         return self.__ref.iter_rsearch(self.__get_normalized_pos(x), word)
 
@@ -223,7 +246,7 @@ class Fileops (object):
             self.insert  = self.__insert
             self.replace = self.__replace
             self.delete  = self.__delete
-        if not util.is_builtin_script() and setting.use_auto_fileops_adjust:
+        if _not_builtin_script and setting.use_auto_fileops_adjust:
             self.read    = self.__decorate_read(self.read)
             self.insert  = self.__decorate_insert(self.insert)
             self.replace = self.__decorate_replace(self.replace)
@@ -353,29 +376,35 @@ class Fileops (object):
 
     def has_undo(self):
         return self.__ref.has_undo()
+
     def has_redo(self):
         return self.__ref.has_redo()
 
     def get_undo_size(self):
         return self.__ref.get_undo_size()
+
     def get_redo_size(self):
         return self.__ref.get_redo_size()
+
     def get_rollback_log_size(self):
         return self.__ref.get_rollback_log_size()
 
     def merge_undo(self, n):
         self.__ref.merge_undo(n)
+
     def merge_undo_until(self, to):
         """Merge until # of remaining undos is arg to"""
         self.merge_undo(self.get_undo_size() - to)
 
     def undo(self, n=1):
         return self.__ref.undo(n)
+
     def redo(self, n=1):
         return self.__ref.redo(n)
 
     def rollback(self, n=1):
         return self.__ref.rollback(n)
+
     def rollback_until(self, to):
         """Rollback until # of remaining undos is arg to"""
         return self.rollback(self.get_undo_size() - to)
@@ -419,7 +448,10 @@ def __alloc(f, name):
         obj = allocator.alloc(f)
     return Fileops(obj)
 
-if not util.is_builtin_script() and setting.use_auto_fileops_cleanup:
+_not_builtin_script = not util.is_running_fileobj() and \
+    not util.is_running_profile()
+
+if _not_builtin_script and setting.use_auto_fileops_cleanup:
     import atexit
 
     def __cleanup(ops):

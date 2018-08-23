@@ -31,30 +31,63 @@ from . import setting
 from . import util
 
 _has_chgat = True
+_use_color = True
 _windows = []
 
+A_NONE      = curses.A_NORMAL
+A_BOLD      = curses.A_BOLD
+A_REVERSE   = curses.A_REVERSE
+A_STANDOUT  = curses.A_STANDOUT
+A_UNDERLINE = curses.A_UNDERLINE
+
+COLOR_INITIALIZED = 1
+COLOR_UNUSED      = 2
+COLOR_UNSUPPORTED = 3
+
 def init(fg, bg):
-    global _has_chgat
+    global _has_chgat, _use_color
     std = curses.initscr()
-    color = __init_curses_color(fg, bg)
-    if color == -1:
+    color = A_NONE
+    arg = [setting.color_current, setting.color_zero]
+    l = [A_NONE for x in range(len(arg))]
+
+    ret = __init_curses_color(fg, bg, *arg)
+    if ret == COLOR_INITIALIZED:
+        ret = __set_curses_color(fg, bg)
+        if ret == -1:
+            log.error("Failed to set curses color")
+            _use_color = False
+        elif ret != A_NONE:
+            color = ret
+        else: # set misc only if fg/bg is unused
+            for i, x in enumerate(__set_curses_misc_color(*arg)):
+                if arg[i] and x == A_NONE:
+                    log.error("Failed to set curses misc color {0}".format(
+                        arg[i]))
+                l[i] = x
+    elif ret == COLOR_UNUSED:
+        log.info("curses color unused")
+    elif ret == COLOR_UNSUPPORTED:
+        log.info("curses color unsupported")
+    elif ret == -1:
         log.error("Failed to init curses color")
+        _use_color = False
+    else:
+        assert False, ret
+
     if __init_curses_io() == -1:
         log.debug("Failed to init curses io")
     if __test_curses_chgat(std) == -1:
         log.debug("Failed to test curses chgat")
         _has_chgat = False
-    return std, \
-        curses.A_NORMAL, \
-        curses.A_BOLD, \
-        curses.A_REVERSE, \
-        curses.A_STANDOUT, \
-        curses.A_UNDERLINE, \
-        curses.ACS_CKBOARD, \
-        color
+    return std, color, l[0], l[1]
 
 def cleanup():
-    assert not curses.isendwin()
+    try:
+        curses.isendwin() # raise if initscr() failed
+    except curses.error as e:
+        log.debug(e)
+        return -1
     curses.echo()
     curses.nocbreak()
     curses.endwin()
@@ -67,47 +100,70 @@ def __init_curses_io():
     curses.noecho()
     curses.cbreak()
     try:
-        # vt100 fails here but just ignore
-        curses.curs_set(0)
-    except Exception as e:
+        curses.curs_set(0) # vt100 fails here but just ignore
+    except curses.error as e:
         log.debug(e)
         return -1
 
-def __init_curses_color(fg, bg):
-    if fg is None and bg is None:
-        return 0
-    if not curses.has_colors():
-        return -1
-    fg, bg = __find_curses_color(fg, bg)
+def __init_curses_color(fg, bg, *l):
+    if not fg and not bg and not l:
+        return COLOR_UNUSED
+    if not has_color():
+        return COLOR_UNSUPPORTED
     try:
-        pair = 1
         curses.start_color()
-        curses.init_pair(pair, fg, bg)
-        return curses.color_pair(pair)
-    except Exception as e:
+        curses.use_default_colors()
+        return COLOR_INITIALIZED
+    except curses.error as e:
         log.error(e)
         return -1
 
-def __find_curses_color(fg, bg):
-    d = dict([l for l in __iter_color_pair()])
-    white = d.get("white")
-    black = d.get("black")
-    fg = d.get(fg, white)
-    bg = d.get(bg, black)
-    if fg != bg:
-        return fg, bg
-    elif fg == white: # white/white -> white/black
-        return fg, black
-    else: # other/other -> white/other
-        return white, bg
+def __set_curses_color(fg, bg):
+    d = dict(list(__iter_color_pair()))
+    pno = 1
+    if fg or bg:
+        ret = __init_curses_pair(pno, d.get(fg), d.get(bg))
+        if ret == -1:
+            return -1
+        return ret
+    return A_NONE
+
+def __set_curses_misc_color(*arg):
+    d = dict(list(__iter_color_pair()))
+    ret = []
+    pno = 2
+    for i, x in enumerate(arg):
+        fg = d.get(x)
+        if fg is None:
+            ret.append(A_NONE) # must keep none (keep unset color with 0)
+            continue
+        _ = __init_curses_pair(pno, fg, None)
+        if _ == -1:
+            ret.append(A_NONE) # no error return
+        else:
+            ret.append(_)
+        pno += 1
+    return ret
+
+def __init_curses_pair(pair_number, fg, bg):
+    if fg is None:
+        fg = -1
+    if bg is None:
+        bg = -1
+    try:
+        curses.init_pair(pair_number, fg, bg)
+        return curses.color_pair(pair_number)
+    except curses.error as e:
+        log.error(e)
+        return -1
 
 def __test_curses_chgat(std):
     try:
         # fails on Python 2.5 and some os
-        std.chgat(0, 0, 1, curses.A_NORMAL)
-        std.chgat(0, 0, 1, curses.A_BOLD)
+        std.chgat(0, 0, 1, A_NONE)
+        std.chgat(0, 0, 1, A_BOLD)
         std.erase()
-    except Exception as e:
+    except Exception as e: # curses.error ?
         log.debug(e)
         return -1
 
@@ -124,6 +180,17 @@ def newwin(leny, lenx, begy, begx, ref=None):
 
 def has_chgat():
     return _has_chgat
+
+def has_color():
+    if kernel.is_vtxxx(): # XXX add other terminals
+        return False
+    try:
+        return curses.has_colors() # raise if before initscr()
+    except curses.error:
+        return False
+
+def use_color():
+    return _use_color
 
 def iter_color_name():
     for k, v in __iter_color_pair():

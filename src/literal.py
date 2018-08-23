@@ -68,12 +68,16 @@ class Literal (object):
 
     def __eq__(self, o):
         return self.seq.__eq__(o.seq)
+
     def __gt__(self, o):
         return self.seq.__gt__(o.seq)
+
     def __ge__(self, o):
         return self.seq.__ge__(o.seq)
+
     def __lt__(self, o):
         return self.seq.__lt__(o.seq)
+
     def __le__(self, o):
         return self.seq.__le__(o.seq)
 
@@ -194,7 +198,7 @@ class ExtLiteral (SlowLiteral):
 
 class ArgLiteral (Literal):
     def __str__(self):
-        return '        ' + super(ArgLiteral, self).__str__()
+        return "    " + super(ArgLiteral, self).__str__()
 
 class InvalidLiteral (Literal):
     pass
