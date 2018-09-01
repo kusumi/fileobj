@@ -1,3 +1,10 @@
+v0.7.76
+=======
+- Minor fixes and cleanups
+- Fix --fg/--bg bug (since v0.7.75)
+- Add FILEOBJ_USE_TEXT_WINDOW
+- Remove FILEOBJ_USE_VERBOSE_WINDOW
+
 v0.7.75
 =======
 - Minor fixes and cleanups

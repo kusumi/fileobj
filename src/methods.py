@@ -473,7 +473,9 @@ def add_workspace_vertical(self, amp, opc, args, raw):
     __add_workspace(self, amp, opc, args, raw, True)
 
 def __add_workspace(self, amp, opc, args, raw, vertical):
-    self.co.add_workspace(vertical)
+    for x in range(get_int(amp)):
+        if self.co.add_workspace(vertical) == -1:
+            break
     self.co.repaint()
 
 def split_workspace(self, amp, opc, args, raw):

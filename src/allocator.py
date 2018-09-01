@@ -157,10 +157,10 @@ class Allocator (object):
     def __alloc(self, f, offset, length, cls):
         while cls:
             try:
-                log.info("Attempt {0} for '{1}'".format(cls, f))
+                log.debug("Attempt {0} for '{1}'".format(cls, f))
                 ret = cls(f, offset, length)
                 ret.set_magic()
-                log.info("Created {0} for '{1}'".format(repr(ret), f))
+                log.debug("Created {0} for '{1}'".format(repr(ret), f))
                 return ret
             except Exception as e:
                 log.error(e)

@@ -61,7 +61,7 @@ def __cleanup(arg):
     literal.cleanup()
     __log_error(arg)
     __print_error(arg)
-    log.info("Cleanup")
+    log.debug("Cleanup")
     log.cleanup()
 
 def __log_error(arg):
@@ -150,19 +150,19 @@ def dispatch(optargs=None):
 
     log.init(util.get_program_name())
 
-    log.info("-" * 50)
-    log.info("{0} {1}".format(util.get_program_path(),
+    log.debug("-" * 50)
+    log.debug("{0} {1}".format(util.get_program_path(),
         version.get_tag_string()))
-    log.info("{0} {1}".format(util.get_python_string(), sys.executable))
-    log.info("UNAME {0} {1}".format(util.get_os_name(), util.get_os_release()))
-    log.info("CPU {0}".format(util.get_cpu_name()))
-    log.info("RAM {0}".format(methods.get_meminfo_string()))
-    log.info("TERM {0}".format(kernel.get_term_info()))
-    log.info("LANG {0}".format(kernel.get_lang_info()))
-    log.info(methods.get_osdep_string())
-    log.info("argv {0}".format(sys.argv))
-    log.info("opts {0}".format(opts))
-    log.info("args {0}".format(args))
+    log.debug("{0} {1}".format(util.get_python_string(), sys.executable))
+    log.debug("UNAME {0} {1}".format(util.get_os_name(), util.get_os_release()))
+    log.debug("CPU {0}".format(util.get_cpu_name()))
+    log.debug("RAM {0}".format(methods.get_meminfo_string()))
+    log.debug("TERM {0}".format(kernel.get_term_info()))
+    log.debug("LANG {0}".format(kernel.get_lang_info()))
+    log.debug(methods.get_osdep_string())
+    log.debug("argv {0}".format(sys.argv))
+    log.debug("opts {0}".format(opts))
+    log.debug("args {0}".format(args))
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
@@ -183,10 +183,6 @@ def dispatch(optargs=None):
             wspnum = opts.O
     else:
         wspnum = 1
-    if not screen.has_color() and (opts.fg or opts.bg):
-        msg[1] = "Terminal color unsupported"
-        opts.fg = None
-        opts.bg = None
 
     l = []
     for _ in env.iter_defined_env():

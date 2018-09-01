@@ -33,26 +33,24 @@ from . import setting
 from . import trace
 from . import util
 
-"""
-Console
-    void._console
-        void.Console
-        void.ExtConsole
-    visual._console
-        visual.Console
-        visual.ExtConsole
-    edit.Console
-        edit._binary
-            edit.BI
-            edit.BR
-                edit.RangeBR
-                edit.BlockBR
-        edit._ascii
-            edit.AI
-            edit.AR
-                edit.RangeAR
-                edit.BlockAR
-"""
+# Console
+#     void._console
+#         void.Console
+#         void.ExtConsole
+#     visual._console
+#         visual.Console
+#         visual.ExtConsole
+#     edit.Console
+#         edit._binary
+#             edit.BI
+#             edit.BR
+#                 edit.RangeBR
+#                 edit.BlockBR
+#         edit._ascii
+#             edit.AI
+#             edit.AR
+#                 edit.RangeAR
+#                 edit.BlockAR
 
 seqno = 0
 

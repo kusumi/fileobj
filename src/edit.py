@@ -46,6 +46,7 @@ class Console (console.Console):
         try:
             self.test()
             self.co.discard_eof()
+            self.co.lrepaintf()
             self.__listen(arg)
             assert not self.co.is_barrier_active()
         except fileobj.FileobjError as e:

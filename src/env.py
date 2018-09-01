@@ -32,7 +32,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_IGNORECASE" # :set ic
     yield "FILEOBJ_USE_SIPREFIX" # :set si
     yield "FILEOBJ_USE_WRAPSCAN" # :set ws
-    yield "FILEOBJ_USE_VERBOSE_WINDOW"
+    yield "FILEOBJ_USE_TEXT_WINDOW"
     yield "FILEOBJ_USE_BACKUP"
     yield "FILEOBJ_ENDIANNESS" # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX" # -x, :set address <arg>
@@ -151,8 +151,8 @@ def __get_setting_use_siprefix():
 def __get_setting_use_wrapscan():
     return test_bool("FILEOBJ_USE_WRAPSCAN", True)
 
-def __get_setting_use_verbose_window():
-    return test_bool("FILEOBJ_USE_VERBOSE_WINDOW", False)
+def __get_setting_use_text_window():
+    return test_bool("FILEOBJ_USE_TEXT_WINDOW", True)
 
 def __get_setting_use_backup():
     return test_bool("FILEOBJ_USE_BACKUP", False)
@@ -297,7 +297,7 @@ def __get_setting_trace_word_size():
         return _
 
 def __get_setting_log_level():
-    return test_name("__FILEOBJ_LOG_LEVEL", "WARNING")
+    return test_name("__FILEOBJ_LOG_LEVEL", "INFO")
 
 def __get_setting_max_history():
     return test_gt_zero("__FILEOBJ_MAX_HISTORY", 1000)

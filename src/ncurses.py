@@ -182,12 +182,7 @@ def has_chgat():
     return _has_chgat
 
 def has_color():
-    if kernel.is_vtxxx(): # XXX add other terminals
-        return False
-    try:
-        return curses.has_colors() # raise if before initscr()
-    except curses.error:
-        return False
+    return curses.has_colors() # raise if before initscr()
 
 def use_color():
     return _use_color

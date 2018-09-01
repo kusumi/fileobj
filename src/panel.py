@@ -34,28 +34,26 @@ from . import setting
 from . import util
 from . import version
 
-"""
-_panel
-    Frame
-        virtual.NullFrame
-        StatusFrame
-            NullStatusFrame
-    Canvas
-        virtual._canvas
-            virtual.BinaryCanvas
-            virtual.ExtCanvas
-        DisplayCanvas
-            BinaryCanvas
-                visual.BinaryCanvas
-            TextCanvas
-                visual.TextCanvas
-            extension.ExtBinaryCanvas
-                visual.ExtBinaryCanvas
-            extension.ExtTextCanvas
-        StatusCanvas
-            VerboseStatusCanvas
-            SingleStatusCanvas
-"""
+# _panel
+#     Frame
+#         virtual.NullFrame
+#         StatusFrame
+#             NullStatusFrame
+#     Canvas
+#         virtual._canvas
+#             virtual.BinaryCanvas
+#             virtual.ExtCanvas
+#         DisplayCanvas
+#             BinaryCanvas
+#                 visual.BinaryCanvas
+#             TextCanvas
+#                 visual.TextCanvas
+#             extension.ExtBinaryCanvas
+#                 visual.ExtBinaryCanvas
+#             extension.ExtTextCanvas
+#         StatusCanvas
+#             VerboseStatusCanvas
+#             SingleStatusCanvas
 
 class _panel (object):
     def __init__(self, siz, pos):

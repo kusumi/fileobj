@@ -36,23 +36,21 @@ from . import setting
 from . import undo
 from . import util
 
-"""
-fileobj.Fileobj
-    romap.Fileobj
-        rrmap.Fileobj
-            rwmap.Fileobj
-    robuf.Fileobj
-        roext.Fileobj
-        rovm.Fileobj
-        rrbuf.Fileobj
-            rrvm.Fileobj
-            rwbuf.Fileobj
-                rwext.Fileobj
-    rofd.Fileobj
-        roblk.Fileobj
-        rwfd.Fileobj
-            rwblk.Fileobj
-"""
+# fileobj.Fileobj
+#     romap.Fileobj
+#         rrmap.Fileobj
+#             rwmap.Fileobj
+#     robuf.Fileobj
+#         roext.Fileobj
+#         rovm.Fileobj
+#         rrbuf.Fileobj
+#             rrvm.Fileobj
+#             rwbuf.Fileobj
+#                 rwext.Fileobj
+#     rofd.Fileobj
+#         roblk.Fileobj
+#         rwfd.Fileobj
+#             rwblk.Fileobj
 
 # any negative should work
 ERROR     = -1

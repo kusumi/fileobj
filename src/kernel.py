@@ -207,7 +207,7 @@ def get_blkdev_info(f):
     assert util.is_seq(l), l
 
     b = util.Namespace(name=f, size=l[0], sector_size=l[1], label=l[2])
-    log.info("Block device {0} ({1}, {2}, '{3}')".format(b.name,
+    log.debug("Block device {0} ({1}, {2}, '{3}')".format(b.name,
         util.get_size_repr(b.size), util.get_size_repr(b.sector_size),
         filebytes.str(b.label)))
     _blkdev_info_cache[b.name] = b
@@ -259,8 +259,8 @@ def get_inode(f):
     if o:
         ino = o.get_inode(f)
         if f in _inode_cache and ino != _inode_cache[f]:
-            log.info("inode#{0} for {1} was previously inode#{2}".format(ino, f,
-                _inode_cache[f]))
+            log.debug("inode#{0} for {1} was previously inode#{2}".format(ino,
+                f, _inode_cache[f]))
         _inode_cache[f] = ino
         return ino
     else:

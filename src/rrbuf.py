@@ -59,7 +59,7 @@ class Fileobj (robuf.Fileobj):
         old = self.get_id()
         self.__overwrite_self(f) # renaming changes inode#
         new = self.init_id()
-        log.info("{0}: id has changed from {1} to {2}".format(f, old, new))
+        log.debug("{0}: id has changed from {1} to {2}".format(f, old, new))
 
     def __overwrite_self(self, f):
         with util.do_atomic_write(f, fsync=kernel.fsync) as fd:

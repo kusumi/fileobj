@@ -29,17 +29,15 @@ from . import kbd
 from . import setting
 from . import util
 
-"""
-Literal
-    FastLiteral
-        RegexLiteral
-            StateLiteral
-    SlowLiteral
-        SearchLiteral
-        ExtLiteral
-    ArgLiteral
-    InvalidLiteral
-"""
+# Literal
+#     FastLiteral
+#         RegexLiteral
+#             StateLiteral
+#     SlowLiteral
+#         SearchLiteral
+#         ExtLiteral
+#     ArgLiteral
+#     InvalidLiteral
 
 class Literal (object):
     def __init__(self, str, seq, desc):
@@ -525,7 +523,9 @@ def init():
         ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw), this.s_set),)
 
     def __scan(l, o, cls):
-        for li in sorted(o.children):
+        if setting.use_debug:
+            assert tuple(o.children) == tuple(sorted(o.children)), o.children
+        for li in o.children: # already sorted (and must be sorted)
             if isinstance(li, cls):
                 l.append(li)
             __scan(l, li, cls)

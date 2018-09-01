@@ -26,6 +26,7 @@ from . import edit
 from . import extension
 from . import panel
 from . import screen
+from . import setting
 from . import util
 from . import virtual
 from . import visual
@@ -79,7 +80,8 @@ class Workspace (object):
             self.__cur_console = self.__consoles[i]
         self.__set_window(self.__cur_console)
         for o in self.__windows:
-            o.set_buffer(self.__cur_fileops)
+            if o:
+                o.set_buffer(self.__cur_fileops)
         def dispatch():
             return self.__cur_console.dispatch(arg)
         self.dispatch = dispatch
@@ -164,7 +166,8 @@ class Workspace (object):
 
     def get_height(self):
         bin_hei = self.__def_bwindow.get_size_y()
-        tex_hei = self.__def_twindow.get_size_y()
+        tex_hei = self.__def_twindow.get_size_y() if setting.use_text_window \
+            else bin_hei
         sta_hei = self.__def_swindow.get_size_y()
         sta_hei_ = self.__get_status_window_height()
         # screen size may change before build() while resizing
@@ -175,7 +178,8 @@ class Workspace (object):
 
     def get_width(self):
         bin_wid = self.__def_bwindow.get_size_x()
-        tex_wid = self.__def_twindow.get_size_x()
+        tex_wid = self.__def_twindow.get_size_x() if setting.use_text_window \
+            else 0
         sta_wid = self.__def_swindow.get_size_x()
         ret = bin_wid + tex_wid
         # screen size may change before build() while resizing
@@ -192,7 +196,7 @@ class Workspace (object):
 
     # horizontal split
     def build_dryrun_delta(self, hei_delta, beg_delta):
-        hei = self.__def_twindow.get_size_y() + self.__def_swindow.get_size_y()
+        hei = self.__def_bwindow.get_size_y() + self.__def_swindow.get_size_y()
         beg = self.__def_bwindow.get_position_y()
         return self.build_dryrun(hei + hei_delta, beg + beg_delta)
 
@@ -329,13 +333,17 @@ class Workspace (object):
         # update first for potential window parameter changes
         # (if yes, dryrun must have been done with new parameters)
         for o in self.__vwindows.values():
-            o.update()
+            if o:
+                o.update()
         for o in self.__bwindows.values():
-            o.update()
+            if o:
+                o.update()
         for o in self.__twindows.values():
-            o.update()
+            if o:
+                o.update()
         for o in self.__swindows.values():
-            o.update()
+            if o:
+                o.update()
 
         for o in self.__vwindows.values():
             self.__build_virtual_window(o)
@@ -347,11 +355,13 @@ class Workspace (object):
             self.__build_status_window(o)
 
         bin_hei = self.__def_bwindow.get_size_y()
-        tex_hei = self.__def_twindow.get_size_y()
+        tex_hei = self.__def_twindow.get_size_y() if setting.use_text_window \
+            else bin_hei
         assert bin_hei == tex_hei, (bin_hei, tex_hei)
 
         bin_wid = self.__def_bwindow.get_size_x()
-        tex_wid = self.__def_twindow.get_size_x()
+        tex_wid = self.__def_twindow.get_size_x() if setting.use_text_window \
+            else 0
         sta_wid = self.__def_swindow.get_size_x()
         assert bin_wid + tex_wid == sta_wid, (bin_wid, tex_wid, sta_wid)
 
@@ -368,8 +378,9 @@ class Workspace (object):
         self.__build_window(o, None, None)
 
     def __build_window(self, o, siz, pos):
-        o.resize(siz, pos)
-        o.update_capacity(self.__bpl)
+        if o: # None if window is disabled
+            o.resize(siz, pos)
+            o.update_capacity(self.__bpl)
 
     def __guess_virtual_window_width(self):
         return window.get_width(virtual.BinaryCanvas, self.__bpl)
@@ -378,7 +389,10 @@ class Workspace (object):
         return window.get_width(panel.BinaryCanvas, self.__bpl)
 
     def __guess_text_window_width(self):
-        return window.get_width(panel.TextCanvas, self.__bpl)
+        if setting.use_text_window:
+            return window.get_width(panel.TextCanvas, self.__bpl)
+        else:
+            return 0
 
     def guess_width(self):
         return self.__guess_binary_window_width() + \
@@ -418,7 +432,9 @@ class Workspace (object):
 
     def __get_text_window(self, cls):
         if cls not in self.__twindows:
-            if cls is console.get_default_class():
+            if not setting.use_text_window:
+                o = None
+            elif cls is console.get_default_class():
                 o = window.Window(panel.TextCanvas, panel.Frame)
             elif cls is void.ExtConsole:
                 o = window.Window(extension.ExtTextCanvas, panel.Frame)
@@ -474,104 +490,124 @@ class Workspace (object):
 
     def crepaint(self, current):
         for o in self.__windows:
-            if o in self.__bwindows.values():
-                o.crepaint(current)
-            elif o in self.__twindows.values():
-                o.crepaint(current)
-            else:
-                o.lrepaint(current, False) # entire window
+            if o:
+                if o in self.__bwindows.values():
+                    o.crepaint(current)
+                elif o in self.__twindows.values():
+                    o.crepaint(current)
+                else:
+                    o.lrepaint(current, False) # entire window
 
     def repaint(self, current):
         for o in self.__windows:
-            o.repaint(current)
+            if o:
+                o.repaint(current)
 
     def lrepaint(self, current, low):
         for o in self.__windows:
-            o.lrepaint(current, low)
+            if o:
+                o.lrepaint(current, low)
 
     def xrepaint(self, current):
         for o in self.__windows:
-            o.xrepaint(current)
+            if o:
+                o.xrepaint(current)
 
     def go_up(self, n=1):
         for o in self.__windows:
-            if o.go_up(n) == -1:
-                return -1
+            if o:
+                if o.go_up(n) == -1:
+                    return -1
 
     def go_down(self, n=1):
         for o in self.__windows:
-            if o.go_down(n) == -1:
-                return -1
+            if o:
+                if o.go_down(n) == -1:
+                    return -1
 
     def go_left(self, n=1):
         for o in self.__windows:
-            if o.go_left(n) == -1:
-                return -1
+            if o:
+                if o.go_left(n) == -1:
+                    return -1
 
     def go_right(self, n=1):
         for o in self.__windows:
-            if o.go_right(n) == -1:
-                return -1
+            if o:
+                if o.go_right(n) == -1:
+                    return -1
 
     def go_pprev(self, n):
         for o in self.__windows:
-            if o.go_pprev(n) == -1:
-                return -1
+            if o:
+                if o.go_pprev(n) == -1:
+                    return -1
 
     def go_hpprev(self, n):
         for o in self.__windows:
-            if o.go_hpprev(n) == -1:
-                return -1
+            if o:
+                if o.go_hpprev(n) == -1:
+                    return -1
 
     def go_pnext(self, n):
         for o in self.__windows:
-            if o.go_pnext(n) == -1:
-                return -1
+            if o:
+                if o.go_pnext(n) == -1:
+                    return -1
 
     def go_hpnext(self, n):
         for o in self.__windows:
-            if o.go_hpnext(n) == -1:
-                return -1
+            if o:
+                if o.go_hpnext(n) == -1:
+                    return -1
 
     def go_head(self, n):
         for o in self.__windows:
-            if o.go_head(n) == -1:
-                return -1
+            if o:
+                if o.go_head(n) == -1:
+                    return -1
 
     def go_tail(self, n):
         for o in self.__windows:
-            if o.go_tail(n) == -1:
-                return -1
+            if o:
+                if o.go_tail(n) == -1:
+                    return -1
 
     def go_lhead(self):
         for o in self.__windows:
-            if o.go_lhead() == -1:
-                return -1
+            if o:
+                if o.go_lhead() == -1:
+                    return -1
 
     def go_ltail(self, n):
         for o in self.__windows:
-            if o.go_ltail(n) == -1:
-                return -1
+            if o:
+                if o.go_ltail(n) == -1:
+                    return -1
 
     def go_phead(self, n):
         for o in self.__windows:
-            if o.go_phead(n) == -1:
-                return -1
+            if o:
+                if o.go_phead(n) == -1:
+                    return -1
 
     def go_pcenter(self):
         for o in self.__windows:
-            if o.go_pcenter() == -1:
-                return -1
+            if o:
+                if o.go_pcenter() == -1:
+                    return -1
 
     def go_ptail(self, n):
         for o in self.__windows:
-            if o.go_ptail(n) == -1:
-                return -1
+            if o:
+                if o.go_ptail(n) == -1:
+                    return -1
 
     def go_to(self, n):
         for o in self.__windows:
-            if o.go_to(n) == -1:
-                return -1
+            if o:
+                if o.go_to(n) == -1:
+                    return -1
 
     def get_bytes_per_line(self):
         return self.__bpl

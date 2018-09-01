@@ -25,6 +25,7 @@ from __future__ import division
 
 from . import panel
 from . import screen
+from . import setting
 from . import util
 
 class Window (object):
@@ -104,10 +105,13 @@ def get_min_binary_window_height(lpw=1):
     return lpw + 1 + _get_diff_y(lf, lc)
 
 def get_min_text_window_height(lpw=1):
-    # need at least 2(lines_per_window==1) lines
-    lf = panel.get_min_size(panel.Frame)
-    lc = panel.get_min_size(panel.TextCanvas)
-    return lpw + 1 + _get_diff_y(lf, lc)
+    if setting.use_text_window:
+        # need at least 2(lines_per_window==1) lines
+        lf = panel.get_min_size(panel.Frame)
+        lc = panel.get_min_size(panel.TextCanvas)
+        return lpw + 1 + _get_diff_y(lf, lc)
+    else:
+        return get_min_binary_window_height(lpw)
 
 def get_status_window_height(scls, fcls):
     assert util.is_subclass(scls, panel.StatusCanvas)
@@ -145,11 +149,12 @@ def get_max_bytes_per_line(wspnum):
     return max_bpl
 
 def __get_min_info():
-    bc = panel.BinaryCanvas(None, None)
-    tc = panel.TextCanvas(None, None)
     lf = panel.get_min_size(panel.Frame)
-    width = _get_diff_x(lf, panel.get_min_size(bc))
-    width += _get_diff_x(lf, panel.get_min_size(tc))
-    width += (bc.offset.x + tc.offset.x)
-    cell = bc.get_cell()[0] + tc.get_cell()[0]
+    bc = panel.BinaryCanvas(None, None)
+    width = _get_diff_x(lf, panel.get_min_size(bc)) + bc.offset.x
+    cell = bc.get_cell()[0]
+    if setting.use_text_window:
+        tc = panel.TextCanvas(None, None)
+        width += (_get_diff_x(lf, panel.get_min_size(tc)) + tc.offset.x)
+        cell += tc.get_cell()[0]
     return width, cell

@@ -28,7 +28,7 @@ from . import util
 
 def init(name, f=None):
     global _logger, _logmsg
-    if __get_attr() is None:
+    if __get_level() is None:
         return -1
     if _logger:
         return -1
@@ -37,7 +37,7 @@ def init(name, f=None):
         if setting.use_debug:
             logger.setLevel(logging.DEBUG)
         else:
-            logger.setLevel(__get_attr(logging.WARNING))
+            logger.setLevel(__get_level(logging.INFO))
         __add_handler(logger, f)
         _logger = logger
         _logmsg = []
@@ -49,7 +49,7 @@ def cleanup():
     if not _logger:
         return -1
     try:
-        info("Bye")
+        debug("Bye")
         __remove_handler(_logger)
     except Exception:
         return -1
@@ -57,7 +57,7 @@ def cleanup():
         _logmsg = None
         _logger = None
 
-def __get_attr(default=None):
+def __get_level(default=None):
     return getattr(logging, setting.log_level.upper(), default)
 
 def __add_handler(logger, f):
