@@ -39,14 +39,15 @@ A_BOLD          = 1
 A_REVERSE       = 2
 A_STANDOUT      = 4
 A_UNDERLINE     = 8
-A_COLOR         = 0
+A_COLOR_FB      = 0
 A_COLOR_CURRENT = 0
 A_COLOR_ZERO    = 0
+A_COLOR_PRINT   = 0
 
 def init(fg, bg):
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
-        A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT
 
 def cleanup():
     ncurses.cleanup_windows()

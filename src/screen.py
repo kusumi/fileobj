@@ -47,19 +47,21 @@ A_BOLD          = _screen.A_BOLD
 A_REVERSE       = _screen.A_REVERSE
 A_STANDOUT      = _screen.A_STANDOUT
 A_UNDERLINE     = _screen.A_UNDERLINE
-A_COLOR         = _screen.A_NONE
+A_COLOR_FB      = _screen.A_NONE
 A_COLOR_CURRENT = _screen.A_NONE
 A_COLOR_ZERO    = _screen.A_NONE
+A_COLOR_PRINT   = _screen.A_NONE
 
 def init(fg='', bg=''):
-    global _std, A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO
+    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT
     if update_size() == -1:
         return -1
     if _std:
         return -1
-    _std, A_COLOR, A_COLOR_CURRENT, A_COLOR_ZERO = _screen.init(fg, bg)
+    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT = \
+        _screen.init(fg, bg)
     _std.keypad(1)
-    _std.bkgd(' ', A_COLOR)
+    _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
 
     l = []
@@ -68,9 +70,10 @@ def init(fg='', bg=''):
     l.append("A_REVERSE=0x{0:X}".format(A_REVERSE))
     l.append("A_STANDOUT=0x{0:X}".format(A_STANDOUT))
     l.append("A_UNDERLINE=0x{0:X}".format(A_UNDERLINE))
-    l.append("A_COLOR=0x{0:X}".format(A_COLOR))
+    l.append("A_COLOR_FB=0x{0:X}".format(A_COLOR_FB))
     l.append("A_COLOR_CURRENT=0x{0:X}".format(A_COLOR_CURRENT))
     l.append("A_COLOR_ZERO=0x{0:X}".format(A_COLOR_ZERO))
+    l.append("A_COLOR_PRINT=0x{0:X}".format(A_COLOR_PRINT))
     log.debug("screen {0}".format(l))
 
 def cleanup():
@@ -177,7 +180,7 @@ def alloc(leny, lenx, begy, begx, ref=None):
     scr.scrollok(0)
     scr.idlok(0)
     scr.keypad(1)
-    scr.bkgd(' ', A_COLOR)
+    scr.bkgd(' ', A_COLOR_FB)
     return scr
 
 def parse_attr(default, extra=None):

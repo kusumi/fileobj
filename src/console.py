@@ -245,7 +245,7 @@ def refresh():
     _scr.refresh()
 
 def __chgat(x, s, attr):
-    _scr.chgat(0, x, 1, attr | screen.A_COLOR)
+    _scr.chgat(0, x, 1, attr | screen.A_COLOR_FB)
 
 def __alt_chgat(x, s, attr):
     if x < len(s):
@@ -264,7 +264,7 @@ def resize():
 
 def printl(x, s, attr=screen.A_NONE):
     try:
-        _scr.addstr(0, x, s, attr | screen.A_COLOR)
+        _scr.addstr(0, x, s, attr | screen.A_COLOR_FB)
     except Exception as e:
         if len(s) < screen.get_size_x() - 1:
             log.debug(e, x, s)

@@ -1,4 +1,4 @@
-# fileobj ([v0.7.76](https://github.com/kusumi/fileobj/releases/tag/v0.7.76))
+# fileobj ([v0.7.77](https://github.com/kusumi/fileobj/releases/tag/v0.7.77))
 
 ## About
 
@@ -6,19 +6,21 @@
 
 + Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
 
-![fileobj](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.76.png/max/max/1)
+![fileobj](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.77_.png/max/max/1)
 
-## Supported Python versions
+## Supported platforms
 
-|-2.6|2.7|3.0|3.1|3.2-3.7|
-|:---|:--|:--|:--|-------|
-|NO  |YES|NO |NO |YES    |
++ 1st tier - Linux
 
-## Supported operating systems
++ 2nd tier - \*BSD, Darwin, Solaris/illumos, Cygwin
 
-|Linux|\*BSD|Darwin|Solaris/illumos|Cygwin|Other Unix-likes|Windows|
-|:----|:----|:-----|:--------------|:-----|:---------------|:------|
-|YES  |YES  |YES   |YES            |YES   |untested        |NO     |
++ 3rd tier - Other Unix-likes (untested)
+
+## Requirements
+
++ Python 2.7 or Python 3.2+
+
++ ncurses (curses Python module)
 
 ## Install
 

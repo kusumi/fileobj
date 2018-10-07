@@ -48,10 +48,10 @@ def init(fg, bg):
     global _has_chgat, _use_color
     std = curses.initscr()
     color = A_NONE
-    arg = [setting.color_current, setting.color_zero]
+    arg = [setting.color_current, setting.color_zero, setting.color_print]
     l = [A_NONE for x in range(len(arg))]
 
-    ret = __init_curses_color(fg, bg, *arg)
+    ret = __init_curses_color(fg, bg, arg)
     if ret == COLOR_INITIALIZED:
         ret = __set_curses_color(fg, bg)
         if ret == -1:
@@ -60,7 +60,7 @@ def init(fg, bg):
         elif ret != A_NONE:
             color = ret
         else: # set misc only if fg/bg is unused
-            for i, x in enumerate(__set_curses_misc_color(*arg)):
+            for i, x in enumerate(__set_curses_misc_color(arg)):
                 if arg[i] and x == A_NONE:
                     log.error("Failed to set curses misc color {0}".format(
                         arg[i]))
@@ -80,7 +80,7 @@ def init(fg, bg):
     if __test_curses_chgat(std) == -1:
         log.debug("Failed to test curses chgat")
         _has_chgat = False
-    return std, color, l[0], l[1]
+    return std, color, l[0], l[1], l[2]
 
 def cleanup():
     try:
@@ -105,8 +105,8 @@ def __init_curses_io():
         log.debug(e)
         return -1
 
-def __init_curses_color(fg, bg, *l):
-    if not fg and not bg and not l:
+def __init_curses_color(fg, bg, arg):
+    if not fg and not bg and not arg:
         return COLOR_UNUSED
     if not has_color():
         return COLOR_UNSUPPORTED
@@ -128,7 +128,7 @@ def __set_curses_color(fg, bg):
         return ret
     return A_NONE
 
-def __set_curses_misc_color(*arg):
+def __set_curses_misc_color(arg):
     d = dict(list(__iter_color_pair()))
     ret = []
     pno = 2

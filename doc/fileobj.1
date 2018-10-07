@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "August 26, 2018" "FILEOBJ 0.7.76"
+.TH FILEOBJ 1 "October 6, 2018" "FILEOBJ 0.7.77"
 .nh
 .ad l
 .SH NAME
@@ -224,6 +224,14 @@ Set blank string to disable.
 Set color for zero (0) bytes within buffer contents.
 Ignored if \fBFILEOBJ_COLOR_FG\fP or \fBFILEOBJ_COLOR_BG\fP is set.
 Defaults to "green" if undefined.
+Set blank string to disable.
+.RE
+.PP
+\fBFILEOBJ_COLOR_PRINT\fP
+.RS 4
+Set color for printable bytes within buffer contents.
+Ignored if \fBFILEOBJ_COLOR_FG\fP or \fBFILEOBJ_COLOR_BG\fP is set.
+Defaults to "cyan" if undefined.
 Set blank string to disable.
 .RE
 .SH FILES

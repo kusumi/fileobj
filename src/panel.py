@@ -226,13 +226,13 @@ class Canvas (_panel):
     def chgat(self, y, x, num, attr=screen.A_NONE):
         try:
             # may raise on page change for previous pos
-            self.scr.chgat(y, x, num, attr | screen.A_COLOR)
+            self.scr.chgat(y, x, num, attr | screen.A_COLOR_FB)
         except Exception:
             pass # log this as error ?
 
     def printl(self, y, x, s, attr=screen.A_NONE):
         try:
-            self.scr.addstr(y, x, s, attr | screen.A_COLOR)
+            self.scr.addstr(y, x, s, attr | screen.A_COLOR_FB)
         except Exception as e:
             if (y < self.get_size_y() - 1) or \
                 (x + len(s) < self.get_size_x() - 1):
@@ -335,7 +335,6 @@ class DisplayCanvas (Canvas):
         self.attr_cursor = screen.parse_attr(screen.A_STANDOUT)
         self.attr_search = screen.parse_attr(screen.A_BOLD)
         self.attr_visual = screen.parse_attr(screen.A_STANDOUT)
-        self.__zlc = 0 # zero line count heuristic
 
     def crepaint(self, *arg):
         super(DisplayCanvas, self).crepaint(*arg)
@@ -362,20 +361,12 @@ class DisplayCanvas (Canvas):
         self.update_search(self.fileops.get_pos())
 
     def fill_line(self, y, x, buf, attr=screen.A_NONE):
-        if screen.A_COLOR_ZERO == screen.A_NONE:
+        if not self.buffer_attr_defined():
             super(DisplayCanvas, self).fill_line(y, x, buf, attr)
             return
-        if self.__zlc > 5:
-            if self.__try_fill_line_zero(y, x, buf, attr) != -1:
-                return
-        z = 0
         extra = ' ' * self.cell[1]
         for i, b in enumerate(filebytes.iter(buf)):
-            if self.test_zero_buffer(b):
-                a = attr | screen.A_COLOR_ZERO
-                z += 1
-            else:
-                a = attr
+            a = attr | self.get_buffer_attr(b)
             pos = x + self.get_cell_width(i)
             if setting.use_debug:
                 assert pos <= self.offset.x + \
@@ -388,22 +379,11 @@ class DisplayCanvas (Canvas):
                     self.get_cell_width(self.bufmap.x)
             if pos < self.get_size_x():
                 self.printl(y, pos, extra)
-        if len(buf) == z:
-            self.__zlc += 1
-
-    def __try_fill_line_zero(self, y, x, buf, attr):
-        if buf == len(buf) * filebytes.ZERO:
-            super(DisplayCanvas, self).fill_line(y, x, buf, attr |
-                screen.A_COLOR_ZERO)
-            self.__zlc += 1
-        else:
-            self.__zlc = 0
-            return -1
 
     def update_highlight(self):
         # update previous position first
         ppos = self.fileops.get_prev_pos()
-        attr = screen.A_COLOR_ZERO if self.test_zero_at(ppos) else screen.A_NONE
+        attr = self.get_buffer_attr_at(ppos, 1)
         self.chgat_posstr(ppos, screen.A_NONE)
         self.chgat_cursor(ppos, attr, attr, False)
         # update current position
@@ -416,7 +396,7 @@ class DisplayCanvas (Canvas):
     def __update_highlight_current(self, low):
         pos = self.fileops.get_pos()
         attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_NONE
-        attr2 = screen.A_COLOR_ZERO if self.test_zero_at(pos) else screen.A_NONE
+        attr2 = self.get_buffer_attr_at(pos, 1)
         self.chgat_posstr(pos, self.attr_posstr)
         self.chgat_cursor(pos, self.attr_cursor | attr1, attr2, low)
 
@@ -448,16 +428,22 @@ class DisplayCanvas (Canvas):
     def fill_posstr(self):
         return
 
-    def test_zero_buffer(self, b):
-        if screen.A_COLOR_ZERO == screen.A_NONE:
-            return False
-        assert len(b) == 1, b
-        return b == filebytes.ZERO
+    def buffer_attr_defined(self):
+        return screen.A_COLOR_ZERO != screen.A_NONE or \
+            screen.A_COLOR_PRINT != screen.A_NONE
 
-    def test_zero_at(self, pos):
-        if screen.A_COLOR_ZERO == screen.A_NONE:
-            return False
-        return self.fileops.read(pos, 1) == filebytes.ZERO
+    def get_buffer_attr_at(self, pos, siz):
+        return self.get_buffer_attr(self.fileops.read(pos, siz))
+
+    def get_buffer_attr(self, buf):
+        if not self.buffer_attr_defined():
+            return screen.A_NONE
+        ret = screen.A_NONE
+        if buf == len(buf) * filebytes.ZERO:
+            ret |= screen.A_COLOR_ZERO
+        if kbd.isprints(buf):
+            ret |= screen.A_COLOR_PRINT
+        return ret
 
     def update_search(self, pos):
         s = self.fileops.get_search_word()

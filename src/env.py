@@ -24,8 +24,8 @@
 import os
 import sys
 
+# considered stable interface, officially introduced in version 0.7.74
 def __iter_env_name():
-    """Stable env variables, officially introduced in version 0.7.74"""
     yield "FILEOBJ_USE_READONLY" # -R
     yield "FILEOBJ_USE_BYTES_BUFFER" # -B
     yield "FILEOBJ_USE_ASCII_EDIT" # :set binary,ascii
@@ -43,9 +43,9 @@ def __iter_env_name():
     yield "FILEOBJ_COLOR_BG" # --bg
     yield "FILEOBJ_COLOR_CURRENT"
     yield "FILEOBJ_COLOR_ZERO"
+    yield "FILEOBJ_COLOR_PRINT"
 
 def __iter_env_name_private():
-    """Unstable env variables (debugging)"""
     yield "__FILEOBJ_USE_DEBUG" # --debug, unittest (true)
     yield "__FILEOBJ_USE_GETCH" # unittest (false)
     yield "__FILEOBJ_USE_STDOUT" # unittest (true)
@@ -223,6 +223,13 @@ def __get_setting_color_current():
 
 def __get_setting_color_zero():
     ret = test_name("FILEOBJ_COLOR_ZERO", "green")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
+
+def __get_setting_color_print():
+    ret = test_name("FILEOBJ_COLOR_PRINT", "cyan")
     if not ret or ret.lower() == "none": # disable
         return None
     else:
