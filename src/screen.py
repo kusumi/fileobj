@@ -44,36 +44,33 @@ terminal = util.Namespace(height=-1, width=-1)
 
 A_NONE          = _screen.A_NONE
 A_BOLD          = _screen.A_BOLD
-A_REVERSE       = _screen.A_REVERSE
-A_STANDOUT      = _screen.A_STANDOUT
+A_REVERSE       = _screen.A_REVERSE # unused
+A_STANDOUT      = _screen.A_STANDOUT # unused
 A_UNDERLINE     = _screen.A_UNDERLINE
 A_COLOR_FB      = _screen.A_NONE
 A_COLOR_CURRENT = _screen.A_NONE
 A_COLOR_ZERO    = _screen.A_NONE
 A_COLOR_PRINT   = _screen.A_NONE
+A_COLOR_VISUAL  = _screen.A_NONE
 
-def init(fg='', bg=''):
-    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT
+def init():
+    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT, \
+        A_COLOR_VISUAL
     if update_size() == -1:
         return -1
     if _std:
         return -1
-    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT = \
-        _screen.init(fg, bg)
+    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT, \
+        A_COLOR_VISUAL = _screen.init()
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
 
+    this = sys.modules[__name__]
     l = []
-    l.append("A_NONE=0x{0:X}".format(A_NONE))
-    l.append("A_BOLD=0x{0:X}".format(A_BOLD))
-    l.append("A_REVERSE=0x{0:X}".format(A_REVERSE))
-    l.append("A_STANDOUT=0x{0:X}".format(A_STANDOUT))
-    l.append("A_UNDERLINE=0x{0:X}".format(A_UNDERLINE))
-    l.append("A_COLOR_FB=0x{0:X}".format(A_COLOR_FB))
-    l.append("A_COLOR_CURRENT=0x{0:X}".format(A_COLOR_CURRENT))
-    l.append("A_COLOR_ZERO=0x{0:X}".format(A_COLOR_ZERO))
-    l.append("A_COLOR_PRINT=0x{0:X}".format(A_COLOR_PRINT))
+    for x in ("NONE", "BOLD", "REVERSE", "STANDOUT", "UNDERLINE", "COLOR_FB",
+        "COLOR_CURRENT", "COLOR_ZERO", "COLOR_PRINT", "COLOR_VISUAL"):
+        l.append("A_{0}=0x{1:X}".format(x, getattr(this, "A_" + x)))
     log.debug("screen {0}".format(l))
 
 def cleanup():
@@ -183,24 +180,15 @@ def alloc(leny, lenx, begy, begx, ref=None):
     scr.bkgd(' ', A_COLOR_FB)
     return scr
 
-def parse_attr(default, extra=None):
-    if extra is None:
-        extra = []
-    assert util.is_seq(extra)
-    this = sys.modules[__name__]
-    attr = zero = A_NONE
-    for s in extra:
-        name = "A_" + s.upper()
-        if hasattr(this, name): # valid extra
-            attr |= getattr(this, name)
-
-    # handle special case
-    if kernel.is_screen() and use_color():
-        if default == A_STANDOUT: # will not standout
-            attr |= A_REVERSE
-
-    # return default if extra empty or invalid
-    if attr == zero:
-        return default
-    else:
-        return attr
+#def parse_attr(default):
+#    attr = zero = A_NONE
+#    # This was needed for --fg/--bg in tmux.
+#    # But since --fg/--bg are removed, plus A_STANDOUT is no longer used,
+#    # this doesn't help anything.
+#    #if kernel.is_screen() and use_color():
+#    #    if default == A_STANDOUT: # will not standout
+#    #        attr |= A_REVERSE
+#    if attr == zero:
+#        return default
+#    else:
+#        return attr

@@ -331,10 +331,9 @@ class DisplayCanvas (Canvas):
             self.chgat_posstr = self.alt_chgat_posstr
             self.chgat_cursor = self.alt_chgat_cursor
             self.chgat_search = self.alt_chgat_search
-        self.attr_posstr = screen.parse_attr(screen.A_BOLD)
-        self.attr_cursor = screen.parse_attr(screen.A_STANDOUT)
-        self.attr_search = screen.parse_attr(screen.A_BOLD)
-        self.attr_visual = screen.parse_attr(screen.A_STANDOUT)
+        self.attr_posstr = screen.A_BOLD
+        self.attr_search = screen.A_BOLD
+        self.attr_visual = screen.A_COLOR_VISUAL
 
     def crepaint(self, *arg):
         super(DisplayCanvas, self).crepaint(*arg)
@@ -395,10 +394,10 @@ class DisplayCanvas (Canvas):
 
     def __update_highlight_current(self, low):
         pos = self.fileops.get_pos()
-        attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_NONE
+        attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_STANDOUT
         attr2 = self.get_buffer_attr_at(pos, 1)
         self.chgat_posstr(pos, self.attr_posstr)
-        self.chgat_cursor(pos, self.attr_cursor | attr1, attr2, low)
+        self.chgat_cursor(pos, attr1, attr2, low)
 
     def sync_cursor(self):
         if self.in_same_page(self.fileops.get_pos(),
@@ -464,14 +463,15 @@ class DisplayCanvas (Canvas):
         self.__update_search(pos, beg, end, s)
 
     def __update_search(self, pos, beg, end, s):
-        attr_cursor = self.attr_search | self.attr_cursor
+        attr_cursor = self.attr_search
         for i in self.__iter_search_word(beg, end, s):
-            for j in range(len(s)):
+            for j, c in enumerate(filebytes.iter(s)):
                 x = i + j
                 here = (x == pos)
                 if here and self.current:
                     attr_cursor |= screen.A_COLOR_CURRENT
-                self.chgat_search(x, attr_cursor, self.attr_search, here)
+                attr_search = self.attr_search | self.get_buffer_attr(c)
+                self.chgat_search(x, attr_cursor, attr_search, here)
 
     def __iter_search_word(self, beg, end, s):
         if beg < 0:
@@ -666,8 +666,6 @@ class TextCanvas (DisplayCanvas, text_addon):
 class StatusCanvas (Canvas, default_addon):
     def __init__(self, siz, pos):
         super(StatusCanvas, self).__init__(siz, pos)
-        self.__attr_current_status = screen.parse_attr(screen.A_STANDOUT) | \
-            screen.A_COLOR_CURRENT
         self.__update()
 
     def update(self):
@@ -775,7 +773,7 @@ class StatusCanvas (Canvas, default_addon):
 
     def get_format_line(self, s):
         if self.current:
-            attr = self.__attr_current_status
+            attr = screen.A_COLOR_CURRENT
             if len(s) < self.get_size_x():
                 s += ' ' * (self.get_size_x() - len(s))
         else:

@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Don't replace "\n" with " ".
+# usage.help needs exact format to be printed.
 def _(s):
     s = s.replace("\n\n", "\n")
     if s.startswith("\n"):
@@ -85,20 +87,6 @@ Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
 
-fg = _("""
-Set foreground color of the terminal.
-Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-Not supported on VTxxx terminal emulators.
-""")
-fg_metavar = _metavar("color")
-
-bg = _("""
-Set background color of the terminal.
-Available colors for \fI<color>\fP are "black", "blue", "cyan", "green", "magenta", "red", "white" and "yellow".
-Not supported on VTxxx terminal emulators.
-""")
-bg_metavar = _metavar("color")
-
 force = _("""
 Ignore warnings which can be ignored.
 """)
@@ -107,10 +95,100 @@ test_screen = _("""
 Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
+env = _("""
+Print list of environment variables and exit.
+""")
+
 command = _("""
 Print list of editor commands and exit. Also see \fB:help\fP.
 """)
 
 sitepkg = _("""
 Print \fBpython\fP\|(1) site\-package directory and exit.
+""")
+
+FILEOBJ_USE_READONLY = _("""
+If defined, use read\-only mode (equivalent to \fB\-R\fP).
+""")
+
+FILEOBJ_USE_BYTES_BUFFER = _("""
+If defined, use Python bytes based buffer for regular files (equivalent to \fB\-B\fP).
+""")
+
+FILEOBJ_USE_ASCII_EDIT = _("""
+If defined, use ASCII edit mode (equivalent to \fB:set ascii\fP).
+Defaults to binary edit mode if undefined.
+""")
+
+FILEOBJ_USE_IGNORECASE = _("""
+If defined, search operation is case-insensitive (equivalent to \fB:set ic\fP).
+Defaults to case-sensitive if undefined.
+""")
+
+FILEOBJ_USE_SIPREFIX = _("""
+If defined, use 10^3(K) for kilo (equivalent to \fB:set si\fP).
+Defaults to 2^10(Ki) if undefined.
+""")
+
+FILEOBJ_USE_WRAPSCAN = _("""
+If defined, search wraps around the end of the buffer (equivalent to \fB:set ws\fP).
+Defaults to no wrap around if undefined.
+""")
+
+FILEOBJ_USE_TEXT_WINDOW = _("""
+If set to "false", do not use text window.
+Defaults to use text window if undefined.
+""")
+
+FILEOBJ_USE_BACKUP = _("""
+If defined, create backup files under \fI~/.fileobj\fP.
+Backup files start with '.'.
+Only applies to regular files.
+""")
+
+FILEOBJ_ENDIANNESS = _("""
+If set to "little" or "big", set endianness for multi-bytes data (equivalent to \fB:set le\fP and \fB:set be\fP).
+Defaults to host endian if undefined.
+""")
+
+FILEOBJ_ADDRESS_RADIX = _("""
+If set to "16", "10" or "8", show numbers in editor in either hexadecimal, decimal or octal (equivalent to \fB:set address\fP).
+Defaults to "16" if undefined.
+""")
+
+FILEOBJ_STATUS_RADIX = _("""
+If set to "16", "10" or "8", show numbers in status in either hexadecimal, decimal or octal (equivalent to \fB:set status\fP).
+Defaults to "10" if undefined.
+""")
+
+FILEOBJ_BYTES_PER_LINE = _("""
+Set number of bytes printed per line (equivalent to \fB\-\-bytes_per_line\fP and \fB:set bytes_per_line\fP).
+""")
+
+FILEOBJ_BYTES_PER_WINDOW = _("""
+Set number of bytes printed per window (equivalent to \fB\-\-bytes_per_window\fP and \fB:set bytes_per_window\fP).
+""")
+
+FILEOBJ_COLOR_CURRENT = _("""
+Set current cursor and window color.
+Defaults to "black,green" if undefined.
+Set blank string to disable.
+""")
+
+FILEOBJ_COLOR_ZERO = _("""
+Set color for zero (0) bytes within buffer contents.
+Defaults to "green" if undefined.
+Set blank string to disable.
+""")
+
+FILEOBJ_COLOR_PRINT = _("""
+Set color for printable bytes within buffer contents.
+Defaults to "cyan" if undefined.
+Set blank string to disable.
+""")
+
+FILEOBJ_COLOR_VISUAL = _("""
+Set color for visual region.
+Defaults to "red,yellow" if undefined.
+Set blank string to disable.
 """)

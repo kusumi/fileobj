@@ -41,46 +41,52 @@ A_STANDOUT  = curses.A_STANDOUT
 A_UNDERLINE = curses.A_UNDERLINE
 
 COLOR_INITIALIZED = 1
-COLOR_UNUSED      = 2
-COLOR_UNSUPPORTED = 3
+COLOR_UNSUPPORTED = 2
 
-def init(fg, bg):
+_default_color = None
+
+def init():
     global _has_chgat, _use_color
     std = curses.initscr()
     color = A_NONE
-    arg = [setting.color_current, setting.color_zero, setting.color_print]
+
+    fg, bg = setting.color_fg, setting.color_bg
+    arg = setting.color_current, setting.color_zero, setting.color_print, \
+        setting.color_visual,
+    standout = True, False, False, True
     l = [A_NONE for x in range(len(arg))]
 
-    ret = __init_curses_color(fg, bg, arg)
-    if ret == COLOR_INITIALIZED:
-        ret = __set_curses_color(fg, bg)
-        if ret == -1:
-            log.error("Failed to set curses color")
-            _use_color = False
-        elif ret != A_NONE:
-            color = ret
-        else: # set misc only if fg/bg is unused
-            for i, x in enumerate(__set_curses_misc_color(arg)):
-                if arg[i] and x == A_NONE:
-                    log.error("Failed to set curses misc color {0}".format(
-                        arg[i]))
-                l[i] = x
-    elif ret == COLOR_UNUSED:
+    if not fg and not bg and not arg:
         log.info("curses color unused")
-    elif ret == COLOR_UNSUPPORTED:
-        log.info("curses color unsupported")
-    elif ret == -1:
-        log.error("Failed to init curses color")
-        _use_color = False
     else:
-        assert False, ret
+        ret = __init_curses_color()
+        if ret == COLOR_INITIALIZED:
+            ret = __set_curses_color(fg, bg)
+            if ret == -1:
+                log.error("Failed to set curses color")
+                _use_color = False
+            elif ret != A_NONE:
+                color = ret
+            else: # set misc only if fg/bg is unused
+                for i, x in enumerate(__set_curses_color_misc(arg, standout)):
+                    if arg[i] and x == A_NONE:
+                        log.error("Failed to set curses misc color {0}".format(
+                            arg[i]))
+                    l[i] = x
+        elif ret == COLOR_UNSUPPORTED:
+            log.info("curses color unsupported")
+        elif ret == -1:
+            log.error("Failed to init curses color")
+            _use_color = False
+        else:
+            assert False, ret
 
     if __init_curses_io() == -1:
         log.debug("Failed to init curses io")
     if __test_curses_chgat(std) == -1:
         log.debug("Failed to test curses chgat")
         _has_chgat = False
-    return std, color, l[0], l[1], l[2]
+    return [std, color] + l
 
 def cleanup():
     try:
@@ -105,14 +111,14 @@ def __init_curses_io():
         log.debug(e)
         return -1
 
-def __init_curses_color(fg, bg, arg):
-    if not fg and not bg and not arg:
-        return COLOR_UNUSED
+def __init_curses_color():
+    global _default_color
     if not has_color():
         return COLOR_UNSUPPORTED
     try:
         curses.start_color()
         curses.use_default_colors()
+        _default_color = -1
         return COLOR_INITIALIZED
     except curses.error as e:
         log.error(e)
@@ -122,22 +128,33 @@ def __set_curses_color(fg, bg):
     d = dict(list(__iter_color_pair()))
     pno = 1
     if fg or bg:
-        ret = __init_curses_pair(pno, d.get(fg), d.get(bg))
-        if ret == -1:
-            return -1
-        return ret
-    return A_NONE
+        return __init_curses_pair(pno, d.get(fg), d.get(bg))
+    else:
+        return A_NONE
 
-def __set_curses_misc_color(arg):
+def __set_curses_color_misc(arg, standout):
     d = dict(list(__iter_color_pair()))
     ret = []
     pno = 2
     for i, x in enumerate(arg):
-        fg = d.get(x)
-        if fg is None:
+        if x is None:
+            if standout[i]:
+                x = "black,white"
+            else:
+                x = "white,black"
+        l = x.split(",", 1) # either side missing is valid
+        if len(l) == 1:
+            fg = d.get(l[0])
+            bg = None
+        elif len(l) == 2:
+            fg = d.get(l[0])
+            bg = d.get(l[1])
+        else:
+            assert False, x
+        if fg is None and bg is None:
             ret.append(A_NONE) # must keep none (keep unset color with 0)
             continue
-        _ = __init_curses_pair(pno, fg, None)
+        _ = __init_curses_pair(pno, fg, bg)
         if _ == -1:
             ret.append(A_NONE) # no error return
         else:
@@ -146,10 +163,12 @@ def __set_curses_misc_color(arg):
     return ret
 
 def __init_curses_pair(pair_number, fg, bg):
+    # https://docs.python.org/3/library/curses.html#curses.init_pair
+    assert 1 <= pair_number <= curses.COLOR_PAIRS-1, pair_number
     if fg is None:
-        fg = -1
+        fg = _default_color
     if bg is None:
-        bg = -1
+        bg = _default_color
     try:
         curses.init_pair(pair_number, fg, bg)
         return curses.color_pair(pair_number)
@@ -194,6 +213,8 @@ def iter_color_name():
 def __iter_color_pair():
     for k, v in sorted(util.iter_dir_items(curses)):
         if k.startswith("COLOR_") and isinstance(v, int):
+            if k == "COLOR_PAIRS": # not color name
+                continue
             s = k[len("COLOR_"):].lower()
             yield s, v
 

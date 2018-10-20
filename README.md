@@ -1,4 +1,4 @@
-# fileobj ([v0.7.77](https://github.com/kusumi/fileobj/releases/tag/v0.7.77))
+# fileobj ([v0.7.78](https://github.com/kusumi/fileobj/releases/tag/v0.7.78))
 
 ## About
 
@@ -61,6 +61,8 @@
 ## [Distributions](doc/README.distributions.md)
 
 ## [List of options](doc/README.list_of_options.md)
+
+## [List of environment variables](doc/README.list_of_environment_variables.md)
 
 ## [List of commands](doc/README.list_of_commands.md)
 

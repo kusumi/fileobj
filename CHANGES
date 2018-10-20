@@ -1,3 +1,17 @@
+v0.7.78
+=======
+- Minor fixes and cleanups
+- Add FILEOBJ_COLOR_VISUAL
+- Add --env
+- Remove --fg
+- Remove --bg
+- Rename FILEOBJ_COLOR_FG to __FILEOBJ_COLOR_FG
+- Rename FILEOBJ_COLOR_BG to __FILEOBJ_COLOR_BG
+- Allow FILEOBJ_COLOR_CURRENT to take "foreground,background" format
+- Allow FILEOBJ_COLOR_ZERO to take "foreground,background" format
+- Allow FILEOBJ_COLOR_PRINT to take "foreground,background" format
+- Allow FILEOBJ_COLOR_VISUAL to take "foreground,background" format
+
 v0.7.77
 =======
 - Minor fixes and cleanups

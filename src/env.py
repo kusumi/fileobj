@@ -24,7 +24,6 @@
 import os
 import sys
 
-# considered stable interface, officially introduced in version 0.7.74
 def __iter_env_name():
     yield "FILEOBJ_USE_READONLY" # -R
     yield "FILEOBJ_USE_BYTES_BUFFER" # -B
@@ -39,11 +38,10 @@ def __iter_env_name():
     yield "FILEOBJ_STATUS_RADIX" # -x, :set status <arg>
     yield "FILEOBJ_BYTES_PER_LINE" # --bytes_per_line, :set bytes_per_line
     yield "FILEOBJ_BYTES_PER_WINDOW" # --bytes_per_window, :set bytes_per_window
-    yield "FILEOBJ_COLOR_FG" # --fg
-    yield "FILEOBJ_COLOR_BG" # --bg
     yield "FILEOBJ_COLOR_CURRENT"
     yield "FILEOBJ_COLOR_ZERO"
     yield "FILEOBJ_COLOR_PRINT"
+    yield "FILEOBJ_COLOR_VISUAL"
 
 def __iter_env_name_private():
     yield "__FILEOBJ_USE_DEBUG" # --debug, unittest (true)
@@ -77,6 +75,8 @@ def __iter_env_name_private():
     yield "__FILEOBJ_TERMINAL_WIDTH"
     yield "__FILEOBJ_TEMP_SIZE"
     yield "__FILEOBJ_PATH_STREAM"
+    yield "__FILEOBJ_COLOR_FG"
+    yield "__FILEOBJ_COLOR_BG"
     yield "__FILEOBJ_KEY_BACKSPACE"
     yield "__FILEOBJ_KEY_DELETE"
 
@@ -200,22 +200,8 @@ def __get_setting_bytes_per_window():
     else:
         return e.lower() # return str even if e is \d+
 
-def __get_setting_color_fg():
-    e = getenv("FILEOBJ_COLOR_FG")
-    if e is None:
-        return None
-    else:
-        return e.lower()
-
-def __get_setting_color_bg():
-    e = getenv("FILEOBJ_COLOR_BG")
-    if e is None:
-        return None
-    else:
-        return e.lower()
-
 def __get_setting_color_current():
-    ret = test_name("FILEOBJ_COLOR_CURRENT", "green")
+    ret = test_name("FILEOBJ_COLOR_CURRENT", "black,green")
     if not ret or ret.lower() == "none": # disable
         return None
     else:
@@ -230,6 +216,13 @@ def __get_setting_color_zero():
 
 def __get_setting_color_print():
     ret = test_name("FILEOBJ_COLOR_PRINT", "cyan")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
+
+def __get_setting_color_visual():
+    ret = test_name("FILEOBJ_COLOR_VISUAL", "red,yellow")
     if not ret or ret.lower() == "none": # disable
         return None
     else:
@@ -336,6 +329,20 @@ def __get_setting_temp_size():
 
 def __get_setting_path_stream():
     return getenv("__FILEOBJ_PATH_STREAM")
+
+def __get_setting_color_fg():
+    e = getenv("__FILEOBJ_COLOR_FG")
+    if e is None:
+        return None
+    else:
+        return e.lower()
+
+def __get_setting_color_bg():
+    e = getenv("__FILEOBJ_COLOR_BG")
+    if e is None:
+        return None
+    else:
+        return e.lower()
 
 def __get_setting_key_backspace():
     return __get_setting_key("__FILEOBJ_KEY_BACKSPACE")

@@ -66,8 +66,8 @@ class _visual_addon (object):
             self.__update_visual(t, full)
         pos = self.fileops.get_pos()
         self.update_search(pos)
-        self.chgat_cursor(pos, self.attr_cursor | screen.A_COLOR_CURRENT,
-            self.attr_cursor | screen.A_COLOR_CURRENT, False)
+        self.chgat_cursor(pos, screen.A_COLOR_CURRENT, screen.A_COLOR_CURRENT,
+            False)
 
     def __update_visual(self, t, full):
         pos = self.fileops.get_pos()

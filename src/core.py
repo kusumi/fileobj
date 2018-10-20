@@ -103,10 +103,9 @@ def dispatch(optargs=None):
     parser.add_argument("-O", nargs="?", type=int, const=-1, metavar=usage.O_metavar, help=usage.O)
     parser.add_argument("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
     parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
-    parser.add_argument("--fg", default=setting.color_fg, metavar=usage.fg_metavar, help=usage.fg)
-    parser.add_argument("--bg", default=setting.color_bg, metavar=usage.bg_metavar, help=usage.bg)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
+    parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
     parser.add_argument("--version", action="version", version=version.__version__)
@@ -127,6 +126,16 @@ def dispatch(optargs=None):
 
     if opts.command:
         literal.print_literal()
+        return
+    if opts.env:
+        # XXX missing FILEOBJ_EXT_XXX
+        n = max([len(s) for s in env.iter_env_name()])
+        f = "{{0:<{0}}} {{1}}".format(n)
+        for x in env.iter_env_name():
+            assert hasattr(usage, x), x
+            s = getattr(usage, x)
+            s = s.replace("\n", " ").rstrip()
+            util.printf(f.format(x, s))
         return
     if opts.sitepkg:
         for x in package.get_paths():
@@ -213,7 +222,7 @@ def dispatch(optargs=None):
 
         # don't let go ncurses exception unless in debug
         try:
-            if screen.init(opts.fg, opts.bg) == -1:
+            if screen.init() == -1:
                 __error("Failed to initialize terminal")
             assert console.init() != -1
             if opts.test_screen:
@@ -328,9 +337,17 @@ def __update_screen(scr, repaint, l):
                 s = "should"
             scr.addstr(7, 1, "This {0} be underlined.".format(s),
                 screen.A_UNDERLINE)
-            if screen.has_color() and \
-                setting.color_current in list(screen.iter_color_name()):
-                s = "be in {0}".format(setting.color_current)
+            if screen.has_color() and setting.color_current is not None:
+                color_pair = setting.color_current.split(",", 1)
+                color_names = tuple(screen.iter_color_name())
+                res = []
+                for s in color_pair:
+                    if s in color_names:
+                        res.append(s)
+                if res:
+                    s = "be in {0}".format(",".join(res))
+                else:
+                    s = "not be in {0}".format(setting.color_current)
             else:
                 s = "not have any color"
             scr.addstr(8, 1, "This should {0}.".format(s),

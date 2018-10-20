@@ -34,16 +34,9 @@
                                 <bytes_per_window> are digit, "even" and "auto".
                                 "even" sets all windows to have the same size. "auto"
                                 is used by default.
-          --fg <color>          Set foreground color of the terminal. Available colors
-                                for <color> are "black", "blue", "cyan", "green",
-                                "magenta", "red", "white" and "yellow". Not supported
-                                on VTxxx terminal emulators.
-          --bg <color>          Set background color of the terminal. Available colors
-                                for <color> are "black", "blue", "cyan", "green",
-                                "magenta", "red", "white" and "yellow". Not supported
-                                on VTxxx terminal emulators.
           --force               Ignore warnings which can be ignored.
           --test_screen         Enter ncurses(3) screen test mode.
+          --env                 Print list of environment variables and exit.
           --command             Print list of editor commands and exit. Also see
                                 :help.
           --sitepkg             Print python(1) site-package directory and exit.

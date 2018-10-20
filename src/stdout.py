@@ -43,11 +43,12 @@ A_COLOR_FB      = 0
 A_COLOR_CURRENT = 0
 A_COLOR_ZERO    = 0
 A_COLOR_PRINT   = 0
+A_COLOR_VISUAL  = 0
 
-def init(fg, bg):
+def init():
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
-        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT, A_COLOR_VISUAL
 
 def cleanup():
     ncurses.cleanup_windows()

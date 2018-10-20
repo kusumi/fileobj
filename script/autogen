@@ -79,6 +79,22 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
+        cmd = "fileobj --env"
+        l = ["## List of environment variables"]
+        l.append("")
+        l.append("{0}$ {1}".format(I, cmd))
+
+        s = fileobj.util.execute_sh(cmd).stdout
+        for x in s.split("\n")[:-1]:
+            l.append("{0}{1}".format(I, x))
+        f = "./doc/README.list_of_environment_variables.md"
+        writel(f, l)
+        print(f)
+    except Exception as e:
+        sys.stderr.write("{0}\n".format(e))
+        sys.exit(1)
+
+    try:
         cmd = "fileobj --command"
         l = ["## List of commands"]
         l.append("")
