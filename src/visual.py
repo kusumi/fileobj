@@ -37,9 +37,9 @@ VISUAL = "VISUAL"
 VISUAL_LINE = "VISUAL LINE"
 VISUAL_BLOCK = "VISUAL BLOCK"
 
-class _visual_addon (object):
-    def init_method(self):
-        if screen.A_COLOR_ZERO == screen.A_NONE:
+class _visual_methods (object):
+    def init(self):
+        if self.buffer_attr_undefined():
             if screen.use_alt_chgat():
                 self.__chgat_head = self.__alt_chgat_head
                 self.__chgat_tail = self.__alt_chgat_tail
@@ -244,7 +244,7 @@ class _visual_addon (object):
         pos = self.get_cell_width(end - offset + 1)
         self.fill_line(y, x + pos, buf)
         if (end + 1) % self.bufmap.x: # not rightmost
-            # clear left side of the fill'd line (needed when moving left/up)
+            # clear right side of newly fill'd line (needed when moving left/up)
             self.printl(y, x + pos - 1, ' ' * self.cell[1])
 
     def __alt_chgat_tail_attr(self, y, x, end, offset):
@@ -261,7 +261,7 @@ class _visual_addon (object):
         pos = self.get_cell_width(end - offset + 1)
         self.fill_line(y, x + pos, buf)
         if (end + 1) % self.bufmap.x: # not rightmost
-            # clear left side of the fill'd line (needed when moving left/up)
+            # clear right side of newly fill'd line (needed when moving left/up)
             self.printl(y, x + pos - 1, ' ' * self.cell[1])
 
     # single
@@ -342,9 +342,9 @@ class _visual_addon (object):
         buf = self.fileops.read(offset, self.bufmap.x)
         self.fill_line(y, x, buf, attr)
 
-class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
+class BinaryCanvas (panel.BinaryCanvas, _visual_methods):
     def __init__(self, siz, pos):
-        self.init_method()
+        self.init()
         super(BinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
@@ -355,9 +355,9 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_addon):
         self.update_visual(False)
         self.refresh()
 
-class TextCanvas (panel.TextCanvas, _visual_addon):
+class TextCanvas (panel.TextCanvas, _visual_methods):
     def __init__(self, siz, pos):
-        self.init_method()
+        self.init()
         super(TextCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
@@ -368,9 +368,9 @@ class TextCanvas (panel.TextCanvas, _visual_addon):
         self.update_visual(False)
         self.refresh()
 
-class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_addon):
+class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_methods):
     def __init__(self, siz, pos):
-        self.init_method()
+        self.init()
         super(ExtBinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):

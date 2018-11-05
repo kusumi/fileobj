@@ -119,7 +119,17 @@ class NullStatusFrame (StatusFrame):
     def box(self):
         return
 
-class default_addon (object):
+class _addon (object):
+    def get_cell(self):
+        util.raise_no_impl("get_cell")
+
+    def get_offset(self):
+        util.raise_no_impl("get_offset")
+
+    def get_bufmap(self, bytes_per_line):
+        util.raise_no_impl("get_bufmap")
+
+class default_addon (_addon):
     def get_cell(self):
         return 1, 0
 
@@ -129,7 +139,7 @@ class default_addon (object):
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y(), self.get_size_x()
 
-class binary_addon (object):
+class binary_addon (_addon):
     def get_cell(self):
         return 3, 1
 
@@ -139,7 +149,7 @@ class binary_addon (object):
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
-class text_addon (object):
+class text_addon (_addon):
     def get_cell(self):
         return 1, 0
 
@@ -173,7 +183,7 @@ class Canvas (_panel):
     def update_capacity(self, bytes_per_line):
         self.bufmap.set(*self.get_bufmap(bytes_per_line))
 
-    def iter_buffer(self):
+    def iter_line_buffer(self):
         yield 0, '', screen.A_NONE
 
     def get_form_single(self, x):
@@ -199,7 +209,7 @@ class Canvas (_panel):
     def fill(self, low):
         super(Canvas, self).fill(low)
         x = self.offset.x
-        for i, b, a in self.iter_buffer(): # b could be str or bytes
+        for i, b, a in self.iter_line_buffer(): # b could be str or bytes
             y = self.offset.y + i
             if len(b) < self.bufmap.x:
                 self.clrl(y, x)
@@ -339,7 +349,7 @@ class DisplayCanvas (Canvas):
         super(DisplayCanvas, self).crepaint(*arg)
         self.update_highlight()
 
-    def iter_buffer(self):
+    def iter_line_buffer(self):
         b = self.read_page()
         n = 0
         for i in range(self.bufmap.y):
@@ -360,7 +370,7 @@ class DisplayCanvas (Canvas):
         self.update_search(self.fileops.get_pos())
 
     def fill_line(self, y, x, buf, attr=screen.A_NONE):
-        if not self.buffer_attr_defined():
+        if self.buffer_attr_undefined():
             super(DisplayCanvas, self).fill_line(y, x, buf, attr)
             return
         extra = ' ' * self.cell[1]
@@ -427,15 +437,14 @@ class DisplayCanvas (Canvas):
     def fill_posstr(self):
         return
 
-    def buffer_attr_defined(self):
-        return screen.A_COLOR_ZERO != screen.A_NONE or \
-            screen.A_COLOR_PRINT != screen.A_NONE
+    def buffer_attr_undefined(self):
+        return setting.color_zero is None and setting.color_print is None
 
     def get_buffer_attr_at(self, pos, siz):
         return self.get_buffer_attr(self.fileops.read(pos, siz))
 
     def get_buffer_attr(self, buf):
-        if not self.buffer_attr_defined():
+        if self.buffer_attr_undefined():
             return screen.A_NONE
         ret = screen.A_NONE
         if buf == len(buf) * filebytes.ZERO:
@@ -795,7 +804,7 @@ class VerboseStatusCanvas (StatusCanvas):
         yield 0, '', screen.A_NONE
         yield 1, '', screen.A_NONE
 
-    def iter_buffer(self):
+    def iter_line_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
         x = self.get_status_common1()
@@ -839,7 +848,7 @@ class SingleStatusCanvas (StatusCanvas):
     def iter_buffer_template(self):
         yield 0, '', screen.A_NONE
 
-    def iter_buffer(self):
+    def iter_line_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
         x = self.get_status_common1()

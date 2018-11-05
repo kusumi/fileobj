@@ -734,6 +734,17 @@ def __bytes_to_str_2k(b):
 def __bytes_to_str_3k(b):
     return codecs.latin_1_decode(b)[0]
 
+def __unicode_to_str_2k(u):
+    if not isinstance(u, _builtin.unicode):
+        return u
+    try:
+        return str(u)
+    except Exception:
+        return None # only allow ascii
+
+def __unicode_to_str_3k(u):
+    return u
+
 if is_python2():
     import __builtin__ as _builtin
     MAX_INT = sys.maxint
@@ -741,6 +752,7 @@ if is_python2():
     get_xrange = __get_xrange_2k
     str_to_bytes = __str_to_bytes_2k
     bytes_to_str = __bytes_to_str_2k
+    unicode_to_str = __unicode_to_str_2k
 else:
     import builtins as _builtin
     import codecs
@@ -749,6 +761,7 @@ else:
     get_xrange = __get_xrange_3k
     str_to_bytes = __str_to_bytes_3k
     bytes_to_str = __bytes_to_str_3k
+    unicode_to_str = __unicode_to_str_3k
 
 MIN_INT = -MAX_INT - 1
 _ = str_to_bytes

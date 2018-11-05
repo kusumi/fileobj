@@ -53,7 +53,7 @@ class Marks (object):
             return -1
         try:
             with kernel.fopen_text(f) as fd:
-                self.__data = self.__load_db(fd)
+                self.__data = self.__load_db(fd) # unicode_to_str unneeded
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))
 

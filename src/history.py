@@ -123,6 +123,7 @@ class History (object):
                 l = d.get(k)
                 if l:
                     for v in l:
+                        v = util.unicode_to_str(v) # Python 2 needs this
                         self.append(k, v)
         except Exception as e:
             log.error("Failed to read {0}, {1}".format(f, e))

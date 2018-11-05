@@ -103,7 +103,7 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
             self.printl(y, x, s, attr2)
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
-    def iter_buffer(self):
+    def iter_line_buffer(self):
         s = ' ' * self.bufmap.x
         for i in range(self.bufmap.y):
             yield i, s, screen.A_NONE
