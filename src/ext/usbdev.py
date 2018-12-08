@@ -76,8 +76,8 @@ def get_text(co, fo, args):
     return l
 
 def btoh(b):
-    return ''.join(["\\x{0:02X}".format(x)
-        for x in fileobj.filebytes.ords(b)])
+    return ''.join(["\\x{0:02X}".format(x) for x in
+        fileobj.filebytes.iter_ords(b)])
 
 def __get_device_descriptor(b):
     assert len(b) == 18, "Invalid device descriptor: " + btoh(b)

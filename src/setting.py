@@ -187,3 +187,7 @@ _snap = dict(_attr)
 
 this = sys.modules[__name__]
 init()
+
+buffer_attr_undefined = this.color_zero is None and \
+    this.color_ff is None and \
+    this.color_print is None

@@ -27,6 +27,7 @@ from __future__ import with_statement
 import os
 import re
 
+from . import filebytes
 from . import kernel
 from . import panel
 from . import screen
@@ -73,10 +74,10 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
             self.fileops.ioctl(self.bufmap.x)
 
     def get_form_single(self, x):
-        return util.bytes_to_str(x)
+        return chr(x)
 
     def get_form_line(self, buf):
-        return util.bytes_to_str(buf)
+        return ''.join([chr(x) for x in buf])
 
     def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
@@ -104,9 +105,15 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
     def iter_line_buffer(self):
-        s = ' ' * self.bufmap.x
+        s = filebytes.SPACE * self.bufmap.x
         for i in range(self.bufmap.y):
             yield i, s, screen.A_NONE
+
+    def get_form_single(self, x):
+        return chr(x)
+
+    def get_form_line(self, buf):
+        return ''.join([chr(x) for x in buf])
 
 def fail(s):
     raise ExtError(s)

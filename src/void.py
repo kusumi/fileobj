@@ -150,6 +150,8 @@ class _console (console.Console):
         self.add_method(literal.s_x          , methods, "xsave_buffer_quit")
         self.add_method(literal.s_q          , methods, "quit")
         self.add_method(literal.s_qneg       , methods, "force_quit")
+        self.add_method(literal.s_qa         , methods, "quit_all")
+        self.add_method(literal.s_qaneg      , methods, "force_quit_all")
         self.add_method(literal.s_fsearch    , methods, "search_forward")
         self.add_method(literal.s_rsearch    , methods, "search_backward")
         self.add_method(literal.n            , methods, "search_next_forward")

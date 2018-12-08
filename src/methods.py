@@ -302,7 +302,7 @@ def go_to(self, amp=None):
         self.co.lrepaintf()
 
 def __isprint(b):
-    return kbd.isprint(util.bytes_to_str(b))
+    return kbd.isprint(filebytes.ord(b))
 
 def __is_zero(b):
     return b == filebytes.ZERO
@@ -553,11 +553,6 @@ def __set_address(self, args):
     if __try_update_address_num_width(self) == -1:
         __rebuild(self)
 
-def __set_status(self, args):
-    if __set_radix_arg(self, args, "status_radix") == -1:
-        return
-    self.co.set_console(None, None) # XXX update offset:length in static info
-
 def __set_radix_arg(self, args, name):
     if len(args) == 1:
         self.co.show(getattr(setting, name))
@@ -605,6 +600,52 @@ def __rebuild(self):
     self.co.build()
     self.co.repaint() # repaint regardless of build result
 
+def __set_bytes_per_unit(self, args):
+    prev = setting.bytes_per_unit
+    if len(args) == 1:
+        self.co.show(prev)
+        return
+    try:
+        bpu = int(args[1])
+    except ValueError:
+        self.co.flash("Invalid arg: {0}".format(args[1]))
+        return
+    if not bpu:
+        self.co.flash("Invalid arg: {0}".format(bpu))
+        return
+
+    if bpu != prev:
+        setting.bytes_per_unit = bpu
+        # update bpl first if not multiple of bpu
+        unitlen = setting.bytes_per_unit
+        bpl = self.co.get_bytes_per_line()
+        if bpl % unitlen:
+            nbpl = (bpl // unitlen) * unitlen
+            if self.co.set_bytes_per_line(nbpl) == -1:
+                if self.co.set_bytes_per_line("max") == -1:
+                    if setting.use_debug:
+                        self.co.flash("Failed to set max bpl")
+                    else:
+                        self.co.flash("Failed to set to {0}".format(bpu))
+                    setting.bytes_per_unit = prev
+                    assert self.co.set_bytes_per_line(bpl) != -1, bpl
+                    return
+        assert self.co.get_bytes_per_line() % unitlen == 0
+        # ready to build
+        screen.clear()
+        # rollback if build failed, or vbuild folded bpl and as a result made
+        # inconsistency against setting.bytes_per_unit (updating bpl first
+        # should eliminate inconsistency mostly...).
+        if self.co.build_quiet() == -1 or \
+            self.co.get_bytes_per_line() % unitlen:
+            if setting.use_debug:
+                self.co.flash("Failed to build")
+            else:
+                self.co.flash("Failed to set to {0}".format(bpu))
+            setting.bytes_per_unit = prev
+            self.co.build()
+        self.co.repaint()
+
 def set_option(self, amp, opc, args, raw):
     _set_methods = {
         literal.s_set_binary.seq:  __set_binary,
@@ -618,9 +659,9 @@ def set_option(self, amp, opc, args, raw):
         literal.s_set_si.seq:      __set_si,
         literal.s_set_nosi.seq:    __set_nosi,
         literal.s_set_address.seq: __set_address,
-        literal.s_set_status.seq:  __set_status,
         literal.s_set_bpl.seq:     __set_bytes_per_line,
-        literal.s_set_bpw.seq:     __set_bytes_per_window, }
+        literal.s_set_bpw.seq:     __set_bytes_per_window,
+        literal.s_set_bpu.seq:     __set_bytes_per_unit, }
 
     if not args:
         self.co.flash("Argument required")
@@ -1006,48 +1047,50 @@ def __cmp_buffer_goto(self, pos):
 
 @_cleanup
 def inc_number(self, amp, opc, args, raw):
-    __do_replace_number(self, get_int(amp), opc, 1)
+    __do_replace_number(self, get_int(amp), self.co.get_unit_pos(),
+        setting.bytes_per_unit)
 
 @_cleanup
 def range_inc_number(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    __do_replace_number(self, get_int(amp), opc, siz)
+    __do_replace_number(self, get_int(amp), self.co.get_pos(), siz)
 
 @_cleanup
 def block_inc_number(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
         self.co.set_pos(beg)
-        __do_replace_number(self, get_int(amp), opc, siz)
+        __do_replace_number(self, get_int(amp), self.co.get_pos(), siz)
     else:
-        self.co.flash()
+        self.co.flash("Only single line allowed")
 
 @_cleanup
 def dec_number(self, amp, opc, args, raw):
-    __do_replace_number(self, -get_int(amp), opc, 1)
+    __do_replace_number(self, -get_int(amp), self.co.get_unit_pos(),
+        setting.bytes_per_unit)
 
 @_cleanup
 def range_dec_number(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    __do_replace_number(self, -get_int(amp), opc, siz)
+    __do_replace_number(self, -get_int(amp), self.co.get_pos(), siz)
 
 @_cleanup
 def block_dec_number(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
     if cnt == 1:
         self.co.set_pos(beg)
-        __do_replace_number(self, -get_int(amp), opc, siz)
+        __do_replace_number(self, -get_int(amp), self.co.get_pos(), siz)
     else:
-        self.co.flash()
+        self.co.flash("Only single line allowed")
 
-def __do_replace_number(self, amp, opc, siz):
+def __do_replace_number(self, amp, pos, siz):
     def fn(_):
         if siz > 8:
             self.co.flash("Only <= 8 bytes allowed")
             return
-        b = self.co.read_current(siz)
+        b = self.co.read(pos, siz)
         if not b:
             self.co.flash("Empty buffer")
             return
@@ -1057,7 +1100,7 @@ def __do_replace_number(self, amp, opc, siz):
         b = util.int_to_bin(x, len(b))
         if b is None:
             raise fileobj.FileobjError("Failed to convert")
-        self.co.replace_current(filebytes.ords(b))
+        self.co.replace(pos, filebytes.ords(b))
         self.co.show(util.bin_to_int(b))
     __exec(self, fn)
 
@@ -2236,6 +2279,14 @@ def force_quit(self, amp, opc, args, raw):
         return remove_workspace(self, amp, opc, args, raw)
     else:
         return QUIT
+
+def quit_all(self, amp, opc, args, raw):
+    remove_other_workspace(self, amp, opc, args, raw)
+    return quit(self, amp, opc, args, raw)
+
+def force_quit_all(self, amp, opc, args, raw):
+    remove_other_workspace(self, amp, opc, args, raw) # not must
+    return force_quit(self, amp, opc, args, raw)
 
 def save_buffer_quit(self, amp, opc, args, raw):
     if __save_buffer(self, args, False) != -1:

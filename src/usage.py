@@ -87,6 +87,21 @@ Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
 
+bytes_per_unit = _("""
+Set number of bytes printed per unit.
+Each unit prints \fI<bytes_per_unit>\fP bytes.
+"1" is used by default.
+""")
+bytes_per_unit_metavar = _metavar("bytes_per_unit")
+
+no_text = _("""
+Disable text window.
+""")
+
+no_color = _("""
+Disable color for buffer contents.
+""")
+
 force = _("""
 Ignore warnings which can be ignored.
 """)
@@ -152,13 +167,8 @@ Defaults to host endian if undefined.
 """)
 
 FILEOBJ_ADDRESS_RADIX = _("""
-If set to "16", "10" or "8", show numbers in editor in either hexadecimal, decimal or octal (equivalent to \fB:set address\fP).
+If set to "16", "10" or "8", show address in either hexadecimal, decimal or octal (equivalent to \fB:set address\fP).
 Defaults to "16" if undefined.
-""")
-
-FILEOBJ_STATUS_RADIX = _("""
-If set to "16", "10" or "8", show numbers in status in either hexadecimal, decimal or octal (equivalent to \fB:set status\fP).
-Defaults to "10" if undefined.
 """)
 
 FILEOBJ_BYTES_PER_LINE = _("""
@@ -169,26 +179,41 @@ FILEOBJ_BYTES_PER_WINDOW = _("""
 Set number of bytes printed per window (equivalent to \fB\-\-bytes_per_window\fP and \fB:set bytes_per_window\fP).
 """)
 
+FILEOBJ_BYTES_PER_UNIT = _("""
+Set number of bytes printed per unit (equivalent to \fB\-\-bytes_per_unit\fP and \fB:set bytes_per_unit\fP).
+""")
+
 FILEOBJ_COLOR_CURRENT = _("""
 Set current cursor and window color.
 Defaults to "black,green" if undefined.
 Set blank string to disable.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
 """)
 
 FILEOBJ_COLOR_ZERO = _("""
 Set color for zero (0) bytes within buffer contents.
 Defaults to "green" if undefined.
 Set blank string to disable.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+""")
+
+FILEOBJ_COLOR_FF = _("""
+Set color for 0xff bytes within buffer contents.
+Defaults to "magenta" if undefined.
+Set blank string to disable.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
 """)
 
 FILEOBJ_COLOR_PRINT = _("""
 Set color for printable bytes within buffer contents.
 Defaults to "cyan" if undefined.
 Set blank string to disable.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
 """)
 
 FILEOBJ_COLOR_VISUAL = _("""
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
 """)

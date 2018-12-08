@@ -261,7 +261,10 @@ def parse_size_repr(s, sector_size=-1):
 def eval_size_repr(s, sector_size=-1):
     if not s:
         return None
-    s, n = __extract_size_unit(s, sector_size)
+    l = __extract_size_unit(s, sector_size)
+    if l == -1:
+        return None
+    s, n = l
     if not s:
         s = "1"
     try:
@@ -294,7 +297,7 @@ def __extract_size_unit(s, sector_size):
         for x in "LBA", "SECTOR":
             if s[-len(x):].upper() == x:
                 if sector_size == -1:
-                    return None
+                    return -1
                 s = s[:-len(x)]
                 return s, sector_size
     return s, 1
@@ -716,12 +719,6 @@ def __iter_next_2k(g):
 def __iter_next_3k(g):
     return next(g)
 
-def __get_xrange_2k(*l):
-    return _builtin.xrange(*l) # silence pyflakes warning on Python 3
-
-def __get_xrange_3k(*l):
-    return range(*l)
-
 def __str_to_bytes_2k(s):
     return s
 
@@ -749,7 +746,7 @@ if is_python2():
     import __builtin__ as _builtin
     MAX_INT = sys.maxint
     iter_next = __iter_next_2k
-    get_xrange = __get_xrange_2k
+    get_xrange = _builtin.xrange # silence pyflakes warning on Python 3
     str_to_bytes = __str_to_bytes_2k
     bytes_to_str = __bytes_to_str_2k
     unicode_to_str = __unicode_to_str_2k
@@ -758,7 +755,7 @@ else:
     import codecs
     MAX_INT = sys.maxsize
     iter_next = __iter_next_3k
-    get_xrange = __get_xrange_3k
+    get_xrange = range
     str_to_bytes = __str_to_bytes_3k
     bytes_to_str = __bytes_to_str_3k
     unicode_to_str = __unicode_to_str_3k

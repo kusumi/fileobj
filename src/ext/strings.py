@@ -49,7 +49,7 @@ def get_text(co, fo, args):
         b = fo.read(pos, siz)
         if b:
             n = 0
-            for i, c in enumerate(b):
+            for i, c in enumerate(fileobj.filebytes.iter_ords(b)):
                 if fileobj.kbd.isprint(c):
                     n += 1
                 else:

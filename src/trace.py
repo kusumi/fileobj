@@ -107,9 +107,9 @@ def __write_script(sf, tf, e, tb):
         log.debug("Wrote text to {0}".format(fd))
 
 def __get_cmdline(tf):
-    ret = ["FILEOBJ_PATH_STREAM=" + os.path.basename(tf)]
+    ret = ["__FILEOBJ_PATH_STREAM=" + os.path.basename(tf)]
     for k, v in env.iter_defined_env():
-        if k not in ("FILEOBJ_USE_TRACE", "FILEOBJ_PATH_STREAM"):
+        if k not in ("__FILEOBJ_USE_TRACE", "__FILEOBJ_PATH_STREAM"):
             ret.append(k + "=" + v)
     for k, v in env.iter_defined_ext_env():
         ret.append(k + "=" + v)
@@ -122,5 +122,6 @@ def __creat_symlink(f, basename):
         l = os.path.join(d, basename)
         if os.path.islink(l):
             os.unlink(l)
+        f = os.path.basename(f)
         if kernel.symlink(f, l) != -1:
             log.debug("Create symlink {0} -> {1}".format(l, f))

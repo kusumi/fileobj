@@ -65,7 +65,7 @@ class ELFMagic (_magic):
         return _("\x7fELF")
 
     def get_name(self):
-        return "ELF"
+        return "elf"
 
 class EXEMagic (_magic):
     def test(self, fo):
@@ -75,12 +75,12 @@ class EXEMagic (_magic):
         return _("MZ")
 
     def get_name(self):
-        return "EXE"
+        return "exe"
 
 class PythonMagic (_magic):
     """Magic definition is taken from Lib/importlib/_bootstrap_external.py"""
     def __init__(self):
-        self.__name = "PYC"
+        self.__name = "pyc"
 
     def test(self, fo):
         v = self.__get_version(fo)
@@ -88,7 +88,7 @@ class PythonMagic (_magic):
             return False
         else:
             if v >= 1.5:
-                self.__name = "PYC|{0}".format(v)
+                self.__name = "pyc|{0}".format(v)
             return True
 
     def get_name(self):
@@ -135,7 +135,7 @@ class PythonMagic (_magic):
             v = 3.4
         elif x in (3320, 3330, 3340, 3350, 3351):
             v = 3.5
-        elif x in (3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378, \
+        elif x in (3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378,
             3379):
             v = 3.6
         elif x in (3390, 3391, 3392, 3393, 3394):
@@ -152,7 +152,7 @@ class JavaMagic (_magic):
         return _("\xCA\xFE\xBA\xBE")
 
     def get_name(self):
-        return "CLASS"
+        return "class"
 
 class RPMMagic (_magic):
     def test(self, fo):
@@ -162,7 +162,17 @@ class RPMMagic (_magic):
         return _("\xED\xAB\xEE\xDB")
 
     def get_name(self):
-        return "RPM"
+        return "rpm"
+
+class DEBMagic (_magic):
+    def test(self, fo):
+        return self.test_head(fo)
+
+    def get_magic(self):
+        return _("!<arch>\x0Adebian-binary   ")
+
+    def get_name(self):
+        return "deb"
 
 class BMPMagic (_magic):
     def test(self, fo):
@@ -172,7 +182,7 @@ class BMPMagic (_magic):
         return _("BM")
 
     def get_name(self):
-        return "BMP"
+        return "bmp"
 
 class JPEGMagic (_magic):
     def test(self, fo):
@@ -183,7 +193,7 @@ class JPEGMagic (_magic):
         return _("\xFF\xD8"), _("\xFF\xD9")
 
     def get_name(self):
-        return "JPEG"
+        return "jpeg"
 
 class GIFMagic (_magic):
     def test(self, fo):
@@ -194,7 +204,7 @@ class GIFMagic (_magic):
         return _("GIF87a"), _("GIF89a")
 
     def get_name(self):
-        return "GIF"
+        return "gif"
 
 class PNGMagic (_magic):
     def test(self, fo):
@@ -204,7 +214,7 @@ class PNGMagic (_magic):
         return _("\x89PNG")
 
     def get_name(self):
-        return "PNG"
+        return "png"
 
 class PDFMagic (_magic):
     def test(self, fo):
@@ -214,7 +224,7 @@ class PDFMagic (_magic):
         return _("%PDF")
 
     def get_name(self):
-        return "PDF"
+        return "pdf"
 
 class PSMagic (_magic):
     def test(self, fo):
@@ -224,7 +234,7 @@ class PSMagic (_magic):
         return _("%!")
 
     def get_name(self):
-        return "PS"
+        return "ps"
 
 class MSOfficeMagic (_magic):
     def test(self, fo):
@@ -234,7 +244,7 @@ class MSOfficeMagic (_magic):
         return _("\xD0\xCF\x11\xE0")
 
     def get_name(self):
-        return "MSOffice"
+        return "msoffice"
 
 class LHAMagic (_magic):
     def test(self, fo):
@@ -245,7 +255,7 @@ class LHAMagic (_magic):
             (b[4:5] == _("-"))
 
     def get_name(self):
-        return "LHA"
+        return "lha"
 
 class ZIPMagic (_magic):
     def test(self, fo):
@@ -255,7 +265,7 @@ class ZIPMagic (_magic):
         return _("PK")
 
     def get_name(self):
-        return "ZIP"
+        return "zip"
 
 class GZIPMagic (_magic):
     def test(self, fo):
@@ -265,7 +275,7 @@ class GZIPMagic (_magic):
         return _("\x1F\x8B")
 
     def get_name(self):
-        return "GZIP"
+        return "gzip"
 
 class BZIPMagic (_magic):
     def test(self, fo):
@@ -275,7 +285,43 @@ class BZIPMagic (_magic):
         return _("BZh")
 
     def get_name(self):
-        return "BZIP"
+        return "bzip"
+
+class ARMagic (_magic):
+    def test(self, fo):
+        return self.test_head(fo)
+
+    def get_magic(self):
+        return _("!<arch>\x0A")
+
+    def get_name(self):
+        return "ar"
+
+class TARMagic (_magic):
+    def test(self, fo):
+        b = self.read(fo, 257, 6)
+        if b == _("ustar\x00"):
+            return True # POSIX
+        b = self.read(fo, 257, 8)
+        if b == _("ustar  \x00"):
+            return True # GNU
+        return False
+
+    def get_name(self):
+        return "tar"
+
+class CPIOMagic (_magic):
+    def test(self, fo):
+        b = self.read(fo, 0, 2)
+        if b == _("\xC7\x71") or b == _("\x71\xC7"): # 070707
+            return True # binary
+        b = self.read(fo, 0, 6)
+        if b == _("070701"):
+            return True # ascii
+        return False
+
+    def get_name(self):
+        return "cpio"
 
 class _blk_magic (_magic):
     pass
@@ -291,7 +337,7 @@ class ISO9660Magic (_blk_magic):
         return _("CD001")
 
     def get_name(self):
-        return "ISO9660"
+        return "iso9660"
 
 class LVM2PVMagic (_blk_magic):
     def test(self, fo):
@@ -301,7 +347,7 @@ class LVM2PVMagic (_blk_magic):
         return _("LABELONE")
 
     def get_name(self):
-        return "LVM2|PV"
+        return "lvm2|pv"
 
 class HAMMERFSMagic (_blk_magic):
     """Magic definition is taken from
@@ -313,7 +359,7 @@ HAMMER_FSBUF_VOLUME in sys/vfs/hammer/hammer_disk.h"""
         return _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8") # le
 
     def get_name(self):
-        return "HAMMERFS"
+        return "hammerfs"
 
 class MBRMagic (_blk_magic):
     def test(self, fo):
@@ -323,7 +369,7 @@ class MBRMagic (_blk_magic):
         return _("\x55\xAA")
 
     def get_name(self):
-        return "MBR"
+        return "mbr"
 
 def get_string(fo):
     return __get_sring(fo, _magics)
@@ -340,12 +386,14 @@ def __get_sring(fo, l):
             return o.get_name()
     return ''
 
+# DEBMagic comes before ARMagic
 _magics = \
 ELFMagic, \
 EXEMagic, \
 PythonMagic, \
 JavaMagic, \
 RPMMagic, \
+DEBMagic, \
 BMPMagic, \
 JPEGMagic, \
 GIFMagic, \
@@ -357,6 +405,9 @@ LHAMagic, \
 ZIPMagic, \
 GZIPMagic, \
 BZIPMagic, \
+ARMagic, \
+TARMagic, \
+CPIOMagic, \
 ISO9660Magic, \
 LVM2PVMagic, \
 HAMMERFSMagic, \

@@ -45,23 +45,24 @@ terminal = util.Namespace(height=-1, width=-1)
 A_NONE          = _screen.A_NONE
 A_BOLD          = _screen.A_BOLD
 A_REVERSE       = _screen.A_REVERSE # unused
-A_STANDOUT      = _screen.A_STANDOUT # unused
+A_STANDOUT      = _screen.A_STANDOUT
 A_UNDERLINE     = _screen.A_UNDERLINE
 A_COLOR_FB      = _screen.A_NONE
 A_COLOR_CURRENT = _screen.A_NONE
 A_COLOR_ZERO    = _screen.A_NONE
+A_COLOR_FF      = _screen.A_NONE
 A_COLOR_PRINT   = _screen.A_NONE
 A_COLOR_VISUAL  = _screen.A_NONE
 
 def init():
-    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT, \
-        A_COLOR_VISUAL
+    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
+        A_COLOR_PRINT, A_COLOR_VISUAL
     if update_size() == -1:
         return -1
     if _std:
         return -1
-    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_PRINT, \
-        A_COLOR_VISUAL = _screen.init()
+    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
+        A_COLOR_PRINT, A_COLOR_VISUAL = _screen.init()
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
@@ -69,7 +70,8 @@ def init():
     this = sys.modules[__name__]
     l = []
     for x in ("NONE", "BOLD", "REVERSE", "STANDOUT", "UNDERLINE", "COLOR_FB",
-        "COLOR_CURRENT", "COLOR_ZERO", "COLOR_PRINT", "COLOR_VISUAL"):
+        "COLOR_CURRENT", "COLOR_ZERO", "COLOR_FF", "COLOR_PRINT",
+        "COLOR_VISUAL"):
         l.append("A_{0}=0x{1:X}".format(x, getattr(this, "A_" + x)))
     log.debug("screen {0}".format(l))
 
@@ -179,16 +181,3 @@ def alloc(leny, lenx, begy, begx, ref=None):
     scr.keypad(1)
     scr.bkgd(' ', A_COLOR_FB)
     return scr
-
-#def parse_attr(default):
-#    attr = zero = A_NONE
-#    # This was needed for --fg/--bg in tmux.
-#    # But since --fg/--bg are removed, plus A_STANDOUT is no longer used,
-#    # this doesn't help anything.
-#    #if kernel.is_screen() and use_color():
-#    #    if default == A_STANDOUT: # will not standout
-#    #        attr |= A_REVERSE
-#    if attr == zero:
-#        return default
-#    else:
-#        return attr

@@ -31,6 +31,7 @@ from . import literal
 from . import methods
 from . import panel
 from . import screen
+from . import setting
 from . import util
 
 VISUAL = "VISUAL"
@@ -39,7 +40,7 @@ VISUAL_BLOCK = "VISUAL BLOCK"
 
 class _visual_methods (object):
     def init(self):
-        if self.buffer_attr_undefined():
+        if setting.buffer_attr_undefined:
             if screen.use_alt_chgat():
                 self.__chgat_head = self.__alt_chgat_head
                 self.__chgat_tail = self.__alt_chgat_tail
@@ -59,6 +60,8 @@ class _visual_methods (object):
                 self.__chgat_outside = self.__chgat_outside_attr
 
     def update_visual(self, full):
+        if not self.fileops.has_region():
+            return # last repaint before exit
         t = self.fileops.get_region_type()
         if t == VISUAL_BLOCK:
             self.__update_block_visual(full)
@@ -86,6 +89,8 @@ class _visual_methods (object):
         if t == VISUAL_LINE:
             beg -= beg % mapx
             end += (mapx - 1 - end % mapx)
+        if setting.use_unit_based and (end % setting.bytes_per_unit == 0):
+            end += (setting.bytes_per_unit - 1) # round up before set region
         self.fileops.set_region_range(beg, end, self.bufmap)
 
         pgo = self.get_page_offset()
@@ -105,12 +110,12 @@ class _visual_methods (object):
             else:
                 if a < b:
                     a, b = b, a
-                l = [b + i for i in range(0, a - b + mapx, mapx)]
+                l = [b + i for i in util.get_xrange(0, a - b + mapx, mapx)]
 
         limit = self.fileops.get_max_pos()
         y = self.offset.y
         x = self.offset.x
-        for _ in range(self.bufmap.y):
+        for _ in util.get_xrange(self.bufmap.y):
             if lcur > limit:
                 break
             lnext = lcur + mapx
@@ -150,6 +155,8 @@ class _visual_methods (object):
         lend = end - d2
         if d1 > d2:
             d2, d1 = d1, d2
+        if setting.use_unit_based:
+            d2 += (setting.bytes_per_unit - 1) # round up before set region
         self.fileops.set_region_range(lbeg + d1, lend + d2, self.bufmap)
 
         lcur = self.get_page_offset()
@@ -165,12 +172,12 @@ class _visual_methods (object):
             else:
                 if a < b:
                     a, b = b, a
-                l = [b + i for i in range(0, a - b + mapx, mapx)]
+                l = [b + i for i in util.get_xrange(0, a - b + mapx, mapx)]
 
         limit = self.fileops.get_max_pos()
         y = self.offset.y
         x = self.offset.x
-        for _ in range(self.bufmap.y):
+        for _ in util.get_xrange(self.bufmap.y):
             if lcur > limit:
                 break
             if full or lr or (lcur in l):
@@ -238,14 +245,8 @@ class _visual_methods (object):
     def __chgat_tail_attr(self, y, x, end, offset):
         siz = self.get_cell_edge(end - offset + 1)
         self.chgat(y, x, siz, self.attr_visual)
-        if end + 1 > self.fileops.get_max_pos():
-            return
-        buf = self.fileops.read(end + 1, self.bufmap.x - (end - offset + 1))
-        pos = self.get_cell_width(end - offset + 1)
-        self.fill_line(y, x + pos, buf)
-        if (end + 1) % self.bufmap.x: # not rightmost
-            # clear right side of newly fill'd line (needed when moving left/up)
-            self.printl(y, x + pos - 1, ' ' * self.cell[1])
+        if end + 1 <= self.fileops.get_max_pos():
+            self.__chgat_tail_attr_clear(y, x, end, offset)
 
     def __alt_chgat_tail_attr(self, y, x, end, offset):
         siz = self.get_cell_edge(end - offset + 1)
@@ -255,26 +256,35 @@ class _visual_methods (object):
         if d > 0:
             s += ' ' * d
         self.printl(y, x, s[:siz], self.attr_visual)
-        if end + 1 > self.fileops.get_max_pos():
-            return
-        buf = self.fileops.read(end + 1, self.bufmap.x - (end - offset + 1))
-        pos = self.get_cell_width(end - offset + 1)
-        self.fill_line(y, x + pos, buf)
+        if end + 1 <= self.fileops.get_max_pos():
+            self.__chgat_tail_attr_clear(y, x, end, offset)
+
+    def __chgat_tail_attr_clear(self, y, x, end, offset):
+        num = end - offset + 1
+        buf = self.fileops.read(end + 1, self.bufmap.x - num)
+        pos = self.get_cell_width(num)
+        self.fill_line_nth(y, x + pos, buf, num)
         if (end + 1) % self.bufmap.x: # not rightmost
             # clear right side of newly fill'd line (needed when moving left/up)
-            self.printl(y, x + pos - 1, ' ' * self.cell[1])
+            unitlen = setting.bytes_per_unit
+            if (num % unitlen) == 0:
+                self.printl(y, x + pos - 1, ' ' * self.cell[1])
+            else:
+                skip = unitlen - (num % unitlen)
+                skip *= self.cell[2]
+                self.printl(y, x + pos + skip, ' ' * self.cell[1])
 
     # single
     def __chgat_single(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
-        siz = self.get_cell_edge(end - beg + 1)
+        siz = self.get_cell_distance(beg, end)
         wid = self.get_cell_edge(self.bufmap.x)
         self.chgat(y, x, wid)
         self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
-        siz = self.get_cell_edge(end - beg + 1)
+        siz = self.get_cell_distance(beg, end)
         end = pos + siz
         buf = self.fileops.read(offset, self.bufmap.x)
         s = self.get_form_line(buf)
@@ -287,14 +297,14 @@ class _visual_methods (object):
 
     def __chgat_single_attr(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
-        siz = self.get_cell_edge(end - beg + 1)
+        siz = self.get_cell_distance(beg, end)
         buf = self.fileops.read(offset, self.bufmap.x)
         self.fill_line(y, x, buf)
         self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single_attr(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
-        siz = self.get_cell_edge(end - beg + 1)
+        siz = self.get_cell_distance(beg, end)
         end = pos + siz
         buf = self.fileops.read(offset, self.bufmap.x)
         s = self.get_form_line(buf)
@@ -348,10 +358,12 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_methods):
         super(BinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
+        self.need_full_line_repaint = True
         super(BinaryCanvas, self).fill(low)
         self.update_visual(True)
 
     def update_highlight(self):
+        self.need_full_line_repaint = True
         self.update_visual(False)
         self.refresh()
 
@@ -361,10 +373,12 @@ class TextCanvas (panel.TextCanvas, _visual_methods):
         super(TextCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
+        self.need_full_line_repaint = True
         super(TextCanvas, self).fill(low)
         self.update_visual(True)
 
     def update_highlight(self):
+        self.need_full_line_repaint = True
         self.update_visual(False)
         self.refresh()
 
@@ -374,10 +388,12 @@ class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_methods):
         super(ExtBinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
+        self.need_full_line_repaint = True
         super(ExtBinaryCanvas, self).fill(low)
         self.update_visual(True)
 
     def update_highlight(self):
+        self.need_full_line_repaint = True
         self.update_visual(False)
         self.refresh()
 
@@ -500,6 +516,8 @@ class _console (console.Console):
         #self.add_method(literal.s_x         , None,    None)
         self.add_method(literal.s_q          , this,    "_buffer_input")
         self.add_method(literal.s_qneg       , this,    "_buffer_input")
+        self.add_method(literal.s_qa         , this,    "_buffer_input")
+        self.add_method(literal.s_qaneg      , this,    "_buffer_input")
         self.add_method(literal.s_fsearch    , methods, "search_forward")
         self.add_method(literal.s_rsearch    , methods, "search_backward")
         self.add_method(literal.n            , methods, "search_next_forward")
@@ -560,6 +578,9 @@ def _escape_visual(self, amp, opc, args, raw):
 
 def _exit_visual(self, amp=None, opc=None, args=None, raw=None):
     self.co.cleanup_region()
+    # Repaint to ensure space between units are cleared before exit.
+    # This is not a must since consoles are repainted on dispatch.
+    self.co.lrepaint()
     return self.set_console(None)
 
 def _(a, b):

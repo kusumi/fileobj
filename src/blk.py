@@ -23,6 +23,7 @@
 
 import errno
 
+from . import filebytes
 from . import fileobj
 from . import kernel
 from . import util
@@ -62,5 +63,5 @@ class methods (object):
         # with ENXIO (even if it's within what ioctl had reported),
         # just pretend it's read by returning 0xff filled buffer.
         if isinstance(e, IOError) and e.errno == errno.ENXIO:
-            return util.str_to_bytes("\xff" * n)
+            return filebytes.FF * n
         raise e

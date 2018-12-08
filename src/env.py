@@ -34,12 +34,13 @@ def __iter_env_name():
     yield "FILEOBJ_USE_TEXT_WINDOW"
     yield "FILEOBJ_USE_BACKUP"
     yield "FILEOBJ_ENDIANNESS" # :set le,be
-    yield "FILEOBJ_ADDRESS_RADIX" # -x, :set address <arg>
-    yield "FILEOBJ_STATUS_RADIX" # -x, :set status <arg>
+    yield "FILEOBJ_ADDRESS_RADIX" # :set address
     yield "FILEOBJ_BYTES_PER_LINE" # --bytes_per_line, :set bytes_per_line
     yield "FILEOBJ_BYTES_PER_WINDOW" # --bytes_per_window, :set bytes_per_window
+    yield "FILEOBJ_BYTES_PER_UNIT" # --bytes_per_unit, :set bytes_per_unit
     yield "FILEOBJ_COLOR_CURRENT"
     yield "FILEOBJ_COLOR_ZERO"
+    yield "FILEOBJ_COLOR_FF"
     yield "FILEOBJ_COLOR_PRINT"
     yield "FILEOBJ_COLOR_VISUAL"
 
@@ -54,6 +55,7 @@ def __iter_env_name_private():
     yield "__FILEOBJ_USE_PID_PATH"
     yield "__FILEOBJ_USE_TRACE"
     yield "__FILEOBJ_USE_ALT_CHGAT"
+    yield "__FILEOBJ_USE_UNIT_BASED"
     yield "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "__FILEOBJ_USE_SINGLE_OPERATION"
     yield "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
@@ -171,9 +173,6 @@ def __get_setting_endianness():
 def __get_setting_address_radix():
     return __get_setting_radix("FILEOBJ_ADDRESS_RADIX", 16)
 
-def __get_setting_status_radix():
-    return __get_setting_radix("FILEOBJ_STATUS_RADIX", 10)
-
 def __get_setting_radix(envname, default):
     e = getenv(envname)
     if e is None:
@@ -200,6 +199,13 @@ def __get_setting_bytes_per_window():
     else:
         return e.lower() # return str even if e is \d+
 
+def __get_setting_bytes_per_unit():
+    e = getenv("FILEOBJ_BYTES_PER_UNIT")
+    _ = 1
+    if e is None:
+        return _
+    return __env_gt_zero(e)
+
 def __get_setting_color_current():
     ret = test_name("FILEOBJ_COLOR_CURRENT", "black,green")
     if not ret or ret.lower() == "none": # disable
@@ -209,6 +215,13 @@ def __get_setting_color_current():
 
 def __get_setting_color_zero():
     ret = test_name("FILEOBJ_COLOR_ZERO", "green")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
+
+def __get_setting_color_ff():
+    ret = test_name("FILEOBJ_COLOR_FF", "magenta")
     if not ret or ret.lower() == "none": # disable
         return None
     else:
@@ -257,6 +270,9 @@ def __get_setting_use_trace():
 
 def __get_setting_use_alt_chgat():
     return test_bool("__FILEOBJ_USE_ALT_CHGAT", False)
+
+def __get_setting_use_unit_based():
+    return test_bool("__FILEOBJ_USE_UNIT_BASED", False)
 
 def __get_setting_use_circular_bit_shift():
     return test_bool("__FILEOBJ_USE_CIRCULAR_BIT_SHIFT", True)

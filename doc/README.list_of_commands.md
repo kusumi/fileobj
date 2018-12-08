@@ -85,6 +85,8 @@
         <CTRL>wq             Close current window if more than 1 windows exist else quit program
         :q!                  Close current window if more than 1 windows exist else quit program without writing
         ZQ                   Close current window if more than 1 windows exist else quit program without writing
+        :qa                  Close all windows and quit program
+        :qa!                 Close all windows and quit program without writing
         :screen              Print screen information
         :sector              Print sector size for block device
         :self                Print current console instance string
@@ -95,6 +97,8 @@
             ascii            Set ascii edit mode (unset binary edit mode)
             bytes_per_line   Set bytes_per_line to {[0-9]+,"max","min","auto"}
             bpl              Set bytes_per_line to {[0-9]+,"max","min","auto"}
+            bytes_per_unit   Set bytes_per_unit to {"1","2","4","8"}
+            bpu              Set bytes_per_unit to {"1","2","4","8"}
             bytes_per_window Set bytes_per_window to {[0-9]+,"even","auto"}
             bpw              Set bytes_per_window to {[0-9]+,"even","auto"}
             ic               Set ic mode (ignore the case of alphabets on search)

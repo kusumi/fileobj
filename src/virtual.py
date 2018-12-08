@@ -24,6 +24,7 @@
 from __future__ import division
 
 from . import panel
+from . import setting
 
 class NullFrame (panel.Frame):
     def repaint(self, *arg):
@@ -49,28 +50,72 @@ class _canvas (panel.Canvas):
         return
 
     def go_up(self, n):
-        self.fileops.add_pos(-self.bufmap.x * n)
+        d = -self.bufmap.x * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_down(self, n):
-        self.fileops.add_pos(self.bufmap.x * n)
+        d = self.bufmap.x * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_left(self, n):
-        self.fileops.add_pos(-n)
+        d = -n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            pos = self.fileops.get_pos()
+            unitlen = setting.bytes_per_unit
+            if pos % unitlen and n > 0:
+                pos += unitlen
+            pos = (pos // unitlen) * unitlen
+            pos += d * unitlen # don't set+add (do in 1 step)
+            self.fileops.set_unit_pos(pos)
 
     def go_right(self, n):
-        self.fileops.add_pos(n)
+        d = n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            pos = self.fileops.get_pos()
+            unitlen = setting.bytes_per_unit
+            if pos % unitlen and n < 0:
+                pos += unitlen
+            pos = (pos // unitlen) * unitlen
+            pos += d * unitlen # don't set+add (do in 1 step)
+            self.fileops.set_unit_pos(pos)
 
     def go_pprev(self, n):
-        self.fileops.add_pos(-self.get_capacity() * n)
+        d = -self.get_capacity() * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_hpprev(self, n):
-        self.fileops.add_pos(-self.get_capacity() // 2 * n)
+        d = -self.get_capacity() // 2 * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_pnext(self, n):
-        self.fileops.add_pos(self.get_capacity() * n)
+        d = self.get_capacity() * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_hpnext(self, n):
-        self.fileops.add_pos(self.get_capacity() // 2 * n)
+        d = self.get_capacity() // 2 * n
+        if not setting.use_unit_based:
+            self.fileops.add_pos(d)
+        else:
+            self.fileops.add_unit_pos(d)
 
     def go_head(self, n):
         pos = 0
@@ -79,23 +124,37 @@ class _canvas (panel.Canvas):
             x = self.fileops.get_max_pos()
             if pos > x:
                 pos = x - x % self.bufmap.x
-        self.fileops.set_pos(pos)
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_tail(self, n):
         if n > 0:
             self.go_head(n)
+            return
+        pos = self.fileops.get_max_pos()
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
         else:
-            self.fileops.set_pos(self.fileops.get_max_pos())
+            self.fileops.set_unit_pos(pos)
 
     def go_lhead(self):
         pos = self.fileops.get_pos()
-        self.fileops.set_pos(pos - pos % self.bufmap.x)
+        pos -= pos % self.bufmap.x
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_ltail(self, n):
         pos = self.get_line_offset(self.fileops.get_pos()) + self.bufmap.x - 1
         if n > 0:
             pos += self.bufmap.x * n
-        self.fileops.set_pos(pos)
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_phead(self, n):
         pos = self.get_page_offset()
@@ -106,7 +165,10 @@ class _canvas (panel.Canvas):
             x = self.fileops.get_max_pos()
             if pos > x:
                 pos = x - x % self.bufmap.x
-        self.fileops.set_pos(pos)
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_pcenter(self):
         n = self.get_next_page_offset()
@@ -114,7 +176,11 @@ class _canvas (panel.Canvas):
             n = self.fileops.get_max_pos()
         pgo = self.get_page_offset()
         pos = pgo + (n - pgo) // 2
-        self.fileops.set_pos(pos - pos % self.bufmap.x)
+        pos -= pos % self.bufmap.x
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_ptail(self, n):
         if self.get_next_page_offset() >= self.fileops.get_size():
@@ -126,12 +192,19 @@ class _canvas (panel.Canvas):
             pos -= self.bufmap.x * n
             if pos < self.get_page_offset():
                 pos = self.get_page_offset()
-        self.fileops.set_pos(pos)
+        if not setting.use_unit_based:
+            self.fileops.set_pos(pos)
+        else:
+            self.fileops.set_unit_pos(pos)
 
     def go_to(self, n):
-        self.fileops.set_pos(n)
+        if not setting.use_unit_based:
+            self.fileops.set_pos(n)
+        else:
+            self.fileops.set_unit_pos(n) # XXX move to nth unit ?
 
 class BinaryCanvas (_canvas, panel.binary_addon):
     pass
+
 class ExtCanvas (_canvas, panel.default_addon):
     pass

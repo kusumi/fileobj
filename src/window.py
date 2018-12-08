@@ -134,27 +134,45 @@ def get_width(cls, bytes_per_line):
     lc = panel.get_min_size(cls)
     o = cls(None, None)
     ret = o.offset.x
-    ret += o.get_cell_edge(bytes_per_line)
+    unit = bytes_per_line // setting.bytes_per_unit
+    if unit < 1:
+        unit = 1
+    ret += o.get_unit_edge(unit)
     ret += _get_diff_x(lf, lc)
     return ret
 
+# This function must return 0 if no space, don't round up with bpu.
 def get_max_bytes_per_line(wspnum):
     if not wspnum: # when container creates initial wsp
         wspnum = 1
-    width, cell = __get_min_info()
+    width, cell, edge = __get_min_info()
     assert width > 0, width
     assert cell > 0, cell
-    max_bpl = screen.get_size_x() - width * wspnum
-    max_bpl //= (cell * wspnum)
-    return max_bpl
+    assert edge > 0, edge
+    r = screen.get_size_x() - width * wspnum
+    r -= edge * wspnum
+    if r < 1:
+        return 0
+    ret = 1
+    while True:
+        r -= cell * wspnum
+        if r < 0: # not "r < 1"
+            unitlen = setting.bytes_per_unit
+            return (ret // unitlen) * unitlen
+        ret += 1
+    assert False
 
+# Calculation based on cell consumes more space than unit width with bpu=2,4,8,
+# so this guarantees get_max_bytes_per_line() works with bpu=2,4,8.
 def __get_min_info():
     lf = panel.get_min_size(panel.Frame)
     bc = panel.BinaryCanvas(None, None)
     width = _get_diff_x(lf, panel.get_min_size(bc)) + bc.offset.x
     cell = bc.get_cell()[0]
+    edge = bc.get_cell()[0] - bc.get_cell()[1]
     if setting.use_text_window:
         tc = panel.TextCanvas(None, None)
         width += (_get_diff_x(lf, panel.get_min_size(tc)) + tc.offset.x)
         cell += tc.get_cell()[0]
-    return width, cell
+        edge += (tc.get_cell()[0] - tc.get_cell()[1])
+    return width, cell, edge

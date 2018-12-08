@@ -68,11 +68,13 @@ def __add_handler(logger, f):
         hnd.setFormatter(logging.Formatter(
             "%(asctime)s %(name)s %(levelname)s %(message)s"))
         logger.addHandler(hnd)
+    assert len(logger.handlers) == 1, logger.handlers
 
 def __remove_handler(logger):
-    for hnd in logger.handlers:
-        logger.removeHandler(hnd)
-        hnd.close()
+    assert len(logger.handlers) == 1, logger.handlers
+    hnd = logger.handlers[0]
+    logger.removeHandler(hnd)
+    hnd.close()
 
 def debug(*l):
     return __log(l, logging.DEBUG)
@@ -101,6 +103,13 @@ def __log(l, level):
         util.printf(s)
     else:
         return -1
+
+def get_path():
+    try:
+        return _logger.handlers[0].baseFilename
+    except Exception as e:
+        error(e)
+        return ""
 
 def get_message():
     if _logmsg is None:

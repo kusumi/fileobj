@@ -34,6 +34,11 @@
                                 <bytes_per_window> are digit, "even" and "auto".
                                 "even" sets all windows to have the same size. "auto"
                                 is used by default.
+          --bytes_per_unit <bytes_per_unit>, --bpu <bytes_per_unit>
+                                Set number of bytes printed per unit. Each unit prints
+                                <bytes_per_unit> bytes. "1" is used by default.
+          --no_text             Disable text window.
+          --no_color            Disable color for buffer contents.
           --force               Ignore warnings which can be ignored.
           --test_screen         Enter ncurses(3) screen test mode.
           --env                 Print list of environment variables and exit.

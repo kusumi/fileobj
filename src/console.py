@@ -219,8 +219,9 @@ def cleanup(e, tb):
     _scr = None
     if setting.use_trace:
         l = _log[:]
-        if l and l[-1] == kbd.ENTER:
-            del l[-1]
+        # enable below to stop stream before exit (e.g. :q)
+        #if l and l[-1] == kbd.ENTER:
+        #    del l[-1]
         if trace.write(setting.get_trace_path(), l, e, tb):
             log.error("Failed to write trace")
 

@@ -74,7 +74,7 @@ def __log_error(arg):
 def __print_error(arg):
     if not arg.e:
         if log.has_error():
-            util.printe("*** Found error in log")
+            util.printe("*** Found error in {0}".format(log.get_path()))
         return -1
     util.printe(arg.e)
     if not isinstance(arg.e, util.QuietError):
@@ -103,6 +103,9 @@ def dispatch(optargs=None):
     parser.add_argument("-O", nargs="?", type=int, const=-1, metavar=usage.O_metavar, help=usage.O)
     parser.add_argument("--bytes_per_line", "--bpl", default=setting.bytes_per_line, metavar=usage.bytes_per_line_metavar, help=usage.bytes_per_line)
     parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
+    parser.add_argument("--bytes_per_unit", "--bpu", default=setting.bytes_per_unit, metavar=usage.bytes_per_unit_metavar, help=usage.bytes_per_unit)
+    parser.add_argument("--no_text", action="store_true", default=False, help=usage.no_text)
+    parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
@@ -163,15 +166,17 @@ def dispatch(optargs=None):
     log.debug("{0} {1}".format(util.get_program_path(),
         version.get_tag_string()))
     log.debug("{0} {1}".format(util.get_python_string(), sys.executable))
-    log.debug("UNAME {0} {1}".format(util.get_os_name(), util.get_os_release()))
-    log.debug("CPU {0}".format(util.get_cpu_name()))
-    log.debug("RAM {0}".format(methods.get_meminfo_string()))
-    log.debug("TERM {0}".format(kernel.get_term_info()))
-    log.debug("LANG {0}".format(kernel.get_lang_info()))
+    log.debug("uname: {0} {1}".format(util.get_os_name(),
+        util.get_os_release()))
+    log.debug("cpu: {0}".format(util.get_cpu_name()))
+    log.debug("ram: {0}".format(methods.get_meminfo_string()))
     log.debug(methods.get_osdep_string())
-    log.debug("argv {0}".format(sys.argv))
-    log.debug("opts {0}".format(opts))
-    log.debug("args {0}".format(args))
+    log.debug("term: {0}".format(kernel.get_term_info()))
+    log.debug("lang: {0}".format(kernel.get_lang_info()))
+    log.debug("log: {0}".format(log.get_path()))
+    log.debug("argv: {0}".format(sys.argv))
+    log.debug("opts: {0}".format(opts))
+    log.debug("args: {0}".format(args))
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
@@ -180,6 +185,7 @@ def dispatch(optargs=None):
         setting.use_readonly = True
     if opts.B:
         allocator.set_default_buffer_class()
+    wspnum = 1
     if opts.o is not None:
         if opts.o == -1:
             wspnum = len(args)
@@ -190,20 +196,31 @@ def dispatch(optargs=None):
             wspnum = len(args)
         else:
             wspnum = opts.O
-    else:
-        wspnum = 1
+    if opts.bytes_per_unit != setting.bytes_per_unit:
+        try:
+            setting.bytes_per_unit = int(opts.bytes_per_unit)
+        except Exception as e:
+            msg[1] = str(e)
+    if opts.no_text:
+        assert isinstance(setting.use_text_window, bool)
+        setting.use_text_window = False
+    if opts.no_color:
+        setting.color_zero = None
+        setting.color_ff = None
+        setting.color_print = None
+        setting.color_visual = None
 
     l = []
     for _ in env.iter_defined_env():
         l.append("{0}={1}".format(*_))
     for _ in env.iter_defined_ext_env():
         l.append("{0}={1}".format(*_))
-    log.debug("envs {0}".format(l))
+    log.debug("envs: {0}".format(l))
 
     l = []
     for _ in setting.iter_setting():
         l.append("{0}={1}".format(*_))
-    log.debug("settings {0}".format(l))
+    log.debug("settings: {0}".format(l))
 
     # log all error messages
     for s in msg:
@@ -257,8 +274,16 @@ def dispatch(optargs=None):
         co = container.Container(targs.baks if setting.use_backup else None)
         if co.init(args, wspnum, True if opts.O else False,
             opts.bytes_per_line, opts.bytes_per_window) == -1:
-            __error("Terminal ({0},{1}) does not have enough room".format(
-                screen.get_size_y(), screen.get_size_x()))
+            s = "Terminal {0} does not have enough room".format(
+                (screen.get_size_y(), screen.get_size_x()))
+            if opts.bytes_per_line or opts.bytes_per_window or \
+                opts.bytes_per_unit:
+                l = []
+                l.append(opts.bytes_per_line)
+                l.append(opts.bytes_per_window)
+                l.append(opts.bytes_per_unit)
+                s += " for {0}".format(tuple(l))
+            __error(s)
 
         if setting.use_debug:
             d = util.get_import_exceptions()
@@ -269,7 +294,7 @@ def dispatch(optargs=None):
                 break # only the first one (highest priority)
         co.xrepaint()
         co.dispatch()
-    except BaseException as e: # not Exception
+    except BaseException as e: # not Exception (note this can catch sys.exit)
         tb = sys.exc_info()[2]
         targs.e = e
         targs.tb = util.get_traceback(tb)
@@ -313,8 +338,8 @@ def test_screen():
                 l[1] = chr(ret) # may not be printable with Python 3
             except ValueError:
                 l[1] = ""
-        if util.test_key(l[0]) and not kbd.isprints(l[1]): # VTxxx
-            l[0] = kbd.ERROR
+        if util.test_key(l[0]) and not kbd.isprints([ord(_) for _ in l[1]]):
+            l[0] = kbd.ERROR # VTxxx
 
 def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
@@ -322,21 +347,27 @@ def __update_screen(scr, repaint, l):
         if repaint:
             scr.addstr(1, 1, "Running {0} on {1}.".format(
                 util.get_python_string(), kernel.get_term_info()))
+            # none
             scr.addstr(3, 1, "This should look normal.", screen.A_NONE)
-            scr.addstr(4, 1, "This should be in bold.", screen.A_BOLD)
-            scr.addstr(5, 1, "This should look reversed.", screen.A_REVERSE)
+            # underline
             if kernel.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
-            scr.addstr(6, 1, "This {0} look reversed.".format(s),
-                screen.A_STANDOUT)
-            if kernel.is_screen() and screen.use_color():
-                s = "may or may not"
-            else:
-                s = "should"
-            scr.addstr(7, 1, "This {0} be underlined.".format(s),
+            scr.addstr(4, 1, "This {0} be underlined.".format(s),
                 screen.A_UNDERLINE)
+            # bold
+            scr.addstr(5, 1, "This should be in bold.", screen.A_BOLD)
+            # reverse
+            scr.addstr(6, 1, "This should look reversed.", screen.A_REVERSE)
+            # standout
+            if kernel.is_screen() and screen.use_color():
+                s = "may or may not"
+            else:
+                s = "should"
+            scr.addstr(7, 1, "This {0} look reversed.".format(s),
+                screen.A_STANDOUT)
+            # color
             if screen.has_color() and setting.color_current is not None:
                 color_pair = setting.color_current.split(",", 1)
                 color_names = tuple(screen.iter_color_name())
@@ -352,7 +383,9 @@ def __update_screen(scr, repaint, l):
                 s = "not have any color"
             scr.addstr(8, 1, "This should {0}.".format(s),
                 screen.A_COLOR_CURRENT)
+            # frame
             scr.addstr(9, 1, "This terminal should have a frame.")
+            # frame/resize
             scr.addstr(10, 1, "The frame should resize if the terminal is "
                 "resized.")
             scr.addstr(12, 1, "Check if above appear as they should.")

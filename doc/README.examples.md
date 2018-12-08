@@ -2,9 +2,9 @@
 
 + Note that some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
 
-+ Note that *offset 0* of the buffer means the first byte of the buffer. *offset 1* is the second byte.
++ Note that *offset 0* of buffer means first byte of the buffer. *offset 1* is second byte.
 
-+ Note that *sector 0* of the buffer means the first sector of the buffer. *sector 1* is the second sector.
++ Note that *sector 0* of buffer means first sector of the buffer. *sector 1* is second sector.
 
 + Note that sector based commands use 512 bytes sector if the buffer is not block device.
 

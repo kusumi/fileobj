@@ -457,6 +457,8 @@ def init():
     setattr(this, "s_x", SlowLiteral(":x", None, "Like :wq, but write only when changes have been made"))
     setattr(this, "s_q", SlowLiteral(":q", None, "Close current window if more than 1 windows exist else quit program"))
     setattr(this, "s_qneg", SlowLiteral(":q!", None, "Close current window if more than 1 windows exist else quit program without writing"))
+    setattr(this, "s_qa", SlowLiteral(":qa", None, "Close all windows and quit program"))
+    setattr(this, "s_qaneg", SlowLiteral(":qa!", None, "Close all windows and quit program without writing"))
     setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
     setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
     setattr(this, "s_fsearch", SearchLiteral('/', None, "Search forward"))
@@ -478,6 +480,8 @@ def init():
     setattr(this, "s_set_bpl_", this.s_set_bpl.create_alias("bpl", None))
     setattr(this, "s_set_bpw", ArgLiteral("bytes_per_window", None, "Set bytes_per_window to {[0-9]+,\"even\",\"auto\"}"))
     setattr(this, "s_set_bpw_", this.s_set_bpw.create_alias("bpw", None))
+    setattr(this, "s_set_bpu", ArgLiteral("bytes_per_unit", None, "Set bytes_per_unit to {\"1\",\"2\",\"4\",\"8\"}"))
+    setattr(this, "s_set_bpu_", this.s_set_bpu.create_alias("bpu", None))
 
     for _ in util.iter_site_ext_module():
         fn = getattr(_, "get_text", None)
@@ -520,7 +524,7 @@ def init():
         (this.s_cmpneg, this.s_cmp),
         (this.s_delmarksneg, this.s_delmarks),
         (this.s_rsearch, this.s_fsearch),
-        ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw), this.s_set),)
+        ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
 
     def __scan(l, o, cls):
         if setting.use_debug:

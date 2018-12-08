@@ -51,9 +51,9 @@ def init():
     color = A_NONE
 
     fg, bg = setting.color_fg, setting.color_bg
-    arg = setting.color_current, setting.color_zero, setting.color_print, \
-        setting.color_visual,
-    standout = True, False, False, True
+    arg = setting.color_current, setting.color_zero, setting.color_ff, \
+        setting.color_print, setting.color_visual,
+    standout = True, False, False, False, True # sync with above
     l = [A_NONE for x in range(len(arg))]
 
     if not fg and not bg and not arg:

@@ -35,13 +35,21 @@ def __ord_2k(b):
     return __builtin_ord(b)
 
 def __ord_3k(b):
-    return b[0]
+    return b[0] # same as ord(b)
 
-def __split_2k(b):
-    return list(b)
+def __ords_2k(b):
+    return tuple(ord(x) for x in b)
 
-def __split_3k(b):
-    return [b[i : i + 1] for i in range(len(b))]
+def __ords_3k(b):
+    return tuple(x for x in b)
+
+def __iter_ords_2k(b):
+    for x in b:
+        yield ord(x)
+
+def __iter_ords_3k(b):
+    for x in b:
+        yield x
 
 def __iter_2k(b):
     for x in b:
@@ -58,6 +66,12 @@ def __riter_2k(b):
 def __riter_3k(b):
     for i in reversed(range(len(b))):
         yield b[i : i + 1]
+
+def __split_2k(b):
+    return list(b)
+
+def __split_3k(b):
+    return [b[i : i + 1] for i in range(len(b))]
 
 # Remove extra stuff from builtin repr
 def __str_2k(b):
@@ -77,11 +91,8 @@ def __str_3k(b):
 def join(l):
     return BLANK.join(l)
 
-def ords(b, cls=tuple):
-    return cls(ord(x) for x in iter(b))
-
-def seq_to_ords(l, cls=tuple):
-    return cls(ord(x) for x in l)
+def seq_to_ords(l):
+    return tuple(ord(x) for x in l)
 
 def pad(x):
     return ZERO * x
@@ -99,18 +110,26 @@ __builtin_repr = util.get_builtin("repr")
 if util.is_python2():
     TYPE = str
     ZERO = "\x00"
+    FF = "\xFF"
+    SPACE = ' '
     BLANK = ''
     ord = __ord_2k
-    split = __split_2k
+    ords = __ords_2k
+    iter_ords = __iter_ords_2k
     iter = __iter_2k
     riter = __riter_2k
+    split = __split_2k
     str = __str_2k
 else:
     TYPE = bytes
     ZERO = _("\x00")
+    FF = _("\xFF")
+    SPACE = _(' ')
     BLANK = _('')
     ord = __ord_3k
-    split = __split_3k
+    ords = __ords_3k
+    iter_ords = __iter_ords_3k
     iter = __iter_3k
     riter = __riter_3k
+    split = __split_3k
     str = __str_3k

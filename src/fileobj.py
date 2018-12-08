@@ -519,7 +519,7 @@ class Fileobj (object):
             return -1, -1, -1
 
     def __read_bbuffer(self, x, n):
-        return filebytes.ords(self.read(x, n), list)
+        return list(filebytes.iter_ords(self.read(x, n)))
 
     def barrier_read(self, x, n):
         self.__test_barrier(x, n)

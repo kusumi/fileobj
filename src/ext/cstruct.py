@@ -57,9 +57,10 @@ class _builtin (_node):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
             v = self.__get_value_expr(buf)
-            a = ''.join(["\\x{0:02X}".format(x)
-                for x in fileobj.filebytes.ords(buf)])
-            b = ''.join([fileobj.kbd.to_chr_repr(x) for x in buf])
+            a = ''.join(["\\x{0:02X}".format(x) for x in
+                fileobj.filebytes.iter_ords(buf)])
+            b = ''.join([fileobj.kbd.to_chr_repr(x) for x in
+                fileobj.filebytes.iter_ords(buf)])
             s += " {0} {1} [{2}]".format(v, a, b)
         return [s]
 

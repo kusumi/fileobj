@@ -48,7 +48,7 @@ from . import window
 from . import workspace
 
 DEF_REG = '"'
-MAX_LOG_2_BPL = 10
+MAX_LOG_N_BPL = 10
 
 class Container (object):
     def __init__(self, backup_files=None):
@@ -92,6 +92,9 @@ class Container (object):
         self.update_address_num_width() # after fileobj allocation
 
         bpl = self.__find_bytes_per_line(optbpl)
+        if bpl == -1:
+            log.debug("Found initial bpl = -1")
+            return -1 # no space
         self.__workspaces.append(workspace.Workspace(bpl))
         wsp = self.__workspaces[0]
         self.__set_workspace(wsp)
@@ -485,11 +488,11 @@ class Container (object):
                 if bpl < 1:
                     return ret
                 else:
-                    bpl //= 2
+                    bpl //= 2 # this is good (not bpu)
                     if bpl < 1:
                         return ret
                     # window.get_max_bytes_per_line() may fail on resize
-                    if self.set_bytes_per_line(bpl, True) == -1:
+                    if self.set_bytes_per_line_in_vertical(bpl, True) == -1:
                         return ret
                     return workspace.BUILD_RETRY
             x += o.guess_width()
@@ -1056,21 +1059,39 @@ class Container (object):
             assert len(s) == width, (s, len(s), width)
         return -1
 
-    def set_bytes_per_line(self, arg, power_of_two=False):
+    # use this during vbuild, when the flag is potentially false
+    def set_bytes_per_line_in_vertical(self, arg, power_of_bpu=False):
+        try:
+            v = self.__in_vertical
+            self.__in_vertical = True # to calculate correct max bpl
+            return self.set_bytes_per_line(arg, power_of_bpu)
+        finally:
+            self.__in_vertical = v
+
+    def set_bytes_per_line(self, arg, power_of_bpu=False):
         ret = self.__find_bytes_per_line(arg)
         if ret == -1:
             return -1
-        # adjust down to max power of 2
-        if power_of_two:
-            for bpl in [2 ** x for x in range(MAX_LOG_2_BPL)]:
+        # adjust down to max power of bpu
+        if power_of_bpu:
+            unitlen = setting.bytes_per_unit
+            if unitlen == 1:
+                unitlen = 2
+            for bpl in [unitlen ** x for x in range(MAX_LOG_N_BPL)]:
                 if ret <= bpl:
-                    if ret == bpl: # already power of 2
+                    if ret == bpl: # already power of bpu
                         ret = bpl
                     else:
-                        ret = bpl // 2
+                        ret = bpl // unitlen
                     if ret < 1:
                         ret = 1
                     break
+        # bpl determined by vbuild retry may not be multiple of bpu
+        unitlen = setting.bytes_per_unit
+        ret = (ret // unitlen) * unitlen
+        if not ret:
+            return -1
+        # update bpl
         for o in self.__workspaces:
             assert o.set_bytes_per_line(ret) != -1
         # assert the result
@@ -1082,12 +1103,21 @@ class Container (object):
                 prev = bpl
 
     def __find_bytes_per_line(self, arg):
+        ret = self.__do_find_bytes_per_line(arg)
+        unitlen = setting.bytes_per_unit
+        if ret != -1 and unitlen > ret: # never allow bpu > bpl
+            log.warning("bpu > bpl not allowed, using {0}".format(unitlen))
+            return unitlen
+        else:
+            return ret
+
+    def __do_find_bytes_per_line(self, arg):
         if self.__in_vertical:
             n = len(self)
         else:
             n = 1
         max_bpl = window.get_max_bytes_per_line(n)
-        if max_bpl < 1:
+        if setting.bytes_per_unit > max_bpl or max_bpl < 1:
             return -1
         if not arg:
             arg = "auto"
@@ -1096,7 +1126,10 @@ class Container (object):
         elif arg == "max":
             return max_bpl
         elif arg == "auto":
-            for ret in reversed([2 ** x for x in range(MAX_LOG_2_BPL)]):
+            unitlen = setting.bytes_per_unit
+            if unitlen == 1:
+                unitlen = 2
+            for ret in reversed([unitlen ** x for x in range(MAX_LOG_N_BPL)]):
                 if ret <= max_bpl:
                     return ret
             return 1
@@ -1108,6 +1141,13 @@ class Container (object):
                 elif ret <= 1:
                     return 1
                 else:
+                    unitlen = setting.bytes_per_unit
+                    ret = (ret // unitlen) * unitlen
+                    # redo the test
+                    if ret >= max_bpl: # never true
+                        return max_bpl
+                    elif ret <= 1:
+                        return 1
                     return ret
             except ValueError:
                 return -1
@@ -1147,7 +1187,10 @@ class Container (object):
         if self.__build(self.__in_vertical, True) == workspace.BUILD_FAILED:
             # expand bpl if possible and retry
             prev_bpl = self.get_bytes_per_line()
-            for bpl in [2 ** x for x in range(MAX_LOG_2_BPL)]:
+            unitlen = setting.bytes_per_unit
+            if unitlen == 1:
+                unitlen = 2
+            for bpl in [unitlen ** x for x in range(MAX_LOG_N_BPL)]:
                 if bpl < prev_bpl:
                     continue
                 if self.set_bytes_per_line(bpl) != -1 and \

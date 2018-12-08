@@ -150,8 +150,12 @@ class Fileops (object):
     def get_max_pos(self):
         if self.is_empty():
             return 0
+        pos = self.get_size() - 1 + self.__trail
+        if not setting.use_unit_based:
+            return pos
         else:
-            return self.get_size() - 1 + self.__trail
+            unitlen = setting.bytes_per_unit
+            return (pos // unitlen) * unitlen
 
     def get_pos(self):
         return self.__pos
@@ -184,11 +188,26 @@ class Fileops (object):
         else:
             self.__pos = pos
 
+    def get_unit_pos(self):
+        unitlen = setting.bytes_per_unit
+        return (self.get_pos() // unitlen) * unitlen
+
+    def add_unit_pos(self, d):
+        unitlen = setting.bytes_per_unit
+        self.set_pos(((self.__pos + d) // unitlen) * unitlen)
+
+    def set_unit_pos(self, n):
+        unitlen = setting.bytes_per_unit
+        self.set_pos((n // unitlen) * unitlen)
+
     def discard_eof(self):
         self.__trail = self.test_insert() * 1
 
     def restore_eof(self):
         self.__trail = 0
+
+    def has_region(self):
+        return self.__reg is not None
 
     def init_region(self, orig, type):
         assert not self.__reg

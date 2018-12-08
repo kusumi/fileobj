@@ -28,14 +28,9 @@ from . import kernel
 from . import setting
 from . import util
 
-def _(c):
-    if isinstance(c, int):
-        return c
-    else:
-        return ord(c)
-
+# take str and return int
 def ctrl(c):
-    return _(c) & 0x1F
+    return ord(c) & 0x1F
 
 #           isspace(3) isgraph(3) isprint(3)
 # 0x09 '\t' True       False      False
@@ -45,31 +40,22 @@ def ctrl(c):
 # 0x0D '\r' True       False      False
 # 0x20 ' '  True       False      True
 
-def isspace(c):
-    x = _(c)
+def isspace(x):
     return x in (0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x20)
 
-def isgraph(c):
-    x = _(c)
+def isgraph(x):
     return x >= 0x21 and x <= 0x7E
 
-def isprint(c):
+def isprint(x):
     # return True if isgraph(3) or 0x20
     # this isn't same as isgraph(3) + isspace(3) see above for details
-    x = _(c)
-    return isgraph(x) or x == 0x20
+    return (x >= 0x21 and x <= 0x7E) or x == 0x20
 
 def isprints(l):
     return len(l) > 0 and all(isprint(x) for x in l)
 
-def to_chr_repr(c):
-    if isprint(c):
-        if isinstance(c, int):
-            return chr(c)
-        else:
-            return c
-    else:
-        return '.'
+def to_chr_repr(x):
+    return chr(x) if isprint(x) else '.'
 
 # XXX alternative for block visual mode
 use_alt_block_visual = kernel.is_bsd_derived() or kernel.is_solaris()
