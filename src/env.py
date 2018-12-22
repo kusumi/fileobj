@@ -42,6 +42,7 @@ def __iter_env_name():
     yield "FILEOBJ_COLOR_ZERO"
     yield "FILEOBJ_COLOR_FF"
     yield "FILEOBJ_COLOR_PRINT"
+    yield "FILEOBJ_COLOR_DEFAULT"
     yield "FILEOBJ_COLOR_VISUAL"
 
 def __iter_env_name_private():
@@ -64,6 +65,7 @@ def __iter_env_name_private():
     yield "__FILEOBJ_USE_AUTO_FILEOPS_ADJUST" # unittest (false)
     yield "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP" # unittest (false)
     yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT"
+    yield "__FILEOBJ_USE_DELETE_CONSOLE" # unittest (false)
     yield "__FILEOBJ_STDOUT_VERBOSE" # unittest (0)
     yield "__FILEOBJ_TRACE_WORD_SIZE"
     yield "__FILEOBJ_LOG_LEVEL"
@@ -234,6 +236,13 @@ def __get_setting_color_print():
     else:
         return ret
 
+def __get_setting_color_default():
+    ret = test_name("FILEOBJ_COLOR_DEFAULT", "white")
+    if not ret or ret.lower() == "none": # disable
+        return None
+    else:
+        return ret
+
 def __get_setting_color_visual():
     ret = test_name("FILEOBJ_COLOR_VISUAL", "red,yellow")
     if not ret or ret.lower() == "none": # disable
@@ -297,6 +306,9 @@ def __get_setting_use_auto_fileops_cleanup():
 
 def __get_setting_use_vm_sync_on_edit():
     return test_bool("__FILEOBJ_USE_VM_SYNC_ON_EDIT", False)
+
+def __get_setting_use_delete_console():
+    return test_bool("__FILEOBJ_USE_DELETE_CONSOLE", True)
 
 def __get_setting_stdout_verbose():
     return test_ge_zero("__FILEOBJ_STDOUT_VERBOSE", 1)

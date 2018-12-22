@@ -1,3 +1,21 @@
+v0.7.81
+=======
+- Minor fixes and cleanups
+- Performance improvement on window repaint
+- Fix window cursor bug on VTxxx terminals (since v0.7.78)
+- Fix visual mode bug on line repaint (since v0.7.80)
+- Add :sha1
+- Add :sha224
+- Add :sha256
+- Add :sha384
+- Add :sha512
+- Add :sha3_224
+- Add :sha3_256
+- Add :sha3_384
+- Add :sha3_512
+- Add FILEOBJ_COLOR_DEFAULT
+- Add __FILEOBJ_USE_DELETE_CONSOLE
+
 v0.7.80
 =======
 - Minor fixes and cleanups

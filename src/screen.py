@@ -25,6 +25,7 @@ import os
 import shutil
 import sys
 
+from . import kbd
 from . import kernel
 from . import log
 from . import setting
@@ -35,12 +36,15 @@ if not setting.use_stdout:
 else:
     from . import stdout as _screen
 
+Error = _screen.Error
+
 _std = None
 _size = util.Pair()
 _signaled = False
 _soft_resize = False
 
 terminal = util.Namespace(height=-1, width=-1)
+buf_attr = {} # no .get() wrapper, out of range input is error
 
 A_NONE          = _screen.A_NONE
 A_BOLD          = _screen.A_BOLD
@@ -52,17 +56,18 @@ A_COLOR_CURRENT = _screen.A_NONE
 A_COLOR_ZERO    = _screen.A_NONE
 A_COLOR_FF      = _screen.A_NONE
 A_COLOR_PRINT   = _screen.A_NONE
+A_COLOR_DEFAULT = _screen.A_NONE
 A_COLOR_VISUAL  = _screen.A_NONE
 
 def init():
     global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
-        A_COLOR_PRINT, A_COLOR_VISUAL
+        A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL
     if update_size() == -1:
         return -1
     if _std:
         return -1
     _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
-        A_COLOR_PRINT, A_COLOR_VISUAL = _screen.init()
+        A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL = _screen.init()
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
@@ -71,9 +76,25 @@ def init():
     l = []
     for x in ("NONE", "BOLD", "REVERSE", "STANDOUT", "UNDERLINE", "COLOR_FB",
         "COLOR_CURRENT", "COLOR_ZERO", "COLOR_FF", "COLOR_PRINT",
-        "COLOR_VISUAL"):
+        "COLOR_DEFAULT", "COLOR_VISUAL"):
         l.append("A_{0}=0x{1:X}".format(x, getattr(this, "A_" + x)))
-    log.debug("screen {0}".format(l))
+    log.debug("screen: {0}".format(l))
+
+    buf_attr.clear()
+    for x in util.get_xrange(0, 256):
+        if setting.has_buffer_attr():
+            if x == 0:
+                _ = A_COLOR_ZERO
+            elif x == 0xff:
+                _ = A_COLOR_FF
+            elif kbd.isprint(x):
+                _ = A_COLOR_PRINT
+            else:
+                _ = A_COLOR_DEFAULT
+        else:
+            _ = A_NONE
+        buf_attr[x] = _
+    log.debug("buf_attr: {0}".format(set(sorted(buf_attr.values()))))
 
 def cleanup():
     global _std
@@ -83,13 +104,16 @@ def cleanup():
         _std = None
     _screen.cleanup() # must always cleanup regardless of _std
 
-def clear():
-    _std.clear()
-    _std.refresh()
+def clear_refresh():
+    _std.clear() # erase contents
+    _std.refresh() # refresh screen
 
 # XXX adhoc way to find if in stream
 def __test_stream():
     return os.path.isfile(setting.get_stream_path())
+
+def doupdate():
+    _screen.doupdate()
 
 def flash():
     # ignore flash if in stream (too slow depending on stream size)

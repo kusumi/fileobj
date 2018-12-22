@@ -54,8 +54,7 @@ def isprint(x):
 def isprints(l):
     return len(l) > 0 and all(isprint(x) for x in l)
 
-def to_chr_repr(x):
-    return chr(x) if isprint(x) else '.'
+chr_repr = {} # no .get() wrapper, out of range input is error
 
 # XXX alternative for block visual mode
 use_alt_block_visual = kernel.is_bsd_derived() or kernel.is_solaris()
@@ -134,6 +133,10 @@ def init(term):
     setattr(this, "get_backspaces", lambda: bs)
     ar = tuple(sorted(ar))
     setattr(this, "get_arrows", lambda: ar)
+
+    chr_repr.clear()
+    for x in util.get_xrange(0, 256):
+        chr_repr[x] = chr(x) if isprint(x) else '.'
 
 this = sys.modules[__name__]
 init(kernel.get_term_info())

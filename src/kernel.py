@@ -31,7 +31,7 @@ from . import objdump
 from . import setting
 from . import util
 
-class KernelError (util.GenericError):
+class Error (util.GenericError):
     pass
 
 def is_linux():
@@ -201,7 +201,7 @@ def get_blkdev_info(f):
     if f in _blkdev_info_cache:
         return _blkdev_info_cache[f] # assume the same blkdev for f
     if not is_blkdev(f):
-        raise KernelError(f + " is not a block device")
+        raise Error(f + " is not a block device")
 
     l = __get_blkdev_info(f)
     assert util.is_seq(l), l
@@ -217,7 +217,7 @@ def __get_blkdev_info(f):
     # try native first and fall back to non native
     o = get_kernel_module()
     if not o:
-        raise KernelError("Failed to get kernel module")
+        raise Error("Failed to get kernel module")
     try:
         if setting.use_native:
             return native.get_blkdev_info(f)

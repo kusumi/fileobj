@@ -29,11 +29,13 @@ from . import console
 from . import filebytes
 from . import fileobj
 from . import kbd
+from . import literal
 from . import methods
 from . import setting
 from . import util
 
 EDIT   = "EDIT"
+DELETE = "DELETE"
 MOTION = "MOTION"
 ESCAPE = "ESCAPE"
 
@@ -45,24 +47,23 @@ class Console (console.Console):
     def dispatch(self, arg):
         try:
             self.test()
-            self.co.discard_eof()
+            self.init_cursor()
             self.co.lrepaintf()
             self.__listen(arg)
             assert not self.co.is_barrier_active()
-        except fileobj.FileobjError as e:
+        except fileobj.Error as e:
             self.co.flash(e)
         finally:
             self.co.cleanup_region()
-            self.co.restore_eof()
+            self.cleanup_cursor()
             self.co.lrepaintf()
             self.set_console(None)
 
     def __listen(self, arg):
         if arg.start != -1:
             methods.go_to(self, arg.start)
-        self.go_right(arg.delta)
+        self.init_listen(arg)
         assert self.co.get_barrier(setting.barrier_size) != -1
-
         l = []
         while True:
             if arg.limit == 0:
@@ -70,76 +71,112 @@ class Console (console.Console):
                 console.seqno += 1
             else:
                 x = self.read_incoming()
-            ret = None
-            if self.test_write(x):
-                ret = self.handle_write(x)
-            elif x in (kbd.ESCAPE, kbd.INTERRUPT):
-                ret = self.handle_escape()
-            elif x == kbd.RESIZE:
-                ret = self.handle_resize()
-            elif x == kbd.UP:
-                ret = self.go_up()
-            elif x == kbd.DOWN:
-                ret = self.go_down()
-            elif x == kbd.LEFT:
-                ret = self.go_left()
-            elif x == kbd.RIGHT:
-                ret = self.go_right()
-            elif x != kbd.ERROR:
-                self.co.flash()
-
-            if ret == EDIT:
-                if arg.limit != -1:
-                    arg.limit -= 1
-                self.__enqueue(l, ret, x)
-            elif ret == MOTION:
-                if arg.limit > 0:
-                    self.co.put_barrier()
-                    break
-                self.__enqueue(l, ret, x)
-            elif ret == ESCAPE:
-                if arg.limit > 0 or not l:
-                    self.co.put_barrier()
-                    break
-                k, v = zip(*l)
-                if (MOTION in k) or x == kbd.INTERRUPT:
-                    arg.amp = 1
-                self.co.set_pos(self.co.put_barrier())
-                self.co.test_access()
-                if len(l) == 1:
-                    self.__sync(arg.amp, k[0], v[0], arg)
-                else:
-                    self.co.disconnect_workspace()
-                    for x in range(arg.amp):
-                        for i in range(len(l)):
-                            self.__sync(1, k[i], v[i], arg)
-                    self.co.reconnect_workspace()
-                self.go_left()
+            cmd = self.process_incoming(arg, x)
+            if self.process_command(arg, x, cmd, l) == -1:
                 break
-            if ret is not None:
-                self.log(ret, x)
+            if cmd is not None:
+                self.log(cmd, x)
             if setting.use_debug:
                 console.set_banner(self.co.get_barrier_range())
 
-    def __enqueue(self, l, key, x):
-        if key == EDIT:
-            value = x
-        elif key == MOTION:
-            value = self.co.get_pos()
-        if l and l[-1][0] == key:
-            l[-1][1].append(value)
-        else:
-            l.append((key, [value]))
+    def test(self):
+        return
 
-    def __sync(self, n, key, seq, arg):
-        if key == EDIT:
+    def init_cursor(self):
+        return
+
+    def cleanup_cursor(self):
+        return
+
+    def init_listen(self, arg):
+        return
+
+    def process_incoming(self, arg, x):
+        util.raise_no_impl("process_incoming")
+
+    def process_command(self, arg, x, cmd, l):
+        util.raise_no_impl("process_command")
+
+class _writeconsole (Console):
+    def init_cursor(self):
+        self.co.discard_eof()
+
+    def cleanup_cursor(self):
+        self.co.restore_eof()
+
+    def init_listen(self, arg):
+        self.go_right(arg.delta)
+
+    def process_incoming(self, arg, x):
+        if self.test_write(x):
+            return self.handle_write(x)
+        elif x in (kbd.ESCAPE, kbd.INTERRUPT):
+            return self.handle_escape()
+        elif x == kbd.RESIZE:
+            return self.handle_resize()
+        elif x == kbd.UP:
+            return self.go_up()
+        elif x == kbd.DOWN:
+            return self.go_down()
+        elif x == kbd.LEFT:
+            return self.go_left()
+        elif x == kbd.RIGHT:
+            return self.go_right()
+        elif x != kbd.ERROR:
+            self.co.flash()
+            return None
+        else:
+            return None
+
+    def process_command(self, arg, x, cmd, l):
+        if cmd == EDIT:
+            if arg.limit != -1:
+                arg.limit -= 1
+            self.__enqueue(x, cmd, l)
+        elif cmd == MOTION:
+            if arg.limit > 0:
+                self.co.put_barrier()
+                return -1
+            self.__enqueue(x, cmd, l)
+        elif cmd == ESCAPE:
+            if arg.limit > 0 or not l:
+                self.co.put_barrier()
+                return -1
+            k, v = zip(*l)
+            if (MOTION in k) or x == kbd.INTERRUPT:
+                arg.amp = 1
+            self.co.set_pos(self.co.put_barrier())
+            self.co.test_access()
+            if len(l) == 1:
+                self.__sync(arg, arg.amp, k[0], v[0])
+            else:
+                self.co.disconnect_workspace()
+                for x in util.get_xrange(arg.amp):
+                    for i in util.get_xrange(len(l)):
+                        self.__sync(arg, 1, k[i], v[i])
+                self.co.reconnect_workspace()
+            self.go_left()
+            return -1
+
+    def __enqueue(self, x, cmd, l):
+        if cmd == EDIT:
+            v = x
+        elif cmd == MOTION:
+            v = self.co.get_pos()
+        if l and l[-1][0] == cmd:
+            l[-1][1].append(v)
+        else:
+            l.append((cmd, [v]))
+
+    def __sync(self, arg, n, cmd, seq):
+        if cmd == EDIT:
             if self.write_buffer(n, seq) == -1:
                 pfn = self.co.get_prev_context()
             else:
                 pfn = None
             def fn(i):
                 try:
-                    self.co.discard_eof()
+                    self.init_cursor()
                     self.co.add_pos(arg.delta)
                     if pfn:
                         pfn(i)
@@ -147,10 +184,44 @@ class Console (console.Console):
                         self.write_buffer(n, seq)
                     self.co.add_pos(-1)
                 finally:
-                    self.co.restore_eof()
+                    self.cleanup_cursor()
             self.co.set_prev_context(fn)
-        elif key == MOTION:
+        elif cmd == MOTION:
             self.co.set_pos(seq[-1])
+
+class _deleteconsole (Console):
+    def test(self):
+        try:
+            methods.test_delete_raise(self)
+        except fileobj.Error:
+            self.co.pop_input(len(literal.delete.seq))
+            raise
+
+    def process_incoming(self, arg, x):
+        for _ in literal.delete_cmds:
+            if x == _:
+                self.delete(arg.amp)
+                return DELETE
+        else:
+            self.co.push_input((x,))
+            return ESCAPE
+
+    def process_command(self, arg, x, cmd, l):
+        if cmd == DELETE:
+            l.append(arg.amp)
+            arg.amp = 1 # only first delete gets amp
+        elif cmd == ESCAPE:
+            assert l, l # there must be at least 1 delete
+            self.co.set_pos(self.co.put_barrier())
+            self.co.test_access()
+            self.co.disconnect_workspace()
+            for x in l:
+                self.delete(x)
+            self.co.reconnect_workspace()
+            return -1
+
+    def delete(self, x):
+        methods.delete(self, x, None, None, None)
 
 class _insert (object):
     def test(self):
@@ -164,7 +235,7 @@ class _replace (object):
 
 _hexdigits = tuple(ord(x) for x in string.hexdigits)
 
-class _binary (Console):
+class _binary (_writeconsole):
     def dispatch(self, arg):
         self.low = False
         return super(_binary, self).dispatch(arg)
@@ -252,7 +323,7 @@ class BR (_binary, _replace):
         seq *= n
         if pad:
             siz = len(seq) // n
-            for i in range(siz, siz * (n + 1), siz):
+            for i in util.get_xrange(siz, siz * (n + 1), siz):
                 x = self.co.get_pos() + i // 2 - 1
                 if x < self.co.get_size():
                     b = self.co.read(x, 1)
@@ -273,7 +344,7 @@ class BlockBR (BR):
         methods.block_replace(self, None, None, get_ascii(*seq[:2]), None)
         return -1
 
-class _ascii (Console):
+class _ascii (_writeconsole):
     def test_write(self, x):
         # include 9 to 13 -> \t\n\v\f\r
         return kbd.isgraph(x) or kbd.isspace(x)
@@ -350,7 +421,7 @@ def get_ascii(upper, lower):
 
 def get_ascii_seq(seq):
     assert len(seq) % 2 == 0
-    r = range(0, len(seq), 2)
+    r = util.get_xrange(0, len(seq), 2)
     return [get_ascii(*seq[i : i + 2]) for i in r]
 
 def get_insert_class():
@@ -364,6 +435,9 @@ def get_range_replace_class():
 
 def get_block_replace_class():
     return __get_class("Block{0}R")
+
+def get_delete_class():
+    return _deleteconsole
 
 def __get_class(s):
     this = sys.modules[__name__]

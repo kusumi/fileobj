@@ -109,6 +109,15 @@
             nosi             Unset SI prefix mode (kilo equals 2^10)
             ws               Set wrapscan mode (search wraps around the end of the buffer)
             nows             Unset wrapscan mode
+        :sha1                Print sha1 message digest of the current buffer
+        :sha224              Print sha224 message digest of the current buffer
+        :sha256              Print sha256 message digest of the current buffer
+        :sha384              Print sha384 message digest of the current buffer
+        :sha3_224            Print sha3_224 message digest of the current buffer
+        :sha3_256            Print sha3_256 message digest of the current buffer
+        :sha3_384            Print sha3_384 message digest of the current buffer
+        :sha3_512            Print sha3_512 message digest of the current buffer
+        :sha512              Print sha512 message digest of the current buffer
         :split               Split current window
         :term                Print terminal type
         :version             Print version

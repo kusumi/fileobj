@@ -28,7 +28,7 @@ from . import path
 from . import setting
 from . import util
 
-class AllocatorError (util.GenericError):
+class Error (util.GenericError):
     pass
 
 class Allocator (object):
@@ -122,7 +122,7 @@ class Allocator (object):
         ret = path.get_path_failure_message(o)
         if ret:
             log.error(ret)
-            raise AllocatorError(ret)
+            raise Error(ret)
 
         cls = self.__def_class
         if setting.use_readonly or (not is_pid and not util.is_write_ok(f)):
@@ -166,7 +166,7 @@ class Allocator (object):
                 log.error(e)
                 cls = self.__get_alt_class(cls)
                 if not cls:
-                    raise AllocatorError(str(e))
+                    raise Error(str(e))
 
 def iter_module_name():
     yield "romap"

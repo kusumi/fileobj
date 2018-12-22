@@ -65,7 +65,7 @@ class Fileobj (rrbuf.Fileobj, vm.methods):
     def __sync_buffer(self, pos, siz):
         l = []
         buf = self.__read_buffer(pos, siz)
-        for x in range(len(buf) // self.word):
+        for x in util.get_xrange(len(buf) // self.word):
             b = buf[:self.word]
             buf = buf[self.word:]
             l.append(util.host_to_int(b))

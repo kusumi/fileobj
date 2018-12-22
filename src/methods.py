@@ -51,7 +51,7 @@ def _cleanup(fn):
         try:
             und = self.co.get_undo_size()
             return fn(self, amp, opc, args, raw)
-        except fileobj.FileobjError as e:
+        except fileobj.Error as e:
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
             self.co.flash(e)
@@ -80,7 +80,7 @@ def __test_permission_raise(self, s):
 
 def test_empty_raise(self):
     if self.co.is_empty():
-        raise fileobj.FileobjError("Empty buffer")
+        raise fileobj.Error("Empty buffer")
 
 def get_int(amp):
     if amp is None:
@@ -98,11 +98,11 @@ def __get_block(self):
     cnt = (end - beg) // map.x + 1
     return beg, end, map.x, siz, cnt
 
-def __exec(self, fn, i=0):
-    __call_context(self, fn, i)
+def __exec_lrepaint(self, fn, i=0):
+    __call_context_lrepaint(self, fn, i)
     self.co.set_prev_context(fn)
 
-def __call_context(self, fn, i=0):
+def __call_context_lrepaint(self, fn, i=0):
     fn(i)
     self.co.lrepaintf()
 
@@ -440,30 +440,30 @@ def refresh_container(self, amp, opc, args, raw):
 
 def switch_to_next_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.crepaint(False)
+        self.co.set_focus(False)
         self.co.switch_to_next_workspace()
-        self.co.crepaint(True)
+        self.co.set_focus(True)
         return RETURN
 
 def switch_to_prev_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.crepaint(False)
+        self.co.set_focus(False)
         self.co.switch_to_prev_workspace()
-        self.co.crepaint(True)
+        self.co.set_focus(True)
         return RETURN
 
 def switch_to_top_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.crepaint(False)
+        self.co.set_focus(False)
         self.co.switch_to_top_workspace()
-        self.co.crepaint(True)
+        self.co.set_focus(True)
         return RETURN
 
 def switch_to_bottom_workspace(self, amp, opc, args, raw):
     if len(self.co) > 1:
-        self.co.crepaint(False)
+        self.co.set_focus(False)
         self.co.switch_to_bottom_workspace()
-        self.co.crepaint(True)
+        self.co.set_focus(True)
         return RETURN
 
 def add_workspace(self, amp, opc, args, raw):
@@ -473,7 +473,7 @@ def add_workspace_vertical(self, amp, opc, args, raw):
     __add_workspace(self, amp, opc, args, raw, True)
 
 def __add_workspace(self, amp, opc, args, raw, vertical):
-    for x in range(get_int(amp)):
+    for x in util.get_xrange(get_int(amp)):
         if self.co.add_workspace(vertical) == -1:
             break
     self.co.repaint()
@@ -596,7 +596,7 @@ def __set_bytes_per_window(self, args):
         __rebuild(self)
 
 def __rebuild(self):
-    screen.clear()
+    screen.clear_refresh()
     self.co.build()
     self.co.repaint() # repaint regardless of build result
 
@@ -632,7 +632,7 @@ def __set_bytes_per_unit(self, args):
                     return
         assert self.co.get_bytes_per_line() % unitlen == 0
         # ready to build
-        screen.clear()
+        screen.clear_refresh()
         # rollback if build failed, or vbuild folded bpl and as a result made
         # inconsistency against setting.bytes_per_unit (updating bpl first
         # should eliminate inconsistency mostly...).
@@ -703,7 +703,7 @@ def __try_update_address_num_width(self):
     orig = self.co.update_address_num_width()
     if orig == -1:
         return -1 # no change
-    screen.clear()
+    screen.clear_refresh()
     if self.co.build_quiet() == -1:
         self.co.set_address_num_width(orig)
         self.co.build()
@@ -809,30 +809,107 @@ def show_args(self, amp, opc, args, raw):
     l[l.index(x)] = "[{0}]".format(x)
     self.co.show(' '.join(l))
 
+# md5
 def show_md5(self, amp, opc, args, raw):
-    __show_md5(self, 0, self.co.get_size())
+    __show_hash(self, "md5", 0, self.co.get_size())
 
 def range_show_md5(self, amp, opc, args, raw):
-    beg, siz = __get_range(self)
-    __show_md5(self, beg, beg + siz)
+    __range_show_hash(self, "md5")
 
 def block_show_md5(self, amp, opc, args, raw):
-    beg, end, mapx, siz, cnt = __get_block(self)
-    pos = beg
-    l = []
-    for i in util.get_xrange(cnt):
-        b = self.co.read(pos, siz)
-        assert len(b) == siz, (pos, siz)
-        l.append(b)
-        if screen.test_signal():
-            self.co.flash("Interrupted ({0})".format(pos))
-            return
-        pos += mapx
-        if pos >= end:
-            break
-    __get_md5(self, l)
+    __block_show_hash(self, "md5")
 
-def __show_md5(self, beg, end):
+# sha1
+def show_sha1(self, amp, opc, args, raw):
+    __show_hash(self, "sha1", 0, self.co.get_size())
+
+def range_show_sha1(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha1")
+
+def block_show_sha1(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha1")
+
+# sha224
+def show_sha224(self, amp, opc, args, raw):
+    __show_hash(self, "sha224", 0, self.co.get_size())
+
+def range_show_sha224(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha224")
+
+def block_show_sha224(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha224")
+
+# sha256
+def show_sha256(self, amp, opc, args, raw):
+    __show_hash(self, "sha256", 0, self.co.get_size())
+
+def range_show_sha256(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha256")
+
+def block_show_sha256(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha256")
+
+# sha384
+def show_sha384(self, amp, opc, args, raw):
+    __show_hash(self, "sha384", 0, self.co.get_size())
+
+def range_show_sha384(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha384")
+
+def block_show_sha384(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha384")
+
+# sha512
+def show_sha512(self, amp, opc, args, raw):
+    __show_hash(self, "sha512", 0, self.co.get_size())
+
+def range_show_sha512(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha512")
+
+def block_show_sha512(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha512")
+
+# sha3_224
+def show_sha3_224(self, amp, opc, args, raw):
+    __show_hash(self, "sha3_224", 0, self.co.get_size())
+
+def range_show_sha3_224(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha3_224")
+
+def block_show_sha3_224(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha3_224")
+
+# sha3_256
+def show_sha3_256(self, amp, opc, args, raw):
+    __show_hash(self, "sha3_256", 0, self.co.get_size())
+
+def range_show_sha3_256(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha3_256")
+
+def block_show_sha3_256(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha3_256")
+
+# sha3_384
+def show_sha3_384(self, amp, opc, args, raw):
+    __show_hash(self, "sha3_384", 0, self.co.get_size())
+
+def range_show_sha3_384(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha3_384")
+
+def block_show_sha3_384(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha3_384")
+
+# sha3_512
+def show_sha3_512(self, amp, opc, args, raw):
+    __show_hash(self, "sha3_512", 0, self.co.get_size())
+
+def range_show_sha3_512(self, amp, opc, args, raw):
+    __range_show_hash(self, "sha3_512")
+
+def block_show_sha3_512(self, amp, opc, args, raw):
+    __block_show_hash(self, "sha3_512")
+
+def __show_hash(self, name, beg, end):
     siz = self.co.get_buffer_size()
     pos = beg
     l = []
@@ -850,14 +927,38 @@ def __show_md5(self, beg, end):
         pos += len(b)
         if pos >= end:
             break
-    __get_md5(self, l)
+    __get_hash(self, name, l)
 
-def __get_md5(self, l):
+def __range_show_hash(self, name):
+    beg, siz = __get_range(self)
+    __show_hash(self, name, beg, beg + siz)
+
+def __block_show_hash(self, name):
+    beg, end, mapx, siz, cnt = __get_block(self)
+    pos = beg
+    l = []
+    for i in util.get_xrange(cnt):
+        b = self.co.read(pos, siz)
+        assert len(b) == siz, (pos, siz)
+        l.append(b)
+        if screen.test_signal():
+            self.co.flash("Interrupted ({0})".format(pos))
+            return
+        pos += mapx
+        if pos >= end:
+            break
+    __get_hash(self, name, l)
+
+def __get_hash(self, name, l):
     b = filebytes.join(l)
-    if b:
-        self.co.show(util.get_md5(b))
-    else:
+    if not b:
         self.co.flash("No input")
+        return
+    try:
+        self.co.show(util.get_hash(name, b))
+    except AttributeError:
+        self.co.flash("{0} not supported by {1}".format(name,
+            util.get_python_string()))
 
 def __is_equal(a, b):
     return a == b
@@ -917,7 +1018,7 @@ def __cmp_buffer(self, pos, fn):
             return
         l = [len(b) for b in bufs]
         for x in util.get_xrange(min(l)):
-            for i in range(len(bufs)):
+            for i in util.get_xrange(len(bufs)):
                 if i == 0:
                     continue
                 a = bufs[i - 1]
@@ -973,7 +1074,7 @@ def __cmpr_buffer(self, pos, fn):
         assert len(set([len(b) for b in bufs])) == 1
         n = len(bufs[0])
         for x in util.get_xrange(n):
-            for i in range(len(bufs)):
+            for i in util.get_xrange(len(bufs)):
                 if i == 0:
                     continue
                 a = bufs[i - 1]
@@ -1004,7 +1105,7 @@ def __cmp_buffer_prep(self):
         return
     files = []
     sizes = []
-    for x in range(len(self.co)):
+    for x in util.get_xrange(len(self.co)):
         files.append(self.co.get_path())
         sizes.append(self.co.get_size())
         self.co.switch_to_next_workspace()
@@ -1018,7 +1119,7 @@ def __cmp_buffer_prep(self):
 def __cmp_buffer_read(self, pos, siz):
     bufs = []
     is_equal = True
-    for x in range(len(self.co)):
+    for x in util.get_xrange(len(self.co)):
         b = self.co.read(pos, siz)
         if not b:
             return None, False
@@ -1036,7 +1137,7 @@ def __cmp_buffer_goto(self, pos):
         full_repaint = True
     else:
         full_repaint = False
-    for x in range(len(self.co)):
+    for x in util.get_xrange(len(self.co)):
         self.co.go_to(pos)
         self.co.switch_to_next_workspace()
     self.co.show(pos)
@@ -1099,10 +1200,10 @@ def __do_replace_number(self, amp, pos, siz):
             x += 2 ** (len(b) * 8)
         b = util.int_to_bin(x, len(b))
         if b is None:
-            raise fileobj.FileobjError("Failed to convert")
+            raise fileobj.Error("Failed to convert")
         self.co.replace(pos, filebytes.ords(b))
         self.co.show(util.bin_to_int(b))
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 _did_search_forward = True
 
@@ -1118,7 +1219,7 @@ def __do_search_repeat(self, amp, opc, args, raw, is_forward):
     # Note that joining args can't handle double space.
     s = util.bytes_to_str(filebytes.input_to_bytes(raw))
     n = get_int(amp)
-    for x in range(n):
+    for x in util.get_xrange(n):
         is_last = (x == (n - 1))
         if not x:
             if __do_search(self, s, is_forward, is_last) == -1:
@@ -1147,7 +1248,7 @@ def search_next_backward(self, amp, opc, args, raw):
 
 def __do_search_next_repeat(self, amp, is_forward):
     n = get_int(amp)
-    for x in range(n):
+    for x in util.get_xrange(n):
         is_last = (x == (n - 1))
         if __do_search_next(self, is_forward, is_last) == -1:
             return
@@ -1221,7 +1322,7 @@ def delete(self, amp, opc, args, raw):
             self.co.set_delete_buffer(buf)
         else:
             self.co.right_add_delete_buffer(buf)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def backspace(self, amp, opc, args, raw):
@@ -1236,7 +1337,7 @@ def backspace(self, amp, opc, args, raw):
             self.co.set_delete_buffer(buf, False)
         else:
             self.co.left_add_delete_buffer(buf)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def delete_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
@@ -1274,7 +1375,7 @@ def block_delete(self, amp, opc, args, raw):
         else:
             self.co.right_add_delete_buffer(buf)
         self.co.merge_undo(i + 1)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def toggle(self, amp, opc, args, raw):
@@ -1293,7 +1394,7 @@ def toggle(self, amp, opc, args, raw):
             self.co.add_pos(amp)
         elif ret == -1:
             self.co.rollback_until(und)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __single_toggle(self, pos, amp):
     for x in util.get_xrange(amp):
@@ -1350,25 +1451,25 @@ def block_toggle(self, amp, opc, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def range_replace(self, amp, opc, args, raw):
     test_replace_raise(self)
     beg, siz = __get_range(self)
-    l = tuple(args for x in range(siz))
+    l = tuple(args for x in util.get_xrange(siz))
     self.co.set_pos(beg)
     def fn(_):
         pos = self.co.get_pos()
         self.co.replace(pos, l)
         self.co.set_pos(pos + siz)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def block_replace(self, amp, opc, args, raw):
     test_replace_raise(self)
     beg, end, mapx, siz, cnt = __get_block(self)
-    l = tuple(args for x in range(siz))
+    l = tuple(args for x in util.get_xrange(siz))
     self.co.set_pos(beg)
     def fn(_):
         und = self.co.get_undo_size()
@@ -1384,7 +1485,7 @@ def block_replace(self, amp, opc, args, raw):
                 return
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def rotate_right(self, amp, opc, args, raw):
@@ -1412,7 +1513,7 @@ def __do_rotate_right(self, amp, opc, siz):
             self.co.merge_undo(ret)
         elif ret == -1:
             self.co.rollback_until(und)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __single_rotate_right(self, shift, beg, end):
     car = 0
@@ -1505,7 +1606,7 @@ def block_rotate_right(self, amp, opc, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(org)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def rotate_left(self, amp, opc, args, raw):
@@ -1533,7 +1634,7 @@ def __do_rotate_left(self, amp, opc, siz):
             self.co.merge_undo(ret)
         elif ret == -1:
             self.co.rollback_until(und)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __single_rotate_left(self, shift, beg, end):
     car = 0
@@ -1626,7 +1727,7 @@ def block_rotate_left(self, amp, opc, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(org)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def swap_bytes(self, amp, opc, args, raw):
@@ -1649,7 +1750,7 @@ def __swap_bytes(self, siz):
         l = __swap_buffer_to_input(self, buf)
         self.co.replace_current(l)
         self.co.add_pos(len(l))
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __swap_buffer_to_input(self, buf):
     l = []
@@ -1681,7 +1782,7 @@ def block_swap_bytes(self, amp, opc, args, raw):
             return
         self.co.merge_undo(ret)
         self.co.set_pos(pos_end + 1)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __block_read_swap_buffer(self, pos, mapx, siz, cnt):
     buf = filebytes.BLANK
@@ -1711,16 +1812,17 @@ def __block_replace_swap_buffer(self, pos, mapx, siz, cnt, l):
 
 @_cleanup
 def repeat(self, amp, opc, args, raw):
+    self.co.require_full_repaint()
     pxfn = self.co.get_xprev_context()
     if not pxfn:
         self.co.flash("No previous command")
     elif amp is None:
-        __call_context(self, pxfn)
+        __call_context_lrepaint(self, pxfn)
     else:
         amp = get_int(amp)
         fn = self.co.get_prev_context()
         if amp <= 1:
-            __call_context(self, fn)
+            __call_context_lrepaint(self, fn)
             self.co.set_prev_context(fn)
         else:
             def xfn(i):
@@ -1731,7 +1833,7 @@ def repeat(self, amp, opc, args, raw):
                     else:
                         fn(1)
                 self.co.merge_undo_until(und)
-            __call_context(self, xfn)
+            __call_context_lrepaint(self, xfn)
             self.co.set_prev_context(fn, xfn)
 
 def undo(self, amp, opc, args, raw):
@@ -1875,7 +1977,7 @@ def logical_bit_operation(self, amp, opc, arg, raw):
             self.co.add_pos(amp)
         elif ret == -1:
             self.co.rollback_until(und)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def __single_logical_bit_operation(self, pos, amp, fn):
     for x in util.get_xrange(amp):
@@ -1929,7 +2031,7 @@ def block_logical_bit_operation(self, amp, opc, args, raw):
                 break
         self.co.merge_undo(i + 1)
         self.co.set_pos(pos - mapx + siz)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 def start_register(self, amp, opc, args, raw):
     self.co.start_register(opc[1])
@@ -1999,7 +2101,7 @@ def __put(self, amp, opc, mov):
             go_right(self, mov + len(buf) - 1)
         finally:
             self.co.restore_eof()
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def put_over(self, amp, opc, args, raw):
@@ -2022,7 +2124,7 @@ def __put_over(self, amp, opc, mov):
             pos = self.co.get_max_pos()
         self.co.replace(pos, buf)
         go_right(self, len(buf) - 1)
-    __exec(self, fn)
+    __exec_lrepaint(self, fn)
 
 @_cleanup
 def range_put(self, amp, opc, args, raw):
@@ -2147,9 +2249,9 @@ def __overwrite_buffer(self, f, buf):
         with util.do_atomic_write(f, fsync=kernel.fsync) as fd:
             fd.write(buf)
         msg = "{0} {1}[B] overwritten".format(f, kernel.get_size(f))
-        return msg, None # XXX (msg, f) to be compatible with vim ?
+        return msg, None # XXX (msg, f) to be compatible with vi ?
     except Exception as e:
-        raise fileobj.FileobjError("Failed to overwrite: " +
+        raise fileobj.Error("Failed to overwrite: " +
             util.e_to_string(e, verbose=False))
 
 def __rename_buffer(self, f):
@@ -2161,7 +2263,7 @@ def __rename_buffer(self, f):
     try:
         assert not self.co.is_dirty()
         self.co.flush() # throw away rollback log
-    except fileobj.FileobjError:
+    except fileobj.Error:
         pass
 
 def __get_save_path(self, args, force):

@@ -77,21 +77,20 @@ class methods (object):
 
     def test_vm(self):
         if not kernel.has_pid_access(self.pid):
-            raise fileobj.FileobjError("Can not access pid {0}".format(
-                self.pid))
+            raise fileobj.Error("Can not access pid {0}".format(self.pid))
 
     def __attach_vm(self):
         ret, err = ptrace.attach(self.pid)
         if ret == ptrace.ERROR:
-            raise fileobj.FileobjError("Failed to attach pid {0}: {1}".format(
-                self.pid, os.strerror(err)))
+            raise fileobj.Error("Failed to attach pid {0}: {1}".format(self.pid,
+                os.strerror(err)))
         self.__wait()
 
     def __detach_vm(self):
         ret, err = ptrace.detach(self.pid)
         if ret == ptrace.ERROR:
-            raise fileobj.FileobjError("Failed to detach pid {0}: {1}".format(
-                self.pid, os.strerror(err)))
+            raise fileobj.Error("Failed to detach pid {0}: {1}".format(self.pid,
+                os.strerror(err)))
 
     def __assert_vm(self, addr, size):
         assert addr % self.word == 0, addr
@@ -113,7 +112,7 @@ class methods (object):
         while True:
             ret, err = ptrace.peektext(self.pid, addr)
             if ret == ptrace.ERROR:
-                raise fileobj.FileobjError(
+                raise fileobj.Error(
                     "Failed to peek pid {0} at 0x{1:X}: {2}".format(self.pid,
                         addr, os.strerror(err)))
             l.append(ret)
@@ -141,7 +140,7 @@ class methods (object):
         for data in buf:
             ret, err = ptrace.poketext(self.pid, addr, data)
             if ret == ptrace.ERROR:
-                raise fileobj.FileobjError(
+                raise fileobj.Error(
                     "Failed to poke pid {0} at 0x{1:X}: {2}".format(self.pid,
                         addr, os.strerror(err)))
             ret += 1

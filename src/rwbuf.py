@@ -29,6 +29,7 @@ from . import fileobj
 from . import log
 from . import rrbuf
 from . import setting
+from . import util
 
 class Fileobj (rrbuf.Fileobj):
     _insert  = True
@@ -49,7 +50,7 @@ class Fileobj (rrbuf.Fileobj):
             self.init_chunk(filebytes.BLANK)
 
     def __sync_size(self, o, delta):
-        for i in range(self.cbuf.index(o) + 1, len(self.cbuf)):
+        for i in util.get_xrange(self.cbuf.index(o) + 1, len(self.cbuf)):
             self.cbuf[i].offset += delta
         self.set_size(self.get_size() + delta)
 
@@ -191,7 +192,7 @@ class Fileobj (rrbuf.Fileobj):
 
     def delete(self, x, n, rec=True):
         if self.is_empty():
-            raise fileobj.FileobjError("Empty buffer")
+            raise fileobj.Error("Empty buffer")
         xx, nn = x, n
         buf = []
         dead = []

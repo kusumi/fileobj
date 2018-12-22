@@ -74,7 +74,7 @@ class Fileobj (fileobj.Fileobj):
         if self.is_mappable():
             self.init_mapping(self.get_path())
         else:
-            raise fileobj.FileobjError("Can not mmap(2) " + self.get_path())
+            raise fileobj.Error("Can not mmap(2) " + self.get_path())
 
     def dtr(self):
         self.cleanup_mapping()

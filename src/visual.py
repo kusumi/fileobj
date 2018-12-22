@@ -40,7 +40,7 @@ VISUAL_BLOCK = "VISUAL BLOCK"
 
 class _visual_methods (object):
     def init(self):
-        if setting.buffer_attr_undefined:
+        if setting.color_visual is None:
             if screen.use_alt_chgat():
                 self.__chgat_head = self.__alt_chgat_head
                 self.__chgat_tail = self.__alt_chgat_tail
@@ -53,7 +53,7 @@ class _visual_methods (object):
                 self.__chgat_tail = self.__alt_chgat_tail_attr
                 self.__chgat_single = self.__alt_chgat_single_attr
                 self.__chgat_outside = self.__alt_chgat_outside_attr
-            else:
+            else: # default
                 self.__chgat_head = self.__chgat_head_attr
                 self.__chgat_tail = self.__chgat_tail_attr
                 self.__chgat_single = self.__chgat_single_attr
@@ -68,7 +68,7 @@ class _visual_methods (object):
         else:
             self.__update_visual(t, full)
         pos = self.fileops.get_pos()
-        self.update_search(pos)
+        self.page_update_search(pos)
         self.chgat_cursor(pos, screen.A_COLOR_CURRENT, screen.A_COLOR_CURRENT,
             False)
 
@@ -181,66 +181,93 @@ class _visual_methods (object):
             if lcur > limit:
                 break
             if full or lr or (lcur in l):
+                # XXX second and third conditionals are redundant
                 if lbeg <= lcur <= lend:
                     self.__chgat_single(y, x, lcur + d1, lcur + d2, lcur)
                 elif lppos <= lcur < lbeg and lpos == lbeg and lppos < lpos:
                     self.__chgat_outside(y, x, lcur) # down
                 elif lend < lcur <= lppos and lpos == lend and lpos < lppos:
                     self.__chgat_outside(y, x, lcur) # up
+                elif lppos < lbeg: # jump down to other side of region
+                    self.__chgat_outside(y, x, lcur)
+                elif lend < lppos: # jump up to other side of region
+                    self.__chgat_outside(y, x, lcur)
             lcur += mapx
             y += 1
+
+    def post_fill_line(self, y, x, buf):
+        if not self.cell[1]:
+            return
+        # need to drop visual color from space within unit
+        upl, xpu = self.get_units_per_line(len(buf))
+        for i in util.get_xrange(upl):
+            extra = ' ' * self.cell[1]
+            pos = x + self.get_unit_width(i + 1) - len(extra)
+            if pos < self.get_size_x():
+                # pos + len(extra) - 1 still needs to fit
+                self.addstr(y, pos, extra)
 
     # head
     def __chgat_head(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(self.bufmap.x) - pos
         self.chgat(y, x, pos)
-        self.chgat(y, x + pos, siz, self.attr_visual)
+        if x + pos < self.get_size_x():
+            self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_head(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos])
-        self.printl(y, x + pos, s[pos:], self.attr_visual)
+        self.addstr(y, x, s[:pos])
+        if x + pos < self.get_size_x():
+            self.addstr(y, x + pos, s[pos:], self.attr_visual)
 
     def __chgat_head_attr(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_edge(self.bufmap.x) - pos
         buf = self.fileops.read(offset, beg - offset)
-        self.fill_line(y, x, buf)
-        self.chgat(y, x + pos, siz, self.attr_visual)
+        self.fill_line(y, x, buf, screen.A_NONE,
+            self.get_units_per_line(len(buf)))
+        self.post_fill_line(y, x, buf)
+        if x + pos < self.get_size_x():
+            self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_head_attr(self, y, x, beg, offset):
         pos = self.get_cell_width(beg - offset)
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
             s += ' ' * d
         buf = self.fileops.read(offset, beg - offset)
-        self.fill_line(y, x, buf)
-        self.printl(y, x + pos, s[pos:], self.attr_visual)
+        self.fill_line(y, x, buf, screen.A_NONE,
+            self.get_units_per_line(len(buf)))
+        self.post_fill_line(y, x, buf)
+        if x + pos < self.get_size_x():
+            self.addstr(y, x + pos, s[pos:], self.attr_visual)
 
     # tail
     def __chgat_tail(self, y, x, end, offset):
         pos = self.get_cell_edge(end - offset + 1)
         siz = self.get_cell_edge(self.bufmap.x) - pos
         self.chgat(y, x, pos, self.attr_visual)
-        self.chgat(y, x + pos, siz)
+        if x + pos < self.get_size_x():
+            self.chgat(y, x + pos, siz)
 
     def __alt_chgat_tail(self, y, x, end, offset):
         pos = self.get_cell_edge(end - offset + 1)
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = pos - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos], self.attr_visual)
-        self.printl(y, x + pos, s[pos:])
+        self.addstr(y, x, s[:pos], self.attr_visual)
+        if x + pos < self.get_size_x():
+            self.addstr(y, x + pos, s[pos:])
 
     def __chgat_tail_attr(self, y, x, end, offset):
         siz = self.get_cell_edge(end - offset + 1)
@@ -251,11 +278,11 @@ class _visual_methods (object):
     def __alt_chgat_tail_attr(self, y, x, end, offset):
         siz = self.get_cell_edge(end - offset + 1)
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = siz - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:siz], self.attr_visual)
+        self.addstr(y, x, s[:siz], self.attr_visual)
         if end + 1 <= self.fileops.get_max_pos():
             self.__chgat_tail_attr_clear(y, x, end, offset)
 
@@ -263,16 +290,20 @@ class _visual_methods (object):
         num = end - offset + 1
         buf = self.fileops.read(end + 1, self.bufmap.x - num)
         pos = self.get_cell_width(num)
-        self.fill_line_nth(y, x + pos, buf, num)
+        xx = self.fill_line_nth(y, x + pos, buf, num, screen.A_NONE)
+        self.post_fill_line(y, xx, buf)
         if (end + 1) % self.bufmap.x: # not rightmost
             # clear right side of newly fill'd line (needed when moving left/up)
             unitlen = setting.bytes_per_unit
             if (num % unitlen) == 0:
-                self.printl(y, x + pos - 1, ' ' * self.cell[1])
+                self.addstr(y, x + pos - 1, ' ' * self.cell[1])
             else:
                 skip = unitlen - (num % unitlen)
                 skip *= self.cell[2]
-                self.printl(y, x + pos + skip, ' ' * self.cell[1])
+                xx = x + pos + skip
+                if xx <= self.get_size_x() - 1:
+                    # xx + len(...) - 1 still needs to fit
+                    self.addstr(y, xx, ' ' * self.cell[1])
 
     # single
     def __chgat_single(self, y, x, beg, end, offset):
@@ -280,40 +311,49 @@ class _visual_methods (object):
         siz = self.get_cell_distance(beg, end)
         wid = self.get_cell_edge(self.bufmap.x)
         self.chgat(y, x, wid)
-        self.chgat(y, x + pos, siz, self.attr_visual)
+        if x + pos < self.get_size_x():
+            self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_distance(beg, end)
         end = pos + siz
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = end - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s[:pos])
-        self.printl(y, x + pos, s[pos:end], self.attr_visual)
-        self.printl(y, x + end, s[end:])
+        self.addstr(y, x, s[:pos])
+        if x + pos < self.get_size_x():
+            self.addstr(y, x + pos, s[pos:end], self.attr_visual)
+        if x + end < self.get_size_x():
+            self.addstr(y, x + end, s[end:])
 
     def __chgat_single_attr(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_distance(beg, end)
         buf = self.fileops.read(offset, self.bufmap.x)
-        self.fill_line(y, x, buf)
-        self.chgat(y, x + pos, siz, self.attr_visual)
+        self.fill_line(y, x, buf, screen.A_NONE,
+            self.get_units_per_line(len(buf)))
+        self.post_fill_line(y, x, buf)
+        if x + pos < self.get_size_x():
+            self.chgat(y, x + pos, siz, self.attr_visual)
 
     def __alt_chgat_single_attr(self, y, x, beg, end, offset):
         pos = self.get_cell_width(beg - offset)
         siz = self.get_cell_distance(beg, end)
         end = pos + siz
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = end - len(s)
         if d > 0:
             s += ' ' * d
         buf = self.fileops.read(offset, self.bufmap.x)
-        self.fill_line(y, x, buf)
-        self.printl(y, x + pos, s[pos:end], self.attr_visual)
+        self.fill_line(y, x, buf, screen.A_NONE,
+            self.get_units_per_line(len(buf)))
+        self.post_fill_line(y, x, buf)
+        if x + pos < self.get_size_x():
+            self.addstr(y, x + pos, s[pos:end], self.attr_visual)
 
     # inside
     def __chgat_inside(self, y, x, offset):
@@ -342,15 +382,20 @@ class _visual_methods (object):
 
     def __alt_chgat_body(self, y, x, offset, attr):
         buf = self.fileops.read(offset, self.bufmap.x)
-        s = self.get_form_line(buf)
+        s = self.get_str_line(buf)
         d = self.get_cell_edge(self.bufmap.x) - len(s)
         if d > 0:
             s += ' ' * d
-        self.printl(y, x, s, attr)
+        self.addstr(y, x, s, attr)
 
     def __chgat_body_attr(self, y, x, offset, attr):
         buf = self.fileops.read(offset, self.bufmap.x)
-        self.fill_line(y, x, buf, attr)
+        if self.fileops.get_region_type() == VISUAL_LINE and \
+            len(buf) != self.bufmap.x:
+            self.clrl(y, x) # clear last line beyond max position
+        self.fill_line(y, x, buf, attr,
+            self.get_units_per_line(len(buf)))
+        self.post_fill_line(y, x, buf)
 
 class BinaryCanvas (panel.BinaryCanvas, _visual_methods):
     def __init__(self, siz, pos):
@@ -358,14 +403,13 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_methods):
         super(BinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
-        self.need_full_line_repaint = True
+        self.require_full_repaint()
         super(BinaryCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self):
-        self.need_full_line_repaint = True
+    def update_highlight(self, low):
+        self.require_full_repaint()
         self.update_visual(False)
-        self.refresh()
 
 class TextCanvas (panel.TextCanvas, _visual_methods):
     def __init__(self, siz, pos):
@@ -373,14 +417,13 @@ class TextCanvas (panel.TextCanvas, _visual_methods):
         super(TextCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
-        self.need_full_line_repaint = True
+        self.require_full_repaint()
         super(TextCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self):
-        self.need_full_line_repaint = True
+    def update_highlight(self, low):
+        self.require_full_repaint()
         self.update_visual(False)
-        self.refresh()
 
 class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_methods):
     def __init__(self, siz, pos):
@@ -388,14 +431,13 @@ class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_methods):
         super(ExtBinaryCanvas, self).__init__(siz, pos)
 
     def fill(self, low):
-        self.need_full_line_repaint = True
+        self.require_full_repaint()
         super(ExtBinaryCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self):
-        self.need_full_line_repaint = True
+    def update_highlight(self, low):
+        self.require_full_repaint()
         self.update_visual(False)
-        self.refresh()
 
 class _console (console.Console):
     def init_method(self):
@@ -431,56 +473,65 @@ class _console (console.Console):
         self.add_method(literal.ctrld        , methods, "cursor_hpnext")
         self.add_method(literal.resize       , methods, "resize_container")
         self.add_method(literal.ctrll        , methods, "refresh_container")
-        self.add_method(literal.ctrlw_w      , this,    "_buffer_input")
-        self.add_method(literal.ctrlw_W      , this,    "_buffer_input")
-        self.add_method(literal.ctrlw_t      , this,    "_buffer_input")
-        self.add_method(literal.ctrlw_b      , this,    "_buffer_input")
-        self.add_method(literal.ctrlw_s      , this,    "_buffer_input")
-        self.add_method(literal.s_split      , this,    "_buffer_input")
-        self.add_method(literal.s_vsplit     , this,    "_buffer_input")
+        self.add_method(literal.ctrlw_w      , this,    "_queue_input")
+        self.add_method(literal.ctrlw_W      , this,    "_queue_input")
+        self.add_method(literal.ctrlw_t      , this,    "_queue_input")
+        self.add_method(literal.ctrlw_b      , this,    "_queue_input")
+        self.add_method(literal.ctrlw_s      , this,    "_queue_input")
+        self.add_method(literal.s_split      , this,    "_queue_input")
+        self.add_method(literal.s_vsplit     , this,    "_queue_input")
         self.add_method(literal.ctrlw_plus   , methods, "inc_workspace_height")
         self.add_method(literal.ctrlw_minus  , methods, "dec_workspace_height")
-        self.add_method(literal.s_close      , this,    "_buffer_input")
-        self.add_method(literal.s_only       , this,    "_buffer_input")
-        self.add_method(literal.s_e          , this,    "_buffer_input")
-        self.add_method(literal.s_bdelete    , this,    "_buffer_input")
-        self.add_method(literal.s_bfirst     , this,    "_buffer_input")
-        self.add_method(literal.s_blast      , this,    "_buffer_input")
-        self.add_method(literal.s_bnext      , this,    "_buffer_input")
-        self.add_method(literal.s_bprev      , this,    "_buffer_input")
+        self.add_method(literal.s_close      , this,    "_queue_input")
+        self.add_method(literal.s_only       , this,    "_queue_input")
+        self.add_method(literal.s_e          , this,    "_queue_input")
+        self.add_method(literal.s_bdelete    , this,    "_queue_input")
+        self.add_method(literal.s_bfirst     , this,    "_queue_input")
+        self.add_method(literal.s_blast      , this,    "_queue_input")
+        self.add_method(literal.s_bnext      , this,    "_queue_input")
+        self.add_method(literal.s_bprev      , this,    "_queue_input")
         self.add_method(literal.s_set        , methods, "set_option")
         self.add_method(literal.s_auto       , methods, "set_auto")
-        self.add_method(literal.ctrlg        , this,    "_buffer_input")
-        self.add_method(literal.g_ctrlg      , this,    "_buffer_input")
-        self.add_method(literal.s_self       , this,    "_buffer_input")
-        self.add_method(literal.s_pwd        , this,    "_buffer_input")
-        self.add_method(literal.s_date       , this,    "_buffer_input")
-        self.add_method(literal.s_kmod       , this,    "_buffer_input")
-        self.add_method(literal.s_fobj       , this,    "_buffer_input")
-        self.add_method(literal.s_bufsiz     , this,    "_buffer_input")
-        self.add_method(literal.s_meminfo    , this,    "_buffer_input")
-        self.add_method(literal.s_osdep      , this,    "_buffer_input")
-        self.add_method(literal.s_screen     , this,    "_buffer_input")
-        self.add_method(literal.s_platform   , this,    "_buffer_input")
-        self.add_method(literal.s_hostname   , this,    "_buffer_input")
-        self.add_method(literal.s_term       , this,    "_buffer_input")
-        self.add_method(literal.s_lang       , this,    "_buffer_input")
-        self.add_method(literal.s_version    , this,    "_buffer_input")
-        self.add_method(literal.s_sector     , this,    "_buffer_input")
-        self.add_method(literal.s_argv       , this,    "_buffer_input")
-        self.add_method(literal.s_args       , this,    "_buffer_input")
+        self.add_method(literal.ctrlg        , this,    "_queue_input")
+        self.add_method(literal.g_ctrlg      , this,    "_queue_input")
+        self.add_method(literal.s_self       , this,    "_queue_input")
+        self.add_method(literal.s_pwd        , this,    "_queue_input")
+        self.add_method(literal.s_date       , this,    "_queue_input")
+        self.add_method(literal.s_kmod       , this,    "_queue_input")
+        self.add_method(literal.s_fobj       , this,    "_queue_input")
+        self.add_method(literal.s_bufsiz     , this,    "_queue_input")
+        self.add_method(literal.s_meminfo    , this,    "_queue_input")
+        self.add_method(literal.s_osdep      , this,    "_queue_input")
+        self.add_method(literal.s_screen     , this,    "_queue_input")
+        self.add_method(literal.s_platform   , this,    "_queue_input")
+        self.add_method(literal.s_hostname   , this,    "_queue_input")
+        self.add_method(literal.s_term       , this,    "_queue_input")
+        self.add_method(literal.s_lang       , this,    "_queue_input")
+        self.add_method(literal.s_version    , this,    "_queue_input")
+        self.add_method(literal.s_sector     , this,    "_queue_input")
+        self.add_method(literal.s_argv       , this,    "_queue_input")
+        self.add_method(literal.s_args       , this,    "_queue_input")
         self.add_method(literal.s_md5        , this,    "_show_md5")
-        self.add_method(literal.s_cmp        , this,    "_buffer_input")
-        self.add_method(literal.s_cmpneg     , this,    "_buffer_input")
-        self.add_method(literal.s_cmpnext    , this,    "_buffer_input")
-        self.add_method(literal.s_cmpnextneg , this,    "_buffer_input")
-        self.add_method(literal.s_cmpr       , this,    "_buffer_input")
-        self.add_method(literal.s_cmprneg    , this,    "_buffer_input")
-        self.add_method(literal.s_cmprnext   , this,    "_buffer_input")
-        self.add_method(literal.s_cmprnextneg, this,    "_buffer_input")
+        self.add_method(literal.s_sha1       , this,    "_show_sha1")
+        self.add_method(literal.s_sha224     , this,    "_show_sha224")
+        self.add_method(literal.s_sha256     , this,    "_show_sha256")
+        self.add_method(literal.s_sha384     , this,    "_show_sha384")
+        self.add_method(literal.s_sha512     , this,    "_show_sha512")
+        self.add_method(literal.s_sha3_224   , this,    "_show_sha3_224")
+        self.add_method(literal.s_sha3_256   , this,    "_show_sha3_256")
+        self.add_method(literal.s_sha3_384   , this,    "_show_sha3_384")
+        self.add_method(literal.s_sha3_512   , this,    "_show_sha3_512")
+        self.add_method(literal.s_cmp        , this,    "_queue_input")
+        self.add_method(literal.s_cmpneg     , this,    "_queue_input")
+        self.add_method(literal.s_cmpnext    , this,    "_queue_input")
+        self.add_method(literal.s_cmpnextneg , this,    "_queue_input")
+        self.add_method(literal.s_cmpr       , this,    "_queue_input")
+        self.add_method(literal.s_cmprneg    , this,    "_queue_input")
+        self.add_method(literal.s_cmprnext   , this,    "_queue_input")
+        self.add_method(literal.s_cmprnextneg, this,    "_queue_input")
         self.add_method(literal.ctrla        , this,    "_inc_number")
         self.add_method(literal.ctrlx        , this,    "_dec_number")
-        self.add_method(literal.period       , this,    "_buffer_input")
+        self.add_method(literal.period       , this,    "_queue_input")
         self.add_method(literal.toggle       , this,    "_toggle")
         self.add_method(literal.ror          , this,    "_rotate_right")
         self.add_method(literal.rol          , this,    "_rotate_left")
@@ -488,19 +539,19 @@ class _console (console.Console):
         self.add_method(literal.delete       , this,    "_delete")
         self.add_method(literal.X            , this,    "_delete")
         self.add_method(literal.D            , this,    "_delete")
-        self.add_method(literal.u            , this,    "_buffer_input")
-        self.add_method(literal.U            , this,    "_buffer_input")
-        self.add_method(literal.ctrlr        , this,    "_buffer_input")
+        self.add_method(literal.u            , this,    "_queue_input")
+        self.add_method(literal.U            , this,    "_queue_input")
+        self.add_method(literal.ctrlr        , this,    "_queue_input")
         self.add_method(literal.reg_reg      , methods, "start_register")
-        self.add_method(literal.m_reg        , this,    "_buffer_input")
-        self.add_method(literal.backtick_reg , this,    "_buffer_input")
-        self.add_method(literal.s_delmarks   , this,    "_buffer_input")
-        self.add_method(literal.s_delmarksneg, this,    "_buffer_input")
+        self.add_method(literal.m_reg        , this,    "_queue_input")
+        self.add_method(literal.backtick_reg , this,    "_queue_input")
+        self.add_method(literal.s_delmarks   , this,    "_queue_input")
+        self.add_method(literal.s_delmarksneg, this,    "_queue_input")
         self.add_method(literal.q_reg        , methods, "start_record")
         self.add_method(literal.atsign_reg   , methods, "replay_record")
         self.add_method(literal.atsign_at    , methods, "replay_record")
         self.add_method(literal.atsign_colon , methods, "replay_bind")
-        self.add_method(literal.s_bind       , this,    "_buffer_input")
+        self.add_method(literal.s_bind       , this,    "_queue_input")
         self.add_method(literal.bit_and      , this,    "_logical_bit_operation")
         self.add_method(literal.bit_or       , this,    "_logical_bit_operation")
         self.add_method(literal.bit_xor      , this,    "_logical_bit_operation")
@@ -514,10 +565,10 @@ class _console (console.Console):
         self.add_method(literal.s_wneg       , this,    "_force_save_buffer")
         self.add_method(literal.s_wq         , this,    "_save_buffer_quit")
         #self.add_method(literal.s_x         , None,    None)
-        self.add_method(literal.s_q          , this,    "_buffer_input")
-        self.add_method(literal.s_qneg       , this,    "_buffer_input")
-        self.add_method(literal.s_qa         , this,    "_buffer_input")
-        self.add_method(literal.s_qaneg      , this,    "_buffer_input")
+        self.add_method(literal.s_q          , this,    "_queue_input")
+        self.add_method(literal.s_qneg       , this,    "_queue_input")
+        self.add_method(literal.s_qa         , this,    "_queue_input")
+        self.add_method(literal.s_qaneg      , this,    "_queue_input")
         self.add_method(literal.s_fsearch    , methods, "search_forward")
         self.add_method(literal.s_rsearch    , methods, "search_backward")
         self.add_method(literal.n            , methods, "search_next_forward")
@@ -532,6 +583,8 @@ class _console (console.Console):
         self.add_method(literal.v            , this,    "_enter_visual")
         self.add_method(literal.V            , this,    "_enter_line_visual")
         self.add_method(literal.ctrlv        , this,    "_enter_block_visual")
+        for li in literal.get_ext_literals():
+            self.add_method(li, this, "_queue_input")
 
     def handle_signal(self):
         _exit_visual(self)
@@ -550,10 +603,10 @@ class Console (_console):
 class ExtConsole (_console):
     pass
 
-def _buffer_input(self, amp, opc, args, raw):
+def _queue_input(self, amp, opc, args, raw):
     if raw[0] in literal.get_slow_ords():
         raw.append(kbd.ENTER)
-    self.co.buffer_input(raw)
+    self.co.queue_input(raw)
     return _exit_visual(self)
 
 def _enter_visual(self, amp, opc, args, raw):
@@ -601,6 +654,42 @@ def _in_block_visual(self):
 
 @_(methods.range_show_md5, methods.block_show_md5)
 def _show_md5(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha1, methods.block_show_sha1)
+def _show_sha1(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha224, methods.block_show_sha224)
+def _show_sha224(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha256, methods.block_show_sha256)
+def _show_sha256(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha384, methods.block_show_sha384)
+def _show_sha384(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha512, methods.block_show_sha512)
+def _show_sha512(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha3_224, methods.block_show_sha3_224)
+def _show_sha3_224(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha3_256, methods.block_show_sha3_256)
+def _show_sha3_256(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha3_384, methods.block_show_sha3_384)
+def _show_sha3_384(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_sha3_512, methods.block_show_sha3_512)
+def _show_sha3_512(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_inc_number, methods.block_inc_number)

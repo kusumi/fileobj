@@ -26,7 +26,7 @@ import sys
 from . import setting
 from . import util
 
-class NativeError (util.GenericError):
+class Error (util.GenericError):
     pass
 
 try:
@@ -42,7 +42,7 @@ def get_so(safe=False):
     if not _native:
         if safe:
             return None
-        raise NativeError(repr(_e))
+        raise Error(repr(_e))
     return _native
 
 def is_enabled():

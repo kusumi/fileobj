@@ -205,9 +205,7 @@ def dispatch(optargs=None):
         assert isinstance(setting.use_text_window, bool)
         setting.use_text_window = False
     if opts.no_color:
-        setting.color_zero = None
-        setting.color_ff = None
-        setting.color_print = None
+        setting.disable_buffer_attr()
         setting.color_visual = None
 
     l = []
@@ -384,7 +382,8 @@ def __update_screen(scr, repaint, l):
             scr.addstr(8, 1, "This should {0}.".format(s),
                 screen.A_COLOR_CURRENT)
             # frame
-            scr.addstr(9, 1, "This terminal should have a frame.")
+            scr.addstr(9, 1, "There should be a frame in the terminal outside "
+                "of this text.")
             # frame/resize
             scr.addstr(10, 1, "The frame should resize if the terminal is "
                 "resized.")

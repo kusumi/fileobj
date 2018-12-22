@@ -41,16 +41,18 @@ from . import util
 #         visual.Console
 #         visual.ExtConsole
 #     edit.Console
-#         edit._binary
-#             edit.BI
-#             edit.BR
-#                 edit.RangeBR
-#                 edit.BlockBR
-#         edit._ascii
-#             edit.AI
-#             edit.AR
-#                 edit.RangeAR
-#                 edit.BlockAR
+#         edit._writeconsole
+#             edit._binary
+#                 edit.BI
+#                 edit.BR
+#                     edit.RangeBR
+#                     edit.BlockBR
+#             edit._ascii
+#                 edit.AI
+#                 edit.AR
+#                     edit.RangeAR
+#                     edit.BlockAR
+#         edit._deleteconsole
 
 seqno = 0
 
@@ -62,10 +64,7 @@ class Console (object):
         self.__fn = {}
 
         if setting.use_console_log:
-            s = util.get_timestamp(util.get_class_repr(self))
-            s += ".log"
-            f = os.path.join(setting.get_user_dir(), s)
-            self.__fd = kernel.fcreat_text(f)
+            self.__fd = open_console_log(util.get_class_repr(self))
 
         if self.init_method() != -1:
             rl, fl, sl = [], [], []
@@ -113,8 +112,8 @@ class Console (object):
         self.co.set_console(cls, arg)
         return methods.RETURN
 
-    def buffer_input(self, l):
-        self.co.buffer_input(l)
+    def queue_input(self, l):
+        self.co.queue_input(l)
 
     def set_banner(self):
         set_banner('')
@@ -123,13 +122,14 @@ class Console (object):
         return
 
     def log(self, *l):
-        if self.__fd:
-            s = ""
-            for x in l:
-                s += str(x)
-                s += " "
-            self.__fd.write("{0} {1}\n".format(seqno, s))
-            kernel.fsync(self.__fd)
+        if setting.use_console_log:
+            s = "{0} {1}\n".format(seqno, " ".join([str(_) for _ in l]))
+            if self.__fd:
+                self.__fd.write(s)
+                kernel.fsync(self.__fd)
+            if _fd:
+                _fd.write(s)
+                kernel.fsync(_fd)
 
     def read_incoming(self):
         global seqno
@@ -197,10 +197,11 @@ _scr = None
 _log = []
 chgat = None
 _cursor_attr = None
+_fd = None
 
 def init():
     # screen must be initialized
-    global _scr, _cursor_attr, chgat
+    global _scr, _cursor_attr, chgat, _fd
     if _scr:
         return -1
     _scr = screen.alloc(get_size_y(), get_size_x(), get_position_y(),
@@ -211,6 +212,8 @@ def init():
         chgat = __alt_chgat
     else:
         chgat = __chgat
+    if setting.use_console_log:
+        _fd = open_console_log("fileobj")
 
 def cleanup(e, tb):
     global _scr
@@ -224,6 +227,8 @@ def cleanup(e, tb):
         #    del l[-1]
         if trace.write(setting.get_trace_path(), l, e, tb):
             log.error("Failed to write trace")
+    if _fd:
+        _fd.close()
 
 def cleanup_no_trace():
     cleanup(None, [])
@@ -238,11 +243,11 @@ def refresh():
     clrl()
     test_flash()
     if _message: # prefer _message to _banner
-        printl(0, _message)
+        addstr(0, _message)
         if _cursor != -1:
             chgat(_cursor, _message, _cursor_attr)
     elif _banner:
-        printl(0, ''.join(_banner))
+        addstr(0, ''.join(_banner))
     _scr.refresh()
 
 def __chgat(x, s, attr):
@@ -253,29 +258,34 @@ def __alt_chgat(x, s, attr):
         c = s[x]
     else:
         c = ' '
-    printl(x, c, attr)
+    addstr(x, c, attr)
 
 def resize():
     try:
         set_message('')
         _scr.resize(get_size_y(), get_size_x())
         _scr.mvwin(get_position_y(), get_position_x())
-    except Exception as e:
-        log.error(e)
+    except screen.Error as e:
+        log.error(resize, e)
 
-def printl(x, s, attr=screen.A_NONE):
+def addstr(x, s, attr=screen.A_NONE):
+    if len(s) > get_size_x():
+        s = s[:get_size_x()-1]
+        s += "~"
     try:
         _scr.addstr(0, x, s, attr | screen.A_COLOR_FB)
-    except Exception as e:
-        if len(s) < screen.get_size_x() - 1:
-            log.debug(e, x, s)
+    except screen.Error as e:
+        # error unless attempt to write to lower right corner
+        if not ((0 == screen.get_size_y() - 1) and \
+            (x + len(s) - 1 == screen.get_size_x() - 1)):
+            log.error(addstr, e, x, s)
 
 def clrl():
     try:
         _scr.move(0, 0)
         _scr.clrtoeol()
-    except Exception as e:
-        log.error(e)
+    except screen.Error as e:
+        log.error(clrl, e)
 
 _banner = ['']
 def set_banner(o):
@@ -339,3 +349,8 @@ def get_position_x():
 def get_default_class():
     from . import void
     return void.Console
+
+def open_console_log(prefix):
+    s = util.get_timestamp(prefix)
+    f = os.path.join(setting.get_user_dir(), s + ".log")
+    return kernel.fcreat_text(f)

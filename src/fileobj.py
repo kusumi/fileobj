@@ -57,7 +57,7 @@ ERROR     = -1
 NOTFOUND  = -2
 INTERRUPT = -3
 
-class FileobjError (util.GenericError):
+class Error (util.GenericError):
     pass
 
 class Fileobj (object):
@@ -88,7 +88,7 @@ class Fileobj (object):
     def __init_path(self, f):
         ret = path.Path(f)
         if not path.is_canonical_type(ret):
-            raise FileobjError("Invalid type " + ret.type)
+            raise Error("Invalid type " + ret.type)
         else:
             return ret
 
@@ -233,23 +233,23 @@ class Fileobj (object):
         if not f:
             f = this
             if not f:
-                raise FileobjError("No file name")
+                raise Error("No file name")
         if this == f:
             if self.is_readonly():
-                raise FileobjError("Read only")
+                raise Error("Read only")
         elif os.path.isdir(f):
-            raise FileobjError(f + " is a directory")
+            raise Error(f + " is a directory")
         elif os.path.exists(f):
-            raise FileobjError(f + " exists")
+            raise Error(f + " exists")
 
         if this == f and not self.test_id(f):
-            raise FileobjError(f + " has been changed since reading it!!!")
+            raise Error(f + " has been changed since reading it!!!")
 
         o = path.Path(f)
         f = o.path
         ret = path.get_path_failure_message(o)
         if ret:
-            raise FileobjError(ret)
+            raise Error(ret)
         if os.path.exists(f):
             msg = ''
         else:
@@ -271,7 +271,7 @@ class Fileobj (object):
                 assert not os.path.exists(f), f
                 self.creat(f)
         except Exception as e:
-            raise FileobjError("Failed to write: " +
+            raise Error("Failed to write: " +
                 util.e_to_string(e, verbose=False))
         else:
             msg += "{0} {1}[B] written".format(f, self.get_size())
@@ -282,7 +282,7 @@ class Fileobj (object):
                 return msg, None
 
     def sync(self):
-        raise FileobjError("Read only")
+        raise Error("Read only")
 
     def utime(self):
         kernel.touch(self.get_path())
@@ -364,9 +364,9 @@ class Fileobj (object):
 
     def raise_no_support(self, s):
         if setting.use_readonly and s in ("insert", "replace", "delete"):
-            raise FileobjError("Using readonly mode")
+            raise Error("Using readonly mode")
         else:
-            raise FileobjError(self.get_no_support_string(s))
+            raise Error(self.get_no_support_string(s))
 
     def get_no_support_string(self, s):
         return s + " not supported"

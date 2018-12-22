@@ -68,7 +68,9 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        s = fileobj.util.execute_sh(cmd).stdout
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
         f = "./doc/README.list_of_options.md"
@@ -84,7 +86,9 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        s = fileobj.util.execute_sh(cmd).stdout
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
         f = "./doc/README.list_of_environment_variables.md"
@@ -100,7 +104,9 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        s = fileobj.util.execute_sh(cmd).stdout
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
         for x in s.split("\n")[:-1]:
             l.append("{0}{1}".format(I, x))
         f = "./doc/README.list_of_commands.md"
@@ -112,7 +118,9 @@ if __name__ == '__main__':
 
     try:
         cmd = "git log --pretty=\"%an\" | sort | uniq"
-        s = fileobj.util.execute_sh(cmd).stdout
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
         f = "./CONTRIBUTORS"
         write(f, s)
         print(f)
@@ -122,7 +130,9 @@ if __name__ == '__main__':
 
     try:
         cmd = "git status -s"
-        s = fileobj.util.execute_sh(cmd).stdout
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
         print("--")
         print(s)
     except Exception as e:

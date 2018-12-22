@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
     try:
         import fileobj.core
+        import fileobj.kernel
         import fileobj.nodep
         import fileobj.screen
         import fileobj.setting
@@ -82,8 +83,15 @@ if __name__ == '__main__':
     stats.print_stats()
     fd.close()
 
+    l = os.path.join(os.path.dirname(f), "profile.txt")
+    if os.path.islink(l):
+        os.unlink(l)
+    if fileobj.kernel.symlink(os.path.basename(f), l) == -1:
+        print("Failed to create symlink {0}".format(l))
+        sys.exit(1)
+
     print("done...")
     print(keys)
-    print(f)
+    print("{0} -> {1}".format(l, f))
     if ret:
         sys.exit(-ret)

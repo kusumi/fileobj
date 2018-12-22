@@ -30,7 +30,7 @@ class NullFrame (panel.Frame):
     def repaint(self, *arg):
         return
 
-    def refresh(self):
+    def noutrefresh(self):
         return
 
     def box(self, current):
@@ -46,7 +46,7 @@ class _canvas (panel.Canvas):
         elif pos < 0:
             self.go_to(0)
 
-    def refresh(self):
+    def noutrefresh(self):
         return
 
     def go_up(self, n):

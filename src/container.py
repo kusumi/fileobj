@@ -107,7 +107,7 @@ class Container (object):
             self.set_bytes_per_window("auto")
 
         self.__in_vertical = vertical # True if -O
-        for i in range(1, wspnum):
+        for i in util.get_xrange(1, wspnum):
             o = self.__cur_workspace.clone()
             o.switch_to_buffer(i % len(self.__fileobjs))
             self.__workspaces.append(o)
@@ -117,12 +117,12 @@ class Container (object):
         return self.build()
 
     def cleanup(self):
+        self.__store_session() # must be before fileobj cleanup
         while self.__fileobjs:
             o = self.__fileobjs.pop()
             self.__store_ondisk_marks(o)
             o.cleanup()
         self.__marks.flush()
-        self.__store_session()
         self.__session.flush()
         self.__operand.cleanup()
 
@@ -199,13 +199,22 @@ class Container (object):
 
     def __get_session_position(self, o):
         if setting.use_session_position:
-            return o.get_session_value('@')
+            ret = o.get_session_value('@')
+            if ret == -1:
+                return ret
+            ret -= o.get_mapping_offset()
+            if ret < 0:
+                return -1
+            return ret
         else:
             return -1
 
     def __set_session_position(self, o):
         if setting.use_session_position:
-            return o.set_session_value('@', o.get_pos())
+            pos = o.get_mapping_offset() + o.get_pos()
+            if pos > o.get_max_pos():
+                return -1
+            return o.set_session_value('@', pos)
         else:
             return -1
 
@@ -233,7 +242,7 @@ class Container (object):
                 if bak:
                     self.__baks[f] = bak
             return o
-        except allocator.AllocatorError as e:
+        except allocator.Error as e:
             self.flash(e)
 
     def add_buffer(self, f, reload=False):
@@ -254,7 +263,7 @@ class Container (object):
             ret = fn(self, fileops.Fileops(fo), args)
             if util.is_seq(ret):
                 ret = '\n'.join(ret)
-        except extension.ExtError as e:
+        except extension.Error as e:
             ret = util.e_to_string(e)
 
         from . import rwext as ext
@@ -409,7 +418,7 @@ class Container (object):
                     self.flash("Not enough room")
                 return -1
         if setting.use_even_size_window or self.__bpw != -1 or vertical:
-            screen.clear()
+            screen.clear_refresh()
         if self.__build(vertical, False) == workspace.BUILD_FAILED:
             return -1
         # Update vertical flag after successful build,
@@ -735,7 +744,7 @@ class Container (object):
     def __resize(self):
         x = screen.get_size_x()
         screen.update_size()
-        screen.clear()
+        screen.clear_refresh()
         if screen.get_size_x() != x:
             width = self.get_width()
             if self.__in_vertical: # multiply by number of wsp
@@ -752,30 +761,44 @@ class Container (object):
         if self.build() == -1 and len(self) > 1:
             self.remove_other_workspace()
 
-    def crepaint(self, current):
-        self.__cur_workspace.crepaint(current)
+    # set or unuset focus against current workspace
+    def set_focus(self, x):
+        assert isinstance(x, bool)
+        self.__cur_workspace.set_focus(x)
+        screen.doupdate()
 
+    def require_full_repaint(self):
+        self.__cur_workspace.require_full_repaint()
+
+    # regular repaint
     def repaint(self, low=False):
         for o in self.__workspaces:
             o.repaint(self.__cur_workspace is o)
         if low:
             self.lrepaint(low)
+        screen.doupdate()
 
+    # light weight repaint (no frame repaint)
     def lrepaint(self, low=False):
         for o in self.__workspaces:
             is_current = self.__cur_workspace is o
             o.lrepaint(is_current, is_current and low)
+        screen.doupdate()
 
+    # lrepaint against workspace with same current buffer
     def lrepaintf(self, low=False):
         f = self.get_path()
         for o in self.__workspaces:
             if o.get_path() == f:
                 is_current = self.__cur_workspace is o
                 o.lrepaint(is_current, is_current and low)
+        screen.doupdate()
 
+    # frame repaint
     def xrepaint(self):
         for o in self.__workspaces:
             o.xrepaint(self.__cur_workspace is o)
+        screen.doupdate()
 
     def get_prev_context(self):
         return self.__prev_context
@@ -790,8 +813,22 @@ class Container (object):
         self.__prev_context = fn
         self.__xprev_context = xfn
 
-    def buffer_input(self, l):
+    def queue_input(self, l):
         self.__stream.extend(l)
+        log.debug("queue_input: {0} entries".format(len(l)))
+        if len(l) <= 1024:
+            log.debug(tuple(zip(l, tuple(_to_chr_repr(_) for _ in l))))
+
+    def push_input(self, l):
+        self.__stream.extendleft(l)
+        log.debug("push_input: {0} entries".format(len(l)))
+        if len(l) <= 1024:
+            log.debug(tuple(zip(l, tuple(_to_chr_repr(_) for _ in l))))
+
+    def pop_input(self, n):
+        for _ in util.get_xrange(n):
+            x = self.__stream.popleft()
+            log.debug("pop_input {0}".format(x))
 
     def __raise_random_stream(self, s):
         log.warning(s)
@@ -806,7 +843,7 @@ class Container (object):
             try:
                 l = trace.read(f)
                 if l:
-                    self.buffer_input(l)
+                    self.queue_input(l)
                 else:
                     self.flash("Failed to read " + f)
             except Exception as e:
@@ -875,7 +912,7 @@ class Container (object):
         assert k != ''
         if k in self.__records:
             self.__records['@'] = self.__records[k] # latest
-            self.buffer_input(self.__records[k])
+            self.queue_input(self.__records[k])
         elif k != '@':
             self.flash("'{0}' not registered".format(k))
         elif k == '@':
@@ -921,7 +958,7 @@ class Container (object):
             self.__yank_buffer[s] = []
 
     def __rotate_delete_buffer(self):
-        for x in range(9, 1, -1): # 9 to 2
+        for x in util.get_xrange(9, 1, -1): # 9 to 2
             dst = str(x)
             src = str(x - 1)
             self.__yank_buffer[dst] = self.__yank_buffer[src]
@@ -1036,7 +1073,7 @@ class Container (object):
             n -= 1
         s = fmt.format(n)
 
-        l = [2 * i for i in range(100)] # max 200 (large enough)
+        l = [2 * i for i in util.get_xrange(100)] # max 200 (large enough)
         l = [x for x in l if x >= min_width]
 
         if len(s) > width:
@@ -1077,7 +1114,7 @@ class Container (object):
             unitlen = setting.bytes_per_unit
             if unitlen == 1:
                 unitlen = 2
-            for bpl in [unitlen ** x for x in range(MAX_LOG_N_BPL)]:
+            for bpl in [unitlen ** x for x in util.get_xrange(MAX_LOG_N_BPL)]:
                 if ret <= bpl:
                     if ret == bpl: # already power of bpu
                         ret = bpl
@@ -1129,7 +1166,8 @@ class Container (object):
             unitlen = setting.bytes_per_unit
             if unitlen == 1:
                 unitlen = 2
-            for ret in reversed([unitlen ** x for x in range(MAX_LOG_N_BPL)]):
+            for ret in reversed([unitlen ** x for x in
+                util.get_xrange(MAX_LOG_N_BPL)]):
                 if ret <= max_bpl:
                     return ret
             return 1
@@ -1190,7 +1228,7 @@ class Container (object):
             unitlen = setting.bytes_per_unit
             if unitlen == 1:
                 unitlen = 2
-            for bpl in [unitlen ** x for x in range(MAX_LOG_N_BPL)]:
+            for bpl in [unitlen ** x for x in util.get_xrange(MAX_LOG_N_BPL)]:
                 if bpl < prev_bpl:
                     continue
                 if self.set_bytes_per_line(bpl) != -1 and \
@@ -1217,3 +1255,9 @@ class Container (object):
                 return int(arg)
             except ValueError:
                 return -1
+
+def _to_chr_repr(x):
+    try:
+        return kbd.chr_repr[x]
+    except KeyError:
+        return '.'

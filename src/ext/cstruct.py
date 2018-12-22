@@ -59,7 +59,7 @@ class _builtin (_node):
             v = self.__get_value_expr(buf)
             a = ''.join(["\\x{0:02X}".format(x) for x in
                 fileobj.filebytes.iter_ords(buf)])
-            b = ''.join([fileobj.kbd.to_chr_repr(x) for x in
+            b = ''.join([fileobj.kbd.chr_repr[x] for x in
                 fileobj.filebytes.iter_ords(buf)])
             s += " {0} {1} [{2}]".format(v, a, b)
         return [s]
@@ -108,7 +108,7 @@ def __create_builtin_class(name, size):
     setattr(sys.modules[__name__], name, cls)
 
 def __init_class():
-    for x in range(4):
+    for x in fileobj.util.get_xrange(4):
         size = 2 ** x
         for sign in "usx":
             for suffix in ("", "le", "be"):
@@ -175,7 +175,7 @@ class _struct (_node):
                     if m:
                         var = m.group(1)
                         num = builtin_int(m.group(2))
-                        for i in range(num):
+                        for i in fileobj.util.get_xrange(num):
                             yield type, "{0}[{1}]".format(var, i)
                     else:
                         yield type, name

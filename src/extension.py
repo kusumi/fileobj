@@ -33,7 +33,7 @@ from . import panel
 from . import screen
 from . import util
 
-class ExtError (util.GenericError):
+class Error (util.GenericError):
     pass
 
 class methods (object):
@@ -73,11 +73,11 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
         if self.fileops is not None:
             self.fileops.ioctl(self.bufmap.x)
 
-    def get_form_single(self, x):
-        return chr(x)
+    def get_str_single(self, x):
+        return _get_str_single(x)
 
-    def get_form_line(self, buf):
-        return ''.join([chr(x) for x in buf])
+    def get_str_line(self, buf):
+        return ''.join([self.get_str_single(x) for x in filebytes.ords(buf)])
 
     def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
@@ -86,7 +86,7 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
     def alt_chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
-        self.printl(y, x, s, attr1)
+        self.addstr(y, x, s, attr1)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
@@ -99,24 +99,32 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s, attr1)
+            self.addstr(y, x, s, attr1)
         else:
-            self.printl(y, x, s, attr2)
+            self.addstr(y, x, s, attr2)
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
     def iter_line_buffer(self):
         s = filebytes.SPACE * self.bufmap.x
-        for i in range(self.bufmap.y):
+        for i in util.get_xrange(self.bufmap.y):
             yield i, s, screen.A_NONE
 
-    def get_form_single(self, x):
-        return chr(x)
+    def get_str_single(self, x):
+        return _get_str_single(x)
 
-    def get_form_line(self, buf):
-        return ''.join([chr(x) for x in buf])
+    def get_str_line(self, buf):
+        return ''.join([self.get_str_single(x) for x in filebytes.ords(buf)])
+
+# Avoid returning "\x00", scr.addstr("\x00") raises
+# ValueError: embedded null character (Python 3)
+# TypeError: must be string without null bytes, not str (Python 2)
+def _get_str_single(x):
+    if x == 0:
+        return '.'
+    return chr(x)
 
 def fail(s):
-    raise ExtError(s)
+    raise Error(s)
 
 def get_path(o):
     f = o.get_path()

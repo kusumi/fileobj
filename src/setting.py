@@ -176,6 +176,16 @@ def __ext_get(k):
     e = "FILEOBJ_EXT_" + k.upper()
     return s, e
 
+def has_buffer_attr():
+    return not (this.color_zero is None and this.color_ff is None and \
+        this.color_print is None and this.color_default is None)
+
+def disable_buffer_attr():
+    this.color_zero = None
+    this.color_ff = None
+    this.color_print = None
+    this.color_default = None
+
 # non env based settings
 use_even_size_window = False
 
@@ -187,7 +197,3 @@ _snap = dict(_attr)
 
 this = sys.modules[__name__]
 init()
-
-buffer_attr_undefined = this.color_zero is None and \
-    this.color_ff is None and \
-    this.color_print is None

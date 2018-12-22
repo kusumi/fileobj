@@ -89,10 +89,10 @@ def is_python_version_or_ht(*l):
     l = tuple(l)
     d = len(v) - len(l)
     if d > 0:
-        l = list(l) + [0 for x in range(d)]
+        l = list(l) + [0 for x in get_xrange(d)]
         return v >= tuple(l)
     elif d < 0:
-        v = list(v) + [0 for x in range(-d)]
+        v = list(v) + [0 for x in get_xrange(-d)]
         return tuple(v) >= l
     else:
         return v >= l
@@ -157,7 +157,7 @@ def pack_hex_string(s):
         if len(s) % 2:
             s += '0'
         l = []
-        for i in range(0, len(s), 2):
+        for i in get_xrange(0, len(s), 2):
             l.append("\\x" + s[i : i + 2])
         s = ''.join(l)
     pos = 0
@@ -682,10 +682,14 @@ def get_stamp(prefix=''):
         os.getpid())
 
 def get_md5(b):
+    return get_hash("md5", b)
+
+def get_hash(name, b):
     if isinstance(b, str):
         b = _(b)
     if b:
-        return hashlib.md5(b).hexdigest()
+        fn = getattr(hashlib, name)
+        return fn(b).hexdigest()
 
 def execute(*l):
     return __execute(False, l)

@@ -27,6 +27,7 @@ from . import extension
 from . import panel
 from . import screen
 from . import setting
+from . import status
 from . import util
 from . import virtual
 from . import visual
@@ -83,6 +84,7 @@ class Workspace (object):
             if o:
                 o.set_buffer(self.__cur_fileops)
         def dispatch():
+            self.require_full_repaint()
             return self.__cur_console.dispatch(arg)
         self.dispatch = dispatch
 
@@ -188,7 +190,7 @@ class Workspace (object):
         return ret
 
     def __get_status_window_class(self):
-        return panel.get_status_canvas_class(), panel.get_status_frame_class()
+        return status.get_status_canvas_class(), status.get_status_frame_class()
 
     def __get_status_window_height(self):
         return window.get_status_window_height(
@@ -377,13 +379,16 @@ class Workspace (object):
     def __build_status_window(self, o):
         self.__build_window(o, None, None)
 
+    # Note that update_capacity() can't be called from window.Window.__init__,
+    # because initial panel size hasn't been set yet, while get_bufmap() needs
+    # panel size to update bufmap.
     def __build_window(self, o, siz, pos):
         if o: # None if window is disabled
             o.resize(siz, pos)
-            o.update_capacity(self.__bpl)
+            o.update_capacity(self.__bpl) # XXX
 
     def __guess_virtual_window_width(self):
-        return window.get_width(virtual.BinaryCanvas, self.__bpl)
+        return window.get_width(panel.BinaryCanvas, self.__bpl)
 
     def __guess_binary_window_width(self):
         return window.get_width(panel.BinaryCanvas, self.__bpl)
@@ -488,30 +493,35 @@ class Workspace (object):
     def delete_current(self, n, rec=True):
         self.__cur_fileops.delete(self.get_pos(), n, rec)
 
-    def crepaint(self, current):
+    def set_focus(self, x):
         for o in self.__windows:
             if o:
                 if o in self.__bwindows.values():
-                    o.crepaint(current)
+                    o.set_focus(x)
                 elif o in self.__twindows.values():
-                    o.crepaint(current)
+                    o.set_focus(x)
                 else:
-                    o.lrepaint(current, False) # entire window
+                    o.lrepaint(x, False) # entire window
 
-    def repaint(self, current):
+    def require_full_repaint(self):
         for o in self.__windows:
             if o:
-                o.repaint(current)
+                o.require_full_repaint()
 
-    def lrepaint(self, current, low):
+    def repaint(self, is_current):
         for o in self.__windows:
             if o:
-                o.lrepaint(current, low)
+                o.repaint(is_current)
 
-    def xrepaint(self, current):
+    def lrepaint(self, is_current, low):
         for o in self.__windows:
             if o:
-                o.xrepaint(current)
+                o.lrepaint(is_current, low)
+
+    def xrepaint(self, is_current):
+        for o in self.__windows:
+            if o:
+                o.xrepaint(is_current)
 
     def go_up(self, n=1):
         for o in self.__windows:

@@ -40,7 +40,7 @@ def iter_trace_word(tf):
     buf = kernel.fopen(tf).read()
     n = setting.trace_word_size
     if len(buf) % n == 0:
-        for i in range(0, len(buf), n):
+        for i in util.get_xrange(0, len(buf), n):
             yield util.bin_to_int(buf[i : i + n])
 
 def __get_path(trace_path):
@@ -65,7 +65,7 @@ def creat_random(trace_path, beg, end, cnt, quit, blacklist=None):
         base, uniq = __get_path(trace_path)
         tf = uniq + ".rand.bin"
         l = []
-        for _ in range(cnt):
+        for _ in util.get_xrange(cnt):
             x = random.randint(beg, end)
             if not blacklist or x not in blacklist:
                 l.append(x)

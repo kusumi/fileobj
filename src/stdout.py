@@ -31,6 +31,8 @@ from . import ncurses
 from . import setting
 from . import util
 
+Error = Exception
+
 _stdin = sys.stdin
 _count = 0
 
@@ -44,16 +46,20 @@ A_COLOR_CURRENT = 0
 A_COLOR_ZERO    = 0
 A_COLOR_FF      = 0
 A_COLOR_PRINT   = 0
+A_COLOR_DEFAULT = 0
 A_COLOR_VISUAL  = 0
 
 def init():
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
         A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, A_COLOR_PRINT, \
-        A_COLOR_VISUAL
+        A_COLOR_DEFAULT, A_COLOR_VISUAL
 
 def cleanup():
     ncurses.cleanup_windows()
+
+def doupdate():
+    return
 
 def flash():
     return
@@ -116,7 +122,7 @@ class _window (ncurses.Window):
     def bkgd(self, ch, attr):
         return
 
-    def addstr(self, y, x, s, attr=A_NONE):
+    def addstr(self, y, x, s, attr):
         if setting.stdout_verbose > 0:
             util.printf(self.__mkstr(y, x, s))
         if setting.stdout_verbose > 2:
@@ -126,7 +132,13 @@ class _window (ncurses.Window):
     def clrtoeol(self):
         return
 
+    def erase(self):
+        return
+
     def clear(self):
+        return
+
+    def noutrefresh(self):
         return
 
     def refresh(self):

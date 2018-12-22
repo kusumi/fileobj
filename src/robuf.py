@@ -104,7 +104,7 @@ class Fileobj (fileobj.Fileobj):
     def init_chunk(self, b):
         self.cbuf = []
         siz = self.get_chunk_size()
-        for i in range(0, len(b), siz):
+        for i in util.get_xrange(0, len(b), siz):
             bb = b[i : i + siz]
             self.cbuf.append(self.alloc_chunk(i, bb))
         self.set_size(len(b))
@@ -162,7 +162,7 @@ class Fileobj (fileobj.Fileobj):
 
     def iter_chunk(self, pos):
         index = self.get_chunk_index(pos)
-        for i in range(index, len(self.cbuf)):
+        for i in util.get_xrange(index, len(self.cbuf)):
             yield self.cbuf[i]
 
     def get_chunk_index(self, pos):

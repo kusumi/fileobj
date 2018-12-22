@@ -48,7 +48,7 @@ def __test_module(co, fo, li):
     if li.fn != get_text:
         try:
             li.fn(co, fo, [0])
-        except fileobj.extension.ExtError:
+        except fileobj.extension.Error:
             pass
         except Exception as e:
             x[2] = fileobj.util.e_to_string(e)

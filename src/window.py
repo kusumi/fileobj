@@ -26,6 +26,7 @@ from __future__ import division
 from . import panel
 from . import screen
 from . import setting
+from . import status
 from . import util
 
 class Window (object):
@@ -73,19 +74,23 @@ class Window (object):
     def get_position_x(self):
         return self.__frame.get_position_x()
 
-    def crepaint(self, current):
-        self.__frame.crepaint(current)
-        self.__canvas.crepaint(current)
+    def set_focus(self, x):
+        self.__frame.set_focus(x)
+        self.__canvas.set_focus(x)
 
-    def repaint(self, current):
-        self.__frame.repaint(current)
-        self.__canvas.repaint(current, False)
+    def require_full_repaint(self):
+        self.__frame.require_full_repaint()
+        self.__canvas.require_full_repaint()
 
-    def lrepaint(self, current, low):
-        self.__canvas.repaint(current, low)
+    def repaint(self, is_current):
+        self.__frame.repaint(is_current)
+        self.__canvas.repaint(is_current, False)
 
-    def xrepaint(self, current):
-        self.__frame.repaint(current)
+    def lrepaint(self, is_current, low):
+        self.__canvas.repaint(is_current, low)
+
+    def xrepaint(self, is_current):
+        self.__frame.repaint(is_current)
 
     def resize(self, siz, pos):
         self.__frame.resize(siz, pos)
@@ -114,13 +119,13 @@ def get_min_text_window_height(lpw=1):
         return get_min_binary_window_height(lpw)
 
 def get_status_window_height(scls, fcls):
-    assert util.is_subclass(scls, panel.StatusCanvas)
-    assert util.is_subclass(fcls, panel.StatusFrame)
+    assert util.is_subclass(scls, status.StatusCanvas)
+    assert util.is_subclass(fcls, status.StatusFrame)
     lf = panel.get_min_size(fcls)
     lc = panel.get_min_size(scls)
-    if util.is_subclass(scls, panel.VerboseStatusCanvas):
+    if util.is_subclass(scls, status.VerboseStatusCanvas):
         height = 2
-    elif util.is_subclass(scls, panel.SingleStatusCanvas):
+    elif util.is_subclass(scls, status.SingleStatusCanvas):
         height = 1
     else:
         assert False, scls
@@ -162,8 +167,8 @@ def get_max_bytes_per_line(wspnum):
         ret += 1
     assert False
 
-# Calculation based on cell consumes more space than unit width with bpu=2,4,8,
-# so this guarantees get_max_bytes_per_line() works with bpu=2,4,8.
+# Calculation based on cell consumes more space than unit width with bpu > 1,
+# so this guarantees get_max_bytes_per_line() works with bpu > 1.
 def __get_min_info():
     lf = panel.get_min_size(panel.Frame)
     bc = panel.BinaryCanvas(None, None)

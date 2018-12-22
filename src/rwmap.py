@@ -192,7 +192,7 @@ class Fileobj (rrmap.Fileobj):
 
     def delete(self, x, n, rec=True):
         if self.is_empty():
-            raise fileobj.FileobjError("Empty buffer")
+            raise fileobj.Error("Empty buffer")
         size = self.get_size()
         xx = x + n
 

@@ -28,6 +28,7 @@ from . import edit
 from . import kbd
 from . import methods
 from . import literal
+from . import setting
 from . import visual
 
 class _console (console.Console):
@@ -104,6 +105,15 @@ class _console (console.Console):
         self.add_method(literal.s_argv       , methods, "show_argv")
         self.add_method(literal.s_args       , methods, "show_args")
         self.add_method(literal.s_md5        , methods, "show_md5")
+        self.add_method(literal.s_sha1       , methods, "show_sha1")
+        self.add_method(literal.s_sha224     , methods, "show_sha224")
+        self.add_method(literal.s_sha256     , methods, "show_sha256")
+        self.add_method(literal.s_sha384     , methods, "show_sha384")
+        self.add_method(literal.s_sha512     , methods, "show_sha512")
+        self.add_method(literal.s_sha3_224   , methods, "show_sha3_224")
+        self.add_method(literal.s_sha3_256   , methods, "show_sha3_256")
+        self.add_method(literal.s_sha3_384   , methods, "show_sha3_384")
+        self.add_method(literal.s_sha3_512   , methods, "show_sha3_512")
         self.add_method(literal.s_cmp        , methods, "cmp_buffer")
         self.add_method(literal.s_cmpneg     , methods, "cmp_buffer_neg")
         self.add_method(literal.s_cmpnext    , methods, "cmp_buffer_next")
@@ -119,7 +129,10 @@ class _console (console.Console):
         self.add_method(literal.ror          , methods, "rotate_right")
         self.add_method(literal.rol          , methods, "rotate_left")
         self.add_method(literal.bswap        , methods, "swap_bytes")
-        self.add_method(literal.delete       , methods, "delete")
+        if setting.use_delete_console:
+            self.add_method(literal.delete   , this,    "_enter_edit_delete")
+        else:
+            self.add_method(literal.delete   , methods, "delete")
         self.add_method(literal.X            , methods, "backspace")
         self.add_method(literal.D            , methods, "delete_till_end")
         self.add_method(literal.u            , methods, "undo")
@@ -207,6 +220,11 @@ def _enter_edit_replace(self, amp, opc, args, raw):
 def _do_edit_replace(self, amp, opc, args, raw):
     arg = edit.Arg(amp=methods.get_int(amp), limit=edit.get_input_limit())
     return self.set_console(edit.get_replace_class(), arg)
+
+def _enter_edit_delete(self, amp, opc, args, raw):
+    arg = edit.Arg(amp=methods.get_int(amp))
+    self.co.push_input(literal.delete.seq)
+    return self.set_console(edit.get_delete_class(), arg)
 
 def _enter_visual(self, amp, opc, args, raw):
     return __enter_visual(self, visual.VISUAL)

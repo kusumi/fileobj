@@ -22,23 +22,20 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-import os
 
 from . import filebytes
 from . import kbd
 from . import kernel
 from . import log
-from . import native
 from . import screen
 from . import setting
 from . import util
-from . import version
 
 # _panel
 #     Frame
 #         virtual.NullFrame
-#         StatusFrame
-#             NullStatusFrame
+#         status.StatusFrame
+#             status.NullStatusFrame
 #     Canvas
 #         virtual._canvas
 #             virtual.BinaryCanvas
@@ -51,9 +48,9 @@ from . import version
 #             extension.ExtBinaryCanvas
 #                 visual.ExtBinaryCanvas
 #             extension.ExtTextCanvas
-#         StatusCanvas
-#             VerboseStatusCanvas
-#             SingleStatusCanvas
+#         status.StatusCanvas
+#             status.VerboseStatusCanvas
+#             status.SingleStatusCanvas
 
 class _panel (object):
     def __init__(self, siz, pos):
@@ -64,6 +61,9 @@ class _panel (object):
         self.scr = screen.alloc(siz[0], siz[1], pos[0], pos[1], self)
         self.__update()
         self.current = True
+
+    def require_full_repaint(self):
+        return
 
     def update(self):
         self.__update()
@@ -84,23 +84,23 @@ class _panel (object):
     def get_position_x(self):
         return self.__begyx[1]
 
-    def set_current(self, current):
-        if isinstance(current, bool): # could be None
-            self.current = current
+    def set_current(self, x):
+        if x is None:
+            return # no change
+        assert isinstance(x, bool)
+        self.current = x
 
     def fill(self, low):
         return
 
-    def crepaint(self, *arg):
-        current = arg[0]
-        self.set_current(current)
+    def set_focus(self, *arg):
+        self.set_current(arg[0])
 
     def repaint(self, *arg):
-        current = arg[0]
-        self.set_current(current)
+        self.set_current(arg[0])
 
-    def refresh(self):
-        self.scr.refresh()
+    def noutrefresh(self):
+        self.scr.noutrefresh()
 
     def resize(self, siz, pos):
         if siz:
@@ -113,17 +113,10 @@ class Frame (_panel):
     def repaint(self, *arg):
         super(Frame, self).repaint(*arg)
         self.box()
-        self.refresh()
+        self.noutrefresh()
 
     def box(self):
         self.scr.box() # need refresh to make it appear
-
-class StatusFrame (Frame):
-    pass
-
-class NullStatusFrame (StatusFrame):
-    def box(self):
-        return
 
 class _addon (object):
     def get_cell(self):
@@ -171,18 +164,21 @@ class Canvas (_panel):
         self.__update()
         self.fileops = None
 
+    def require_full_repaint(self):
+        self.need_full_repaint = True
+
     def update(self):
         super(Canvas, self).update()
         self.__update()
 
     def __update(self):
-        l = list(self.get_cell()) # size, distance
-        l.append(l[0] - l[1]) # size - distance for [2]
+        l = list(self.get_cell()) # cell size, space within cell
+        l.append(l[0] - l[1]) # [2]: non space within cell
         assert l[2] > 0, l
         self.cell = tuple(l)
         self.offset = util.Pair(*self.get_offset())
-        self.bufmap = util.Pair()
-        self.need_full_line_repaint = True # currently for offset.x change
+        self.bufmap = util.Pair() # need update_capacity()
+        self.require_full_repaint()
 
     def set_buffer(self, fileops):
         self.fileops = fileops
@@ -196,68 +192,20 @@ class Canvas (_panel):
     def iter_line_buffer(self):
         yield 0, '', screen.A_NONE
 
-    def get_form_single(self, x):
+    def get_str_single(self, x):
         return x # take str and return str (not bytes)
 
-    def get_form_line(self, buf):
+    def get_str_line(self, buf):
         return buf # take str and return str (not bytes)
 
-    # cell distance from beg to end (end inclusive)
-    def get_cell_distance(self, beg, end):
-        assert end >= beg, (beg, end)
-        n = end - beg + 1
-        d = (end // setting.bytes_per_unit) - (beg // setting.bytes_per_unit)
-        return self.cell[2] * n + self.cell[1] * d
-
-    # e.g. when unit size is 2
-    # <>                    x=1
-    # <--->                 x=2
-    # 0000 0000 0000 0000...
-    def get_cell_width(self, x):
-        q = x // setting.bytes_per_unit
-        return self.cell[2] * x + self.cell[1] * q
-
-    # e.g. when unit size is 2
-    # <>                    x=1
-    # <-->                  x=2
-    # 0000 0000 0000 0000...
-    def get_cell_edge(self, x):
-        r = 0 if x % setting.bytes_per_unit else 1
-        return self.get_cell_width(x) - self.cell[1] * r
-
-    # e.g. when unit size is 2
-    # <--->                 x=1
-    # <-------->            x=2
-    # 0000 0000 0000 0000...
-    def get_unit_width(self, x):
-        return (self.cell[2] * setting.bytes_per_unit + self.cell[1]) * x
-
-    # e.g. when unit size is 2
-    # <-->                  x=1
-    # <------->             x=2
-    # 0000 0000 0000 0000...
-    def get_unit_edge(self, x):
-        return self.get_unit_width(x) - self.cell[1]
-
-    def fill(self, low):
-        super(Canvas, self).fill(low)
-        x = self.offset.x
-        for i, b, a in self.iter_line_buffer(): # b could be str or bytes
-            y = self.offset.y + i
-            if len(b) < self.bufmap.x:
-                self.clrl(y, x)
-            if b:
-                self.fill_line(y, x, b, a)
-        self.need_full_line_repaint = False # done in this fill if any
-
-    def fill_line(self, y, x, buf, attr=screen.A_NONE):
-        self.printl(y, x, self.get_form_line(buf), attr)
+    def fill_line(self, y, x, buf, attr, arg):
+        self.addstr(y, x, self.get_str_line(buf), attr)
 
     def repaint(self, *arg):
         super(Canvas, self).repaint(*arg)
         low = arg[1]
         self.fill(low)
-        self.refresh()
+        self.noutrefresh()
 
     def resize(self, siz, pos):
         super(Canvas, self).resize(siz, pos)
@@ -268,27 +216,31 @@ class Canvas (_panel):
             setting.barrier_size = x
 
     def chgat(self, y, x, num, attr=screen.A_NONE):
-        try:
-            # may raise on page change for previous pos
-            self.scr.chgat(y, x, num, attr | screen.A_COLOR_FB)
-        except Exception:
-            pass # XXX don't silently ignore
+        self.scr.chgat(y, x, num, attr | screen.A_COLOR_FB)
 
-    def printl(self, y, x, s, attr=screen.A_NONE):
+    def addstr(self, y, x, s, attr=screen.A_NONE):
+        # don't forget to sync with inlined version in __fill_inline()
         try:
+            # XXX Python 3 is too slow against Python 2.7 (2018-12-14)
+            # Python 2.7
+            # ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+            # 938311    0.436    0.000    0.436    0.000 {built-in method addstr}
+            # Python 3.7
+            # ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+            # 938311    0.978    0.000    0.978    0.000 {method 'addstr' of '_curses.window' objects}
             self.scr.addstr(y, x, s, attr | screen.A_COLOR_FB)
-        except Exception as e:
-            if (y < self.get_size_y() - 1) or \
-                (x + len(s) < self.get_size_x() - 1):
-                log.error(e, (y, x), s)
-            # XXX don't silently ignore else case
+        except screen.Error as e:
+            # error unless attempt to write to lower right corner
+            if not ((y == self.get_size_y() - 1) and \
+                (x + len(s) - 1 == self.get_size_x() - 1)):
+                log.error(self, e, (y, x), s)
 
     def clrl(self, y, x):
         try:
             self.scr.move(y, x)
             self.scr.clrtoeol()
-        except Exception as e:
-            log.error(e)
+        except screen.Error as e:
+            log.error(self, e, (y, x))
 
     def get_coordinate(self, pos):
         """Return coordinate of the position within the page"""
@@ -305,6 +257,10 @@ class Canvas (_panel):
     def get_next_page_offset(self):
         """Return offset of the next page"""
         return self.get_page_offset() + self.get_capacity()
+
+    def is_page_changed(self):
+        return not self.in_same_page(self.fileops.get_pos(),
+            self.fileops.get_prev_pos())
 
     def in_same_page(self, pos1, pos2):
         """Return True if two positions are in the same page"""
@@ -379,18 +335,82 @@ class DisplayCanvas (Canvas):
         self.attr_posstr = screen.A_BOLD
         self.attr_search = screen.A_BOLD
         self.attr_visual = screen.A_COLOR_VISUAL
-        if not setting.buffer_attr_undefined:
+        if setting.has_buffer_attr():
             self.fill_line = self.__fill_line
+        self.__update()
 
-    def crepaint(self, *arg):
-        super(DisplayCanvas, self).crepaint(*arg)
-        self.update_highlight()
+    def update(self):
+        super(DisplayCanvas, self).update()
+        self.__update()
+
+    def __update(self):
+        self.__unit_width = self.cell[2] * setting.bytes_per_unit + self.cell[1]
+
+    def update_capacity(self, bytes_per_line):
+        super(DisplayCanvas, self).update_capacity(bytes_per_line)
+        # precalculate after bufmap update
+        self.default_units_per_line = self.get_units_per_line(self.bufmap.x)
+
+    def get_units_per_line(self, xlen):
+        unitlen = setting.bytes_per_unit
+        upl = xlen // unitlen
+        xpu = [unitlen] * upl
+        r = xlen % unitlen
+        if r:
+            upl += 1
+            xpu.append(r)
+        # upl: units per line
+        # xpu: buffer size for each unit (last entry may be smaller than bpu)
+        return upl, xpu
+
+    def set_focus(self, *arg):
+        super(DisplayCanvas, self).set_focus(*arg)
+        self.update_highlight(False)
+        self.noutrefresh()
+
+    # cell distance from beg to end (end inclusive)
+    def get_cell_distance(self, beg, end):
+        assert end >= beg, (beg, end)
+        n = end - beg + 1
+        d = (end // setting.bytes_per_unit) - (beg // setting.bytes_per_unit)
+        return self.cell[2] * n + self.cell[1] * d
+
+    # e.g. when unit size is 2
+    # <>                    x=1
+    # <--->                 x=2
+    # 0000 0000 0000 0000...
+    def get_cell_width(self, x):
+        q = x // setting.bytes_per_unit
+        return self.cell[2] * x + self.cell[1] * q
+
+    # e.g. when unit size is 2
+    # <>                    x=1
+    # <-->                  x=2
+    # 0000 0000 0000 0000...
+    def get_cell_edge(self, x):
+        r = 0 if x % setting.bytes_per_unit else 1
+        return self.get_cell_width(x) - self.cell[1] * r
+
+    # e.g. when unit size is 2
+    # <--->                 x=1
+    # <-------->            x=2
+    # 0000 0000 0000 0000...
+    def get_unit_width(self, x):
+        # don't forget to sync with inlined version in __fill_inline()
+        return self.__unit_width * x
+
+    # e.g. when unit size is 2
+    # <-->                  x=1
+    # <------->             x=2
+    # 0000 0000 0000 0000...
+    def get_unit_edge(self, x):
+        return self.get_unit_width(x) - self.cell[1]
 
     # only used by alt chgat
     def read_form_single(self, pos):
         b = self.fileops.read(pos, 1)
         if b:
-            return self.get_form_single(filebytes.ord(b))
+            return self.get_str_single(filebytes.ord(b))
         else:
             return ' ' * self.cell[2]
 
@@ -404,19 +424,34 @@ class DisplayCanvas (Canvas):
             n += self.bufmap.x
 
     def fill(self, low):
+        # erase if needed
         # XXX with vt2xx, self.clrl() via super's fill() may not work against
         # consecutive lines in the final page, so clear the entire screen.
-        if kernel.is_vt2xx() and \
-            self.fileops.get_max_pos() < self.get_next_page_offset():
-            self.scr.clear()
-        self.fill_posstr() # XXX doesn't need to fill in everytime
-        super(DisplayCanvas, self).fill(low)
-        # update current position
-        self.__update_highlight_current(low)
+        if self.need_full_repaint or \
+            (_is_vt2xx and \
+            self.fileops.get_max_pos() < self.get_next_page_offset()):
+            self.scr.erase() # not scr.clear()
+        # fill posstr if needed
+        if self.need_full_repaint or self.is_page_changed():
+            self.fill_posstr()
+        # start to fill
+        super(Canvas, self).fill(low)
+        x = self.offset.x
+        for i, b, a in self.iter_line_buffer():
+            y = self.offset.y + i
+            if len(b) == self.bufmap.x:
+                self.fill_line(y, x, b, a, self.default_units_per_line)
+            else:
+                self.clrl(y, x)
+                if b:
+                    self.fill_line(y, x, b, a, self.get_units_per_line(len(b)))
+        self.need_full_repaint = False # done in this fill if any
+        # update position
+        self.update_highlight(low)
         # update search strings
-        self.update_search(self.fileops.get_pos())
+        self.page_update_search(self.fileops.get_pos())
 
-    def fill_line_nth(self, y, x, buf, nth_in_line, attr=screen.A_NONE):
+    def fill_line_nth(self, y, x, buf, nth_in_line, attr):
         # fill in unaligned bytes first
         unitlen = setting.bytes_per_unit
         if nth_in_line:
@@ -425,58 +460,66 @@ class DisplayCanvas (Canvas):
                 n = unitlen - r
                 b = buf[:n]
                 buf = buf[n:]
-                for k, _ in enumerate(filebytes.iter_ords(b)):
-                    c = self.get_form_single(_)
-                    a = attr | self.__get_buffer_attr(_)
-                    self.printl(y, x, c, a)
+                for _ in filebytes.iter_ords(b):
+                    c = self.get_str_single(_)
+                    a = attr | screen.buf_attr[_]
+                    self.addstr(y, x, c, a)
                     x += len(c)
                 x += self.cell[1]
-        self.__fill_line(y, x, buf, attr)
+        self.fill_line(y, x, buf, attr, self.get_units_per_line(len(buf)))
+        return x # for visual
 
-    def __fill_line(self, y, x, buf, attr=screen.A_NONE):
+    def __fill_line(self, y, x, buf, attr, arg):
+        upl, xpu = arg
+        # normally use filebytes.ords(), but this is exception for speed
+        if not _bytes_is_int:
+            buf = filebytes.ords(buf)
+        # precalculate before going into the loop
+        c = [self.get_str_single(_) for _ in buf]
+        a = [(attr | screen.buf_attr[_] | screen.A_COLOR_FB) for _ in buf]
+        # start to fill line
         unitlen = setting.bytes_per_unit
-        nloop = len(buf) // unitlen
-        if len(buf) % unitlen:
-            nloop += 1
-        for i in util.get_xrange(nloop):
-            j = i * unitlen
-            b = buf[j : j + unitlen]
-            pos = x + self.get_unit_width(i)
-            for k, _ in enumerate(filebytes.iter_ords(b)):
-                c = self.get_form_single(_)
-                a = attr | self.__get_buffer_attr(_)
-                self.printl(y, pos + len(c) * k, c, a)
-            # need to clear blank part within unit when offset.x changes
-            if self.need_full_line_repaint:
-                extra = ' ' * self.cell[1]
-                pos = x + self.get_unit_width(i + 1) - len(extra)
-                if pos < self.get_size_x():
-                    self.printl(y, pos, extra)
+        j = 0
+        for i in _xrange(upl):
+            # normally use get_unit_width(), but this is exception for speed
+            pos = x + self.__unit_width * i
+            for k in _xrange(xpu[i]):
+                _ = c[j + k]
+                xx = pos + len(_) * k
+                # normally use Canvas.addstr(), but this is exception for speed
+                try:
+                    self.scr.addstr(y, xx, _, a[j + k])
+                except screen.Error as e:
+                    # error unless attempt to write to lower right corner
+                    if not ((y == self.get_size_y() - 1) and \
+                        (xx + len(_) - 1 == self.get_size_x() - 1)):
+                        log.error(self, e, (y, xx), _)
+            j += unitlen
 
-    def update_highlight(self):
+    def update_highlight(self, low):
         # update previous position first
         ppos = self.fileops.get_prev_pos()
-        attr = self.__get_buffer_attr_at(ppos)
-        self.chgat_posstr(ppos, screen.A_NONE)
-        self.chgat_cursor(ppos, attr, attr, False)
+        if ppos <= self.fileops.get_max_pos(): # may be invalid after delete
+            b = self.fileops.read(ppos, 1)
+            attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
+            self.chgat_posstr(ppos, screen.A_NONE)
+            self.chgat_cursor(ppos, attr, attr, low)
         # update current position
-        self.__update_highlight_current(False)
-        # update search strings
-        pos = self.fileops.get_pos()
-        self.range_update_search(pos, ppos, pos)
-        self.refresh()
-
-    def __update_highlight_current(self, low):
         pos = self.fileops.get_pos()
         attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_STANDOUT
-        attr2 = self.__get_buffer_attr_at(pos)
+        b = self.fileops.read(pos, 1)
+        attr2 = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
         self.chgat_posstr(pos, self.attr_posstr)
         self.chgat_cursor(pos, attr1, attr2, low)
+        # update search strings
+        if not self.in_same_page(pos, ppos):
+            ppos = self.get_page_offset()
+        self.range_update_search(pos, ppos, pos)
 
     def sync_cursor(self):
-        if self.in_same_page(self.fileops.get_pos(),
-            self.fileops.get_prev_pos()):
-            self.update_highlight()
+        if not self.is_page_changed():
+            self.update_highlight(False)
+            self.noutrefresh()
         else:
             return -1 # need repaint
 
@@ -501,25 +544,7 @@ class DisplayCanvas (Canvas):
     def fill_posstr(self):
         return
 
-    def __get_buffer_attr_at(self, pos):
-        b = self.fileops.read(pos, 1)
-        if b:
-            return self.__get_buffer_attr(filebytes.ord(b))
-        else:
-            return screen.A_NONE
-
-    def __get_buffer_attr(self, x):
-        if setting.buffer_attr_undefined:
-            return screen.A_NONE
-        if x == 0:
-            return screen.A_COLOR_ZERO
-        if x == 0xff:
-            return screen.A_COLOR_FF
-        if kbd.isprint(x):
-            return screen.A_COLOR_PRINT
-        return screen.A_NONE
-
-    def update_search(self, pos):
+    def page_update_search(self, pos):
         s = self.fileops.get_search_word()
         if not s:
             return -1
@@ -539,29 +564,39 @@ class DisplayCanvas (Canvas):
 
     def __update_search(self, pos, beg, end, s):
         attr_cursor = self.attr_search
-        for i in self.__iter_search_word(beg, end, s):
+        if beg < 0:
+            beg = 0
+        b = self.fileops.read(beg, end - beg) # end not inclusive
+        if not b:
+            return
+        found = 0
+        while True:
+            found = util.find_string(b, s, found)
+            if found == -1:
+                break
+            i = beg + found
+            if i < beg or i >= end:
+                break
             for j, _ in enumerate(filebytes.iter_ords(s)):
                 x = i + j
                 here = (x == pos)
                 if here and self.current:
                     attr_cursor |= screen.A_COLOR_CURRENT
-                attr_search = self.attr_search | self.__get_buffer_attr(_)
+                attr_search = self.attr_search | screen.buf_attr[_]
                 self.chgat_search(x, attr_cursor, attr_search, here)
+            found += 1
 
-    def __iter_search_word(self, beg, end, s):
-        if beg < 0:
-            beg = 0
-        b = self.fileops.read(beg, end - beg) # end not inclusive
-        i = 0
-        while True:
-            i = util.find_string(b, s, i)
-            if i == -1:
-                break
-            pos = beg + i
-            if pos < beg or pos >= end:
-                break
-            yield pos
-            i += 1
+def _get_binary_str_single():
+    d = {}
+    for x in util.get_xrange(0, 256):
+        d[x] = "{0:02X}".format(x)
+    return d
+
+_binary_str_single = _get_binary_str_single()
+_binary_cstr_fmt = {
+    16: "{0:02X}",
+    10: "{0:02d}",
+    8 : "{0:02o}", }
 
 class BinaryCanvas (DisplayCanvas, binary_addon):
     def __init__(self, siz, pos):
@@ -573,10 +608,6 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         self.__update()
 
     def __update(self):
-        self.__cstr = {
-            16: "{0:02X}",
-            10: "{0:02d}",
-            8 : "{0:02o}", }
         lstr_fmt = {
             16: ":0{0}X".format(address_num_width),
             10: ":{0}d".format(address_num_width),
@@ -593,23 +624,30 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
                 10: "{{0{0}}}|{{1{0}}}".format(lstr_fmt[10]),
                 8: "{{0{0}}}|{{1{0}}}".format(lstr_fmt[8]), }
 
-    def get_form_single(self, x):
-        # don't use .format for this, % is faster
-        return "%02X" % (x & 0xFF) # x is int
+    def get_str_single(self, x):
+        return _binary_str_single[x] # x is from ord()
 
-    def get_form_line(self, buf):
-        ret = []
+    def get_str_line(self, buf):
+        if len(buf) == self.bufmap.x:
+            upl, xpu = self.default_units_per_line
+        else:
+            upl, xpu = self.get_units_per_line(len(buf))
+        # normally use filebytes.ords(), but this is exception for speed
+        if not _bytes_is_int:
+            buf = filebytes.ords(buf)
+        # start to construct line string
         unitlen = setting.bytes_per_unit
-        nloop = len(buf) // unitlen
-        if len(buf) % unitlen:
-            nloop += 1
-        for i in util.get_xrange(nloop):
-            j = i * unitlen
+        extra = ' ' * self.cell[1]
+        ret = []
+        j = 0
+        for i in _xrange(upl):
             b = buf[j : j + unitlen]
-            s = ''.join([self.get_form_single(_) for _ in
-                filebytes.iter_ords(b)])
+            s = ''.join([self.get_str_single(_) for _ in b])
             ret.append(s)
-        return ' '.join(ret)
+            if i != upl - 1:
+                ret.append(extra)
+            j += unitlen
+        return ''.join(ret)
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
@@ -619,10 +657,10 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
     def alt_chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
         d = pos % self.bufmap.x
-        self.printl(0, x,
+        self.addstr(0, x,
             self.__get_column_posstr(d), screen.A_UNDERLINE | attr)
         s = self.__get_line_posstr(self.get_line_offset(pos))[:-1]
-        self.printl(y, 0, s, screen.A_UNDERLINE | attr)
+        self.addstr(y, 0, s, screen.A_UNDERLINE | attr)
 
     def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
@@ -637,11 +675,11 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
         if low:
-            self.printl(y, x, s[0], attr2)
-            self.printl(y, x + 1, s[1], attr1)
+            self.addstr(y, x, s[0], attr2)
+            self.addstr(y, x + 1, s[1], attr1)
         else:
-            self.printl(y, x, s[0], attr1)
-            self.printl(y, x + 1, s[1], attr2)
+            self.addstr(y, x, s[0], attr1)
+            self.addstr(y, x + 1, s[1], attr2)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
@@ -655,39 +693,31 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s[0], attr1)
-            self.printl(y, x + 1, s[1], attr2)
+            self.addstr(y, x, s[0], attr1)
+            self.addstr(y, x + 1, s[1], attr2)
         else:
-            self.printl(y, x, s, attr2)
+            self.addstr(y, x, s, attr2)
 
     def fill_posstr(self):
-        self.printl(0, 0, ' ' * self.offset.x) # blank part
+        self.addstr(0, 0, ' ' * self.offset.x) # blank part
         unitlen = setting.bytes_per_unit
-        nloop = self.bufmap.x // unitlen
-        if self.bufmap.x % unitlen:
-            nloop += 1
-        for i in util.get_xrange(nloop):
-            j = i * unitlen
+        upl, xpu = self.default_units_per_line
+        j = 0
+        for i in util.get_xrange(upl):
             x = self.offset.x + self.get_unit_width(i)
             bx = ''.join([self.__get_column_posstr(_) for _ in
                 util.get_xrange(j, j + unitlen)])
-            self.printl(0, x, bx, screen.A_UNDERLINE)
-            # need to clear blank part within unit when offset.x changes
-            if self.need_full_line_repaint:
-                extra = ' ' * self.cell[1]
-                x = self.offset.x + self.get_unit_width(i + 1) - len(extra)
-                if x < self.get_size_x():
-                    self.printl(0, x, extra)
-
+            self.addstr(0, x, bx, screen.A_UNDERLINE)
+            j += unitlen
         n = self.get_page_offset()
         for i in util.get_xrange(self.bufmap.y):
             s = self.__get_line_posstr(n)
-            self.printl(self.offset.y + i, 0, s, screen.A_UNDERLINE)
-            self.printl(self.offset.y + i, len(s), ' ')
+            self.addstr(self.offset.y + i, 0, s, screen.A_UNDERLINE)
+            self.addstr(self.offset.y + i, len(s), ' ')
             n += self.bufmap.x
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.address_radix].format(n)
+        return _binary_cstr_fmt[setting.address_radix].format(n)
 
     def __get_line_posstr(self, n):
         fmt = self.__lstr[setting.address_radix]
@@ -701,20 +731,20 @@ class BinaryCanvas (DisplayCanvas, binary_addon):
             s = fmt.format(n + offset, n)
         return s[-(self.offset.x - 1):]
 
+_text_cstr_fmt = {
+    16: "{0:X}",
+    10: "{0:d}",
+    8 : "{0:o}", }
+
 class TextCanvas (DisplayCanvas, text_addon):
-    def __init__(self, siz, pos):
-        super(TextCanvas, self).__init__(siz, pos)
-        self.__cstr = {
-            16: "{0:X}",
-            10: "{0:d}",
-            8 : "{0:o}", }
+    def get_str_single(self, x):
+        return kbd.chr_repr[x] # x is from ord()
 
-    def get_form_single(self, x):
-        return kbd.to_chr_repr(x) # x is int
-
-    def get_form_line(self, buf):
-        return ''.join([self.get_form_single(x) for x in
-            filebytes.iter_ords(buf)])
+    def get_str_line(self, buf):
+        # normally use filebytes.ords(), but this is exception for speed
+        if not _bytes_is_int:
+            buf = filebytes.ords(buf)
+        return ''.join([self.get_str_single(x) for x in buf])
 
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
@@ -723,7 +753,7 @@ class TextCanvas (DisplayCanvas, text_addon):
 
     def alt_chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
-        self.printl(0, self.offset.x + self.get_cell_width(x),
+        self.addstr(0, self.offset.x + self.get_cell_width(x),
             self.__get_column_posstr(x), screen.A_UNDERLINE | attr)
 
     def chgat_cursor(self, pos, attr1, attr2, low):
@@ -733,7 +763,7 @@ class TextCanvas (DisplayCanvas, text_addon):
     def alt_chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
-        self.printl(y, x, s, attr1)
+        self.addstr(y, x, s, attr1)
 
     def chgat_search(self, pos, attr1, attr2, here):
         y, x = self.get_coordinate(pos)
@@ -746,225 +776,21 @@ class TextCanvas (DisplayCanvas, text_addon):
         y, x = self.get_coordinate(pos)
         s = self.read_form_single(pos)
         if here:
-            self.printl(y, x, s, attr1)
+            self.addstr(y, x, s, attr1)
         else:
-            self.printl(y, x, s, attr2)
+            self.addstr(y, x, s, attr2)
 
     def fill_posstr(self):
         s = ''.join([self.__get_column_posstr(x) for x in
             util.get_xrange(self.bufmap.x)])
-        self.printl(0, self.offset.x, s, screen.A_UNDERLINE)
+        self.addstr(0, self.offset.x, s, screen.A_UNDERLINE)
 
     def __get_column_posstr(self, n):
-        return self.__cstr[setting.address_radix].format(n)[-1]
+        return _text_cstr_fmt[setting.address_radix].format(n)[-1]
 
-class StatusCanvas (Canvas, default_addon):
-    def __init__(self, siz, pos):
-        super(StatusCanvas, self).__init__(siz, pos)
-        self.__update()
-
-    def update(self):
-        super(StatusCanvas, self).update()
-        self.__update()
-
-    def __update(self):
-        self.__nstr = {
-            16: "0x{0:X}",
-            10: "{0:d}",
-            8 : "0{0:o}", }
-        self.__cur_size = 0
-        self.__update_size_format()
-
-    def get_static_info(self):
-        s = ''
-        if setting.use_debug:
-            a = ''
-            if screen.use_alt_chgat():
-                a += "A"
-            if not native.is_enabled():
-                a += "N"
-            if a:
-                s += "{0}|".format(a)
-            x = self.fileops.get_type().__module__
-            if x.startswith("fileobj."):
-                x = x[len("fileobj."):]
-            s += "{0}|{1}|{2}|{3} ".format(kernel.get_term_info(),
-                util.get_python_string(), version.__version__, x)
-        s += self.__get_buffer_name()
-
-        offset = self.fileops.get_mapping_offset()
-        length = self.fileops.get_mapping_length()
-        fmt = self.__nstr[10]
-        if offset or length:
-            s += "[@"
-            s += fmt.format(offset)
-            if length:
-                s += "-"
-                s += fmt.format(offset + length)
-            s += "]"
-        if self.fileops.is_readonly():
-            s += " [RO]"
-        return s
-
-    def __get_buffer_name(self):
-        f = self.fileops.get_short_path()
-        if f:
-            # XXX self.get_size_x() uninitialized at this point
-            if isinstance(self, SingleStatusCanvas) and \
-                len(f) > screen.get_size_x() // 4: # heuristic
-                f = os.path.basename(self.fileops.get_path())
-            alias = self.fileops.get_alias()
-            if alias:
-                f += "|{0}".format(alias)
-            if self.fileops.is_vm():
-                f = "[{0}]".format(f)
-            return f
-        else:
-            return util.NO_NAME
-
-    def get_status_common1(self):
-        if self.fileops.is_readonly():
-            return ""
-        if self.fileops.is_dirty():
-            return "[+]"
-        else:
-            return ""
-
-    def get_status_common2(self):
-        offset = self.fileops.get_mapping_offset()
-        fmt = self.__nstr[10]
-        siz = fmt.format(self.fileops.get_size())
-        pos = fmt.format(self.fileops.get_pos())
-        per = "{0:.1f}".format(self.fileops.get_pos_percentage())
-        if per.endswith(".0"):
-            per = per[:-2]
-
-        # Update the format for e.g. on transition from 99 -> 100.
-        # This also means self.__cur_fmt is formatted with the largest
-        # file opened in *this* status canvas.
-        if len(str(self.fileops.get_size())) > len(str(self.__cur_size)):
-            self.__cur_size = self.fileops.get_size()
-            self.__update_size_format()
-
-        if not address_num_double:
-            s = self.__cur_fmt.format(pos, siz, per)
-        elif not offset: # other buffer(s) need double space
-            s = self.__cur_fmt_single.format(pos, siz, per)
-        else:
-            pos_abs = fmt.format(offset + self.fileops.get_pos())
-            s = self.__cur_fmt.format(pos_abs, pos, siz, per)
-
-        # current unit value
-        unitlen = setting.bytes_per_unit
-        if unitlen > 8:
-            return s
-        b = self.fileops.read(self.fileops.get_unit_pos(), unitlen)
-        if not b:
-            return s
-        un = util.bin_to_int(b, False)
-        sn = util.bin_to_int(b, True)
-        l = [kbd.to_chr_repr(_) for _ in filebytes.iter_ords(b)]
-        s += " {0} {1} {2}".format(self.__nstr[16].format(un), ''.join(l),
-            self.__nstr[10].format(un))
-        if un != sn:
-            s += "/{0}".format(self.__nstr[10].format(sn))
-        return s
-
-    # width alignment is turned off
-    def __update_size_format(self):
-        #n = len(str(self.__cur_size))
-        #self.__cur_fmt = "{{0:>{0}}}/{{1:>{1}}}[B] {{2:>4}}%".format(n, n)
-        self.__cur_fmt = "{0}/{1}[B] {2:>4}%"
-        self.__cur_fmt_single = self.__cur_fmt
-        if address_num_double:
-            #self.__cur_fmt = \
-            #    "{{0:>{0}}},{{1:>{1}}}/{{2:>{2}}}[B] {{3:>4}}%".format(n, n, n)
-            self.__cur_fmt = "{0},{1}/{2}[B] {3:>4}%"
-
-    def get_format_line(self, s):
-        if self.current:
-            attr = screen.A_COLOR_CURRENT
-            if len(s) < self.get_size_x():
-                s += ' ' * (self.get_size_x() - len(s))
-        else:
-            attr = screen.A_NONE
-        if len(s) > self.get_size_x():
-            s = s[:self.get_size_x()-1]
-            s += "~"
-        return s, attr
-
-class VerboseStatusCanvas (StatusCanvas):
-    def set_buffer(self, fileops):
-        super(VerboseStatusCanvas, self).set_buffer(fileops)
-        if self.fileops is not None:
-            a = self.get_static_info()
-            b = self.fileops.get_magic()
-            def fn():
-                yield 0, a
-                yield 1, b # may be empty
-            self.iter_buffer_template = fn
-
-    def iter_buffer_template(self):
-        yield 0, '', screen.A_NONE
-        yield 1, '', screen.A_NONE
-
-    def iter_line_buffer(self):
-        g = self.iter_buffer_template()
-        i, s = util.iter_next(g)
-        x = self.get_status_common1()
-        if x:
-            if s:
-                s += ' '
-            s += x
-        s, attr = self.get_format_line(s)
-        yield i, s, attr
-
-        i, s = util.iter_next(g)
-        x = self.get_status_common2()
-        if x:
-            if s:
-                s += ' '
-            s += x
-        s, attr = self.get_format_line(s)
-        yield i, s, attr
-
-    def sync_cursor(self):
-        self.repaint(None, False)
-
-class SingleStatusCanvas (StatusCanvas):
-    def set_buffer(self, fileops):
-        super(SingleStatusCanvas, self).set_buffer(fileops)
-        if self.fileops is not None:
-            a = self.get_static_info()
-            s = self.fileops.get_magic()
-            if s:
-                a += ' '
-                a += s
-            def fn():
-                yield 0, a
-            self.iter_buffer_template = fn
-
-    def iter_buffer_template(self):
-        yield 0, '', screen.A_NONE
-
-    def iter_line_buffer(self):
-        g = self.iter_buffer_template()
-        i, s = util.iter_next(g)
-        x = self.get_status_common1()
-        if x:
-            if s:
-                s += ' '
-            s += x
-        x = self.get_status_common2()
-        if x:
-            if s:
-                s += ' '
-            s += x
-        s, attr = self.get_format_line(s)
-        yield i, s, attr
-
-    def sync_cursor(self):
-        self.repaint(None, False)
+_is_vt2xx = kernel.is_vt2xx()
+_bytes_is_int = util.is_python3()
+_xrange = util.get_xrange
 
 def get_min_address_num_width():
     return 4 # 65536 bytes buffer
@@ -973,24 +799,13 @@ def get_min_address_num_width():
 address_num_width = get_min_address_num_width()
 address_num_double = False
 
-def get_status_frame_class():
-    if setting.use_status_window_frame:
-        return StatusFrame
-    else:
-        return NullStatusFrame
-
-def get_status_canvas_class():
-    if setting.use_status_window_verbose:
-        return VerboseStatusCanvas
-    else:
-        return SingleStatusCanvas
-
 _MIN_SIZE_Y = 1
 _MIN_SIZE_X = 1
 _FRAME_MARGIN_Y = 1
 _FRAME_MARGIN_X = 1
 
 def get_min_size(cls):
+    from . import status
     if not util.is_class(cls):
         cls = util.get_class(cls)
     if util.is_subclass(cls, Frame):
@@ -1002,12 +817,13 @@ def get_min_size(cls):
     else:
         assert False, cls
     if not setting.use_status_window_frame and \
-        util.is_subclass(cls, StatusFrame):
+        util.is_subclass(cls, status.StatusFrame):
         y -= _FRAME_MARGIN_Y * 2
         x -= _FRAME_MARGIN_X * 2
     return y, x
 
 def get_min_position(cls):
+    from . import status
     if not util.is_class(cls):
         cls = util.get_class(cls)
     if util.is_subclass(cls, Frame):
@@ -1019,7 +835,7 @@ def get_min_position(cls):
     else:
         assert False, cls
     if not setting.use_status_window_frame and \
-        util.is_subclass(cls, StatusCanvas):
+        util.is_subclass(cls, status.StatusCanvas):
         y -= _FRAME_MARGIN_Y
         x -= _FRAME_MARGIN_X
     return y, x

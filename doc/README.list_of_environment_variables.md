@@ -6,6 +6,7 @@
         FILEOBJ_BYTES_PER_UNIT   Set number of bytes printed per unit (equivalent to --bytes_per_unit and :set bytes_per_unit).
         FILEOBJ_BYTES_PER_WINDOW Set number of bytes printed per window (equivalent to --bytes_per_window and :set bytes_per_window).
         FILEOBJ_COLOR_CURRENT    Set current cursor and window color. Defaults to "black,green" if undefined. Set blank string to disable. Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+        FILEOBJ_COLOR_DEFAULT    Set default color for buffer contents. Defaults to "white" if undefined. Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
         FILEOBJ_COLOR_FF         Set color for 0xff bytes within buffer contents. Defaults to "magenta" if undefined. Set blank string to disable. Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
         FILEOBJ_COLOR_PRINT      Set color for printable bytes within buffer contents. Defaults to "cyan" if undefined. Set blank string to disable. Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
         FILEOBJ_COLOR_VISUAL     Set color for visual region. Defaults to "red,yellow" if undefined. Set blank string to disable. Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".

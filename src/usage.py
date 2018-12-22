@@ -211,6 +211,12 @@ Set blank string to disable.
 Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
 """)
 
+FILEOBJ_COLOR_DEFAULT = _("""
+Set default color for buffer contents.
+Defaults to "white" if undefined.
+Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+""")
+
 FILEOBJ_COLOR_VISUAL = _("""
 Set color for visual region.
 Defaults to "red,yellow" if undefined.

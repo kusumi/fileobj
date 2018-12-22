@@ -437,6 +437,15 @@ def init():
     setattr(this, "s_argv", SlowLiteral(":argv", None, "Print arguments of this program"))
     setattr(this, "s_args", SlowLiteral(":args", None, "Print buffer list with the current buffer in brackets"))
     setattr(this, "s_md5", SlowLiteral(":md5", None, "Print md5 message digest of the current buffer"))
+    setattr(this, "s_sha1", SlowLiteral(":sha1", None, "Print sha1 message digest of the current buffer"))
+    setattr(this, "s_sha224", SlowLiteral(":sha224", None, "Print sha224 message digest of the current buffer"))
+    setattr(this, "s_sha256", SlowLiteral(":sha256", None, "Print sha256 message digest of the current buffer"))
+    setattr(this, "s_sha384", SlowLiteral(":sha384", None, "Print sha384 message digest of the current buffer"))
+    setattr(this, "s_sha512", SlowLiteral(":sha512", None, "Print sha512 message digest of the current buffer"))
+    setattr(this, "s_sha3_224", SlowLiteral(":sha3_224", None, "Print sha3_224 message digest of the current buffer"))
+    setattr(this, "s_sha3_256", SlowLiteral(":sha3_256", None, "Print sha3_256 message digest of the current buffer"))
+    setattr(this, "s_sha3_384", SlowLiteral(":sha3_384", None, "Print sha3_384 message digest of the current buffer"))
+    setattr(this, "s_sha3_512", SlowLiteral(":sha3_512", None, "Print sha3_512 message digest of the current buffer"))
     setattr(this, "s_cmp", SlowLiteral(":cmp", None, "Compare two buffers and go to the first non matching byte"))
     setattr(this, "s_cmpneg", SlowLiteral(":cmp!", None, "Compare two buffers and go to the first matching byte"))
     setattr(this, "s_cmpnext", SlowLiteral(":cmpnext", None, "Compare two buffers starting from the next byte and go to the first non matching byte"))
@@ -525,6 +534,14 @@ def init():
         (this.s_delmarksneg, this.s_delmarks),
         (this.s_rsearch, this.s_fsearch),
         ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
+
+    # edit._deleteconsole currently requires delete variants are of size 1
+    assert len(this.delete.seq) == 1, this.delete
+    l = [this.delete.seq[0]]
+    for o in this.delete.children:
+        assert len(o.seq) == 1, o
+        l.append(o.seq[0])
+    this.delete_cmds = tuple(l)
 
     def __scan(l, o, cls):
         if setting.use_debug:

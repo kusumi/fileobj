@@ -69,7 +69,7 @@ class Fileobj (fileobj.Fileobj):
         f = self.get_path()
         size = kernel.get_size(f)
         if size <= 0:
-            raise fileobj.FileobjError(f + " is empty")
+            raise fileobj.Error(f + " is empty")
         self.set_size(size)
         self.set_align(0)
         self.set_window(1, 1)
@@ -172,7 +172,7 @@ class Fileobj (fileobj.Fileobj):
             except Exception as e:
                 # Don't unconditionally log an exception for blkdev.
                 if setting.use_debug:
-                    log.error(e, (beg, end))
+                    log.error(e, (x, n), (beg, end))
                 beg = x
                 end = x + n
                 self.fd.seek(beg)

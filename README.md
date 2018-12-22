@@ -1,4 +1,4 @@
-# fileobj ([v0.7.80](https://github.com/kusumi/fileobj/releases/tag/v0.7.80))
+# fileobj ([v0.7.81](https://github.com/kusumi/fileobj/releases/tag/v0.7.81))
 
 ## About
 
@@ -49,6 +49,10 @@
         $ fileobj [options]... [paths]...
         $ fileobj [options]... [paths[@offset:length]]...
         $ fileobj [options]... [paths[@offset-(offset+length)]]...
+
++ Run with *--test_screen* to test ncurses.
+
+        $ fileobj --test_screen
 
 ## Resource
 

@@ -55,7 +55,7 @@ class methods (object):
         return self.blk_sector_size
 
     def creat_blk(self):
-        raise fileobj.FileobjError("Can only write to " + self.get_path())
+        raise fileobj.Error("Can only write to " + self.get_path())
 
     def pad(self, e, n):
         # XXX Added for Solaris.

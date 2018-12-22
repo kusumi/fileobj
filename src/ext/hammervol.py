@@ -102,7 +102,7 @@ def get_text(co, fo, args):
     l.append("vol_flags = {0}".format(vol_flags))
     l.append("vol_rootvol = {0}".format(vol_rootvol))
     if print_rsv:
-        for x in range(8):
+        for x in fileobj.util.get_xrange(8):
             l.append("vol_reserved[{0}] = 0x{1:08X}".format(x, vol_reserved[x]))
     l.append("")
 
@@ -129,7 +129,7 @@ def get_text(co, fo, args):
 
     offset = 264
 
-    for x in range(16):
+    for x in fileobj.util.get_xrange(16):
         s = "vol0_blockmap[{0}]".format(x)
         buf = b[offset:offset+40]
         phys_offset = _int(buf[0:8])
@@ -148,7 +148,7 @@ def get_text(co, fo, args):
         l.append("")
         offset += 40
 
-    for x in range(128):
+    for x in fileobj.util.get_xrange(128):
         s = "vol0_undo_array[{0}]".format(x)
         vol0_undo_array = _int(b[offset:offset+8])
         l.append("{0} = 0x{1:016X}".format(s, vol0_undo_array))
