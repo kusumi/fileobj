@@ -38,13 +38,9 @@ class NullFrame (panel.Frame):
 
 class _canvas (panel.Canvas):
     def fill(self, low):
-        # update position before other canvas refer to it
         super(_canvas, self).fill(low)
         pos = self.fileops.get_pos()
-        if pos > self.fileops.get_max_pos():
-            self.go_to(self.fileops.get_max_pos())
-        elif pos < 0:
-            self.go_to(0)
+        assert 0 <= pos <= self.fileops.get_max_pos(), pos
 
     def noutrefresh(self):
         return
@@ -203,8 +199,8 @@ class _canvas (panel.Canvas):
         else:
             self.fileops.set_unit_pos(n) # XXX move to nth unit ?
 
-class BinaryCanvas (_canvas, panel.binary_addon):
+class BinaryCanvas (_canvas, panel.binary_attribute):
     pass
 
-class ExtCanvas (_canvas, panel.default_addon):
+class ExtCanvas (_canvas, panel.default_attribute):
     pass

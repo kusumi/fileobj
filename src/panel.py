@@ -24,11 +24,10 @@
 from __future__ import division
 
 from . import filebytes
-from . import kbd
-from . import kernel
 from . import log
 from . import screen
 from . import setting
+from . import terminal
 from . import util
 
 # _panel
@@ -93,10 +92,16 @@ class _panel (object):
     def fill(self, low):
         return
 
+    def fill_partial(self, low, num):
+        return
+
     def set_focus(self, *arg):
         self.set_current(arg[0])
 
     def repaint(self, *arg):
+        self.set_current(arg[0])
+
+    def repaint_partial(self, *arg):
         self.set_current(arg[0])
 
     def noutrefresh(self):
@@ -118,7 +123,7 @@ class Frame (_panel):
     def box(self):
         self.scr.box() # need refresh to make it appear
 
-class _addon (object):
+class _attribute (object):
     def get_cell(self):
         util.raise_no_impl("get_cell")
 
@@ -128,7 +133,7 @@ class _addon (object):
     def get_bufmap(self, bytes_per_line):
         util.raise_no_impl("get_bufmap")
 
-class default_addon (_addon):
+class default_attribute (_attribute):
     def get_cell(self):
         return 1, 0
 
@@ -138,7 +143,7 @@ class default_addon (_addon):
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y(), self.get_size_x()
 
-class binary_addon (_addon):
+class binary_attribute (_attribute):
     def get_cell(self):
         return 3, 1
 
@@ -148,7 +153,7 @@ class binary_addon (_addon):
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
-class text_addon (_addon):
+class text_attribute (_attribute):
     def get_cell(self):
         return 1, 0
 
@@ -207,6 +212,13 @@ class Canvas (_panel):
         self.fill(low)
         self.noutrefresh()
 
+    def repaint_partial(self, *arg):
+        super(Canvas, self).repaint(*arg)
+        low = arg[1]
+        num = arg[2]
+        self.fill_partial(low, num)
+        self.noutrefresh()
+
     def resize(self, siz, pos):
         super(Canvas, self).resize(siz, pos)
         x = self.get_capacity()
@@ -236,11 +248,8 @@ class Canvas (_panel):
                 log.error(self, e, (y, x), s)
 
     def clrl(self, y, x):
-        try:
-            self.scr.move(y, x)
-            self.scr.clrtoeol()
-        except screen.Error as e:
-            log.error(self, e, (y, x))
+        self.scr.move(y, x)
+        self.scr.clrtoeol()
 
     def get_coordinate(self, pos):
         """Return coordinate of the position within the page"""
@@ -423,18 +432,29 @@ class DisplayCanvas (Canvas):
             yield i, b[n : n + self.bufmap.x], screen.A_NONE
             n += self.bufmap.x
 
-    def fill(self, low):
+    def __fill_pre(self):
         # erase if needed
-        # XXX with vt2xx, self.clrl() via super's fill() may not work against
-        # consecutive lines in the final page, so clear the entire screen.
-        if self.need_full_repaint or \
-            (_is_vt2xx and \
-            self.fileops.get_max_pos() < self.get_next_page_offset()):
-            self.scr.erase() # not scr.clear()
+        # XXX self.clrl() via super's fill() may not work against consecutive
+        # lines in final page with some terminals, so clear the screen.
+        if self.need_full_repaint:
+            self.scr.erase()
+        elif _clear_on_fill and \
+            self.fileops.get_max_pos() < self.get_next_page_offset():
+            self.scr.clear() # not scr.erase()
         # fill posstr if needed
         if self.need_full_repaint or self.is_page_changed():
             self.fill_posstr()
-        # start to fill
+
+    def __fill_post(self, low):
+        # update position
+        self.update_highlight(low)
+        # update search strings
+        self.page_update_search(self.fileops.get_pos())
+        # done in this fill if any
+        self.need_full_repaint = False
+
+    def fill(self, low):
+        self.__fill_pre()
         super(Canvas, self).fill(low)
         x = self.offset.x
         for i, b, a in self.iter_line_buffer():
@@ -445,11 +465,31 @@ class DisplayCanvas (Canvas):
                 self.clrl(y, x)
                 if b:
                     self.fill_line(y, x, b, a, self.get_units_per_line(len(b)))
-        self.need_full_repaint = False # done in this fill if any
-        # update position
-        self.update_highlight(low)
-        # update search strings
-        self.page_update_search(self.fileops.get_pos())
+        self.__fill_post(low)
+
+    def fill_partial(self, low, num):
+        self.__fill_pre()
+        super(Canvas, self).fill_partial(low, num)
+        if num == -1:
+            num = 1
+        pos = self.fileops.get_pos()
+        loff = self.get_page_offset()
+        lbeg = self.get_line_offset(pos) - self.bufmap.x # one above current
+        lend = self.get_line_offset(pos + num - 1)
+        x = self.offset.x
+        for i, b, a in self.iter_line_buffer():
+            if not (lbeg <= loff <= lend):
+                loff += self.bufmap.x
+                continue
+            y = self.offset.y + i
+            if len(b) == self.bufmap.x:
+                self.fill_line(y, x, b, a, self.default_units_per_line)
+            else:
+                self.clrl(y, x)
+                if b:
+                    self.fill_line(y, x, b, a, self.get_units_per_line(len(b)))
+            loff += self.bufmap.x
+        self.__fill_post(low)
 
     def fill_line_nth(self, y, x, buf, nth_in_line, attr):
         # fill in unaligned bytes first
@@ -469,6 +509,7 @@ class DisplayCanvas (Canvas):
         self.fill_line(y, x, buf, attr, self.get_units_per_line(len(buf)))
         return x # for visual
 
+    # most cpu cycles on repaint are consumed in here
     def __fill_line(self, y, x, buf, attr, arg):
         upl, xpu = arg
         # normally use filebytes.ords(), but this is exception for speed
@@ -598,7 +639,7 @@ _binary_cstr_fmt = {
     10: "{0:02d}",
     8 : "{0:02o}", }
 
-class BinaryCanvas (DisplayCanvas, binary_addon):
+class BinaryCanvas (DisplayCanvas, binary_attribute):
     def __init__(self, siz, pos):
         super(BinaryCanvas, self).__init__(siz, pos)
         self.__update()
@@ -736,9 +777,9 @@ _text_cstr_fmt = {
     10: "{0:d}",
     8 : "{0:o}", }
 
-class TextCanvas (DisplayCanvas, text_addon):
+class TextCanvas (DisplayCanvas, text_attribute):
     def get_str_single(self, x):
-        return kbd.chr_repr[x] # x is from ord()
+        return screen.chr_repr[x] # x is from ord()
 
     def get_str_line(self, buf):
         # normally use filebytes.ords(), but this is exception for speed
@@ -788,7 +829,7 @@ class TextCanvas (DisplayCanvas, text_addon):
     def __get_column_posstr(self, n):
         return _text_cstr_fmt[setting.address_radix].format(n)[-1]
 
-_is_vt2xx = kernel.is_vt2xx()
+_clear_on_fill = terminal.in_tmux_tmux() and not terminal.is_screen()
 _bytes_is_int = util.is_python3()
 _xrange = util.get_xrange
 
@@ -805,7 +846,6 @@ _FRAME_MARGIN_Y = 1
 _FRAME_MARGIN_X = 1
 
 def get_min_size(cls):
-    from . import status
     if not util.is_class(cls):
         cls = util.get_class(cls)
     if util.is_subclass(cls, Frame):
@@ -816,6 +856,7 @@ def get_min_size(cls):
         x = _MIN_SIZE_X
     else:
         assert False, cls
+    from . import status
     if not setting.use_status_window_frame and \
         util.is_subclass(cls, status.StatusFrame):
         y -= _FRAME_MARGIN_Y * 2
@@ -823,7 +864,6 @@ def get_min_size(cls):
     return y, x
 
 def get_min_position(cls):
-    from . import status
     if not util.is_class(cls):
         cls = util.get_class(cls)
     if util.is_subclass(cls, Frame):
@@ -834,6 +874,7 @@ def get_min_position(cls):
         x = _FRAME_MARGIN_X
     else:
         assert False, cls
+    from . import status
     if not setting.use_status_window_frame and \
         util.is_subclass(cls, status.StatusCanvas):
         y -= _FRAME_MARGIN_Y

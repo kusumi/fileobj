@@ -38,7 +38,7 @@ def get_text(co, fo, args):
             _ = f.format(i + 1, str(cls), "yes")
         else:
             _ = f.format(i + 1, str(cls), "no")
-        if cls == d:
+        if cls is d:
             _ += " *"
         sl.append(_)
     return sl

@@ -22,13 +22,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import shutil
 import sys
 
-from . import kbd
-from . import kernel
 from . import log
 from . import setting
+from . import terminal
 from . import util
 
 if not setting.use_stdout:
@@ -43,8 +41,9 @@ _size = util.Pair()
 _signaled = False
 _soft_resize = False
 
-terminal = util.Namespace(height=-1, width=-1)
-buf_attr = {} # no .get() wrapper, out of range input is error
+# no .get() wrapper, out of range input is error
+chr_repr = {}
+buf_attr = {}
 
 A_NONE          = _screen.A_NONE
 A_BOLD          = _screen.A_BOLD
@@ -80,6 +79,10 @@ def init():
         l.append("A_{0}=0x{1:X}".format(x, getattr(this, "A_" + x)))
     log.debug("screen: {0}".format(l))
 
+    chr_repr.clear()
+    for x in util.get_xrange(0, 256):
+        chr_repr[x] = chr(x) if util.isprint(x) else '.'
+
     buf_attr.clear()
     for x in util.get_xrange(0, 256):
         if setting.has_buffer_attr():
@@ -87,7 +90,7 @@ def init():
                 _ = A_COLOR_ZERO
             elif x == 0xff:
                 _ = A_COLOR_FF
-            elif kbd.isprint(x):
+            elif util.isprint(x):
                 _ = A_COLOR_PRINT
             else:
                 _ = A_COLOR_DEFAULT
@@ -127,10 +130,7 @@ def get_size_x():
     return _size.x
 
 def update_size():
-    if util.is_python_version_or_ht(3, 3):
-        x, y = shutil.get_terminal_size() # portable ???
-    else:
-        y, x = kernel.get_terminal_size()
+    y, x = terminal.get_size()
     y = __override_size(y, setting.terminal_height)
     x = __override_size(x, setting.terminal_width)
     if y > 0 and x > 0:

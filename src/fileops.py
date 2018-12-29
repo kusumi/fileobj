@@ -392,6 +392,8 @@ class Fileops (object):
             self.__ref.barrier_delete(x, n, rec)
         else:
             self.__ref.delete(x, n, rec)
+        if self.get_pos() > self.get_max_pos():
+            self.set_pos(self.get_max_pos())
 
     def has_undo(self):
         return self.__ref.has_undo()
@@ -416,10 +418,16 @@ class Fileops (object):
         self.merge_undo(self.get_undo_size() - to)
 
     def undo(self, n=1):
-        return self.__ref.undo(n)
+        ret = self.__ref.undo(n)
+        if self.get_pos() > self.get_max_pos(): # delete on undo
+            self.set_pos(self.get_max_pos())
+        return ret
 
     def redo(self, n=1):
-        return self.__ref.redo(n)
+        ret = self.__ref.redo(n)
+        if self.get_pos() > self.get_max_pos(): # delete on redo
+            self.set_pos(self.get_max_pos())
+        return ret
 
     def rollback(self, n=1):
         return self.__ref.rollback(n)

@@ -25,7 +25,6 @@ import collections
 import curses
 
 from . import kbd
-from . import kernel
 from . import log
 from . import setting
 from . import util
@@ -96,6 +95,7 @@ def cleanup():
         curses.isendwin() # raise if initscr() failed
     except curses.error as e:
         log.debug(e)
+        log.debug("Failed before curses.initscr()")
         return -1
     curses.echo()
     curses.nocbreak()
@@ -189,8 +189,8 @@ doupdate = curses.doupdate
 flash = curses.flash
 
 def newwin(leny, lenx, begy, begx, ref=None):
-    if kernel.is_vtxxx():
-        scr = _VTxxxWindow(leny, lenx, begy, begx, ref)
+    if kbd.parse_sequence:
+        scr = Window(leny, lenx, begy, begx, ref)
         scr.init()
         return scr
     else:
@@ -217,6 +217,8 @@ def __iter_color_pair():
             s = k[len("COLOR_"):].lower()
             yield s, v
 
+# APIs must be compatible with
+# https://docs.python.org/3/library/curses.html
 class Window (object):
     def __init__(self, leny, lenx, begy, begx, ref):
         self.__scr = curses.newwin(leny, lenx, begy, begx)
@@ -265,10 +267,10 @@ class Window (object):
     def scrollok(self, flag):
         return self.__scr.scrollok(flag)
 
-    def bkgd(self, ch, attr):
+    def bkgd(self, ch, attr=A_NONE): # attr must be optional
         return self.__scr.bkgd(ch, attr)
 
-    def addstr(self, y, x, s, attr):
+    def addstr(self, y, x, s, attr=A_NONE): # attr must be optional
         return self.__scr.addstr(y, x, s, attr)
 
     def clrtoeol(self):
@@ -313,6 +315,9 @@ class Window (object):
     def _getch(self):
         return self.__scr.getch()
 
+    def preprocess(self, x, l):
+        return
+
     def getch(self):
         x = self.__fetch_output()
         if x is not None:
@@ -326,7 +331,7 @@ class Window (object):
         ret = None
         if x != kbd.ERROR:
             try:
-                ret = self.parse(x, l)
+                ret = kbd.parse_sequence(chr(x), ''.join([chr(_) for _ in l]))
             except ValueError as e:
                 # max chr(255) on Python 2
                 if not util.is_python2():
@@ -343,31 +348,3 @@ class Window (object):
         self.__queue_output((x,))
         self.__clear_input()
         return kbd.CONTINUE
-
-    def preprocess(self, x, l):
-        return
-
-    def parse(self, x, l):
-        return
-
-    def test_env(self, s):
-        name = "key_{0}".format(s.lower())
-        if getattr(setting, name) is None:
-            return getattr(kbd, s.upper())
-
-class _VTxxxWindow (Window):
-    def parse(self, x, l):
-        x = chr(x)
-        s = ''.join([chr(_) for _ in l])
-        if x == "\x1B": # ESC
-            if not s:
-                return kbd.CONTINUE
-        elif x == "[":
-            if s == "\x1B": # ESC
-                return kbd.CONTINUE # CSI
-        elif x == "3":
-            if s == "\x1B[": # CSI
-                return kbd.CONTINUE
-        elif x == "~":
-            if s == "\x1B[3":
-                return self.test_env("delete")

@@ -25,12 +25,6 @@ import errno
 
 from . import unix
 
-def get_term_info():
-    return unix.get_term_info()
-
-def get_lang_info():
-    return unix.get_lang_info()
-
 def read_reg_size(f):
     return unix.read_reg_size(f)
 
@@ -78,18 +72,6 @@ def get_buffer_size():
 
 def set_non_blocking(fd):
     return unix.set_non_blocking(fd)
-
-def get_terminal_size():
-    return unix.get_terminal_size()
-
-def get_tc(fd):
-    return unix.get_tc(fd)
-
-def set_tc(fd):
-    return unix.set_tc(fd)
-
-def set_cbreak(fd):
-    return unix.set_cbreak(fd)
 
 def get_total_ram():
     return unix.get_total_ram()

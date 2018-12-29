@@ -24,16 +24,13 @@
 import sys
 
 from . import filebytes
-from . import kbd
-from . import kernel
-from . import log
 from . import ncurses
 from . import setting
+from . import terminal
 from . import util
 
 Error = Exception
 
-_stdin = sys.stdin
 _count = 0
 
 A_NONE          = 0
@@ -82,6 +79,8 @@ def iter_color_name():
     yield "black"
     yield "white"
 
+# APIs must be compatible with
+# https://docs.python.org/3/library/curses.html
 class _window (ncurses.Window):
     def __init__(self, leny, lenx, begy, begx, ref):
         self.__siz = util.Pair(leny, lenx)
@@ -92,10 +91,7 @@ class _window (ncurses.Window):
         global _count
         super(_window, self).init()
         if _count == 0:
-            kernel.get_tc(_stdin)
-            log.debug("Save tty attr")
-            kernel.set_cbreak(_stdin)
-            log.debug("Set tty cbreak")
+            assert terminal.init_getch(sys.stdin) != -1
         _count += 1
 
     def cleanup(self):
@@ -103,8 +99,7 @@ class _window (ncurses.Window):
         super(_window, self).cleanup()
         _count -= 1
         if _count == 0:
-            kernel.set_tc(_stdin)
-            log.debug("Restore tty attr")
+            assert terminal.cleanup_getch(sys.stdin) != -1
 
     def __mkstr(self, y, x, s):
         return "{0} ({1:2}, {2:3}) {3}".format(repr(self.__ref), y, x,
@@ -119,10 +114,10 @@ class _window (ncurses.Window):
     def scrollok(self, flag):
         return
 
-    def bkgd(self, ch, attr):
+    def bkgd(self, ch, attr=A_NONE): # attr must be optional
         return
 
-    def addstr(self, y, x, s, attr):
+    def addstr(self, y, x, s, attr=A_NONE): # attr must be optional
         if setting.stdout_verbose > 0:
             util.printf(self.__mkstr(y, x, s))
         if setting.stdout_verbose > 2:
@@ -169,39 +164,11 @@ class _window (ncurses.Window):
         return self.__pos.y, self.__pos.x
 
     def _getch(self):
-        return ord(_stdin.read(1))
+        return terminal.getch(sys.stdin)
 
     def preprocess(self, x, l):
         if setting.stdout_verbose > 1:
-            if kbd.isprint(x):
+            if util.isprint(x):
                 util.printf("{0} {1}".format(x, chr(x)))
             else:
                 util.printf(x)
-
-    def parse(self, x, l):
-        x = chr(x)
-        s = ''.join([chr(_) for _ in l])
-        if x == "\x1B": # ESC
-            if not s:
-                return kbd.CONTINUE
-        elif x == "[":
-            if s == "\x1B": # ESC
-                return kbd.CONTINUE # CSI
-        elif x == "A":
-            if s == "\x1B[": # CSI
-                return kbd.UP
-        elif x == "B":
-            if s == "\x1B[": # CSI
-                return kbd.DOWN
-        elif x == "C":
-            if s == "\x1B[": # CSI
-                return kbd.RIGHT
-        elif x == "D":
-            if s == "\x1B[": # CSI
-                return kbd.LEFT
-        elif x == "3":
-            if s == "\x1B[": # CSI
-                return kbd.CONTINUE
-        elif x == "~":
-            if s == "\x1B[3":
-                return self.test_env("delete")

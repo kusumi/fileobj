@@ -46,8 +46,8 @@ def get_paths():
 
 def __get_paths():
     if pkg is None:
-        dir = distutils.sysconfig.get_python_lib()
-        return [os.path.join(dir, get_name())]
+        d = distutils.sysconfig.get_python_lib()
+        return [os.path.join(d, get_name())]
     elif hasattr(pkg, "__path__"):
         return pkg.__path__
     elif get_sites:

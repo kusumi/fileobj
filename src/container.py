@@ -794,6 +794,22 @@ class Container (object):
                 o.lrepaint(is_current, is_current and low)
         screen.doupdate()
 
+    # partial repaint (no frame repaint)
+    def prepaint(self, num, low=False):
+        for o in self.__workspaces:
+            is_current = self.__cur_workspace is o
+            o.prepaint(is_current, is_current and low, num)
+        screen.doupdate()
+
+    # partial repaint against workspace with same current buffer
+    def prepaintf(self, num, low=False):
+        f = self.get_path()
+        for o in self.__workspaces:
+            if o.get_path() == f:
+                is_current = self.__cur_workspace is o
+                o.prepaint(is_current, is_current and low, num)
+        screen.doupdate()
+
     # frame repaint
     def xrepaint(self):
         for o in self.__workspaces:
@@ -817,13 +833,15 @@ class Container (object):
         self.__stream.extend(l)
         log.debug("queue_input: {0} entries".format(len(l)))
         if len(l) <= 1024:
-            log.debug(tuple(zip(l, tuple(_to_chr_repr(_) for _ in l))))
+            log.debug(tuple(zip(l, tuple(screen.chr_repr[_] if _ in
+                screen.chr_repr else '.' for _ in l))))
 
     def push_input(self, l):
         self.__stream.extendleft(l)
         log.debug("push_input: {0} entries".format(len(l)))
         if len(l) <= 1024:
-            log.debug(tuple(zip(l, tuple(_to_chr_repr(_) for _ in l))))
+            log.debug(tuple(zip(l, tuple(screen.chr_repr[_] if _ in
+                screen.chr_repr else '.' for _ in l))))
 
     def pop_input(self, n):
         for _ in util.get_xrange(n):
@@ -929,7 +947,7 @@ class Container (object):
         return ''.join(l)
 
     def add_delayed_input(self, x):
-        if kbd.isprint(x):
+        if util.isprint(x):
             self.__delayed_input.append(x)
         elif x == kbd.ESCAPE:
             self.clear_delayed_input()
@@ -1255,9 +1273,3 @@ class Container (object):
                 return int(arg)
             except ValueError:
                 return -1
-
-def _to_chr_repr(x):
-    try:
-        return kbd.chr_repr[x]
-    except KeyError:
-        return '.'

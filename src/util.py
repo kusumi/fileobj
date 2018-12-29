@@ -71,6 +71,9 @@ class Pair (object):
         self.y = y
         self.x = x
 
+def raise_no_impl(s):
+    raise NotImplementedError("No " + s)
+
 _python_version = tuple(sys.version_info[:3])
 def get_python_version():
     return _python_version
@@ -122,6 +125,47 @@ def is_running_fileobj():
 
 def is_running_profile():
     return is_running_script("profile")
+
+def get_os_name():
+    # e.g. 'Linux'
+    ret = platform.system()
+    return ret if ret else UNKNOWN
+
+def get_os_release():
+    # e.g. '2.6.32-504.1.3.el6.x86_64'
+    ret = platform.release()
+    return ret if ret else UNKNOWN
+
+def get_cpu_name():
+    # e.g. 'x86_64'
+    ret = platform.processor()
+    return ret if ret else UNKNOWN
+
+# take str and return int
+def ctrl(c):
+    return ord(c) & 0x1F
+
+#           isspace(3) isgraph(3) isprint(3)
+# 0x09 '\t' True       False      False
+# 0x0A '\n' True       False      False
+# 0x0B '\v' True       False      False
+# 0x0C '\f' True       False      False
+# 0x0D '\r' True       False      False
+# 0x20 ' '  True       False      True
+
+def isspace(x):
+    return x in (0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x20)
+
+def isgraph(x):
+    return x >= 0x21 and x <= 0x7E
+
+def isprint(x):
+    # return True if isgraph(3) or 0x20
+    # this isn't same as isgraph(3) + isspace(3) see above for details
+    return (x >= 0x21 and x <= 0x7E) or x == 0x20
+
+def isprints(l):
+    return len(l) > 0 and all(isprint(x) for x in l)
 
 _key_cnt = 0
 def gen_key():
@@ -195,24 +239,6 @@ def rfind_string(src, sub, start=0):
         src = src.lower()
         sub = sub.lower()
     return src.rfind(sub, 0, start)
-
-def get_os_name():
-    # e.g. 'Linux'
-    ret = platform.system()
-    return ret if ret else UNKNOWN
-
-def get_os_release():
-    # e.g. '2.6.32-504.1.3.el6.x86_64'
-    ret = platform.release()
-    return ret if ret else UNKNOWN
-
-def get_cpu_name():
-    # e.g. 'x86_64'
-    ret = platform.processor()
-    return ret if ret else UNKNOWN
-
-def raise_no_impl(s):
-    raise NotImplementedError("No " + s)
 
 KB = 10 ** 3
 MB = 10 ** 6
@@ -540,22 +566,22 @@ __mktmp_no_delete = tempfile.mkstemp
 
 def open_temp_file(binary=True, delete=True):
     mode = 'w+b' if binary else 'w+'
-    dir = setting.get_user_dir()
-    if not os.path.isdir(dir):
-        dir = '.'
+    d = setting.get_user_dir()
+    if not os.path.isdir(d):
+        d = '.'
     if is_python_version_or_ht(2, 6):
         try:
-            return __mktmp(mode=mode, delete=delete, dir=dir)
+            return __mktmp(mode=mode, delete=delete, dir=d)
         except Exception:
             return __mktmp(mode=mode, delete=delete)
     elif delete:
         try:
-            return __mktmp(mode=mode, dir=dir)
+            return __mktmp(mode=mode, dir=d)
         except Exception:
             return __mktmp(mode=mode)
     else:
         try:
-            l = __mktmp_no_delete(dir=dir)
+            l = __mktmp_no_delete(dir=d)
         except Exception:
             l = __mktmp_no_delete()
         os.close(l[0])
@@ -576,6 +602,8 @@ def do_atomic_write(dst, binary=True, fsync=None, rename=None):
         if rename:
             rename(src, dst)
         else:
+            if os.path.isfile(dst):
+                os.unlink(dst) # FileExistsError on rename if exists on Windows
             os.rename(src, dst) # supposed to be atomic
         assert os.path.isfile(dst)
         l2 = __get_uid_gid(dst)
@@ -658,10 +686,7 @@ def __get_path_attribute(s):
 
 def creat_backup(f, timestamp=""):
     if os.path.isfile(f): # regular files (follows symlink)
-        x = f.replace("/", "-")
-        while x.startswith("-"):
-            x = x[1:]
-        x = "{0}.{1}.bak".format(timestamp, x)
+        x = "{0}.{1}.bak".format(timestamp, os.path.basename(f))
         dst = os.path.join(setting.get_user_dir(), x)
         shutil.copy2(f, dst) # preserve ctime/mtime
         if setting.use_debug:
@@ -672,12 +697,13 @@ def creat_backup(f, timestamp=""):
         return dst
 
 def get_timestamp(prefix=''):
-    # e.g. profile.2014-07-03-00:24:32
-    return "{0}.{1}".format(prefix, time.strftime("%Y-%m-%d-%H:%M:%S",
+    # e.g. profile.2014-07-03-00-24-32
+    # file name with : is invalid on Windows
+    return "{0}.{1}".format(prefix, time.strftime("%Y-%m-%d-%H-%M-%S",
         time.localtime()))
 
 def get_stamp(prefix=''):
-    # e.g. profile.2014-07-03-00:24:32.python3.3.pid29097
+    # e.g. profile.2014-07-03-00-24-32.python3.3.pid29097
     return "{0}.{1}.pid{2}".format(get_timestamp(prefix), get_python_string(),
         os.getpid())
 

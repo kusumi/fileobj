@@ -22,26 +22,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
-import fcntl
 import mmap
 import os
-import posix
 import re
-import resource
 import stat
-import struct
-import termios
-import tty
 
 from . import filebytes
 from . import log
 from . import util
-
-def get_term_info():
-    return os.getenv("TERM", "")
-
-def get_lang_info():
-    return os.getenv("LANG", "")
 
 def read_reg_size(f):
     if not os.path.isfile(f): # only for regfile
@@ -104,6 +92,8 @@ def fcreat(f):
 def fcreat_text(f):
     return os.fdopen(__creat_file(f), 'w+')
 
+# Python 3.3+ raises subclass of OSError called FileExistsError
+# https://docs.python.org/3/whatsnew/3.3.html
 def __creat_file(f):
     """Raise 'OSError: [Errno 17] File exists: ...' if f exists"""
     return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
@@ -127,6 +117,7 @@ def truncate(f, offset):
         fd.truncate()
 
 def utime(f, st):
+    import posix
     if st is None:
         os.utime(f, None)
     elif isinstance(st, posix.stat_result):
@@ -178,6 +169,7 @@ def get_page_size():
     return -1
 
 def __get_resource_page_size():
+    import resource
     try:
         return resource.getpagesize()
     except Exception:
@@ -233,6 +225,7 @@ def __do_mmap_resize(osiz, nsiz):
     return nsiz
 
 def set_non_blocking(fd):
+    import fcntl
     try:
         fl = fcntl.fcntl(fd.fileno(), fcntl.F_GETFL)
         fl |= os.O_NONBLOCK
@@ -241,34 +234,11 @@ def set_non_blocking(fd):
         return -1
 
 def ioctl(fd, request, length):
+    import fcntl
     return fcntl.ioctl(fd, request, filebytes.pad(length))
 
 def ioctl_get_int(fd, request, length):
     return util.host_to_int(ioctl(fd, request, length))
-
-def get_terminal_size():
-    """Return a tuple of (y, x)"""
-    b = ioctl(0, termios.TIOCGWINSZ, 8)
-    return struct.unpack(util.S2F * 4, b)[:2]
-
-_tattr = None
-def get_tc(fd):
-    global _tattr
-    if not _tattr:
-        _tattr = termios.tcgetattr(fd)
-    else:
-        return -1
-
-def set_tc(fd):
-    global _tattr
-    if _tattr:
-        termios.tcsetattr(fd, termios.TCSANOW, _tattr)
-        _tattr = None
-    else:
-        return -1
-
-def set_cbreak(fd):
-    tty.setcbreak(fd)
 
 def get_total_ram():
     page_size = get_page_size()

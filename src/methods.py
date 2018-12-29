@@ -37,6 +37,7 @@ from . import native
 from . import path
 from . import screen
 from . import setting
+from . import terminal
 from . import util
 from . import version
 
@@ -102,9 +103,17 @@ def __exec_lrepaint(self, fn, i=0):
     __call_context_lrepaint(self, fn, i)
     self.co.set_prev_context(fn)
 
+def __exec_prepaint(self, fn, num, i=0):
+    __call_context_prepaint(self, fn, num, i)
+    self.co.set_prev_context(fn)
+
 def __call_context_lrepaint(self, fn, i=0):
     fn(i)
     self.co.lrepaintf()
+
+def __call_context_prepaint(self, fn, num, i=0):
+    fn(i)
+    self.co.prepaintf(num)
 
 def cursor_up(self, amp, opc, args, raw):
     go_up(self, amp)
@@ -302,7 +311,7 @@ def go_to(self, amp=None):
         self.co.lrepaintf()
 
 def __isprint(b):
-    return kbd.isprint(filebytes.ord(b))
+    return util.isprint(filebytes.ord(b))
 
 def __is_zero(b):
     return b == filebytes.ZERO
@@ -432,7 +441,7 @@ def refresh_container(self, amp, opc, args, raw):
     # frame issue which happens after once changing to a different terminal.
     # e.g. Frames disappear on *BSD, and corrupt on Cygwin.
     # Not confirmed on Linux and Solaris.
-    if kernel.is_screen():
+    if terminal.is_screen():
         self.co.resize()
     else:
         self.co.refresh()
@@ -785,10 +794,10 @@ def show_hostname(self, amp, opc, args, raw):
     self.co.show(platform.node())
 
 def show_term(self, amp, opc, args, raw):
-    self.co.show(kernel.get_term_info())
+    self.co.show(terminal.get_type())
 
 def show_lang(self, amp, opc, args, raw):
-    self.co.show(kernel.get_lang_info())
+    self.co.show(terminal.get_lang())
 
 def show_version(self, amp, opc, args, raw):
     self.co.show(version.__version__)
@@ -1203,7 +1212,7 @@ def __do_replace_number(self, amp, pos, siz):
             raise fileobj.Error("Failed to convert")
         self.co.replace(pos, filebytes.ords(b))
         self.co.show(util.bin_to_int(b))
-    __exec_lrepaint(self, fn)
+    __exec_prepaint(self, fn, siz)
 
 _did_search_forward = True
 
@@ -1316,12 +1325,16 @@ def delete(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
     def fn(_):
+        pos = self.co.get_pos()
         buf = self.co.read_current(amp)
         self.co.delete_current(amp)
         if not _:
             self.co.set_delete_buffer(buf)
         else:
             self.co.right_add_delete_buffer(buf)
+        # require full repaint if deleted end of buffer
+        if self.co.get_pos() != pos:
+            self.co.require_full_repaint()
     __exec_lrepaint(self, fn)
 
 @_cleanup
@@ -1812,6 +1825,9 @@ def __block_replace_swap_buffer(self, pos, mapx, siz, cnt, l):
 
 @_cleanup
 def repeat(self, amp, opc, args, raw):
+    # Repeat action may change position more than once (e.g. write console).
+    # When it happens, update highlight can only update the last change,
+    # so always force full repaint.
     self.co.require_full_repaint()
     pxfn = self.co.get_xprev_context()
     if not pxfn:

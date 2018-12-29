@@ -1,4 +1,4 @@
-# fileobj ([v0.7.81](https://github.com/kusumi/fileobj/releases/tag/v0.7.81))
+# fileobj ([v0.7.82](https://github.com/kusumi/fileobj/releases/tag/v0.7.82))
 
 ## About
 
@@ -6,7 +6,9 @@
 
 + Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
 
-![fileobj](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.80.png/max/max/1)
+![fileobj-linux](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.82-linux.png/max/max/1)
+
+![fileobj-windows](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.82-windows.png/max/max/1)
 
 ## Supported platforms
 
@@ -16,20 +18,24 @@
 
 + 3rd tier - Other Unix-likes (untested)
 
++ experimental - Windows (feature limitations)
+
 ## Requirements
 
 + Python 2.7 or Python 3.2+
+
++ (Python 3.3+ for Windows)
 
 + ncurses (curses Python module)
 
 ## Install
 
-+ Run *setup.py* as follows. Use *python3* for Python 3.
++ Run *setup.py* as follows. Use *python3* for Python 3. On Windows, run without *sudo* with appropriate permission.
 
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ Run *./script/install.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument.
++ Run *./script/install.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument. On Windows, see *doc/fileobj.1.txt*.
 
         $ sudo bash ./script/install.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, from Unix, max compression
@@ -50,7 +56,7 @@
         $ fileobj [options]... [paths[@offset:length]]...
         $ fileobj [options]... [paths[@offset-(offset+length)]]...
 
-+ Run with *--test_screen* to test ncurses.
++ Run with *--test_screen* to test appearance of ncurses.
 
         $ fileobj --test_screen
 

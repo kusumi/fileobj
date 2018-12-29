@@ -25,12 +25,11 @@ from __future__ import division
 import os
 
 from . import filebytes
-from . import kbd
-from . import kernel
 from . import native
 from . import panel
 from . import screen
 from . import setting
+from . import terminal
 from . import util
 from . import version
 
@@ -45,7 +44,7 @@ _fmt_hex = "0x{0:X}"
 _fmt_dec = "{0:d}"
 _fmt_oct = "0{0:o}"
 
-class StatusCanvas (panel.Canvas, panel.default_addon):
+class StatusCanvas (panel.Canvas, panel.default_attribute):
     def __init__(self, siz, pos):
         super(StatusCanvas, self).__init__(siz, pos)
         self.__update()
@@ -84,7 +83,7 @@ class StatusCanvas (panel.Canvas, panel.default_addon):
             x = self.fileops.get_type().__module__
             if x.startswith("fileobj."):
                 x = x[len("fileobj."):]
-            s += "{0}|{1}|{2}|{3} ".format(kernel.get_term_info(),
+            s += "{0}|{1}|{2}|{3} ".format(terminal.get_type(),
                 util.get_python_string(), version.__version__, x)
         s += self.__get_buffer_name()
 
@@ -158,7 +157,7 @@ class StatusCanvas (panel.Canvas, panel.default_addon):
             return s
         un = util.bin_to_int(b, False)
         sn = util.bin_to_int(b, True)
-        l = [kbd.chr_repr[_] for _ in filebytes.iter_ords(b)]
+        l = [screen.chr_repr[_] for _ in filebytes.iter_ords(b)]
         s += " {0} {1} {2}".format(_fmt_hex.format(un), ''.join(l),
             _fmt_dec.format(un))
         if un != sn:

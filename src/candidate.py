@@ -81,8 +81,8 @@ class PathCandidate (_candidate):
             l = [x for x in sorted(os.listdir(d)) if x.startswith(b)]
             for s in l:
                 f = os.path.join(d, s)
-                if os.path.isdir(f) and not f.endswith("/"):
-                    f = f + "/"
+                if os.path.isdir(f) and not f.endswith(os.path.sep):
+                    f = f + os.path.sep
                 yield f, len(l)
 
     def _get_item(self, o):

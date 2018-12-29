@@ -181,6 +181,8 @@ def iter_module_name():
     yield "rwblk"
     yield "rovm"
     yield "rrvm"
+    yield "roext"
+    yield "rwext"
 
 def iter_class():
     return _allocator.iter_class()

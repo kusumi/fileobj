@@ -32,6 +32,7 @@ from . import kbd
 from . import literal
 from . import methods
 from . import setting
+from . import terminal
 from . import util
 
 EDIT   = "EDIT"
@@ -107,6 +108,9 @@ class _writeconsole (Console):
     def init_listen(self, arg):
         self.go_right(arg.delta)
 
+    def repaint(self, arg):
+        util.raise_no_impl("repaint")
+
     def process_incoming(self, arg, x):
         if self.test_write(x):
             return self.handle_write(x)
@@ -123,7 +127,8 @@ class _writeconsole (Console):
         elif x == kbd.RIGHT:
             return self.go_right()
         elif x != kbd.ERROR:
-            self.co.flash()
+            if not terminal.is_vtxxx(): # XXX avoid flash on vtxxx
+                self.co.flash()
             return None
         else:
             return None
@@ -245,14 +250,14 @@ class _binary (_writeconsole):
 
     def handle_write(self, x):
         self.write(int(chr(x), 16)) # e.g. pass 10 if x is 0x41
-        self.co.lrepaintf(self.low)
+        self.repaint(self.low)
         return EDIT
 
     def handle_escape(self):
         if not self.low:
             self.go_left()
         else:
-            self.co.lrepaintf()
+            self.repaint(False)
             self.low = False
         return ESCAPE
 
@@ -296,6 +301,9 @@ class _binary (_writeconsole):
         self.co.add_pos(ret)
 
 class BI (_binary, _insert):
+    def repaint(self, arg):
+        self.co.lrepaintf(arg)
+
     def _do_write(self, x):
         if not self.low:
             self.co.insert_current((x << 4,))
@@ -309,6 +317,9 @@ class BI (_binary, _insert):
         return len(l)
 
 class BR (_binary, _replace):
+    def repaint(self, arg):
+        self.co.prepaintf(-1, arg)
+
     def _do_write(self, x):
         c = self.co.read_current(1)
         xx = filebytes.ord(c) if c else 0
@@ -347,11 +358,11 @@ class BlockBR (BR):
 class _ascii (_writeconsole):
     def test_write(self, x):
         # include 9 to 13 -> \t\n\v\f\r
-        return kbd.isgraph(x) or kbd.isspace(x)
+        return util.isgraph(x) or util.isspace(x)
 
     def handle_write(self, x):
         self.write(x)
-        self.co.lrepaintf()
+        self.repaint(False)
         return EDIT
 
     def handle_escape(self):
@@ -387,6 +398,9 @@ class _ascii (_writeconsole):
         self.co.add_pos(ret)
 
 class AI (_ascii, _insert):
+    def repaint(self, arg):
+        self.co.lrepaintf(arg)
+
     def _do_write(self, x):
         self.co.insert_current((x,))
 
@@ -396,6 +410,9 @@ class AI (_ascii, _insert):
         return len(l)
 
 class AR (_ascii, _replace):
+    def repaint(self, arg):
+        self.co.prepaintf(-1, arg)
+
     def _do_write(self, x):
         self.co.replace_current((x,))
 

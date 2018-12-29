@@ -9,11 +9,11 @@
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out --no-native
 
-+ Installation warned below. -> **This can be ignored. GCC may complain this on some old Python versions.**
++ Installation warns below. -> **This can be ignored. GCC may complain this on some old Python versions.**
 
         warning: 'PyArg_ParseTuple' is an unrecognized format function type [-Wformat=]
 
-+ Installation warned below. -> **This can be ignored. This seems to happen with Python 3.5 and certain versions of GCC.**
++ Installation warns below. -> **This can be ignored. This seems to happen with Python 3.5 and certain versions of GCC.**
 
         In function '__get_ptrace_word_size':
         warning: will never be executed
@@ -44,7 +44,7 @@
 
 ## NetBSD
 
-+ Can not install on NetBSD due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. The binary package name would be for example *py27-curses* for Python 2.7.**
++ Can not install due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. The binary package name would be for example *py27-curses* for Python 2.7.**
 
         $ uname
         NetBSD
@@ -52,6 +52,20 @@
         No module named _curses
         $ cd /usr/pkgsrc/devel/py-curses
         $ sudo make install
+
+## Windows
+
++ Can not install due to a missing module *curses*. -> **Install *windows-curses*.**
+
+        $ pip install windows-curses
+
++ Installation fails with below. -> **Run *setup.py* with *--no-native* option.**
+
+        error: Unable to find vcvarsall.bat
+
++ *CTRL-c* can not interrupt ongoing editor command. -> ***windows-curses* module does not seem to be able to handle *SIGINT* (regular Python applications on Windows can handle some Unix signals including *SIGINT*).**
+
++ Window frames do not resize upon console window resizing. -> ***windows-curses* module does not seem to be able to handle resize event.**
 
 ## Cygwin
 

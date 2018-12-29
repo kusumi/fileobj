@@ -518,6 +518,11 @@ class Workspace (object):
             if o:
                 o.lrepaint(is_current, low)
 
+    def prepaint(self, is_current, low, num):
+        for o in self.__windows:
+            if o:
+                o.prepaint(is_current, low, num)
+
     def xrepaint(self, is_current):
         for o in self.__windows:
             if o:

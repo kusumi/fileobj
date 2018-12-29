@@ -40,6 +40,7 @@ from . import package
 from . import path
 from . import screen
 from . import setting
+from . import terminal
 from . import usage
 from . import util
 from . import version
@@ -171,8 +172,8 @@ def dispatch(optargs=None):
     log.debug("cpu: {0}".format(util.get_cpu_name()))
     log.debug("ram: {0}".format(methods.get_meminfo_string()))
     log.debug(methods.get_osdep_string())
-    log.debug("term: {0}".format(kernel.get_term_info()))
-    log.debug("lang: {0}".format(kernel.get_lang_info()))
+    log.debug("term: {0}".format(terminal.get_type()))
+    log.debug("lang: {0}".format(terminal.get_lang()))
     log.debug("log: {0}".format(log.get_path()))
     log.debug("argv: {0}".format(sys.argv))
     log.debug("opts: {0}".format(opts))
@@ -213,6 +214,7 @@ def dispatch(optargs=None):
         l.append("{0}={1}".format(*_))
     for _ in env.iter_defined_ext_env():
         l.append("{0}={1}".format(*_))
+    log.debug("envs_config: {0}".format(env.get_config()))
     log.debug("envs: {0}".format(l))
 
     l = []
@@ -225,6 +227,7 @@ def dispatch(optargs=None):
         if s:
             log.error(s)
 
+    # XXX Windows + ncurses can't handle signal
     signal.signal(signal.SIGINT, __sigint_handler)
     signal.signal(signal.SIGTERM, __sigterm_handler)
 
@@ -232,6 +235,10 @@ def dispatch(optargs=None):
         co = None
         if not kernel.get_kernel_module():
             __error(kernel.get_status_string())
+
+        if terminal.is_dumb():
+            __error("Invalid terminal type \"{0}\"".format(
+                terminal.get_type()))
 
         assert literal.init() != -1
 
@@ -305,6 +312,9 @@ def dispatch(optargs=None):
     if targs.e:
         return -1
 
+# provide a way to exit without relying on signal for portability
+_quit_test_screen = 'q'
+
 def test_screen():
     scr = screen.alloc_all()
     repaint = True
@@ -318,14 +328,14 @@ def test_screen():
         scr.refresh()
 
         ret = scr.getch()
+        if ret == ord(_quit_test_screen) or screen.test_signal():
+            break # exit
         if ret == kbd.RESIZE:
             screen.update_size()
             scr.resize(screen.get_size_y(), screen.get_size_x())
             repaint = True
         else:
             repaint = False
-        if screen.test_signal():
-            break
 
         li = literal.find_literal((ret,))
         l[0] = ret
@@ -336,19 +346,25 @@ def test_screen():
                 l[1] = chr(ret) # may not be printable with Python 3
             except ValueError:
                 l[1] = ""
-        if util.test_key(l[0]) and not kbd.isprints([ord(_) for _ in l[1]]):
-            l[0] = kbd.ERROR # VTxxx
+        if util.test_key(l[0]) and not util.isprints([ord(_) for _ in l[1]]):
+            l[0] = kbd.ERROR # vtxxx
 
 def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
     if siz >= 16:
         if repaint:
-            scr.addstr(1, 1, "Running {0} on {1}.".format(
-                util.get_python_string(), kernel.get_term_info()))
+            s = terminal.get_type()
+            if s:
+                scr.addstr(1, 1, "Running {0} on {1}.".format(
+                    util.get_python_string(), s))
+            else: # Windows
+                scr.addstr(1, 1, "Running {0} on {1} {2}.".format(
+                    util.get_python_string(), util.get_os_name(),
+                    util.get_os_release()))
             # none
             scr.addstr(3, 1, "This should look normal.", screen.A_NONE)
             # underline
-            if kernel.is_screen() and screen.use_color():
+            if terminal.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
@@ -359,7 +375,7 @@ def __update_screen(scr, repaint, l):
             # reverse
             scr.addstr(6, 1, "This should look reversed.", screen.A_REVERSE)
             # standout
-            if kernel.is_screen() and screen.use_color():
+            if terminal.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
@@ -387,18 +403,28 @@ def __update_screen(scr, repaint, l):
             # frame/resize
             scr.addstr(10, 1, "The frame should resize if the terminal is "
                 "resized.")
-            scr.addstr(12, 1, "Check if above appear as they should.")
-            if kernel.is_xnix():
-                s = "with different TERM value"
+            # end
+            if terminal.get_type():
+                s = ", if not try with different TERM value."
             else:
-                s = "with different terminal environment"
-            scr.addstr(13, 1, "If not try {0}.".format(s))
-            scr.addstr(15, 1, "Press {0} to exit.".format(literal.ctrlc.str))
-        __update_input(scr, 16, l)
+                s = "."
+            scr.addstr(12, 1,
+                "Check if above appear as they should{0}".format(s))
+            if kernel.is_windows(): # XXX can't handle signal
+                scr.addstr(14, 1, "Press {0} to exit.".format(
+                    _quit_test_screen))
+            else:
+                scr.addstr(14, 1, "Press {0} or {1} to exit.".format(
+                    literal.ctrlc.str, _quit_test_screen))
+        __update_input(scr, 15, l)
     elif siz >= 3:
         if repaint:
             scr.addstr(1, 1, "Not enough room.")
-            scr.addstr(2, 1, "Press {0} to exit.".format(literal.ctrlc.str))
+            if kernel.is_windows(): # XXX can't handle signal
+                scr.addstr(2, 1, "Press {0} to exit.".format(_quit_test_screen))
+            else:
+                scr.addstr(2, 1, "Press {0} or {1} to exit.".format(
+                    literal.ctrlc.str, _quit_test_screen))
         __update_input(scr, 3, l)
 
 def __update_input(scr, y, l):

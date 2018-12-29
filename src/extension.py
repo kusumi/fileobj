@@ -39,10 +39,12 @@ class Error (util.GenericError):
 class methods (object):
     def init_raw(self, raw):
         self.raw = raw
+        self.__first_fill = True
 
     def fill_chunk(self, width):
-        if self.is_empty():
+        if self.is_empty() and self.__first_fill:
             self.init_chunk(self.__get(width))
+            self.__first_fill = False
 
     def write_raw(self, f):
         with kernel.fcreat_text(f) as fd:
@@ -67,7 +69,7 @@ class methods (object):
                 l.append(' ' * width)
         return ''.join(l).rstrip()
 
-class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
+class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_attribute):
     def set_buffer(self, fileops):
         super(ExtBinaryCanvas, self).set_buffer(fileops)
         if self.fileops is not None:
@@ -103,7 +105,7 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_addon):
         else:
             self.addstr(y, x, s, attr2)
 
-class ExtTextCanvas (panel.DisplayCanvas, panel.default_addon):
+class ExtTextCanvas (panel.DisplayCanvas, panel.default_attribute):
     def iter_line_buffer(self):
         s = filebytes.SPACE * self.bufmap.x
         for i in util.get_xrange(self.bufmap.y):

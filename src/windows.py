@@ -31,39 +31,59 @@
 # no curses for Python on win32 however unofficial binary is available at
 # http://www.lfd.uci.edu/~gohlke/pythonlibs/#curses
 
+# windows-curses is available as of 2018
+# https://pypi.org/project/windows-curses/
+# $ pip install windows-curses
+
+from __future__ import with_statement
 import errno
 import mmap
-import nt
 import os
+import stat
 
 from . import util
 
-def get_term_info():
-    return ''
-
-def get_lang_info():
-    return ''
-
 def read_reg_size(f):
-    return -1
+    if not os.path.isfile(f): # only for regfile
+        return -1
+    ret = os.stat(f).st_size
+    if ret != -1:
+        return ret
+    return seek_end(f)
 
 def seek_end(f):
-    return -1
+    if not os.path.exists(f):
+        return -1
+    with fopen(f) as fd:
+        try:
+            return os.lseek(fd.fileno(), 0, os.SEEK_END)
+        except Exception:
+            return -1
 
+# .st_ino looks to be an unique number, at least on NTFS
 def get_inode(f):
-    return -1
+    return 0 # XXX but force return 0 for now
+    if os.path.exists(f):
+        return os.stat(f).st_ino
+    else:
+        return -1
 
 def fopen(f, mode='r'):
-    return -1
+    return open(f, mode + 'b')
 
 def fopen_text(f, mode='r'):
-    return -1
+    return open(f, mode)
 
 def fcreat(f):
-    return -1
+    return os.fdopen(__creat_file(f), 'w+b')
 
 def fcreat_text(f):
-    return -1
+    return os.fdopen(__creat_file(f), 'w+')
+
+# https://docs.python.org/3/library/os.html#os.open
+def __creat_file(f):
+    """Raise 'FileExistsError: [Errno 17] File exists: ...' if f exists"""
+    return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 def symlink(source, link_name):
     if util.is_python_version_or_ht(3, 2) and not os.path.exists(link_name):
@@ -79,9 +99,12 @@ def fsync(fd):
         os.fsync(fd.fileno())
 
 def truncate(f, offset):
-    return -1
+    with fopen(f, 'r+') as fd:
+        fd.seek(offset)
+        fd.truncate()
 
 def utime(f, st):
+    import nt
     if st is None:
         os.utime(f, None)
     elif isinstance(st, nt.stat_result):
@@ -92,16 +115,18 @@ def utime(f, st):
 def touch(f):
     return utime(f, None)
 
+# stat.S_ISxxx at least exist on Windows
 def stat_type(f):
-    return -1
+    try:
+        mode = os.stat(f).st_mode
+        path_type = "LINK", "REG", "DIR", "BLKDEV", "CHRDEV"
+        stat_type = "lnk", "reg", "dir", "blk", "chr"
+        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in stat_type]
+        return dict(zip(path_type, l))
+    except Exception:
+        return -1
 
 def get_page_size():
-    ret = __get_mmap_page_size()
-    if ret != -1:
-        return ret
-    return -1
-
-def __get_mmap_page_size():
     try:
         return mmap.PAGESIZE
     except Exception:
@@ -111,18 +136,6 @@ def get_buffer_size():
     return get_page_size()
 
 def set_non_blocking(fd):
-    return -1
-
-def get_terminal_size():
-    return -1, -1
-
-def get_tc(fd):
-    return -1
-
-def set_tc(fd):
-    return -1
-
-def set_cbreak(fd):
     return -1
 
 def get_total_ram():
@@ -137,17 +150,18 @@ def is_blkdev(f):
 def is_blkdev_supported():
     return False
 
+# https://docs.python.org/3/library/mmap.html
 def mmap_full(fileno, readonly=False):
-    return None
+    return mmap.mmap(fileno, 0)
 
 def mmap_partial(fileno, offset, length, readonly=False):
-    return None
+    return mmap.mmap(fileno, length, offset=offset)
 
 def has_mmap():
-    return False
+    return False # XXX supported by Windows, but disable for now
 
 def has_mremap():
-    return False
+    return False # XXX supported by Windows, but disable for now
 
 def test_mmap_resize(osiz, nsiz):
     return False, None

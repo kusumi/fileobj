@@ -26,38 +26,8 @@ import sys
 from . import ascii
 from . import kernel
 from . import setting
+from . import terminal
 from . import util
-
-# take str and return int
-def ctrl(c):
-    return ord(c) & 0x1F
-
-#           isspace(3) isgraph(3) isprint(3)
-# 0x09 '\t' True       False      False
-# 0x0A '\n' True       False      False
-# 0x0B '\v' True       False      False
-# 0x0C '\f' True       False      False
-# 0x0D '\r' True       False      False
-# 0x20 ' '  True       False      True
-
-def isspace(x):
-    return x in (0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x20)
-
-def isgraph(x):
-    return x >= 0x21 and x <= 0x7E
-
-def isprint(x):
-    # return True if isgraph(3) or 0x20
-    # this isn't same as isgraph(3) + isspace(3) see above for details
-    return (x >= 0x21 and x <= 0x7E) or x == 0x20
-
-def isprints(l):
-    return len(l) > 0 and all(isprint(x) for x in l)
-
-chr_repr = {} # no .get() wrapper, out of range input is error
-
-# XXX alternative for block visual mode
-use_alt_block_visual = kernel.is_bsd_derived() or kernel.is_solaris()
 
 CONTINUE  = util.gen_key()
 INTERRUPT = util.gen_key()
@@ -83,60 +53,120 @@ except ImportError:
     _KEY_RIGHT     = 261
     _KEY_BACKSPACE = 263
     _KEY_DC        = 330
-    _KEY_RESIZE    = 410
-
-#                  stdout          VTxxx           xterm/others(XXX)
-_keys = (
-    ("TAB",        ascii.HT,       ascii.HT,       ascii.HT),
-    ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF),
-    ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC),
-    ("SPACE",      ascii.SP,       ascii.SP,       ascii.SP),
-    ("DOWN",       util.gen_key(), _KEY_DOWN,      _KEY_DOWN),
-    ("UP",         util.gen_key(), _KEY_UP,        _KEY_UP),
-    ("LEFT",       util.gen_key(), _KEY_LEFT,      _KEY_LEFT),
-    ("RIGHT",      util.gen_key(), _KEY_RIGHT,     _KEY_RIGHT),
-    ("BACKSPACE",  ascii.DEL,      ascii.DEL,      _KEY_BACKSPACE),
-    ("BACKSPACE2", util.gen_key(), util.gen_key(), ascii.DEL),
-    ("DELETE",     _KEY_DC,        util.gen_key(), _KEY_DC),
-    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE),)
-
-def get_code(term):
-    if term == "stdout":
-        x = 1
-    elif term.startswith("vt"):
-        x = 2
+    if util.get_os_name() == "Windows":
+        _KEY_RESIZE = 546
     else:
-        x = 3
-    d = {}
-    for l in _keys:
-        d[l[0]] = l[x]
-    return d
+        _KEY_RESIZE = 410
 
-def init(term):
-    bs = []
-    ar = []
+#                  stdout          vtxxx           xterm/others    Windows
+_keys = (
+    ("TAB",        ascii.HT,       ascii.HT,       ascii.HT,       ascii.HT),
+    ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF,       ascii.LF),
+    ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC,      ascii.ESC),
+    ("SPACE",      ascii.SP,       ascii.SP,       ascii.SP,       ascii.SP),
+    ("DOWN",       util.gen_key(), _KEY_DOWN,      _KEY_DOWN,      _KEY_DOWN),
+    ("UP",         util.gen_key(), _KEY_UP,        _KEY_UP,        _KEY_UP),
+    ("LEFT",       util.gen_key(), _KEY_LEFT,      _KEY_LEFT,      _KEY_LEFT),
+    ("RIGHT",      util.gen_key(), _KEY_RIGHT,     _KEY_RIGHT,     _KEY_RIGHT),
+    ("BACKSPACE",  ascii.DEL,      ascii.DEL,      _KEY_BACKSPACE, ascii.BS), # XXX
+    ("BACKSPACE2", util.gen_key(), util.gen_key(), ascii.DEL,      util.gen_key()), # XXX
+    ("DELETE",     _KEY_DC,        util.gen_key(), _KEY_DC,        _KEY_DC), # XXX
+    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE,    _KEY_RESIZE),)
+
+def parse_ansi_sequence(x, s):
+    if x == "\x1B": # ESC
+        if not s:
+            return this.CONTINUE
+    elif x == "[": # CSI
+        if s == "\x1B": # ESC
+            return this.CONTINUE
+    elif x == "A":
+        if s == "\x1B[": # CSI
+            return this.UP
+    elif x == "B":
+        if s == "\x1B[": # CSI
+            return this.DOWN
+    elif x == "C":
+        if s == "\x1B[": # CSI
+            return this.RIGHT
+    elif x == "D":
+        if s == "\x1B[": # CSI
+            return this.LEFT
+    elif x == "3":
+        if s == "\x1B[": # CSI
+            return this.CONTINUE
+    elif x == "~":
+        if s == "\x1B[3":
+            return this.DELETE
+
+def parse_windows_sequence(x, s):
+    if ord(x) == 224: # Set Keyboard Strings
+        if not s:
+            return this.CONTINUE
+    elif x == "H":
+        if len(s) == 1 and ord(s[0]) == 224:
+            return this.UP
+    elif x == "P":
+        if len(s) == 1 and ord(s[0]) == 224:
+            return this.DOWN
+    elif x == "M":
+        if len(s) == 1 and ord(s[0]) == 224:
+            return this.RIGHT
+    elif x == "K":
+        if len(s) == 1 and ord(s[0]) == 224:
+            return this.LEFT
+    elif x == "S":
+        if len(s) == 1 and ord(s[0]) == 224:
+            return this.DELETE
+
+def parse_ncurses_vtxxx_sequence(x, s):
+    if x == "\x1B": # ESC
+        if not s:
+            return this.CONTINUE
+    elif x == "[": # CSI
+        if s == "\x1B": # ESC
+            return this.CONTINUE
+    elif x == "3":
+        if s == "\x1B[": # CSI
+            return this.CONTINUE
+    elif x == "~":
+        if s == "\x1B[3":
+            return this.DELETE
+
+def init():
     if setting.use_stdout:
-        term = "stdout"
-    d = get_code(term)
+        if kernel.is_xnix():
+            x = 1
+            this.parse_sequence = parse_ansi_sequence
+        else:
+            assert kernel.is_windows(), util.get_os_name()
+            x = 4
+            this.parse_sequence = parse_windows_sequence
+    else:
+        if terminal.is_vtxxx():
+            x = 2
+            this.parse_sequence = parse_ncurses_vtxxx_sequence
+        else:
+            x = 3
+            this.parse_sequence = None
 
-    for s, v in d.items():
-        config = getattr(setting, "key_" + s.lower(), None)
-        if config is not None:
-            v = config # override
+    l = []
+    lb = []
+    la = []
+    for _ in _keys:
+        s, v = _[0], _[x]
+        l.append((s, v))
         setattr(this, s, v)
         if s.startswith("BACKSPACE"):
-            bs.append(v)
+            lb.append(v)
         if s in ("DOWN", "UP", "LEFT", "RIGHT"):
-            ar.append(v)
+            la.append(v)
 
-    bs = tuple(sorted(bs))
-    setattr(this, "get_backspaces", lambda: bs)
-    ar = tuple(sorted(ar))
-    setattr(this, "get_arrows", lambda: ar)
-
-    chr_repr.clear()
-    for x in util.get_xrange(0, 256):
-        chr_repr[x] = chr(x) if isprint(x) else '.'
+    this.keys = tuple(l)
+    lb = tuple(sorted(lb))
+    setattr(this, "get_backspaces", lambda: lb)
+    la = tuple(sorted(la))
+    setattr(this, "get_arrows", lambda: la)
 
 this = sys.modules[__name__]
-init(kernel.get_term_info())
+init()

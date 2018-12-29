@@ -89,6 +89,9 @@ class Window (object):
     def lrepaint(self, is_current, low):
         self.__canvas.repaint(is_current, low)
 
+    def prepaint(self, is_current, low, num):
+        self.__canvas.repaint_partial(is_current, low, num)
+
     def xrepaint(self, is_current):
         self.__frame.repaint(is_current)
 

@@ -24,7 +24,6 @@
 import fileobj.env
 import fileobj.extension
 import fileobj.filebytes
-import fileobj.kbd
 import fileobj.kernel
 import fileobj.screen
 import fileobj.setting
@@ -50,7 +49,7 @@ def get_text(co, fo, args):
         if b:
             n = 0
             for i, c in enumerate(fileobj.filebytes.iter_ords(b)):
-                if fileobj.kbd.isprint(c):
+                if fileobj.util.isprint(c):
                     n += 1
                 else:
                     if n >= fileobj.setting.ext_strings_thresh:

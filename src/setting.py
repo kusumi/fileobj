@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import platform
 import sys
 
 from . import env
@@ -32,20 +33,33 @@ def get_home_dir():
 def get_user_dir():
     return _user_dir
 
+_windows_suffix = ".txt"
+
+def get_env_path():
+    f = os.path.join(get_user_dir(), "env")
+    if platform.system() == "Windows":
+        return f + _windows_suffix
+    else:
+        return f
+
+def _get_suffix():
+    from . import kernel
+    return _windows_suffix if kernel.is_windows() else ""
+
 def get_trace_path():
-    return os.path.join(get_user_dir(), "trace")
+    return os.path.join(get_user_dir(), "trace" + _get_suffix())
 
 def get_log_path():
-    return os.path.join(get_user_dir(), "log")
+    return os.path.join(get_user_dir(), "log" + _get_suffix())
 
 def get_history_path():
-    return os.path.join(get_user_dir(), "history")
+    return os.path.join(get_user_dir(), "history" + _get_suffix())
 
 def get_marks_path():
-    return os.path.join(get_user_dir(), "marks")
+    return os.path.join(get_user_dir(), "marks" + _get_suffix())
 
 def get_session_path():
-    return os.path.join(get_user_dir(), "session")
+    return os.path.join(get_user_dir(), "session" + _get_suffix())
 
 def get_stream_path():
     return __get_path("path_stream")
@@ -61,7 +75,7 @@ def __get_path(s):
         return s
     d = get_user_dir()
     if s and d and os.path.isdir(d):
-        return os.path.join(d, s)
+        return os.path.join(d, s + _get_suffix())
     return ''
 
 USER_DIR_NONE         = -1
@@ -88,6 +102,7 @@ def init_user():
             return USER_DIR_MKDIR_FAILED
 
 def init():
+    env.init(get_env_path())
     __init(env.iter_setting())
 
 def __init(g):

@@ -281,11 +281,8 @@ def addstr(x, s, attr=screen.A_NONE):
             log.error(addstr, e, x, s)
 
 def clrl():
-    try:
-        _scr.move(0, 0)
-        _scr.clrtoeol()
-    except screen.Error as e:
-        log.error(clrl, e)
+    _scr.move(0, 0)
+    _scr.clrtoeol()
 
 _banner = ['']
 def set_banner(o):

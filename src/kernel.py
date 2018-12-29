@@ -170,33 +170,6 @@ def get_status_string():
     else:
         return "Unable to detect OS type for " + _system
 
-def get_term_info():
-    o = get_kernel_module()
-    if o:
-        return o.get_term_info()
-    else:
-        return ''
-
-# don't use regex here, e.g. panel checks VTxxx in fill()
-def is_vtxxx():
-    return get_term_info().startswith("vt")
-
-def is_vt1xx():
-    return get_term_info().startswith("vt1")
-
-def is_vt2xx():
-    return get_term_info().startswith("vt2")
-
-def is_screen():
-    return get_term_info() == "screen"
-
-def get_lang_info():
-    o = get_kernel_module()
-    if o:
-        return o.get_lang_info()
-    else:
-        return ''
-
 def get_blkdev_info(f):
     if f in _blkdev_info_cache:
         return _blkdev_info_cache[f] # assume the same blkdev for f
@@ -360,34 +333,6 @@ def set_non_blocking(fd):
     o = get_kernel_module()
     if o:
         return o.set_non_blocking(fd)
-    else:
-        return -1
-
-def get_terminal_size():
-    o = get_kernel_module()
-    if o:
-        return o.get_terminal_size()
-    else:
-        return -1, -1
-
-def get_tc(fd):
-    o = get_kernel_module()
-    if o:
-        return o.get_tc(fd)
-    else:
-        return -1
-
-def set_tc(fd):
-    o = get_kernel_module()
-    if o:
-        return o.set_tc(fd)
-    else:
-        return -1
-
-def set_cbreak(fd):
-    o = get_kernel_module()
-    if o:
-        return o.set_cbreak(fd)
     else:
         return -1
 

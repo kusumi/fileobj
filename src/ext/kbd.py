@@ -26,11 +26,8 @@ import operator
 import fileobj.kbd
 
 def get_text(co, fo, args):
-    l = []
-    names = fileobj.kbd.get_code("dummy").keys()
-    for s in names:
-        l.append((s, getattr(fileobj.kbd, s)))
+    l = fileobj.kbd.keys
     l = sorted(l, key=operator.itemgetter(1))
-    n = max([len(s) for s in names])
+    n = max([len(s) for (s, _) in l])
     f = "{{0:<{0}}} {{1:<3d}} 0{{2:<3o}} 0x{{3:<4X}}".format(n)
     return [f.format(x[0], x[1], x[1], x[1]) for x in l]

@@ -63,12 +63,14 @@ TYPE_PREFIX = "c_"
 
 def __init_libc():
     global _libc, get_errno
-    name = ctypes.util.find_library("c")
-    _libc = ctypes.CDLL(name, use_errno=True)
-    def get_errno():
-        ret = ctypes.get_errno()
-        ctypes.set_errno(0)
-        return ret
+    # https://docs.python.org/3/library/ctypes.html#finding-shared-libraries
+    name = ctypes.util.find_library("c") # None on Windows
+    if name is not None:
+        _libc = ctypes.CDLL(name, use_errno=True)
+        def get_errno():
+            ret = ctypes.get_errno()
+            ctypes.set_errno(0)
+            return ret
 
 def get_errno():
     return errno.EPERM

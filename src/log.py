@@ -96,6 +96,8 @@ def __log(l, level):
     if len(l) == 1:
         l = l[0]
     s = util.obj_to_string(l)
+    if _logmsg is None:
+        return -1
     _logmsg.append((level, s))
     if _logger:
         _logger.log(level, s)

@@ -194,7 +194,7 @@ class Operand (object):
                     amp = util.MIN_INT
         else:
             amp = None
-        if kbd.isprints(self.__opc):
+        if util.isprints(self.__opc):
             opc = _to_string(self.__opc)
         else:
             opc = ''
@@ -250,10 +250,10 @@ class Operand (object):
             return True
         elif x == kbd.TAB:
             return self.__scan_slow_tab()
-        elif x in (kbd.UP, kbd.ctrl('p')):
+        elif x in (kbd.UP, util.ctrl('p')):
             self.__get_older_history()
             return False
-        elif x in (kbd.DOWN, kbd.ctrl('n')):
+        elif x in (kbd.DOWN, util.ctrl('n')):
             self.__get_newer_history()
             return False
         elif x == kbd.LEFT:
@@ -270,13 +270,13 @@ class Operand (object):
         elif x == kbd.DELETE:
             self.__delete_slow()
             return False
-        elif x == kbd.ctrl('a'):
+        elif x == util.ctrl('a'):
             self.__pos = self.__get_min_cursor()
             return False
-        elif x == kbd.ctrl('e'):
+        elif x == util.ctrl('e'):
             self.__pos = self.__get_tail_cursor()
             return False
-        elif x == kbd.ctrl('k'):
+        elif x == util.ctrl('k'):
             self.__buf[self.__pos:] = ''
             self.__parse_buffer()
             return False
@@ -285,7 +285,7 @@ class Operand (object):
             self.__add_history()
             self.__clear_candidate()
             return True
-        elif kbd.isprint(x):
+        elif util.isprint(x):
             if len(self.__opc) < self.__get_max_cursor():
                 self.__add_buffer(x)
             return False
@@ -421,8 +421,8 @@ class Operand (object):
             return literal.InvalidLiteral(s, None, '')
 
 _arrows = list(kbd.get_arrows())
-_arrows.append(kbd.ctrl('p'))
-_arrows.append(kbd.ctrl('n'))
+_arrows.append(util.ctrl('p'))
+_arrows.append(util.ctrl('n'))
 _null, _fast, _slow = range(3)
 
 def _to_string(l):

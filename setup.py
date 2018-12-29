@@ -45,6 +45,13 @@ if __name__ == '__main__':
         while s in sys.argv:
             sys.argv.remove(s)
 
+    # Force Windows specific behavior.
+    s = "--windows"
+    if s in sys.argv:
+        ext_modules = None
+        while s in sys.argv:
+            sys.argv.remove(s)
+
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
     # warning: sdist: standard file not found: should have one of README, README.txt

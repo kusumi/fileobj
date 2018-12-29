@@ -29,10 +29,10 @@ import sys
 import fileobj.env
 import fileobj.extension
 import fileobj.filebytes
-import fileobj.kbd
 import fileobj.kernel
 import fileobj.libc
 import fileobj.path
+import fileobj.screen
 import fileobj.setting
 import fileobj.util
 
@@ -59,7 +59,7 @@ class _builtin (_node):
             v = self.__get_value_expr(buf)
             a = ''.join(["\\x{0:02X}".format(x) for x in
                 fileobj.filebytes.iter_ords(buf)])
-            b = ''.join([fileobj.kbd.chr_repr[x] for x in
+            b = ''.join([fileobj.screen.chr_repr[x] for x in
                 fileobj.filebytes.iter_ords(buf)])
             s += " {0} {1} [{2}]".format(v, a, b)
         return [s]
@@ -267,7 +267,7 @@ def init():
         try:
             fileobj.kernel.fcreat_text(f)
         except Exception:
-            pass
+            pass # ignore
 
 def cleanup():
     fileobj.setting.ext_delete("path_cstruct")

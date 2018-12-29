@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "December 16, 2018" "FILEOBJ 0.7.81"
+.TH FILEOBJ 1 "December 28, 2018" "FILEOBJ 0.7.82"
 .nh
 .ad l
 .SH NAME
@@ -130,7 +130,7 @@ Print list of editor commands and exit. Also see \fB:help\fP.
 .RS 4
 Print \fBpython\fP\|(1) site\-package directory and exit.
 .RE
-.SH ENVIRONMENT VARIABLES
+.SH ENVIRONMENT
 .PP
 \fBFILEOBJ_USE_READONLY\fP
 .RS 4
@@ -257,34 +257,47 @@ Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white"
 \fI~/.fileobj\fP
 .RS 4
 A directory automatically created by \fBfileobj\fP\|(1).
+Note that on Windows, name of files automatically created under this directory end with ".txt".
 .RE
 .PP
 \fI~/.fileobj/cstruct\fP
 .RS 4
 A default path for configuration file for \fB:cstruct\fP.
+Automatically created.
+.RE
+.PP
+\fI~/.fileobj/env\fP
+.RS 4
+A file to specify environment variables via file on runtime.
+Existing environment variables take precedence over the file contents.
+Automatically created.
 .RE
 .PP
 \fI~/.fileobj/history\fP
 .RS 4
 A JSON file contains history of executed editor commands.
+Automatically created.
 .RE
 .PP
 \fI~/.fileobj/log\fP
 .RS 4
 A text file contains logged messages.
+Automatically created.
 .RE
 .PP
 \fI~/.fileobj/marks\fP
 .RS 4
 A JSON file contains per\-file marks marked by an editor command.
+Automatically created.
 .RE
 .PP
 \fI~/.fileobj/session\fP
 .RS 4
 A JSON file contains session information.
+Automatically created.
 .RE
 .PP
-\fI~/.fileobj/.YYYY\-MM\-DD\-HH:MM:SS.path\-to\-file.bak\fP
+\fI~/.fileobj/.YYYY\-MM\-DD\-HH\-MM\-SS.name.bak\fP
 .RS 4
 Temporary backup file format.
 .RE
