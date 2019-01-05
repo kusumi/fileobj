@@ -1,4 +1,6 @@
-# Copyright (c) 2013, Tomohiro Kusumi
+#!/usr/bin/env python
+
+# Copyright (c) 2018, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,29 +23,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# RELEASE is basically always 1.
-# It was added only to sync with RPM versioning.
-# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
-# RPM patches within the same fileobj version may or may not increment RELEASE.
+# This script is for Windows.
+# All other platforms use bin/fileobj.
 
-MAJOR = 0
-MINOR1 = 7
-MINOR2 = 83
-RELEASE = 1
+if __name__ == '__main__':
+    import os
+    import platform
+    import sys
+    try:
+        import fileobj_.core
+        import fileobj_.nodep
+    except ImportError:
+        sys.stderr.write(sys.executable + ": fileobj not installed\n")
+        if platform.system() == "Windows" and os.getenv("PROMPT") is None:
+            sys.stderr.write("Press Enter key to exit\n")
+            sys.stdin.read(1)
+        sys.exit(1)
 
-def get_version():
-    return MAJOR, MINOR1, MINOR2
-
-def get_release():
-    return MAJOR, MINOR1, MINOR2, RELEASE
-
-def get_version_string():
-    return "{0}.{1}.{2}".format(*get_version())
-
-def get_release_string():
-    return "{0}.{1}.{2}-{3}".format(*get_release())
-
-def get_tag_string():
-    return "v" + get_version_string()
-
-__version__ = get_version_string()
+    fileobj_.nodep.test()
+    ret = fileobj_.core.dispatch()
+    if ret:
+        sys.exit(-ret)

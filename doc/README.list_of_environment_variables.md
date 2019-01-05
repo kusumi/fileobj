@@ -16,6 +16,7 @@
         FILEOBJ_USE_BACKUP       If defined, create backup files under ~/.fileobj. Backup files start with '.'. Only applies to regular files.
         FILEOBJ_USE_BYTES_BUFFER If defined, use Python bytes based buffer for regular files (equivalent to -B).
         FILEOBJ_USE_IGNORECASE   If defined, search operation is case-insensitive (equivalent to :set ic). Defaults to case-sensitive if undefined.
+        FILEOBJ_USE_MOUSE_EVENTS If set to "false", do not use mouse events. Defaults to use mouse events if undefined.
         FILEOBJ_USE_READONLY     If defined, use read-only mode (equivalent to -R).
         FILEOBJ_USE_SIPREFIX     If defined, use 10^3(K) for kilo (equivalent to :set si). Defaults to 2^10(Ki) if undefined.
         FILEOBJ_USE_TEXT_WINDOW  If set to "false", do not use text window. Defaults to use text window if undefined.

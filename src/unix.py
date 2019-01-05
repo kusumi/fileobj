@@ -54,7 +54,7 @@ def __read_procfs_size(f):
 # suboptimal, don't use this unless this is the only way
 def __read_buf_size(f):
     with fopen(f) as fd:
-        if set_non_blocking(fd) == -1:
+        if __set_non_blocking(fd) == -1:
             return -1
         try:
             ret = fd.read() # XXX add heuristic to return -1 if too big
@@ -131,12 +131,14 @@ def touch(f):
 def stat_type(f):
     try:
         mode = os.stat(f).st_mode
-        path_type = "LINK", "REG", "DIR", "BLKDEV", "CHRDEV"
-        stat_type = "lnk", "reg", "dir", "blk", "chr"
-        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in stat_type]
-        return dict(zip(path_type, l)) # LINK always false
     except Exception:
         return -1
+    return {
+        "LINK" : stat.S_ISLNK(mode),
+        "REG" : stat.S_ISREG(mode),
+        "DIR" : stat.S_ISDIR(mode),
+        "BLKDEV" : stat.S_ISBLK(mode),
+        "CHRDEV" : stat.S_ISCHR(mode), } # LINK always false
 
 def stat_is_blkdev(f):
     return __stat_is(f, "BLKDEV")
@@ -224,7 +226,7 @@ def __do_mmap_resize(osiz, nsiz):
     m.close()
     return nsiz
 
-def set_non_blocking(fd):
+def __set_non_blocking(fd):
     import fcntl
     try:
         fl = fcntl.fcntl(fd.fileno(), fcntl.F_GETFL)

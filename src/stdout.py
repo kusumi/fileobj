@@ -46,6 +46,13 @@ A_COLOR_PRINT   = 0
 A_COLOR_DEFAULT = 0
 A_COLOR_VISUAL  = 0
 
+BUTTON1_CLICKED        = 0
+BUTTON1_PRESSED        = 0
+BUTTON1_RELEASED       = 0
+BUTTON1_DOUBLE_CLICKED = 0
+BUTTON1_TRIPLE_CLICKED = 0
+REPORT_MOUSE_POSITION  = 0
+
 def init():
     from . import screen
     return newwin(screen.get_size_y(), screen.get_size_x(), 0, 0), \
@@ -78,6 +85,12 @@ def use_color():
 def iter_color_name():
     yield "black"
     yield "white"
+
+def getmouse():
+    return (-1, -1, -1, -1, -1)
+
+def get_mouse_event_name(bstate):
+    return ""
 
 # APIs must be compatible with
 # https://docs.python.org/3/library/curses.html

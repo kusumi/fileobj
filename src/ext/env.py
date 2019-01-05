@@ -21,11 +21,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.env
+from .. import env
 
 def get_text(co, fo, args):
-    env1 = list(fileobj.env.iter_defined_env())
-    env2 = list(fileobj.env.iter_defined_ext_env())
+    env1 = list(env.iter_defined_env())
+    env2 = list(env.iter_defined_ext_env())
     envs = sorted(env1 + env2)
     if not len(envs):
         return "No env"

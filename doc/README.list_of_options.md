@@ -38,6 +38,7 @@
                                 Set number of bytes printed per unit. Each unit prints
                                 <bytes_per_unit> bytes. "1" is used by default.
           --no_text             Disable text window.
+          --no_mouse            Disable mouse events.
           --no_color            Disable color for buffer contents.
           --force               Ignore warnings which can be ignored.
           --test_screen         Enter ncurses(3) screen test mode.

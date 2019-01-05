@@ -117,6 +117,9 @@ class ExtTextCanvas (panel.DisplayCanvas, panel.default_attribute):
     def get_str_line(self, buf):
         return ''.join([self.get_str_single(x) for x in filebytes.ords(buf)])
 
+    def get_geom_pos(self, y, x):
+        return -1
+
 # Avoid returning "\x00", scr.addstr("\x00") raises
 # ValueError: embedded null character (Python 3)
 # TypeError: must be string without null bytes, not str (Python 2)

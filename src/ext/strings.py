@@ -21,13 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.env
-import fileobj.extension
-import fileobj.filebytes
-import fileobj.kernel
-import fileobj.screen
-import fileobj.setting
-import fileobj.util
+from .. import extension
+from .. import filebytes
+from .. import kernel
+from .. import screen
+from .. import setting
+from .. import util
 
 def get_text(co, fo, args):
     tot = fo.get_size()
@@ -37,23 +36,23 @@ def get_text(co, fo, args):
     beg = args.pop()
     pos = beg
     rem = tot - pos
-    if fileobj.extension.test_dryrun():
+    if extension.test_dryrun():
         if rem > 1024:
             rem = 1024
 
-    siz = fileobj.kernel.get_buffer_size()
+    siz = kernel.get_buffer_size()
     l = []
 
     while True:
         b = fo.read(pos, siz)
         if b:
             n = 0
-            for i, c in enumerate(fileobj.filebytes.iter_ords(b)):
-                if fileobj.util.isprint(c):
+            for i, c in enumerate(filebytes.iter_ords(b)):
+                if util.isprint(c):
                     n += 1
                 else:
-                    if n >= fileobj.setting.ext_strings_thresh:
-                        s = fileobj.filebytes.str(b[i - n:i])
+                    if n >= setting.ext_strings_thresh:
+                        s = filebytes.str(b[i - n:i])
                         l.append((pos + i - n, s))
                     n = 0
             if len(b) == n:
@@ -62,13 +61,12 @@ def get_text(co, fo, args):
         rem -= len(b)
         if rem <= 0:
             break
-        if fileobj.screen.test_signal():
+        if screen.test_signal():
             co.flash("Interrupted ({0})".format(pos))
             break
 
-    sl = ["Range {0}-{1}".format(
-        fileobj.util.get_size_repr(beg),
-        fileobj.util.get_size_repr(pos - 1))]
+    sl = ["Range {0}-{1}".format(util.get_size_repr(beg),
+        util.get_size_repr(pos - 1))]
     sl.append("Found {0} strings".format(len(l)))
 
     if l:
@@ -80,9 +78,9 @@ def get_text(co, fo, args):
     return sl
 
 def init():
-    fileobj.setting.ext_add_gt_zero("strings_thresh", 3)
+    setting.ext_add_gt_zero("strings_thresh", 3)
 
 def cleanup():
-    fileobj.setting.ext_delete("strings_thresh")
+    setting.ext_delete("strings_thresh")
 
 init()

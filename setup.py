@@ -23,6 +23,7 @@
 
 if __name__ == '__main__':
     import os
+    import platform
     import sys
 
     if not os.path.isfile("./setup.py") or not os.path.isdir("./src"):
@@ -31,12 +32,13 @@ if __name__ == '__main__':
 
     import src.nodep
     src.nodep.test()
+    pkg = src.nodep.get_package_name()
 
     from distutils.core import setup, Extension
     import src.version
 
     # The C extension is enabled by default.
-    ext_modules = [Extension("fileobj._native", ["src/_native.c"])]
+    ext_modules = [Extension(pkg + "._native", ["src/_native.c"])]
 
     # Ignore C extension if --no-native is specified.
     s = "--no-native"
@@ -46,11 +48,11 @@ if __name__ == '__main__':
             sys.argv.remove(s)
 
     # Force Windows specific behavior.
-    s = "--windows"
-    if s in sys.argv:
+    if platform.system() == "Windows":
         ext_modules = None
-        while s in sys.argv:
-            sys.argv.remove(s)
+        f = "bin/fileobj.py"
+    else:
+        f = "bin/fileobj"
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
@@ -62,7 +64,7 @@ if __name__ == '__main__':
         url         = "https://sourceforge.net/projects/fileobj/",
         description = "Ncurses based hex editor with vi interface",
         license     = "BSD License (2-clause)",
-        scripts     = ["script/fileobj"],
-        packages    = ["fileobj", "fileobj.ext"],
-        package_dir = {"fileobj" : "src", "fileobj.ext" : "src/ext",},
+        scripts     = [f],
+        packages    = [pkg, pkg + ".ext"],
+        package_dir = {pkg : "src", pkg + ".ext" : "src/ext",},
         ext_modules = ext_modules,)

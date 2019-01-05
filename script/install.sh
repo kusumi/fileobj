@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 2016, Tomohiro Kusumi
+# Copyright (c) 2019, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,68 +23,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ ! -f ./doc/fileobj.1 ]; then
-	echo "Missing ./doc/fileobj.1"
-	exit 1
-fi
-
-MANDIR_USER=$1
-MANDIR_LOCAL=/usr/local/share/man/man1 # default
-MANDIR_SYSTEM=/usr/share/man/man1
-
-if [ "${MANDIR_USER}" != "" ]; then
-	if [ -d ${MANDIR_USER} ]; then
-		MANDIR=${MANDIR_USER}
-	else
-		echo "No such directory ${MANDIR_USER}"
-		exit 1
-	fi
-elif [ -d ${MANDIR_LOCAL} ]; then
-	MANDIR=${MANDIR_LOCAL}
-elif [ -d ${MANDIR_SYSTEM} ]; then
-	MANDIR=${MANDIR_SYSTEM}
-else
-	echo "Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
-	exit 1
-fi
-
-UNAME=`uname`
-case "${UNAME}" in
-	Linux | *BSD | DragonFly | CYGWIN*)
-		if [ -f ./doc/fileobj.1.gz ]; then
-			echo "./doc/fileobj.1.gz exists"
-			exit 1
-		fi
-		cat ./doc/fileobj.1 | gzip -9 -n > ./doc/fileobj.1.gz
-		if [ $? -ne 0 ]; then
-			echo "Failed to gzip manpage"
-			exit 1
-		fi
-		install -m 644 ./doc/fileobj.1.gz ${MANDIR}/fileobj.1.gz
-		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
-			exit 1
-		fi
-		file ${MANDIR}/fileobj.1.gz
-		rm ./doc/fileobj.1.gz
-		;;
-	Darwin)
-		install -m 644 ./doc/fileobj.1 ${MANDIR}/fileobj.1
-		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
-			exit 1
-		fi
-		file ${MANDIR}/fileobj.1
-		;;
-	SunOS)
-		install -m 644 -f ${MANDIR} ./doc/fileobj.1
-		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
-			exit 1
-		fi
-		file ${MANDIR}/fileobj.1
-		;;
-	*)
-		echo "No manpage available for ${UNAME}" # XXX
-		;;
-esac
+python ./setup.py clean --all
+python ./setup.py install --force --record ./install.out

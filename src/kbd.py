@@ -42,6 +42,7 @@ try:
     _KEY_RIGHT     = curses.KEY_RIGHT
     _KEY_BACKSPACE = curses.KEY_BACKSPACE
     _KEY_DC        = curses.KEY_DC
+    _KEY_MOUSE     = curses.KEY_MOUSE
     _KEY_RESIZE    = curses.KEY_RESIZE
 except ImportError:
     if setting.use_debug:
@@ -54,24 +55,43 @@ except ImportError:
     _KEY_BACKSPACE = 263
     _KEY_DC        = 330
     if util.get_os_name() == "Windows":
+        _KEY_MOUSE  = 539
         _KEY_RESIZE = 546
     else:
+        _KEY_MOUSE  = 409
         _KEY_RESIZE = 410
 
-#                  stdout          vtxxx           xterm/others    Windows
-_keys = (
-    ("TAB",        ascii.HT,       ascii.HT,       ascii.HT,       ascii.HT),
-    ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF,       ascii.LF),
-    ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC,      ascii.ESC),
-    ("SPACE",      ascii.SP,       ascii.SP,       ascii.SP,       ascii.SP),
-    ("DOWN",       util.gen_key(), _KEY_DOWN,      _KEY_DOWN,      _KEY_DOWN),
-    ("UP",         util.gen_key(), _KEY_UP,        _KEY_UP,        _KEY_UP),
-    ("LEFT",       util.gen_key(), _KEY_LEFT,      _KEY_LEFT,      _KEY_LEFT),
-    ("RIGHT",      util.gen_key(), _KEY_RIGHT,     _KEY_RIGHT,     _KEY_RIGHT),
-    ("BACKSPACE",  ascii.DEL,      ascii.DEL,      _KEY_BACKSPACE, ascii.BS), # XXX
-    ("BACKSPACE2", util.gen_key(), util.gen_key(), ascii.DEL,      util.gen_key()), # XXX
-    ("DELETE",     _KEY_DC,        util.gen_key(), _KEY_DC,        _KEY_DC), # XXX
-    ("RESIZE",     util.gen_key(), _KEY_RESIZE,    _KEY_RESIZE,    _KEY_RESIZE),)
+#                  *nix            Windows
+_keys_stdout = (
+    ("TAB",        ascii.HT,       ascii.HT),
+    ("ENTER",      ascii.LF,       ascii.LF),
+    ("ESCAPE",     ascii.ESC,      ascii.ESC),
+    ("SPACE",      ascii.SP,       ascii.SP),
+    ("DOWN",       util.gen_key(), util.gen_key()),
+    ("UP",         util.gen_key(), util.gen_key()),
+    ("LEFT",       util.gen_key(), util.gen_key()),
+    ("RIGHT",      util.gen_key(), util.gen_key()),
+    ("BACKSPACE",  ascii.DEL,      ascii.BS),
+    ("BACKSPACE2", util.gen_key(), util.gen_key()),
+    ("DELETE",     _KEY_DC,        _KEY_DC),
+    ("MOUSE",      util.gen_key(), util.gen_key()),
+    ("RESIZE",     util.gen_key(), util.gen_key()),)
+
+#                  *nix/vtxxx      *nix/xterm      Windows
+_keys_ncurses = (
+    ("TAB",        ascii.HT,       ascii.HT,       ascii.HT),
+    ("ENTER",      ascii.LF,       ascii.LF,       ascii.LF),
+    ("ESCAPE",     ascii.ESC,      ascii.ESC,      ascii.ESC),
+    ("SPACE",      ascii.SP,       ascii.SP,       ascii.SP),
+    ("DOWN",       _KEY_DOWN,      _KEY_DOWN,      _KEY_DOWN),
+    ("UP",         _KEY_UP,        _KEY_UP,        _KEY_UP),
+    ("LEFT",       _KEY_LEFT,      _KEY_LEFT,      _KEY_LEFT),
+    ("RIGHT",      _KEY_RIGHT,     _KEY_RIGHT,     _KEY_RIGHT),
+    ("BACKSPACE",  ascii.DEL,      _KEY_BACKSPACE, ascii.BS),
+    ("BACKSPACE2", util.gen_key(), ascii.DEL,      util.gen_key()),
+    ("DELETE",     util.gen_key(), _KEY_DC,        _KEY_DC),
+    ("MOUSE",      _KEY_MOUSE,     _KEY_MOUSE,     _KEY_MOUSE),
+    ("RESIZE",     _KEY_RESIZE,    _KEY_RESIZE,    _KEY_RESIZE),)
 
 def parse_ansi_sequence(x, s):
     if x == "\x1B": # ESC
@@ -135,25 +155,32 @@ def parse_ncurses_vtxxx_sequence(x, s):
 
 def init():
     if setting.use_stdout:
+        keys = _keys_stdout
         if kernel.is_xnix():
             x = 1
             this.parse_sequence = parse_ansi_sequence
         else:
             assert kernel.is_windows(), util.get_os_name()
-            x = 4
+            x = 2
             this.parse_sequence = parse_windows_sequence
     else:
-        if terminal.is_vtxxx():
-            x = 2
-            this.parse_sequence = parse_ncurses_vtxxx_sequence
+        keys = _keys_ncurses
+        if kernel.is_xnix():
+            if terminal.is_vtxxx():
+                x = 1
+                this.parse_sequence = parse_ncurses_vtxxx_sequence
+            else:
+                x = 2
+                this.parse_sequence = None
         else:
+            assert kernel.is_windows(), util.get_os_name()
             x = 3
             this.parse_sequence = None
 
     l = []
     lb = []
     la = []
-    for _ in _keys:
+    for _ in keys:
         s, v = _[0], _[x]
         l.append((s, v))
         setattr(this, s, v)

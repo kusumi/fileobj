@@ -21,13 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.literal
-import fileobj.version
-import fileobj.url
+from .. import literal
+from .. import url
 
 def get_text(co, fo, args):
-    l = [fileobj.url.get_doc_url("list_of_commands")]
-    l.extend(fileobj.literal.get_lines())
+    l = [url.get_doc_url("list_of_commands")]
+    l.extend(literal.get_lines())
     return l
 
 def get_description():

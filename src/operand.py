@@ -220,6 +220,9 @@ class Operand (object):
         if x == kbd.ESCAPE:
             self.clear()
             return True
+        elif x == kbd.MOUSE:
+            self.__set_buffer(literal.mouse.seq)
+            return True
         elif x == kbd.RESIZE:
             self.__set_buffer(literal.resize.seq)
             return True
@@ -230,6 +233,9 @@ class Operand (object):
     def __scan_fast(self, x):
         if x == kbd.ESCAPE:
             self.clear()
+            return True
+        elif x == kbd.MOUSE:
+            self.__set_buffer(literal.mouse.seq)
             return True
         elif x == kbd.RESIZE:
             self.__set_buffer(literal.resize.seq)
@@ -244,6 +250,9 @@ class Operand (object):
             self.__add_history()
             self.__clear_candidate()
             self.clear()
+            return True
+        elif x == kbd.MOUSE:
+            self.__set_buffer(literal.mouse.seq)
             return True
         elif x == kbd.RESIZE:
             self.__set_buffer(literal.resize.seq)

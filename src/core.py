@@ -60,19 +60,24 @@ def __cleanup(arg):
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
-    __log_error(arg)
-    __print_error(arg)
+    __cleanup_log_error(arg)
+    __cleanup_print_error(arg)
     log.debug("Cleanup")
     log.cleanup()
+    # wait for input if error printed and double clicked on Windows
+    if kernel.is_windows() and util.did_print_error() and \
+        not terminal.in_windows_prompt():
+        sys.stderr.write("Press Enter key to exit\n")
+        sys.stdin.read(1)
 
-def __log_error(arg):
+def __cleanup_log_error(arg):
     if not arg.e:
         return -1
     log.error(arg.e)
     for s in arg.tb:
         log.error(s)
 
-def __print_error(arg):
+def __cleanup_print_error(arg):
     if not arg.e:
         if log.has_error():
             util.printe("*** Found error in {0}".format(log.get_path()))
@@ -106,6 +111,7 @@ def dispatch(optargs=None):
     parser.add_argument("--bytes_per_window", "--bpw", default=setting.bytes_per_window, metavar=usage.bytes_per_window_metavar, help=usage.bytes_per_window)
     parser.add_argument("--bytes_per_unit", "--bpu", default=setting.bytes_per_unit, metavar=usage.bytes_per_unit_metavar, help=usage.bytes_per_unit)
     parser.add_argument("--no_text", action="store_true", default=False, help=usage.no_text)
+    parser.add_argument("--no_mouse", action="store_true", default=False, help=usage.no_mouse)
     parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
@@ -205,6 +211,9 @@ def dispatch(optargs=None):
     if opts.no_text:
         assert isinstance(setting.use_text_window, bool)
         setting.use_text_window = False
+    if opts.no_mouse:
+        assert isinstance(setting.use_mouse_events, bool)
+        setting.use_mouse_events = False
     if opts.no_color:
         setting.disable_buffer_attr()
         setting.color_visual = None
@@ -307,7 +316,7 @@ def dispatch(optargs=None):
         if co:
             co.cleanup()
 
-    if not util.is_running_fileobj():
+    if not util.is_running_script_fileobj():
         __cleanup(targs)
     if targs.e:
         return -1

@@ -329,13 +329,6 @@ def get_buffer_size():
     else:
         return -1
 
-def set_non_blocking(fd):
-    o = get_kernel_module()
-    if o:
-        return o.set_non_blocking(fd)
-    else:
-        return -1
-
 def get_total_ram():
     o = get_kernel_module()
     if o:
@@ -470,10 +463,11 @@ def parse_file_path(f):
     """Return tuple of path, offset, length"""
     if not setting.use_path_attr or os.path.exists(f):
         return f, 0, 0
-    # try objdump path and return if matched
-    l = __parse_objdump_path(f)
-    if l is not None:
-        return l
+    if is_xnix():
+        # try objdump path and return if matched
+        l = __parse_objdump_path(f)
+        if l is not None:
+            return l
     return util.parse_file_path(f)
 
 def __parse_objdump_path(f):

@@ -21,16 +21,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.allocator
-import fileobj.extension
+from .. import allocator
+from .. import extension
 
 def get_text(co, fo, args):
-    l1 = [x for x in fileobj.allocator.iter_class()]
-    l2 = [x for x in fileobj.allocator.iter_enabled_class()]
-    d = fileobj.allocator.get_default_class()
+    l1 = [x for x in allocator.iter_class()]
+    l2 = [x for x in allocator.iter_enabled_class()]
+    d = allocator.get_default_class()
 
-    f = "{{0:{0}}} {{1:{1}}} {{2:{2}}}".format(
-        fileobj.extension.get_index_width(l1),
+    f = "{{0:{0}}} {{1:{1}}} {{2:{2}}}".format(extension.get_index_width(l1),
         max([len(str(_)) for _ in l1]), 3)
     sl = []
     for i, cls in enumerate(l1):

@@ -107,9 +107,6 @@ def get_page_size():
 def get_buffer_size():
     return unix.get_buffer_size()
 
-def set_non_blocking(fd):
-    return unix.set_non_blocking(fd)
-
 def get_total_ram():
     """
     [root@netbsd ~]# sysctl hw.physmem

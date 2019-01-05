@@ -12,7 +12,7 @@ dist
 build
 eggs
 parts
-bin
+#bin
 var
 sdist
 develop-eggs
@@ -39,3 +39,4 @@ nosetests.xml
 unittest
 MANIFEST
 install.out
+install.out.txt

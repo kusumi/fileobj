@@ -358,7 +358,7 @@ class Container (object):
 
     def __assert_attr_key(self, f):
         # should have been renamed already or using the same name
-        if util.is_running_fileobj() or util.is_running_profile():
+        if util.is_running_script_fileobj() or util.is_running_script_profile():
             assert fileattr.has_key(f), fileattr.get_keys()
 
     def __get_buffer(self, f, cond=None):
@@ -681,6 +681,27 @@ class Container (object):
 
     def switch_to_bottom_workspace(self):
         return self.__set_workspace(self.__workspaces[len(self) - 1])
+
+    def switch_to_geom_workspace(self, y, x):
+        for o in self.__workspaces:
+            if o.has_geom(y, x):
+                if o is self.__cur_workspace:
+                    return # already at the workspace
+                else:
+                    return self.__set_workspace(o)
+        return -1
+
+    def is_geom_valid(self, y, x):
+        for o in self.__workspaces:
+            if o.has_geom(y, x):
+                return True
+        return False
+
+    def has_geom(self, y, x):
+        return self.__cur_workspace.has_geom(y, x)
+
+    def get_geom_pos(self, y, x):
+        return self.__cur_workspace.get_geom_pos(y, x)
 
     def __get_workspace_index(self, o=None):
         if not o:

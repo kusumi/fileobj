@@ -21,10 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.setting
+from .. import setting
 
 def get_text(co, fo, args):
-    settings = list(fileobj.setting.iter_setting())
+    settings = list(setting.iter_setting())
     if not len(settings):
         return "No setting"
     n = max([len(x[0]) for x in settings])

@@ -117,9 +117,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        cmd = "LESS= man fileobj | col -bx > ./doc/fileobj.1.txt"
+        f = "./doc/fileobj.1.txt"
+        cmd = "LESS= man fileobj | col -bx > {0}".format(f)
         o = fileobj.util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
+        print(f)
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)

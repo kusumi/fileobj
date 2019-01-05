@@ -86,10 +86,20 @@ def warning(*l):
     return __log(l, logging.WARNING)
 
 def error(*l):
-    return __log(l, logging.ERROR)
+    ret = __log(l, logging.ERROR)
+    if ret == -1:
+        return ret
+    #for x in util.iter_traceback():
+    #    __log((x,), logging.ERROR)
+    return ret
 
 def critical(*l):
-    return __log(l, logging.CRITICAL)
+    ret = __log(l, logging.CRITICAL)
+    if ret == -1:
+        return ret
+    #for x in util.iter_traceback():
+    #    __log((x,), logging.CRITICAL)
+    return ret
 
 def __log(l, level):
     assert util.is_seq(l), l

@@ -1,4 +1,5 @@
 recursive-include src *.c *.h
+recursive-include bin *
 recursive-include script *
 recursive-include doc *
 include COPYING CONTRIBUTORS CHANGES README.md

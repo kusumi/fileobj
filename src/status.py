@@ -26,6 +26,7 @@ import os
 
 from . import filebytes
 from . import native
+from . import nodep
 from . import panel
 from . import screen
 from . import setting
@@ -43,6 +44,8 @@ class NullStatusFrame (StatusFrame):
 _fmt_hex = "0x{0:X}"
 _fmt_dec = "{0:d}"
 _fmt_oct = "0{0:o}"
+
+_pkg_prefix = nodep.get_package_name() + "."
 
 class StatusCanvas (panel.Canvas, panel.default_attribute):
     def __init__(self, siz, pos):
@@ -81,8 +84,8 @@ class StatusCanvas (panel.Canvas, panel.default_attribute):
             if a:
                 s += "{0}|".format(a)
             x = self.fileops.get_type().__module__
-            if x.startswith("fileobj."):
-                x = x[len("fileobj."):]
+            if x.startswith(_pkg_prefix):
+                x = x[len(_pkg_prefix):]
             s += "{0}|{1}|{2}|{3} ".format(terminal.get_type(),
                 util.get_python_string(), version.__version__, x)
         s += self.__get_buffer_name()

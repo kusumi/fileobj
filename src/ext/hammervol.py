@@ -23,12 +23,12 @@
 
 import uuid
 
-import fileobj.extension
-import fileobj.filebytes
-import fileobj.util
+from .. import extension
+from .. import filebytes
+from .. import util
 
-_ = fileobj.util.str_to_bytes
-_int = fileobj.util.le_to_int
+_ = util.str_to_bytes
+_int = util.le_to_int
 
 HAMMER_FSBUF_VOLUME = _("\x31\x30\x52\xC5\x4D\x4D\x41\xC8")
 HAMMER_FSBUF_VOLUME_REV = _("\xC8\x41\x4D\x4D\xC5\x52\x30\x31")
@@ -37,14 +37,13 @@ def get_text(co, fo, args):
     l = []
     b = fo.read(args[-1], 1928)
     if len(b) != 1928:
-        fileobj.extension.fail("Invalid length: {0}".format(len(b)))
+        extension.fail("Invalid length: {0}".format(len(b)))
     print_rsv = (args[0] == "all")
 
     sig = b[:8]
     if sig not in (HAMMER_FSBUF_VOLUME, HAMMER_FSBUF_VOLUME_REV):
-        fileobj.extension.fail("Invalid signature: '{0}'".format(
-            fileobj.filebytes.str(sig)))
-    if fileobj.filebytes.ord(sig[:1]) == 0x31:
+        extension.fail("Invalid signature: '{0}'".format(filebytes.str(sig)))
+    if filebytes.ord(sig[:1]) == 0x31:
         endian = "LE"
     else:
         endian = "BE" # invalid
@@ -76,8 +75,8 @@ def get_text(co, fo, args):
     l.append("vol_fstype = {0}{1}".format(vol_fstype_str, vol_fstype_dfly))
 
     vol_label = b[80:144]
-    i = vol_label.find(fileobj.filebytes.ZERO)
-    vol_label = fileobj.filebytes.str(vol_label[:i])
+    i = vol_label.find(filebytes.ZERO)
+    vol_label = filebytes.str(vol_label[:i])
     l.append("vol_label = \"{0}\"".format(vol_label))
 
     vol_no = _int(b[144:148])
@@ -102,7 +101,7 @@ def get_text(co, fo, args):
     l.append("vol_flags = {0}".format(vol_flags))
     l.append("vol_rootvol = {0}".format(vol_rootvol))
     if print_rsv:
-        for x in fileobj.util.get_xrange(8):
+        for x in util.get_xrange(8):
             l.append("vol_reserved[{0}] = 0x{1:08X}".format(x, vol_reserved[x]))
     l.append("")
 
@@ -129,7 +128,7 @@ def get_text(co, fo, args):
 
     offset = 264
 
-    for x in fileobj.util.get_xrange(16):
+    for x in util.get_xrange(16):
         s = "vol0_blockmap[{0}]".format(x)
         buf = b[offset:offset+40]
         phys_offset = _int(buf[0:8])
@@ -148,7 +147,7 @@ def get_text(co, fo, args):
         l.append("")
         offset += 40
 
-    for x in fileobj.util.get_xrange(128):
+    for x in util.get_xrange(128):
         s = "vol0_undo_array[{0}]".format(x)
         vol0_undo_array = _int(b[offset:offset+8])
         l.append("{0} = 0x{1:016X}".format(s, vol0_undo_array))

@@ -23,10 +23,10 @@
 
 import operator
 
-import fileobj.kbd
+from .. import kbd
 
 def get_text(co, fo, args):
-    l = fileobj.kbd.keys
+    l = kbd.keys
     l = sorted(l, key=operator.itemgetter(1))
     n = max([len(s) for (s, _) in l])
     f = "{{0:<{0}}} {{1:<3d}} 0{{2:<3o}} 0x{{3:<4X}}".format(n)

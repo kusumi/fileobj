@@ -26,31 +26,40 @@
 if __name__ == '__main__':
     import cProfile
     import os
+    import platform
     import pstats
     import re
     import sys
 
     try:
-        import fileobj.core
-        import fileobj.kernel
-        import fileobj.nodep
-        import fileobj.screen
-        import fileobj.setting
-        import fileobj.util
+        if platform.system() == "Windows":
+            import fileobj_.core as core
+            import fileobj_.kernel as kernel
+            import fileobj_.nodep as nodep
+            import fileobj_.screen as screen
+            import fileobj_.setting as setting
+            import fileobj_.util as util
+        else:
+            import fileobj.core as core
+            import fileobj.kernel as kernel
+            import fileobj.nodep as nodep
+            import fileobj.screen as screen
+            import fileobj.setting as setting
+            import fileobj.util as util
     except ImportError as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
-    fileobj.nodep.test()
+    nodep.test()
 
-    d = fileobj.setting.get_user_dir()
+    d = setting.get_user_dir()
     if not os.path.isdir(d):
         os.makedirs(d)
         if not os.path.isdir(d):
             sys.stderr.write("No {0}\n".format(d))
             sys.exit(1)
 
-    s = fileobj.util.get_stamp("profile")
+    s = util.get_stamp("profile")
     f = os.path.join(d, s) + ".txt"
     if os.path.isfile(f):
         sys.stderr.write("{0} exists\n".format(f))
@@ -67,9 +76,9 @@ if __name__ == '__main__':
 
     profile = cProfile.Profile()
     profile.enable()
-    assert fileobj.util.is_running_profile()
-    ret = fileobj.core.dispatch()
-    fileobj.screen.cleanup()
+    assert util.is_running_script_profile()
+    ret = core.dispatch()
+    screen.cleanup()
     profile.disable()
 
     fd = open(f, "w")
@@ -86,12 +95,12 @@ if __name__ == '__main__':
     l = os.path.join(os.path.dirname(f), "profile.txt")
     if os.path.islink(l):
         os.unlink(l)
-    if fileobj.kernel.symlink(os.path.basename(f), l) == -1:
-        print("Failed to create symlink {0}".format(l))
-        sys.exit(1)
+    if kernel.symlink(os.path.basename(f), l) != -1:
+        print("Create symlink {0} -> {1}".format(l, f))
+    else: # likely "symbolic link privilege not held" on Windows
+        print("Failed to create symlink {0} -> {1}".format(l, f))
 
     print("done...")
     print(keys)
-    print("{0} -> {1}".format(l, f))
     if ret:
         sys.exit(-ret)

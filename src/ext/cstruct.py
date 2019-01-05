@@ -26,15 +26,14 @@ import os
 import re
 import sys
 
-import fileobj.env
-import fileobj.extension
-import fileobj.filebytes
-import fileobj.kernel
-import fileobj.libc
-import fileobj.path
-import fileobj.screen
-import fileobj.setting
-import fileobj.util
+from .. import extension
+from .. import filebytes
+from .. import kernel
+from .. import libc
+from .. import path
+from .. import screen
+from .. import setting
+from .. import util
 
 def I(x):
     return ' ' * 4 * x
@@ -51,16 +50,15 @@ class _node (object):
 
 class _builtin (_node):
     def __init__(self):
-        super(_builtin, self).__init__(fileobj.util.get_class_name(self))
+        super(_builtin, self).__init__(util.get_class_name(self))
 
     def get_repr(self, buf, name, indent):
         s = "{0}{1} {2};".format(I(indent), self.type, name)
         if len(buf) == self.get_size():
             v = self.__get_value_expr(buf)
             a = ''.join(["\\x{0:02X}".format(x) for x in
-                fileobj.filebytes.iter_ords(buf)])
-            b = ''.join([fileobj.screen.chr_repr[x] for x in
-                fileobj.filebytes.iter_ords(buf)])
+                filebytes.iter_ords(buf)])
+            b = ''.join([screen.chr_repr[x] for x in filebytes.iter_ords(buf)])
             s += " {0} {1} [{2}]".format(v, a, b)
         return [s]
 
@@ -83,7 +81,7 @@ _builtin_xtype_regex = re.compile(r"^x(8|16|32|64)") # only to detect x
 # XXX
 # This is necessary as this module uses int()
 # while __create_builtin_class() overwrites int.
-builtin_int = fileobj.util.get_builtin("int")
+builtin_int = util.get_builtin("int")
 
 _classes = []
 def __create_builtin_class(name, size):
@@ -93,13 +91,13 @@ def __create_builtin_class(name, size):
     m = _builtin_type_regex.match(name)
     if not m:
         def to_int(self, b):
-            return fileobj.util.host_to_int(b, sign)
+            return util.host_to_int(b, sign)
     elif m.group(3) == "le":
         def to_int(self, b):
-            return fileobj.util.le_to_int(b, sign)
+            return util.le_to_int(b, sign)
     elif m.group(3) == "be":
         def to_int(self, b):
-            return fileobj.util.be_to_int(b, sign)
+            return util.be_to_int(b, sign)
     else:
         assert False, m.group(0)
     cls = type(name, (_builtin,), dict(get_size=get_size, to_int=to_int,),)
@@ -108,13 +106,13 @@ def __create_builtin_class(name, size):
     setattr(sys.modules[__name__], name, cls)
 
 def __init_class():
-    for x in fileobj.util.get_xrange(4):
+    for x in util.get_xrange(4):
         size = 2 ** x
         for sign in "usx":
             for suffix in ("", "le", "be"):
                 name = "{0}{1}{2}".format(sign, size * 8, suffix)
                 __create_builtin_class(name, size)
-    for name, func_name, fn in fileobj.libc.iter_defined_type():
+    for name, func_name, fn in libc.iter_defined_type():
         __create_builtin_class(name, fn())
 
 # A node for this class can't be added on import
@@ -127,8 +125,8 @@ class _string (_node):
         return self.__size
 
     def get_repr(self, buf, name, indent):
-        i = buf.find(fileobj.filebytes.ZERO)
-        b = fileobj.filebytes.str(buf[:i])
+        i = buf.find(filebytes.ZERO)
+        b = filebytes.str(buf[:i])
         s = "{0}string {1}; \"{2}\"".format(I(indent), name, b)
         return [s]
 
@@ -142,7 +140,7 @@ class _struct (_node):
         for type, name in self.__iter_member(defs):
             o = get_node(type)
             if not o:
-                fileobj.extension.fail(type + " not defined yet")
+                extension.fail(type + " not defined yet")
             self.__member.append((o, name))
 
     def get_size(self):
@@ -165,7 +163,7 @@ class _struct (_node):
                 if l[0] == "struct":
                     l = l[1:]
                 if len(l) != 2:
-                    fileobj.extension.fail("Invalid syntax: {0}".format(l))
+                    extension.fail("Invalid syntax: {0}".format(l))
                 type, name = l
                 if type == "string":
                     yield self.__scan_string_type(type, name)
@@ -175,7 +173,7 @@ class _struct (_node):
                     if m:
                         var = m.group(1)
                         num = builtin_int(m.group(2))
-                        for i in fileobj.util.get_xrange(num):
+                        for i in util.get_xrange(num):
                             yield type, "{0}[{1}]".format(var, i)
                     else:
                         yield type, name
@@ -217,20 +215,20 @@ def get_text(co, fo, args):
     if not args:
         return "No struct name"
 
-    f = fileobj.path.get_path(args[0])
+    f = path.get_path(args[0])
     if os.path.exists(f):
         args = args[1:]
         if not args:
             return "No struct name"
     else:
-        f = fileobj.setting.get_ext_path("cstruct")
-        if fileobj.path.is_noent(f):
+        f = setting.get_ext_path("cstruct")
+        if path.is_noent(f):
             return "Need {0} with struct definition".format(f)
         if not os.path.isfile(f):
             return "Can not read " + f
 
     try:
-        l = fileobj.kernel.fopen_text(f).readlines()
+        l = kernel.fopen_text(f).readlines()
     except Exception as e:
         return str(e)
     l = [x.strip() for x in l] # strip whitespaces and tabs first
@@ -259,17 +257,17 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    fileobj.setting.ext_add_name("path_cstruct", "cstruct")
+    setting.ext_add_name("path_cstruct", "cstruct")
     __init_class()
     # create an empty file
-    f = fileobj.setting.get_ext_path("cstruct")
+    f = setting.get_ext_path("cstruct")
     if not os.path.exists(f):
         try:
-            fileobj.kernel.fcreat_text(f)
+            kernel.fcreat_text(f)
         except Exception:
             pass # ignore
 
 def cleanup():
-    fileobj.setting.ext_delete("path_cstruct")
+    setting.ext_delete("path_cstruct")
 
 init()

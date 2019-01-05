@@ -1,4 +1,4 @@
-# fileobj ([v0.7.82](https://github.com/kusumi/fileobj/releases/tag/v0.7.82))
+# fileobj ([v0.7.83](https://github.com/kusumi/fileobj/releases/tag/v0.7.83))
 
 ## About
 
@@ -35,9 +35,9 @@
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out
 
-+ Run *./script/install.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument. On Windows, see *doc/fileobj.1.txt*.
++ Run *./script/install_misc.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument. On Windows, see *[doc/fileobj.1.txt](doc/fileobj.1.txt)*.
 
-        $ sudo bash ./script/install.sh
+        $ sudo bash ./script/install_misc.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, from Unix, max compression
 
 + See *[Notes](doc/README.notes.md)* for compilation error due to a missing header file *Python.h*, and other platform specific information.
@@ -50,7 +50,7 @@
 
 ## Usage
 
-+ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* or *length* syntax.
++ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* or *length* syntax. On Windows, run *fileobj.py* unless ".PY" is in *PATHEXT* environment variable.
 
         $ fileobj [options]... [paths]...
         $ fileobj [options]... [paths[@offset:length]]...

@@ -23,14 +23,14 @@
 
 import os
 
-import fileobj.extension
+from .. import extension
 
 def get_text(co, fo, args):
     l = list(co.iter_buffer())
     assert l
     title = '', " ", "buffer", "#undo", "#redo", "#rollback"
 
-    l1 = [len(fileobj.extension.get_verbose_path(o)) for o in l]
+    l1 = [len(extension.get_verbose_path(o)) for o in l]
     l1.append(len(title[2]))
     l2 = [len(str(o.get_undo_size())) for o in l]
     l2.append(len(title[3]))
@@ -40,11 +40,11 @@ def get_text(co, fo, args):
     l4.append(len(title[5]))
 
     f = "{{0:{0}}} {{1}} {{2:<{1}}} {{3:{2}}} {{4:{3}}} {{5:{4}}}".format(
-        fileobj.extension.get_index_width(l),
+        extension.get_index_width(l),
         max(l1), max(l2), max(l3), max(l4))
     sl = [f.format(*title)]
     for i, o in enumerate(l):
         c = " " if os.path.exists(o.get_path()) else "!"
-        sl.append(f.format(i + 1, c, fileobj.extension.get_verbose_path(o),
+        sl.append(f.format(i + 1, c, extension.get_verbose_path(o),
             o.get_undo_size(), o.get_redo_size(), o.get_rollback_log_size()))
     return sl

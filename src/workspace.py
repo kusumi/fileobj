@@ -636,3 +636,16 @@ class Workspace (object):
 
     def get_capacity(self):
         return self.__def_bwindow.get_capacity()
+
+    def has_geom(self, y, x):
+        for o in self.__windows: # virtual window has geom
+            if o.has_geom(y, x):
+                return True
+        return False
+
+    def get_geom_pos(self, y, x):
+        for o in self.__windows: # virtual window has geom
+            pos = o.get_geom_pos(y, x)
+            if pos != -1:
+                return pos
+        return -1

@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "December 28, 2018" "FILEOBJ 0.7.82"
+.TH FILEOBJ 1 "January 5, 2019" "FILEOBJ 0.7.83"
 .nh
 .ad l
 .SH NAME
@@ -101,6 +101,11 @@ Each unit prints \fI<bytes_per_unit>\fP bytes.
 Disable text window.
 .RE
 .PP
+\fB\-\-no_mouse\fP
+.RS 4
+Disable mouse events.
+.RE
+.PP
 \fB\-\-no_color\fP
 .RS 4
 Disable color for buffer contents.
@@ -170,6 +175,12 @@ Defaults to no wrap around if undefined.
 .RS 4
 If set to "false", do not use text window.
 Defaults to use text window if undefined.
+.RE
+.PP
+\fBFILEOBJ_USE_MOUSE_EVENTS\fP
+.RS 4
+If set to "false", do not use mouse events.
+Defaults to use mouse events if undefined.
 .RE
 .PP
 \fBFILEOBJ_USE_BACKUP\fP
@@ -310,7 +321,7 @@ Temporary backup file format.
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/master/README.md\fP
 .SH COPYING
-Copyright (c) 2010\-2018, Tomohiro Kusumi.
+Copyright (c) 2010\-2019, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).
 .SH AUTHORS
 Tomohiro Kusumi <\fIkusumi.tomohiro@gmail.com\fP>

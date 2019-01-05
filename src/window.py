@@ -100,6 +100,12 @@ class Window (object):
         self.__canvas.resize(self.__get_canvas_size(),
             self.__get_canvas_position())
 
+    def has_geom(self, y, x):
+        return self.__frame.has_geom(y, x)
+
+    def get_geom_pos(self, y, x):
+        return self.__canvas.get_geom_pos(y, x)
+
 def _get_diff_y(a, b):
     return a[0] - b[0]
 

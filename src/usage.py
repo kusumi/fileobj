@@ -98,6 +98,10 @@ no_text = _("""
 Disable text window.
 """)
 
+no_mouse = _("""
+Disable mouse events.
+""")
+
 no_color = _("""
 Disable color for buffer contents.
 """)
@@ -153,6 +157,11 @@ Defaults to no wrap around if undefined.
 FILEOBJ_USE_TEXT_WINDOW = _("""
 If set to "false", do not use text window.
 Defaults to use text window if undefined.
+""")
+
+FILEOBJ_USE_MOUSE_EVENTS = _("""
+If set to "false", do not use mouse events.
+Defaults to use mouse events if undefined.
 """)
 
 FILEOBJ_USE_BACKUP = _("""

@@ -41,6 +41,13 @@ A_REVERSE   = curses.A_REVERSE
 A_STANDOUT  = curses.A_STANDOUT
 A_UNDERLINE = curses.A_UNDERLINE
 
+BUTTON1_CLICKED        = curses.BUTTON1_CLICKED
+BUTTON1_PRESSED        = curses.BUTTON1_PRESSED
+BUTTON1_RELEASED       = curses.BUTTON1_RELEASED
+BUTTON1_DOUBLE_CLICKED = curses.BUTTON1_DOUBLE_CLICKED
+BUTTON1_TRIPLE_CLICKED = curses.BUTTON1_TRIPLE_CLICKED
+REPORT_MOUSE_POSITION  = curses.REPORT_MOUSE_POSITION
+
 COLOR_INITIALIZED = 1
 COLOR_UNSUPPORTED = 2
 
@@ -49,6 +56,7 @@ _pair_number = 1
 
 def init():
     global _has_chgat, _use_color
+    __init_mouse_event_name()
     std = curses.initscr()
     color_fb = A_NONE
 
@@ -108,6 +116,10 @@ def cleanup_windows():
 def __init_curses_io():
     curses.noecho()
     curses.cbreak()
+    if setting.use_mouse_events:
+        l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
+        log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
+            hex(l[1])))
     try:
         curses.curs_set(0) # vt100 fails here but just ignore
     except curses.error as e:
@@ -216,6 +228,28 @@ def __iter_color_pair():
                 continue
             s = k[len("COLOR_"):].lower()
             yield s, v
+
+def getmouse():
+    return curses.getmouse()
+
+_mouse_event_name = {}
+def get_mouse_event_name(bstate):
+    ret = []
+    for k, v in _mouse_event_name.items():
+        if bstate & k:
+            ret.append(v)
+    if ret:
+        return ",".join(ret)
+    else:
+        return "?"
+
+def __init_mouse_event_name():
+    _mouse_event_name.clear()
+    for s in dir(curses):
+        if s.startswith("BUTTON"):
+            k = getattr(curses, s) # should be of int
+            if isinstance(k, int):
+                _mouse_event_name[k] = s
 
 # APIs must be compatible with
 # https://docs.python.org/3/library/curses.html

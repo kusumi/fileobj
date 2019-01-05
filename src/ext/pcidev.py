@@ -24,32 +24,32 @@
 from __future__ import division
 import struct
 
-import fileobj.filebytes
-import fileobj.util
-from fileobj.extension import fail
+from .. import extension
+from .. import filebytes
+from .. import util
 
 PCI_HDR_DEV = 0x00
 PCI_HDR_PPB = 0x01
 PCI_HDR_PCB = 0x02
 
 def get_text(co, fo, args):
-    size = fileobj.util.KiB * 4
+    size = util.KiB * 4
     b = fo.read(args[-1], size + 1)
     n = len(b)
     if n > size:
-        fail("Invalid length: >{0}".format(size))
+        extension.fail("Invalid length: >{0}".format(size))
     elif n < 0x40 or (n % 4):
-        fail("Invalid length: {0}".format(n))
+        extension.fail("Invalid length: {0}".format(n))
 
-    cfg = fileobj.filebytes.ords(b)
+    cfg = filebytes.ords(b)
     vend = cfg[0:2]
     if vend in ((0, 0), (0xFF, 0xFF)): # 0000 for Gammagraphx ?
-        fail("Invalid vendor id: '{0}'".format(fileobj.filebytes.str(
-            struct.pack(fileobj.util.U1F * 2, vend[1], vend[0]))))
+        extension.fail("Invalid vendor id: '{0}'".format(filebytes.str(
+            struct.pack(util.U1F * 2, vend[1], vend[0]))))
 
     type = cfg[0x0E] & 0x7F
     if type not in (PCI_HDR_DEV, PCI_HDR_PPB, PCI_HDR_PCB):
-        fail("Invalid header type: {0}".format(type))
+        extension.fail("Invalid header type: {0}".format(type))
 
     cap = ((cfg[0x06] & 0x10) != 0)
     capaddr = []
@@ -63,7 +63,7 @@ def get_text(co, fo, args):
         next = ptr
         while next:
             if next % 4:
-                fail("Invalid cap address: 0x{0:04X}".format(next))
+                extension.fail("Invalid cap address: 0x{0:04X}".format(next))
             capaddr.append(next)
             next = cfg[next + 1]
 
@@ -89,7 +89,7 @@ def get_text(co, fo, args):
     return l
 
 def __get_bar(n, word):
-    addr = fileobj.util.le_to_int(fileobj.filebytes.input_to_bytes(word))
+    addr = util.le_to_int(filebytes.input_to_bytes(word))
     if word[0] & 0x01:
         s = "I/O {0:04X}".format(addr & 0xFFFFFFFC)
     elif word[0] & 0x06:

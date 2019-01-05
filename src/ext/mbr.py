@@ -23,11 +23,11 @@
 
 from __future__ import division
 
-import fileobj.extension
-import fileobj.filebytes
-import fileobj.util
+from .. import extension
+from .. import filebytes
+from .. import util
 
-_ = fileobj.util.str_to_bytes
+_ = util.str_to_bytes
 
 _partition_type = {
     0x00 : '',
@@ -42,12 +42,11 @@ _partition_type = {
 def get_text(co, fo, args):
     b = fo.read(args[-1], 512)
     if len(b) != 512:
-        fileobj.extension.fail("Invalid length: {0}".format(len(b)))
+        extension.fail("Invalid length: {0}".format(len(b)))
     mag = b[-2:]
     if mag != _("\x55\xAA"):
-        fileobj.extension.fail("Invalid magic: '{0}'".format(
-            fileobj.filebytes.str(mag)))
-    b = fileobj.filebytes.ords(b)
+        extension.fail("Invalid magic: '{0}'".format(filebytes.str(mag)))
+    b = filebytes.ords(b)
     n = 446
     l = []
     while n < 510:
@@ -83,8 +82,8 @@ def __get_partition(p, offset):
     l.append("  {0:<15}= {1}".format("last sector", sect))
     l.append("  {0:<15}= {1}".format("last cylinder", cyli))
 
-    b = fileobj.filebytes.input_to_bytes(p[8:12])
-    l.append("  {0:<15}= {1}".format("first lba", fileobj.util.le_to_int(b)))
-    b = fileobj.filebytes.input_to_bytes(p[12:16])
-    l.append("  {0:<15}= {1}".format("sectors", fileobj.util.le_to_int(b)))
+    b = filebytes.input_to_bytes(p[8:12])
+    l.append("  {0:<15}= {1}".format("first lba", util.le_to_int(b)))
+    b = filebytes.input_to_bytes(p[12:16])
+    l.append("  {0:<15}= {1}".format("sectors", util.le_to_int(b)))
     return l

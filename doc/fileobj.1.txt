@@ -61,6 +61,9 @@ OPTIONS
        --no_text
            Disable text window.
 
+       --no_mouse
+           Disable mouse events.
+
        --no_color
            Disable color for buffer contents.
 
@@ -106,6 +109,10 @@ ENVIRONMENT
        FILEOBJ_USE_TEXT_WINDOW
            If set to "false", do not use text window.  Defaults to use text
            window if undefined.
+
+       FILEOBJ_USE_MOUSE_EVENTS
+           If set to "false", do not use mouse events.  Defaults to use mouse
+           events if undefined.
 
        FILEOBJ_USE_BACKUP
            If defined, create backup files under ~/.fileobj.  Backup files
@@ -208,7 +215,7 @@ DOCUMENTATION
        https://github.com/kusumi/fileobj/blob/master/README.md
 
 COPYING
-       Copyright (c) 2010-2018, Tomohiro Kusumi.  Free use of this software is
+       Copyright (c) 2010-2019, Tomohiro Kusumi.  Free use of this software is
        granted under the terms of the BSD License (2-clause).
 
 AUTHORS
@@ -216,4 +223,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.82                 December 28, 2018                    FILEOBJ(1)
+FILEOBJ 0.7.83                  January 5, 2019                     FILEOBJ(1)

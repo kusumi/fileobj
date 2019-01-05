@@ -1,9 +1,25 @@
+v0.7.83
+=======
+- Minor fixes and cleanups
+- Improve Windows support
+- Rename package from "fileobj" to "fileobj_" on Windows
+- Rename executable from "fileobj" to "fileobj.py" on Windows
+- Move script/fileobj to bin/
+- Add bin/fileobj.py
+- Rename script/install.sh to script/install_misc.sh
+- Add script/install.sh
+- Add mouse events support
+- Add --no_mouse
+- Add FILEOBJ_USE_MOUSE_EVENTS
+
 v0.7.82
 =======
 - Minor fixes and cleanups
 - Performance improvement on window repaint
 - Fix minor window repaint issues
 - Add experimental Windows support
+- Add script/install.bat
+- Add doc/fileobj.1.txt
 - Add ~/.fileobj/env
 - Create default ~/.fileobj/env if it does not exist
 - Remove __FILEOBJ_KEY_BACKSPACE

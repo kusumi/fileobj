@@ -394,11 +394,18 @@ def init():
     setattr(this, "V", FastLiteral("V", None, "Start/End line visual mode"))
     setattr(this, "ctrlv", FastLiteral("<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode"))
     setattr(this, "escape", FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode"))
-    setattr(this, "resize", FastLiteral('<RESIZE>', (kbd.RESIZE,), ""))
+    setattr(this, "mouse", FastLiteral("<MOUSE>", (kbd.MOUSE,), ""))
+    setattr(this, "resize", FastLiteral("<RESIZE>", (kbd.RESIZE,), ""))
+
+    setattr(this, "_mouse_button1_clicked", FastLiteral("<MOUSE_CLICKED>", (util.MAX_INT, 1), "Move cursor to clicked position in the window"))
+    setattr(this, "_mouse_button1_pressed", FastLiteral("<MOUSE_PRESSED>", (util.MAX_INT, 2), "Start visual mode or start visual scroll (if already in visual mode) followed by <MOUSE_RELEASED> event"))
+    setattr(this, "_mouse_button1_released", FastLiteral("<MOUSE_RELEASED>", (util.MAX_INT, 3), "Set visual area in the window"))
+    setattr(this, "_mouse_button1_double_clicked", FastLiteral("<MOUSE_DOUBLE_CLICKED>", (util.MAX_INT, 4), "Start line visual mode or exit visual mode (if already in visual mode)"))
+    setattr(this, "_mouse_button1_triple_clicked", FastLiteral("<MOUSE_TRIPLE_CLICKED>", (util.MAX_INT, 5), "Start block visual mode or exit visual mode (if already in visual mode)"))
 
     # XXX alternative for block visual mode
     if kernel.is_bsd_derived() or kernel.is_solaris():
-        setattr(this, "", FastLiteral("<CTRL>v<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode")) # the first <CTRL>v is ignored
+        setattr(this, "_ctrlv", FastLiteral("<CTRL>v<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode")) # the first <CTRL>v is ignored
 
     setattr(this, "reg_reg", RegexLiteral(2, "\"[0-9a-zA-Z\"]", r"^\"[0-9a-zA-Z\"]", "Use register {0-9a-zA-Z\"} for next delete, yank or put (use uppercase character to append with delete and yank)"))
     setattr(this, "m_reg", RegexLiteral(2, "m[0-9a-zA-Z]", r"^m[0-9a-zA-Z]", "Set mark at cursor position, uppercase marks are valid between buffers"))
@@ -472,8 +479,8 @@ def init():
     setattr(this, "s_qaneg", SlowLiteral(":qa!", None, "Close all windows and quit program without writing"))
     setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
     setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
-    setattr(this, "s_fsearch", SearchLiteral('/', None, "Search forward"))
-    setattr(this, "s_rsearch", SearchLiteral('?', None, "Search backward"))
+    setattr(this, "s_fsearch", SearchLiteral("/", None, "Search forward"))
+    setattr(this, "s_rsearch", SearchLiteral("?", None, "Search backward"))
 
     setattr(this, "s_set_binary", ArgLiteral("binary", None, "Set binary edit mode (unset ascii edit mode)"))
     setattr(this, "s_set_ascii", ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)"))

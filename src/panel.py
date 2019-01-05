@@ -114,6 +114,13 @@ class _panel (object):
             self.scr.mvwin(*pos)
         self.update()
 
+    def has_geom(self, y, x):
+        pos_y = self.get_position_y()
+        pos_x = self.get_position_x()
+        siz_y = self.get_size_y()
+        siz_x = self.get_size_x()
+        return (pos_y <= y < pos_y + siz_y) and (pos_x <= x < pos_x + siz_x)
+
 class Frame (_panel):
     def repaint(self, *arg):
         super(Frame, self).repaint(*arg)
@@ -333,6 +340,9 @@ class Canvas (_panel):
 
     def sync_cursor(self):
         return
+
+    def get_geom_pos(self, y, x):
+        return -1
 
 class DisplayCanvas (Canvas):
     def __init__(self, siz, pos):
@@ -563,6 +573,30 @@ class DisplayCanvas (Canvas):
             self.noutrefresh()
         else:
             return -1 # need repaint
+
+    def get_geom_pos(self, y, x):
+        if not self.has_geom(y, x):
+            return -1
+        offset_y = self.get_position_y() + self.offset.y
+        offset_x = self.get_position_x() + self.offset.x
+        if y < offset_y or x < offset_x:
+            return -1
+        page_pos = 0
+        if y > offset_y:
+            page_pos += (y - offset_y) * self.bufmap.x
+        # XXX do this in O(1)
+        line_pos = -1
+        for _ in util.get_xrange(1, self.bufmap.x + 1):
+            # keep the first x number whose cell width exceeds x distance
+            if self.get_cell_width(_) - 1 >= x - offset_x:
+                line_pos = _ - 1
+                break
+        assert line_pos != -1, line_pos
+        page_pos += line_pos
+        pos = self.get_page_offset() + page_pos
+        if pos > self.fileops.get_max_pos():
+            pos = self.fileops.get_max_pos()
+        return pos
 
     def chgat_posstr(self, pos, attr):
         return

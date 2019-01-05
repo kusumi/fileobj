@@ -58,6 +58,13 @@ A_COLOR_PRINT   = _screen.A_NONE
 A_COLOR_DEFAULT = _screen.A_NONE
 A_COLOR_VISUAL  = _screen.A_NONE
 
+BUTTON1_CLICKED        = _screen.BUTTON1_CLICKED
+BUTTON1_PRESSED        = _screen.BUTTON1_PRESSED
+BUTTON1_RELEASED       = _screen.BUTTON1_RELEASED
+BUTTON1_DOUBLE_CLICKED = _screen.BUTTON1_DOUBLE_CLICKED
+BUTTON1_TRIPLE_CLICKED = _screen.BUTTON1_TRIPLE_CLICKED
+REPORT_MOUSE_POSITION  = _screen.REPORT_MOUSE_POSITION
+
 def init():
     global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
         A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL
@@ -194,6 +201,12 @@ def use_color():
 def iter_color_name():
     for s in _screen.iter_color_name():
         yield s
+
+def getmouse():
+    return _screen.getmouse()
+
+def get_mouse_event_name(bstate):
+    return _screen.get_mouse_event_name(bstate)
 
 def alloc_all(ref=None):
     return alloc(get_size_y(), get_size_x(), 0, 0, ref)

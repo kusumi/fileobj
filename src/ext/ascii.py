@@ -21,11 +21,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.ascii
-import fileobj.util
+from .. import ascii
+from .. import util
 
 def get_text(co, fo, args):
-    n = max([len(x) for x in fileobj.ascii.iter_ascii_symbol()])
+    n = max([len(x) for x in ascii.iter_ascii_symbol()])
     f = "{{0:<{0}}} {{1:3d}} 0{{2:03o}} 0x{{3:02X}} {{4:08b}}".format(n)
-    return [f.format(fileobj.ascii.get_symbol(x), x, x, x, x) for x in
-        fileobj.util.get_xrange(128)]
+    return [f.format(ascii.get_symbol(x), x, x, x, x) for x in
+        util.get_xrange(128)]

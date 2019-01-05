@@ -30,7 +30,7 @@
 
 + Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* if *CTRL-v* does not work.**
 
-+ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed. Some platforms have backported package.**
++ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed, since some platforms have backported *argparse*. This does not apply for Windows. Only Python 3.3 and above are supported on Windows.**
 
 ## Terminal multiplexer
 
@@ -59,13 +59,11 @@
 
         $ pip install windows-curses
 
-+ Installation fails with below. -> **Run *setup.py* with *--no-native* option.**
-
-        error: Unable to find vcvarsall.bat
-
 + *CTRL-c* can not interrupt ongoing editor command. -> ***windows-curses* module does not seem to be able to handle *SIGINT* (regular Python applications on Windows can handle some Unix signals including *SIGINT*).**
 
 + Window frames do not resize upon console window resizing. -> ***windows-curses* module does not seem to be able to handle resize event.**
+
++ There is no *fileobj* package in site-packages directory. -> **On Windows, *fileobj* package is installed as *fileobj_*.**
 
 ## Cygwin
 

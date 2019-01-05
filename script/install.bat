@@ -21,4 +21,5 @@ REM ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 REM (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 REM SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-python ./setup.py install --force --record ./install.out.txt --windows
+python ./setup.py clean --all
+python ./setup.py install --force --record ./install.out.txt

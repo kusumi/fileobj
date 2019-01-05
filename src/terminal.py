@@ -138,3 +138,6 @@ def is_dumb():
 
 def in_tmux_tmux():
     return os.getenv("TMUX") is not None
+
+def in_windows_prompt():
+    return kernel.is_windows() and os.getenv("PROMPT") is not None

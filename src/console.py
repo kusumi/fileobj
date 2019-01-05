@@ -28,6 +28,7 @@ from . import kernel
 from . import literal
 from . import log
 from . import methods
+from . import nodep
 from . import screen
 from . import setting
 from . import trace
@@ -213,7 +214,7 @@ def init():
     else:
         chgat = __chgat
     if setting.use_console_log:
-        _fd = open_console_log("fileobj")
+        _fd = open_console_log(nodep.get_package_name())
 
 def cleanup(e, tb):
     global _scr

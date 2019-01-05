@@ -85,12 +85,22 @@ def __creat_file(f):
     """Raise 'FileExistsError: [Errno 17] File exists: ...' if f exists"""
     return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
-def symlink(source, link_name):
-    if util.is_python_version_or_ht(3, 2) and not os.path.exists(link_name):
-        os.symlink(source, link_name)
+# https://docs.python.org/3/library/os.html#os.symlink
+if util.is_python_version_or_ht(3, 2):
+    def symlink(source, link_name):
+        if os.path.exists(link_name):
+            return -1
+        try:
+            os.symlink(source, link_name)
+        except NotImplementedError: # pre Windows Vista
+            return -1
+        except OSError: # "symbolic link privilege not held"
+            return -1
         if not os.path.islink(link_name):
             return -1
-    else:
+else:
+    def symlink(source, link_name):
+        assert False
         return -1
 
 def fsync(fd):
@@ -115,16 +125,17 @@ def utime(f, st):
 def touch(f):
     return utime(f, None)
 
-# stat.S_ISxxx at least exist on Windows
 def stat_type(f):
     try:
         mode = os.stat(f).st_mode
-        path_type = "LINK", "REG", "DIR", "BLKDEV", "CHRDEV"
-        stat_type = "lnk", "reg", "dir", "blk", "chr"
-        l = [getattr(stat, "S_IS" + s.upper())(mode) for s in stat_type]
-        return dict(zip(path_type, l))
     except Exception:
         return -1
+    return {
+        "LINK" : stat.S_ISLNK(mode),
+        "REG" : stat.S_ISREG(mode),
+        "DIR" : stat.S_ISDIR(mode),
+        "BLKDEV" : stat.S_ISBLK(mode),
+        "CHRDEV" : stat.S_ISCHR(mode), }
 
 def get_page_size():
     try:
@@ -134,9 +145,6 @@ def get_page_size():
 
 def get_buffer_size():
     return get_page_size()
-
-def set_non_blocking(fd):
-    return -1
 
 def get_total_ram():
     return -1

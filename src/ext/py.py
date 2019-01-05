@@ -24,7 +24,7 @@
 import platform
 import sys
 
-import fileobj.util
+from .. import util
 
 def get_text(co, fo, args):
     l = []
@@ -32,7 +32,7 @@ def get_text(co, fo, args):
     l.append(("build", platform.python_build()[0]))
     l.append(("build date", platform.python_build()[1]))
     l.append(("compiler", platform.python_compiler()))
-    if fileobj.util.is_python_version_or_ht(2, 6, 0):
+    if util.is_python_version_or_ht(2, 6, 0):
         l.append(("implementation", platform.python_implementation()))
         l.append(("branch", platform.python_branch()))
         l.append(("revision", platform.python_revision()))

@@ -163,7 +163,10 @@ class Allocator (object):
                 log.debug("Created {0} for '{1}'".format(repr(ret), f))
                 return ret
             except Exception as e:
-                log.error(e)
+                if isinstance(e, util.Message):
+                    log.debug(e)
+                else:
+                    log.error(e)
                 cls = self.__get_alt_class(cls)
                 if not cls:
                     raise Error(str(e))

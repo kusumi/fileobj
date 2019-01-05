@@ -21,10 +21,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.literal
+from .. import literal
 
 def get_text(co, fo, args):
-    li = fileobj.literal.get_literals()[0]
+    li = literal.get_literals()[0]
     while li.ref:
         li = li.ref
     def _(l, o, i, level):

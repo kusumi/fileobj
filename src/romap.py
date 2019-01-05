@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
+import mmap
 
 from . import fileobj
 from . import kernel
@@ -81,7 +82,10 @@ class Fileobj (fileobj.Fileobj):
 
     def init_mapping(self, f):
         with kernel.fopen(f, 'r+') as fd:
-            self.map = self.mmap(fd.fileno())
+            try:
+                self.map = self.mmap(fd.fileno())
+            except mmap.error as e:
+                raise util.Message("mmap(2) failed, {0}".format(repr(e)))
 
     def cleanup_mapping(self):
         if self.map:

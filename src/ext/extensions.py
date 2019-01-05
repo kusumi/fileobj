@@ -21,24 +21,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.extension
-import fileobj.literal
-import fileobj.util
+from .. import extension
+from .. import literal
+from .. import util
 
 def get_text(co, fo, args):
     try:
-        fileobj.extension.set_dryrun()
-        l = [__test_module(co, fo, li) for li in
-            fileobj.literal.get_ext_literals()]
+        extension.set_dryrun()
+        l = [__test_module(co, fo, li) for li in literal.get_ext_literals()]
     except Exception:
         pass
     finally:
-        fileobj.extension.clear_dryrun()
+        extension.clear_dryrun()
 
     if not l:
         return "No extension"
     f = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3}}".format(
-        fileobj.extension.get_index_width(l),
+        extension.get_index_width(l),
         max([len(x[0]) for x in l]),
         max([len(x[1]) for x in l]),)
     return [f.format(i + 1, x[0], x[1], x[2]) for i, x in enumerate(l)]
@@ -48,10 +47,10 @@ def __test_module(co, fo, li):
     if li.fn != get_text:
         try:
             li.fn(co, fo, [0])
-        except fileobj.extension.Error:
+        except extension.Error:
             pass
         except Exception as e:
-            x[2] = fileobj.util.e_to_string(e)
+            x[2] = util.e_to_string(e)
     return x
 
 def get_description():

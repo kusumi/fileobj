@@ -24,8 +24,10 @@
 import distutils.sysconfig
 import os
 import pkgutil
+import platform
 import sys
 
+from . import nodep
 from . import setting
 
 _major, _minor = sys.version_info[:2]
@@ -34,15 +36,17 @@ try:
     if _major == 2:
         import __init__ as pkg
     else:
-        import fileobj as pkg
+        if platform.system() == "Windows":
+            import fileobj_ as pkg # avoid conflict with executable
+        else:
+            import fileobj as pkg # XXX integrate with above
 except ImportError:
     pkg = None
     if setting.use_debug:
         raise
 
 def get_paths():
-    return tuple(x for x in __get_paths() if
-        os.path.isdir(x))
+    return tuple(x for x in __get_paths() if os.path.isdir(x))
 
 def __get_paths():
     if pkg is None:
@@ -50,16 +54,21 @@ def __get_paths():
         return [os.path.join(d, get_name())]
     elif hasattr(pkg, "__path__"):
         return pkg.__path__
-    elif get_sites:
-        return get_sites()
+    elif __get_sites:
+        return __get_sites()
     else:
         return [os.path.dirname(pkg.__file__)]
 
 def get_name():
     if pkg is None:
-        return "fileobj"
+        return nodep.get_package_name()
     else:
-        return pkg.__name__.rstrip(".__init__")
+        s = ".__init__"
+        ret = pkg.__name__
+        if ret.endswith(s):
+            return ret[:-len(s)]
+        else:
+            return ret
 
 def get_prefix():
     return get_name() + '.'
@@ -74,12 +83,12 @@ def iter_module_name():
 
 if (_major == 2 and _minor >= 7) or (_major == 3 and _minor >= 2):
     import site
-    def get_sites():
+    def __get_sites():
         l = [site.getusersitepackages()]
         l.extend(site.getsitepackages())
-        return [os.path.join(x, get_name()) for x in l]
+        return tuple(os.path.join(x, get_name()) for x in l)
 else:
-    get_sites = None
+    __get_sites = None
 
 if (_major == 2 and _minor >= 7) or (_major == 3 and _minor >= 1):
     import importlib

@@ -471,6 +471,7 @@ class _console (console.Console):
         self.add_method(literal.ctrlu        , methods, "cursor_hpprev")
         self.add_method(literal.ctrlf        , methods, "cursor_pnext")
         self.add_method(literal.ctrld        , methods, "cursor_hpnext")
+        self.add_method(literal.mouse        , methods, "handle_mouse_event_visual")
         self.add_method(literal.resize       , methods, "resize_container")
         self.add_method(literal.ctrll        , methods, "refresh_container")
         self.add_method(literal.ctrlw_w      , this,    "_queue_input")

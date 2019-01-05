@@ -432,6 +432,159 @@ def switch_to_prev_buffer(self, amp, opc, args, raw):
         self.co.lrepaintf()
         return RETURN
 
+def handle_mouse_event(self, amp, opc, args, raw):
+    handled = False
+    devid, x, y, z, bstate = screen.getmouse()
+    if bstate & screen.BUTTON1_CLICKED:
+        __mouse_go_to(self, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_PRESSED:
+        __mouse_enter_visual(self, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_RELEASED:
+        # need to handle, but nothing to do
+        handled = True
+    if bstate & screen.BUTTON1_DOUBLE_CLICKED:
+        __mouse_enter_line_visual(self, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_TRIPLE_CLICKED: # ignored on Windows
+        __mouse_enter_block_visual(self, y, x)
+        handled = True
+    if bstate & screen.REPORT_MOUSE_POSITION:
+        __show_mouse_event(self, devid, x, y, z, bstate)
+        handled = True
+    if not handled:
+        __flash_mouse_event(self, devid, x, y, z, bstate)
+
+# sub functions may change console and immediately return
+def handle_mouse_event_visual(self, amp, opc, args, raw):
+    handled = False
+    devid, x, y, z, bstate = screen.getmouse()
+    if bstate & screen.BUTTON1_CLICKED:
+        return __mouse_update_visual(self, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_PRESSED:
+        return __mouse_start_scroll_visual(self, devid, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_RELEASED:
+        return __mouse_end_scroll_visual(self, devid, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_DOUBLE_CLICKED:
+        return __mouse_exit_visual(self, y, x)
+        handled = True
+    if bstate & screen.BUTTON1_TRIPLE_CLICKED: # ignored on Windows
+        return __mouse_exit_visual(self, y, x)
+        handled = True
+    if bstate & screen.REPORT_MOUSE_POSITION:
+        __show_mouse_event(self, devid, x, y, z, bstate)
+        handled = True
+    if not handled:
+        __flash_mouse_event(self, devid, x, y, z, bstate)
+
+def __show_mouse_event(self, devid, x, y, z, bstate):
+    if setting.use_debug:
+        self.co.show((devid, x, y, z, screen.get_mouse_event_name(bstate)))
+
+def __flash_mouse_event(self, devid, x, y, z, bstate):
+    if setting.use_debug:
+        self.co.flash((devid, x, y, z, screen.get_mouse_event_name(bstate)))
+    else:
+        self.co.flash()
+
+# 1. if (y, x) is not in any workspace -> return -1
+# 2. if (y, x) is not in current workspace -> switch workspace
+# 3-1. if (y, x) is not in buffer contents -> return -2
+# 3-2. else -> change position and return None
+def __mouse_go_to(self, y, x):
+    assert not self.co.has_region()
+    if not self.co.is_geom_valid(y, x):
+        self.co.flash("No editor window at {0}".format((y, x)))
+        return -1
+    if not self.co.has_geom(y, x):
+        assert self.co.switch_to_geom_workspace(y, x) != -1
+    pos = self.co.get_geom_pos(y, x)
+    if pos == -1:
+        self.co.lrepaint()
+        return -2 # not in buffer contents
+    else:
+        self.co.go_to(pos)
+        self.co.lrepaint()
+
+def __mouse_enter_visual(self, y, x):
+    assert not self.co.has_region()
+    if __mouse_go_to(self, y, x) is None:
+        self.co.queue_input(literal.v.seq)
+
+def __mouse_enter_line_visual(self, y, x):
+    assert not self.co.has_region()
+    if __mouse_go_to(self, y, x) is None:
+        self.co.queue_input(literal.V.seq)
+
+def __mouse_enter_block_visual(self, y, x):
+    assert not self.co.has_region()
+    if __mouse_go_to(self, y, x) is None:
+        self.co.queue_input(literal.ctrlv.seq)
+
+def __mouse_exit_visual(self, y, x):
+    assert self.co.has_region()
+    if self.co.is_geom_valid(y, x):
+        ret = __exit_visual(self)
+        assert __mouse_go_to(self, y, x) != -1
+        return ret
+    else:
+        self.co.flash("No editor window at {0}".format((y, x)))
+
+def __mouse_update_visual(self, y, x):
+    assert self.co.has_region()
+    if self.co.has_geom(y, x): # in current workspace
+        pos = self.co.get_geom_pos(y, x)
+        if pos != -1: # in buffer contents
+            self.co.go_to(pos)
+            self.co.lrepaint()
+    elif self.co.is_geom_valid(y, x): # in other workspace
+        ret = __exit_visual(self)
+        assert __mouse_go_to(self, y, x) != -1
+        return ret
+    else:
+        self.co.flash("No editor window at {0}".format((y, x)))
+
+# Note that scroll start/end need to be in current workspace,
+# but don't need to be in buffer contents area.
+_mouse_event_visual_pressed = None
+
+def __mouse_start_scroll_visual(self, devid, y, x):
+    global _mouse_event_visual_pressed
+    assert self.co.has_region()
+    if self.co.has_geom(y, x):
+        _mouse_event_visual_pressed = devid, y, x
+    else:
+        _mouse_event_visual_pressed = None
+        return __mouse_update_visual(self, y, x)
+
+def __mouse_end_scroll_visual(self, devid, y, x):
+    global _mouse_event_visual_pressed
+    assert self.co.has_region()
+    if _mouse_event_visual_pressed is None:
+        return __mouse_update_visual(self, y, x)
+    if not self.co.has_geom(y, x):
+        _mouse_event_visual_pressed = None
+        return __mouse_update_visual(self, y, x)
+    # in current workspace with valid start position
+    assert isinstance(_mouse_event_visual_pressed, tuple)
+    start_devid, start_y, start_x = _mouse_event_visual_pressed
+    assert devid == start_devid, (devid, start_devid)
+    assert self.co.has_geom(start_y, start_x), (start_y, start_x)
+    d = y - start_y
+    if d > 0:
+        go_down(self, d)
+    elif d < 0:
+        go_up(self, -d)
+    _mouse_event_visual_pressed = None
+
+def __exit_visual(self):
+    from . import visual # XXX
+    return visual._exit_visual(self)
+
 def resize_container(self, amp, opc, args, raw):
     self.co.resize()
     self.co.repaint()
@@ -1828,6 +1981,7 @@ def repeat(self, amp, opc, args, raw):
     # Repeat action may change position more than once (e.g. write console).
     # When it happens, update highlight can only update the last change,
     # so always force full repaint.
+    # XXX write console looks to be the only one with above behavior.
     self.co.require_full_repaint()
     pxfn = self.co.get_xprev_context()
     if not pxfn:

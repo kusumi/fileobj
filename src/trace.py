@@ -54,9 +54,10 @@ def write(trace_path, l, e, tb):
         tf = uniq + ".bin"
         sf = uniq + ".sh"
         __write_trace(tf, l)
-        __write_script(sf, tf, e, tb)
         __creat_symlink(tf, base + ".bin")
-        __creat_symlink(sf, base + ".sh")
+        if not kernel.is_windows():
+            __write_script(sf, tf, e, tb)
+            __creat_symlink(sf, base + ".sh")
     except Exception as e:
         log.error(e)
 
@@ -125,3 +126,5 @@ def __creat_symlink(f, basename):
         f = os.path.basename(f)
         if kernel.symlink(f, l) != -1:
             log.debug("Create symlink {0} -> {1}".format(l, f))
+        else: # likely "symbolic link privilege not held" on Windows
+            log.debug("Failed to create symlink {0} -> {1}".format(l, f))

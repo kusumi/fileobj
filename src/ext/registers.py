@@ -23,8 +23,7 @@
 
 import string
 
-import fileobj.filebytes
-import fileobj.kbd
+from .. import filebytes
 
 def get_text(co, fo, args):
     max_print_size = 1024
@@ -32,9 +31,9 @@ def get_text(co, fo, args):
     d = co.get_registers()
     for k in sorted(d.keys()):
         b = d[k]
-        assert isinstance(b, fileobj.filebytes.TYPE)
+        assert isinstance(b, filebytes.TYPE)
         if b:
-            s = fileobj.filebytes.str(b)
+            s = filebytes.str(b)
             if len(s) > max_print_size:
                 s = s[:max_print_size] + "..."
         elif k == '"' or (k in string.digits): # always show " and 0-9

@@ -52,6 +52,9 @@ class GenericError (Exception):
 class QuietError (GenericError):
     pass
 
+class Message (GenericError):
+    pass
+
 class Namespace (object):
     def __init__(self, **kwd):
         self.set(**kwd)
@@ -120,10 +123,10 @@ def is_running_script(name=None):
     else:
         return os.path.isfile(f)
 
-def is_running_fileobj():
-    return is_running_script("fileobj")
+def is_running_script_fileobj():
+    return is_running_script("fileobj") or is_running_script("fileobj.py")
 
-def is_running_profile():
+def is_running_script_profile():
     return is_running_script("profile")
 
 def get_os_name():
@@ -870,7 +873,14 @@ def printf(o):
     __fprintf(o, False, True)
 
 def printe(o):
+    global _did_print_error
+    _did_print_error = True
     __fprintf(o, True, True)
+
+_did_print_error = False
+
+def did_print_error():
+    return _did_print_error
 
 def obj_to_string(o, verbose=True):
     if isinstance(o, Exception):

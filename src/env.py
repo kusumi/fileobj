@@ -34,6 +34,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_SIPREFIX" # :set si
     yield "FILEOBJ_USE_WRAPSCAN" # :set ws
     yield "FILEOBJ_USE_TEXT_WINDOW"
+    yield "FILEOBJ_USE_MOUSE_EVENTS"
     yield "FILEOBJ_USE_BACKUP"
     yield "FILEOBJ_ENDIANNESS" # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX" # :set address
@@ -92,6 +93,7 @@ _env_default_value = {
     "FILEOBJ_USE_SIPREFIX" : False,
     "FILEOBJ_USE_WRAPSCAN" : True,
     "FILEOBJ_USE_TEXT_WINDOW" : True,
+    "FILEOBJ_USE_MOUSE_EVENTS" : True,
     "FILEOBJ_USE_BACKUP" : False,
     "FILEOBJ_ENDIANNESS" : None,
     "FILEOBJ_ADDRESS_RADIX" : 16,
@@ -208,6 +210,9 @@ def __get_setting_use_wrapscan():
 
 def __get_setting_use_text_window():
     return test_bool("FILEOBJ_USE_TEXT_WINDOW")
+
+def __get_setting_use_mouse_events():
+    return test_bool("FILEOBJ_USE_MOUSE_EVENTS")
 
 def __get_setting_use_backup():
     return test_bool("FILEOBJ_USE_BACKUP")

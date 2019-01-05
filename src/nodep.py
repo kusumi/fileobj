@@ -27,21 +27,25 @@ import sys
 
 support_if_argparse = True # unittest (false)
 
-def __test(version, name):
-    if not version:
-        version = sys.version_info
-    version = tuple(version[:3])
-    if not name:
-        name = platform.system()
-    if name == "Windows":
-        __test_windows(version)
+def get_package_name():
+    if platform.system() == "Windows":
+        return "fileobj_" # avoid conflict with executable
     else:
-        __test_xnix(version)
+        return "fileobj" # XXX integrate with above
+
+def __test(version, name):
+    version = tuple(version[:3])
+    if name == "Windows":
+        __test_windows(version, name)
+    else:
+        __test_xnix(version, name)
     import curses
     curses
     del curses
 
-def __test_xnix(version):
+def __test_xnix(version, name):
+    if name.startswith("CYGWIN") and sys.executable[0] in "ABCDEFG":
+        raise Exception("Cygwin Python is required on Cygwin")
     if version < (2, 6, 0): # this script must run on Python 2.5-
         raise Exception("Python 2.7 is required")
     if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
@@ -58,25 +62,28 @@ def __test_xnix(version):
             else:
                 raise Exception("Python 3.2 or above is required")
 
-def __test_windows(version):
-    if sys.executable[0] not in "ABCDEFG": # test this first
-        raise Exception("Cygwin Python binary is required on Cygwin")
+def __test_windows(version, name):
     if version < (3, 3, 0):
         raise Exception("Python 3.3 or above is required")
 
 def test():
-    e = os.getenv("FILEOBJ_USE_DEBUG")
+    e = os.getenv("__FILEOBJ_USE_DEBUG")
     if e is None:
         debug = False
     else:
         debug = e.lower() != "false"
     try:
-        __test(None, None)
+        name = platform.system()
+        __test(sys.version_info, name)
     except Exception:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)
-        if not debug:
-            sys.exit(1)
+        if debug:
+            return
+        if name == "Windows" and os.getenv("PROMPT") is None:
+            sys.stderr.write("Press Enter key to exit\n")
+            sys.stdin.read(1)
+        sys.exit(1)
 
 if __name__ == '__main__':
     test()

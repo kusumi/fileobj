@@ -21,18 +21,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fileobj.marks
-import fileobj.util
+from .. import marks
+from .. import util
 
 def get_text(co, fo, args):
     sl = []
     for o in co.iter_buffer():
         f = o.get_path()
-        sl.append(f if f else fileobj.util.NO_NAME)
+        sl.append(f if f else util.NO_NAME)
         d = o.get_marks()
         if d:
             for k in sorted(d.keys()):
-                sl.append(fileobj.marks.get_mark_repr(k, d[k]))
+                sl.append(marks.get_mark_repr(k, d[k]))
         else:
             sl.append("No mark")
         sl.append('')
