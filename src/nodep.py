@@ -21,14 +21,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# this script must run on Python 2.4+
+
 import os
 import platform
 import sys
 
 support_if_argparse = True # unittest (false)
 
+def is_windows():
+    return platform.system() == "Windows"
+
 def get_package_name():
-    if platform.system() == "Windows":
+    if is_windows():
         return "fileobj_" # avoid conflict with executable
     else:
         return "fileobj" # XXX integrate with above
@@ -46,25 +51,26 @@ def __test(version, name):
 def __test_xnix(version, name):
     if name.startswith("CYGWIN") and sys.executable[0] in "ABCDEFG":
         raise Exception("Cygwin Python is required on Cygwin")
-    if version < (2, 6, 0): # this script must run on Python 2.5-
-        raise Exception("Python 2.7 is required")
-    if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
-        try:
-            if support_if_argparse:
-                import argparse # test if backported
-                argparse
-                del argparse
-            else:
-                raise ImportError("")
-        except ImportError:
-            if version[0] == 2:
-                raise Exception("Python 2.7 is required")
-            else:
-                raise Exception("Python 3.2 or above is required")
+    __test_common(version, name)
 
 def __test_windows(version, name):
-    if version < (3, 3, 0):
-        raise Exception("Python 3.3 or above is required")
+    __test_common(version, name)
+
+def __test_common(version, name):
+    if not support_if_argparse:
+        if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
+            raise Exception("Python 2.7 or Python 3.2+ is required")
+    else:
+        if version < (2, 6, 0):
+            raise Exception("Python 2.7 or Python 3.2+ or Python 2.6 with "
+                "backported argparse is required")
+        if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
+            try:
+                import argparse
+                argparse
+                del argparse
+            except ImportError:
+                raise Exception("Python 2.7 or Python 3.2+ is required")
 
 def test():
     e = os.getenv("__FILEOBJ_USE_DEBUG")

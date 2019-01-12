@@ -1,3 +1,25 @@
+v0.7.84
+=======
+- Minor fixes and cleanups
+- Fix partial :w bug on Python 2 (since v0.7.0)
+- Improve Windows support
+- Add Python 2.7 support on Windows
+- Add Python 3.2 support on Windows
+- Add f
+- Add F
+- Add t
+- Add T
+- Add ;
+- Add ,
+- Add :base64_encode
+- Add :base64_decode
+- Add :base32_encode
+- Add :base32_decode
+- Add :base16_encode
+- Add :base16_decode
+- Add :base85_encode
+- Add :base85_decode
+
 v0.7.83
 =======
 - Minor fixes and cleanups
@@ -17,7 +39,7 @@ v0.7.82
 - Minor fixes and cleanups
 - Performance improvement on window repaint
 - Fix minor window repaint issues
-- Add experimental Windows support
+- Add experimental Windows support (Python 3.3+)
 - Add script/install.bat
 - Add doc/fileobj.1.txt
 - Add ~/.fileobj/env

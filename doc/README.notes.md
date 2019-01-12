@@ -30,7 +30,7 @@
 
 + Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* if *CTRL-v* does not work.**
 
-+ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed, since some platforms have backported *argparse*. This does not apply for Windows. Only Python 3.3 and above are supported on Windows.**
++ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed, since some platforms have backported *argparse*.
 
 ## Terminal multiplexer
 
@@ -55,9 +55,11 @@
 
 ## Windows
 
-+ Can not install due to a missing module *curses*. -> **Install *windows-curses*.**
++ Can not install due to a missing module *_curses*. -> **Install *windows-curses*.**
 
-        $ pip install windows-curses
+        > python ./setup.py install --force --record ./install.out.txt
+        No module named '_curses'
+        > pip install windows-curses
 
 + *CTRL-c* can not interrupt ongoing editor command. -> ***windows-curses* module does not seem to be able to handle *SIGINT* (regular Python applications on Windows can handle some Unix signals including *SIGINT*).**
 

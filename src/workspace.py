@@ -469,6 +469,9 @@ class Workspace (object):
             self.__swindows[cls] = o
         return self.__swindows[cls]
 
+    def init_buffer(self, b):
+        return self.__cur_fileops.init_buffer(b)
+
     def read(self, x, n):
         return self.__cur_fileops.read(x, n)
 

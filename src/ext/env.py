@@ -31,7 +31,4 @@ def get_text(co, fo, args):
         return "No env"
     n = max([len(x[0]) for x in sorted(envs)])
     f = "{{0:<{0}}} \"{{1}}\"".format(n)
-    l = []
-    for x in envs:
-        l.append(f.format(*x))
-    return l
+    return [f.format(*x) for x in envs]

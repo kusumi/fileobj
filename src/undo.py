@@ -28,13 +28,21 @@ NOTFOUND = -2
 
 class Undo (object):
     def __init__(self):
+        self.__init()
+
+    def __len__(self):
+        return len(self.__undoredo)
+
+    def __init(self):
         self.__undoredo = []
         self.__rollback = []
         self.__cursor = 0
         self.__base = 0
 
-    def __len__(self):
-        return len(self.__undoredo)
+    # use with care...
+    def clear(self):
+        assert self.__base == self.__cursor
+        self.__init()
 
     def add_undo(self, ufn, rfn):
         if self.__cursor < self.__base:

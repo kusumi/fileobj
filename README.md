@@ -1,14 +1,44 @@
-# fileobj ([v0.7.83](https://github.com/kusumi/fileobj/releases/tag/v0.7.83))
+# fileobj ([v0.7.84](https://github.com/kusumi/fileobj/releases/tag/v0.7.84))
 
 ## About
 
 + Ncurses based hex editor with vi interface.
 
-+ Features include inserting and replacing data in hexadecimal or ascii, deleting data, cut and paste, undo and redo, visual select, multiple buffers and windows, partial file loading, raw disk/partition support, ptrace based userspace editing, data in C struct view, etc.
+![fileobj-linux](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.82/linux.png)
 
-![fileobj-linux](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.82-linux.png/max/max/1)
+![fileobj-windows](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.82/windows.png)
 
-![fileobj-windows](https://a.fsdn.com/con/app/proj/fileobj/screenshots/fileobj-v0.7.82-windows.png/max/max/1)
+## Features
+
++ vi(1) interface
+
++ Insert, replace, delete
+
++ Undo and redo
+
++ Search
+
++ Visual select in normal, line, block mode
+
++ Cut and paste
+
++ Partial file load via offset/length specification
+
++ Open multiple editor buffer
+
++ Compare editor buffer contents
+
++ Split editor window into vertical or horizontal direction
+
++ Configurable color
+
++ Block device support
+
++ Visualize data in C struct format
+
++ ptrace(2) based process userspace edit
+
++ and more
 
 ## Supported platforms
 
@@ -18,13 +48,11 @@
 
 + 3rd tier - Other Unix-likes (untested)
 
-+ experimental - Windows (feature limitations)
++ Experimental - Windows (feature limitations)
 
 ## Requirements
 
 + Python 2.7 or Python 3.2+
-
-+ (Python 3.3+ for Windows)
 
 + ncurses (curses Python module)
 

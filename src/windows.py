@@ -36,10 +36,12 @@
 # $ pip install windows-curses
 
 from __future__ import with_statement
+import ctypes
 import errno
 import mmap
 import os
 import stat
+import struct
 
 from . import util
 
@@ -60,9 +62,10 @@ def seek_end(f):
         except Exception:
             return -1
 
-# .st_ino looks to be an unique number, at least on NTFS
+# .st_ino on Windows looks to be a unique number on certain version of
+# Python 3 and above, at least on NTFS, but not on Python 2.
 def get_inode(f):
-    return 0 # XXX but force return 0 for now
+    return 0 # XXX
     if os.path.exists(f):
         return os.stat(f).st_ino
     else:
@@ -86,7 +89,7 @@ def __creat_file(f):
     return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 # https://docs.python.org/3/library/os.html#os.symlink
-if util.is_python_version_or_ht(3, 2):
+if util.is_python3():
     def symlink(source, link_name):
         if os.path.exists(link_name):
             return -1
@@ -100,8 +103,7 @@ if util.is_python_version_or_ht(3, 2):
             return -1
 else:
     def symlink(source, link_name):
-        assert False
-        return -1
+        return -1 # XXX
 
 def fsync(fd):
     if fd and not fd.closed:
@@ -145,6 +147,18 @@ def get_page_size():
 
 def get_buffer_size():
     return get_page_size()
+
+def get_terminal_size():
+    h = ctypes.windll.kernel32.GetStdHandle(-11) # STD_OUTPUT_HANDLE
+    b = ctypes.create_string_buffer(22)
+    if ctypes.windll.kernel32.GetConsoleScreenBufferInfo(h, b) != 0:
+        # https://docs.microsoft.com/en-us/windows/console/console-screen-buffer-info-str
+        l = struct.unpack(util.S2F * 4 + util.U2F + util.S2F * 6, b.raw)
+        assert len(l) == 11, l
+        left, top, right, bottom = l[5:9]
+        return bottom - top + 1, right - left + 1
+    else:
+        return -1, -1
 
 def get_total_ram():
     return -1

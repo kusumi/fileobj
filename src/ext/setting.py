@@ -29,7 +29,4 @@ def get_text(co, fo, args):
         return "No setting"
     n = max([len(x[0]) for x in settings])
     f = "{{0:<{0}}} {{1}}".format(n)
-    l = []
-    for x in settings:
-        l.append(f.format(*x))
-    return l
+    return [f.format(*x) for x in settings]

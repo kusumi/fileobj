@@ -96,19 +96,12 @@ def __system_is(s):
 
 def __is_xnix():
     try:
-        util.execute("uname")
-        util.execute("pwd")
-        util.execute("ls")
-        return True
+        return util.execute("true").retval == 0
     except Exception:
         return False
 
 def is_bsd():
-    return \
-        is_netbsd() or \
-        is_openbsd() or \
-        is_freebsd() or \
-        is_dragonflybsd() or \
+    return is_netbsd() or is_openbsd() or is_freebsd() or is_dragonflybsd() or \
         _system.endswith("BSD")
 
 def is_bsd_derived():

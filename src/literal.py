@@ -384,6 +384,8 @@ def init():
     setattr(this, "ZQ", FastLiteral("ZQ", None, "Close current window if more than 1 windows exist else quit program without writing"))
     setattr(this, "n", FastLiteral("n", None, "Repeat the latest search"))
     setattr(this, "N", FastLiteral("N", None, "Repeat the latest search toward backward"))
+    setattr(this, "semicolon", FastLiteral(";", None, "Repeat the latest character search"))
+    setattr(this, "comma", FastLiteral(",", None, "Repeat the latest character search toward backward"))
     setattr(this, "i", FastLiteral("i", None, "Start insert edit mode"))
     setattr(this, "I", FastLiteral("I", None, "Start insert edit mode at the first byte of buffer"))
     setattr(this, "a", FastLiteral("a", None, "Start append edit mode"))
@@ -418,6 +420,10 @@ def init():
     setattr(this, "bit_and", RegexLiteral(3, "&[0-9a-fA-F]{2}", r"^&[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise and-ed bytes"))
     setattr(this, "bit_or", RegexLiteral(3, "|[0-9a-fA-F]{2}", r"^\|[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise or-ed bytes"))
     setattr(this, "bit_xor", RegexLiteral(3, "^[0-9a-fA-F]{2}", r"^\^[0-9a-fA-F]{2}", "Replace [count] bytes with bitwise xor-ed bytes"))
+    setattr(this, "fsearchc", RegexLiteral(2, "f?", r"^f.", "Search character forward"))
+    setattr(this, "rsearchc", RegexLiteral(2, "F?", r"^F.", "Search character backward"))
+    setattr(this, "fsearchcb", RegexLiteral(2, "t?", r"^t.", "Search character forward until before occurrence"))
+    setattr(this, "rsearchcb", RegexLiteral(2, "T?", r"^T.", "Search character backward until before occurrence"))
 
     setattr(this, "s_e", SlowLiteral(":e", None, "Open a buffer"))
     setattr(this, "s_bdelete", SlowLiteral(":bdelete", None, "Close a buffer"))
@@ -479,8 +485,16 @@ def init():
     setattr(this, "s_qaneg", SlowLiteral(":qa!", None, "Close all windows and quit program without writing"))
     setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
     setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
-    setattr(this, "s_fsearch", SearchLiteral("/", None, "Search forward"))
-    setattr(this, "s_rsearch", SearchLiteral("?", None, "Search backward"))
+    setattr(this, "s_b64_enc", SlowLiteral(":base64_encode", None, "Open base64 encoded buffer"))
+    setattr(this, "s_b64_dec", SlowLiteral(":base64_decode", None, "Open base64 decoded buffer"))
+    setattr(this, "s_b32_enc", SlowLiteral(":base32_encode", None, "Open base32 encoded buffer"))
+    setattr(this, "s_b32_dec", SlowLiteral(":base32_decode", None, "Open base32 decoded buffer"))
+    setattr(this, "s_b16_enc", SlowLiteral(":base16_encode", None, "Open base16 encoded buffer"))
+    setattr(this, "s_b16_dec", SlowLiteral(":base16_decode", None, "Open base16 decoded buffer"))
+    setattr(this, "s_b85_enc", SlowLiteral(":base85_encode", None, "Open base85 encoded buffer"))
+    setattr(this, "s_b85_dec", SlowLiteral(":base85_decode", None, "Open base85 decoded buffer"))
+    setattr(this, "s_fsearchw", SearchLiteral("/", None, "Search forward"))
+    setattr(this, "s_rsearchw", SearchLiteral("?", None, "Search backward"))
 
     setattr(this, "s_set_binary", ArgLiteral("binary", None, "Set binary edit mode (unset ascii edit mode)"))
     setattr(this, "s_set_ascii", ArgLiteral("ascii", None, "Set ascii edit mode (unset binary edit mode)"))
@@ -541,7 +555,7 @@ def init():
         (this.s_bdelete, this.s_e),
         (this.s_cmpneg, this.s_cmp),
         (this.s_delmarksneg, this.s_delmarks),
-        (this.s_rsearch, this.s_fsearch),
+        (this.s_rsearchw, this.s_fsearchw),
         ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
 
     # edit._deleteconsole currently requires delete variants are of size 1

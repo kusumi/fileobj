@@ -23,5 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-python ./setup.py clean --all
-python ./setup.py install --force --record ./install.out
+PYTHON=$1
+
+${PYTHON} ./setup.py clean --all
+${PYTHON} ./setup.py install --force --record ./install.out

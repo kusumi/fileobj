@@ -23,6 +23,7 @@
 
 from __future__ import division
 from __future__ import with_statement
+import base64
 import os
 import platform
 import sys
@@ -1114,7 +1115,7 @@ def __block_show_hash(self, name):
 def __get_hash(self, name, l):
     b = filebytes.join(l)
     if not b:
-        self.co.flash("No input")
+        self.co.flash("No buffer")
         return
     try:
         self.co.show(util.get_hash(name, b))
@@ -1367,81 +1368,169 @@ def __do_replace_number(self, amp, pos, siz):
         self.co.show(util.bin_to_int(b))
     __exec_prepaint(self, fn, siz)
 
-_did_search_forward = True
+_did_search_word_forward = True
+_did_search_char_forward = True
 
-def search_forward(self, amp, opc, args, raw):
-    __do_search_repeat(self, amp, opc, args, raw, True)
+def __get_did_search_forward(k):
+    if k in (literal.s_fsearchw.str, literal.s_rsearchw.str):
+        return _did_search_word_forward
+    elif k in (literal.fsearchc.str[0], literal.rsearchc.str[0]):
+        return _did_search_char_forward
+    elif k in (literal.fsearchcb.str[0], literal.rsearchcb.str[0]):
+        return _did_search_char_forward
+    else:
+        assert False, k
 
-def search_backward(self, amp, opc, args, raw):
-    __do_search_repeat(self, amp, opc, args, raw, False)
+def __set_did_search_forward(k, v):
+    global _did_search_word_forward, _did_search_char_forward
+    if k in (literal.s_fsearchw.str, literal.s_rsearchw.str):
+        _did_search_word_forward = v
+    elif k in (literal.fsearchc.str[0], literal.rsearchc.str[0]):
+        _did_search_char_forward = v
+    elif k in (literal.fsearchcb.str[0], literal.rsearchcb.str[0]):
+        _did_search_char_forward = v
+    else:
+        assert False, (k, v)
 
-def __do_search_repeat(self, amp, opc, args, raw, is_forward):
+def __get_search_direction_next(k, is_cmd_forward):
+    # The direction is set based on the previous regular search.
+    # If searched forward (/xxx) and forward next (n), then forward (True).
+    # If searched forward (/xxx) and backward next (N), then backward (False).
+    # If searched backward (?xxx) and forward next (n), then backward (False).
+    # If searched backward (?xxx) and backward next (N), then forward (True).
+    return __get_did_search_forward(k) == is_cmd_forward
+
+def __get_search_word_next(self):
+    if __get_did_search_forward(literal.s_fsearchw.str):
+        k = literal.s_fsearchw.str
+    else:
+        k = literal.s_rsearchw.str
+    s = self.ope.get_prev_history(k)
+    if not s:
+        self.co.flash("No previous search")
+        return -1
+    return s
+
+# search
+def search_word_forward(self, amp, opc, args, raw):
     # /xxx yyy  zzz
     # is to find "xxx yyy  zzz" but not "xxx".
     # Note that joining args can't handle double space.
     s = util.bytes_to_str(filebytes.input_to_bytes(raw))
-    n = get_int(amp)
-    for x in util.get_xrange(n):
-        is_last = (x == (n - 1))
-        if not x:
-            if __do_search(self, s, is_forward, is_last) == -1:
-                return
-        else:
-            # Always pass True, as the actual direction is set
-            # based on comparison with the previous regular search.
-            if __do_search_next(self, True, is_last) == -1:
-                return
-
-def __do_search(self, s, is_forward, is_last):
-    global _did_search_forward
     if len(s) == 1:
         s = self.ope.get_prev_history(s[0])
         if not s:
             self.co.flash("No previous search")
             return
-    _did_search_forward = is_forward
-    return __search(self, self.co.get_pos(), s, is_forward, is_last)
+    __search(self, s, amp, True) # ignore current position
+    __set_did_search_forward(s[0], True)
 
-def search_next_forward(self, amp, opc, args, raw):
-    __do_search_next_repeat(self, amp, True)
+def search_word_backward(self, amp, opc, args, raw):
+    # /xxx yyy  zzz
+    # is to find "xxx yyy  zzz" but not "xxx".
+    # Note that joining args can't handle double space.
+    s = util.bytes_to_str(filebytes.input_to_bytes(raw))
+    if len(s) == 1:
+        s = self.ope.get_prev_history(s[0])
+        if not s:
+            self.co.flash("No previous search")
+            return
+    __search(self, s, amp, False) # ignore current position
+    __set_did_search_forward(s[0], False)
 
-def search_next_backward(self, amp, opc, args, raw):
-    __do_search_next_repeat(self, amp, False)
+_prev_search_char = None
+_did_search_char_before = False
 
-def __do_search_next_repeat(self, amp, is_forward):
+def search_char_forward(self, amp, opc, args, raw):
+    global _prev_search_char, _did_search_char_before
+    s = _prev_search_char = util.bytes_to_str(filebytes.input_to_bytes(raw))
+    _did_search_char_before = False
+    __search(self, s, amp, True) # ignore current position
+    __set_did_search_forward(s[0], True)
+
+def search_char_backward(self, amp, opc, args, raw):
+    global _prev_search_char, _did_search_char_before
+    s = _prev_search_char = util.bytes_to_str(filebytes.input_to_bytes(raw))
+    _did_search_char_before = False
+    __search(self, s, amp, False) # ignore current position
+    __set_did_search_forward(s[0], False)
+
+def search_char_forward_before(self, amp, opc, args, raw):
+    global _prev_search_char, _did_search_char_before
+    s = _prev_search_char = util.bytes_to_str(filebytes.input_to_bytes(raw))
+    _did_search_char_before = True
+    # no need to move +1, no position change on consecutive attempt
+    if __search(self, s, amp, True) != -1: # ignore current
+        go_left(self, 1) # move -1 if success
+    __set_did_search_forward(s[0], True)
+
+def search_char_backward_before(self, amp, opc, args, raw):
+    global _prev_search_char, _did_search_char_before
+    s = _prev_search_char = util.bytes_to_str(filebytes.input_to_bytes(raw))
+    _did_search_char_before = True
+    # no need to move -1, no position change on consecutive attempt
+    if __search(self, s, amp, False) != -1: # ignore current
+        go_right(self, 1) # move +1 if success
+    __set_did_search_forward(s[0], False)
+
+# search next
+def search_word_next_forward(self, amp, opc, args, raw):
+    s = __get_search_word_next(self)
+    if s == -1:
+        return
+    assert s[0] in (literal.s_fsearchw.str, literal.s_rsearchw.str), s
+    is_forward = __get_search_direction_next(literal.s_fsearchw.str, True)
+    __search(self, s, amp, is_forward)
+
+def search_word_next_backward(self, amp, opc, args, raw):
+    s = __get_search_word_next(self)
+    if s == -1:
+        return
+    assert s[0] in (literal.s_fsearchw.str, literal.s_rsearchw.str), s
+    is_forward = __get_search_direction_next(literal.s_fsearchw.str, False)
+    __search(self, s, amp, is_forward)
+
+def search_char_next_forward(self, amp, opc, args, raw):
+    s = _prev_search_char
+    if s is None:
+        return
+    is_forward = __get_search_direction_next(literal.fsearchc.str[0], True)
+    if _did_search_char_before:
+        go_right(self, 1) # move +1 for consecutive attempt
+    __search(self, s, amp, is_forward)
+    if _did_search_char_before:
+        go_left(self, 1) # move -1, or backout previous +1 on failure
+
+def search_char_next_backward(self, amp, opc, args, raw):
+    s = _prev_search_char
+    if s is None:
+        return
+    is_forward = __get_search_direction_next(literal.fsearchc.str[0], False)
+    if _did_search_char_before:
+        go_left(self, 1) # move -1 for consecutive attempt
+    __search(self, s, amp, is_forward)
+    if _did_search_char_before:
+        go_right(self, 1) # move +1, or backout previous -1 on failure
+
+def __search(self, s, amp, is_forward):
     n = get_int(amp)
     for x in util.get_xrange(n):
         is_last = (x == (n - 1))
-        if __do_search_next(self, is_forward, is_last) == -1:
-            return
-
-def __do_search_next(self, _is_forward, is_last):
-    k = literal.s_fsearch.str if _did_search_forward else literal.s_rsearch.str
-    s = self.ope.get_prev_history(k)
-    if not s:
-        self.co.flash("No previous search")
-        return
-    pos = self.co.get_pos()
-    # The direction is set based on the previous regular search.
-    # If searched forward (/xxx) and forward next (n), then forward.
-    # If searched forward (/xxx) and backward next (N), then backward.
-    # If searched backward (?xxx) and forward next (n), then backward.
-    # If searched backward (?xxx) and backward next (N), then forward.
-    is_forward = (_did_search_forward == _is_forward)
-    if is_forward:
-        if pos >= self.co.get_max_pos():
-            pos = 0
+        pos = self.co.get_pos()
+        if is_forward:
+            if pos >= self.co.get_max_pos():
+                pos = 0
+            else:
+                pos += 1
         else:
-            pos += 1
-    else:
-        if pos <= 0:
-            pos = self.co.get_max_pos()
-        else:
-            pos -= 1
-    return __search(self, pos, s, is_forward, is_last)
+            if pos <= 0:
+                pos = self.co.get_max_pos()
+            else:
+                pos -= 1
+        if __do_search(self, pos, s, is_forward, is_last) == -1:
+            return -1
 
-def __search(self, pos, s, is_forward, is_last):
-    assert s[0] in (literal.s_fsearch.str, literal.s_rsearch.str)
+def __do_search(self, pos, s, is_forward, is_last):
     word = util.pack_hex_string(s[1:])
     b = util.str_to_bytes(word)
     if is_forward:
@@ -2491,13 +2580,14 @@ def __save_partial(self, args, fn, force):
     try:
         buf = fn(self)
         if not buf:
+            self.co.flash("No buffer selected")
             return -1
         if overwrite:
             msg, new = __overwrite_buffer(self, f, buf)
         else:
-            assert not os.path.exists(f)
+            assert not os.path.exists(f), f
             o = self.co.alloc_fileobj(f) # should not fail
-            o.insert(0, buf) # XXX too slow
+            o.init_buffer(buf)
             msg, new = o.flush()
             assert new, new
         if msg:
@@ -2577,6 +2667,174 @@ def range_save_buffer_quit(self, amp, opc, args, raw):
 def block_save_buffer_quit(self, amp, opc, args, raw):
     if __save_partial(self, args, __block_read, False) != -1:
         return quit(self, amp, opc, args, raw)
+
+def _b64encode(b):
+    return base64.standard_b64encode(b)
+
+def _b64decode(b):
+    return base64.standard_b64decode(b)
+
+def _b32encode(b):
+    return base64.b32encode(b)
+
+def _b32decode(b):
+    return base64.b32decode(b)
+
+def _b16encode(b):
+    return base64.b16encode(b)
+
+def _b16decode(b):
+    return base64.b16decode(b)
+
+def _b85encode(b):
+    try:
+        return base64.b85encode(b) # Python 3.4+
+    except AttributeError:
+        raise Exception("Base85 unsupported by " + util.get_python_string())
+
+def _b85decode(b):
+    try:
+        return base64.b85decode(b) # Python 3.4+
+    except AttributeError:
+        raise Exception("Base85 unsupported by " + util.get_python_string())
+
+# base64
+def open_base64_encode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b64encode)
+
+def open_base64_decode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b64decode)
+
+def range_open_base64_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b64encode)
+
+def range_open_base64_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b64decode)
+
+def block_open_base64_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b64encode)
+
+def block_open_base64_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b64decode)
+
+# base32
+def open_base32_encode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b32encode)
+
+def open_base32_decode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b32decode)
+
+def range_open_base32_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b32encode)
+
+def range_open_base32_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b32decode)
+
+def block_open_base32_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b32encode)
+
+def block_open_base32_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b32decode)
+
+# base16
+def open_base16_encode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b16encode)
+
+def open_base16_decode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b16decode)
+
+def range_open_base16_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b16encode)
+
+def range_open_base16_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b16decode)
+
+def block_open_base16_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b16encode)
+
+def block_open_base16_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b16decode)
+
+# base85
+def open_base85_encode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b85encode)
+
+def open_base85_decode(self, amp, opc, args, raw):
+    __open_basex_encoding(self, args, _b85decode)
+
+def range_open_base85_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b85encode)
+
+def range_open_base85_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __range_read, _b85decode)
+
+def block_open_base85_encode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b85encode)
+
+def block_open_base85_decode(self, amp, opc, args, raw):
+    __open_basex_encoding_partial(self, args, __block_read, _b85decode)
+
+def __open_basex_encoding(self, args, efn):
+    # returns -1 if not written
+    f = __get_open_basex_encoding_path(self, args, efn)
+    if f is None:
+        return -1
+    assert not os.path.exists(f), f
+    try:
+        buf = self.co.readall()
+        if not buf:
+            self.co.flash("No buffer")
+            return -1
+        buf = efn(buf)
+        self.co.add_buffer(f)
+        self.co.init_buffer(buf)
+        if __try_update_address_num_width(self) == -1:
+            self.co.lrepaintf()
+        return RETURN
+    except Exception as e:
+        self.co.flash(e)
+        return -1
+
+def __open_basex_encoding_partial(self, args, fn, efn):
+    # returns -1 if not written
+    f = __get_open_basex_encoding_path(self, args, efn)
+    if f is None:
+        return -1
+    assert not os.path.exists(f), f
+    try:
+        buf = fn(self)
+        if not buf:
+            self.co.flash("No buffer selected")
+            return -1
+        buf = efn(buf)
+        self.co.add_buffer(f)
+        self.co.init_buffer(buf)
+        if __try_update_address_num_width(self) == -1:
+            self.co.lrepaintf()
+        return RETURN
+    except Exception as e:
+        self.co.flash(e)
+        return -1
+
+def __get_open_basex_encoding_path(self, args, efn):
+    if len(args) > 1:
+        self.co.flash("Only one file name allowed")
+        return
+    if args:
+        f = args[0]
+    else:
+        f = "{0}_{1}".format(efn, os.path.basename(self.co.get_path()))
+    o = path.Path(f)
+    f = o.path
+    ret = path.get_path_failure_message(o, False)
+    if ret:
+        self.co.flash(ret)
+    elif self.co.has_buffer(f):
+        self.co.flash(f + " is already loaded")
+    elif not o.is_noent:
+        self.co.flash(f + " exists")
+    else:
+        return f
 
 def escape(self, amp, opc, args, raw):
     self.co.clear_delayed_input()

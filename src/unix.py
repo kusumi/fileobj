@@ -26,6 +26,7 @@ import mmap
 import os
 import re
 import stat
+import struct
 
 from . import filebytes
 from . import log
@@ -241,6 +242,11 @@ def ioctl(fd, request, length):
 
 def ioctl_get_int(fd, request, length):
     return util.host_to_int(ioctl(fd, request, length))
+
+def get_terminal_size():
+    import termios
+    b = ioctl(0, termios.TIOCGWINSZ, 8)
+    return struct.unpack(util.S2F * 4, b)[:2]
 
 def get_total_ram():
     page_size = get_page_size()

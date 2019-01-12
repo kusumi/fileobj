@@ -570,10 +570,24 @@ class _console (console.Console):
         self.add_method(literal.s_qneg       , this,    "_queue_input")
         self.add_method(literal.s_qa         , this,    "_queue_input")
         self.add_method(literal.s_qaneg      , this,    "_queue_input")
-        self.add_method(literal.s_fsearch    , methods, "search_forward")
-        self.add_method(literal.s_rsearch    , methods, "search_backward")
-        self.add_method(literal.n            , methods, "search_next_forward")
-        self.add_method(literal.N            , methods, "search_next_backward")
+        self.add_method(literal.s_b64_enc    , this,    "_open_base64_encode")
+        self.add_method(literal.s_b64_dec    , this,    "_open_base64_decode")
+        self.add_method(literal.s_b32_enc    , this,    "_open_base32_encode")
+        self.add_method(literal.s_b32_dec    , this,    "_open_base32_decode")
+        self.add_method(literal.s_b16_enc    , this,    "_open_base16_encode")
+        self.add_method(literal.s_b16_dec    , this,    "_open_base16_decode")
+        self.add_method(literal.s_b85_enc    , this,    "_open_base85_encode")
+        self.add_method(literal.s_b85_dec    , this,    "_open_base85_decode")
+        self.add_method(literal.s_fsearchw   , methods, "search_word_forward")
+        self.add_method(literal.s_rsearchw   , methods, "search_word_backward")
+        self.add_method(literal.n            , methods, "search_word_next_forward")
+        self.add_method(literal.N            , methods, "search_word_next_backward")
+        self.add_method(literal.fsearchc     , methods, "search_char_forward")
+        self.add_method(literal.rsearchc     , methods, "search_char_backward")
+        self.add_method(literal.fsearchcb    , methods, "search_char_forward_before")
+        self.add_method(literal.rsearchcb    , methods, "search_char_backward_before")
+        self.add_method(literal.semicolon    , methods, "search_char_next_forward")
+        self.add_method(literal.comma        , methods, "search_char_next_backward")
         self.add_method(literal.escape       , this,    "_escape_visual")
         #self.add_method(literal.i           , None,    None)
         #self.add_method(literal.I           , None,    None)
@@ -743,6 +757,38 @@ def _force_save_buffer(self, amp, opc, args, raw):
 
 @_(methods.range_save_buffer_quit, methods.block_save_buffer_quit)
 def _save_buffer_quit(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base64_encode, methods.block_open_base64_encode)
+def _open_base64_encode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base64_decode, methods.block_open_base64_decode)
+def _open_base64_decode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base32_encode, methods.block_open_base32_encode)
+def _open_base32_encode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base32_decode, methods.block_open_base32_decode)
+def _open_base32_decode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base16_encode, methods.block_open_base16_encode)
+def _open_base16_encode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base16_decode, methods.block_open_base16_decode)
+def _open_base16_decode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base85_encode, methods.block_open_base85_encode)
+def _open_base85_encode(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_base85_decode, methods.block_open_base85_decode)
+def _open_base85_decode(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_delete, methods.block_delete)

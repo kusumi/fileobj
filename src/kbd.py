@@ -25,6 +25,7 @@ import sys
 
 from . import ascii
 from . import kernel
+from . import nodep
 from . import setting
 from . import terminal
 from . import util
@@ -54,7 +55,7 @@ except ImportError:
     _KEY_RIGHT     = 261
     _KEY_BACKSPACE = 263
     _KEY_DC        = 330
-    if util.get_os_name() == "Windows":
+    if nodep.is_windows():
         _KEY_MOUSE  = 539
         _KEY_RESIZE = 546
     else:

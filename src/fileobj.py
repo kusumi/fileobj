@@ -334,6 +334,28 @@ class Fileobj (object):
             if x < 0:
                 break
 
+    def init_buffer(self, b):
+        assert not self.is_dirty()
+        assert not self.has_undo()
+        assert not self.has_redo()
+        assert not self.has_rollback_log()
+        if not b:
+            return
+        if not self.is_empty():
+            self.delete(0, self.get_size())
+            assert self.is_dirty()
+        assert self.is_empty()
+        self.insert(0, filebytes.bytes_to_input(b))
+        assert self.get_size() == len(b), (self.get_size(), len(b))
+        assert self.is_dirty()
+        self.sync_undo()
+        assert not self.is_dirty()
+        self.__attr.undo.clear()
+        assert not self.is_dirty()
+        assert not self.has_undo()
+        assert not self.has_redo()
+        assert not self.has_rollback_log()
+
     def read(self, x, n):
         self.raise_no_support("read")
 
@@ -376,6 +398,9 @@ class Fileobj (object):
 
     def has_redo(self):
         return self.get_redo_size() > 0
+
+    def has_rollback_log(self):
+        return self.get_rollback_log_size() > 0
 
     def get_undo_size(self):
         return self.__attr.undo.get_undo_size()

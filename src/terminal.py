@@ -28,11 +28,10 @@ from . import kernel
 from . import util
 
 if kernel.is_xnix():
-    import struct
     import termios
     import tty
 
-    from . import unix
+    from . import unix as _terminal
 
     def get_lang():
         return os.getenv("LANG", "")
@@ -40,14 +39,14 @@ if kernel.is_xnix():
     def get_type():
         return os.getenv("TERM", "")
 
-    if util.is_python_version_or_ht(3, 3):
-        def get_size():
-            l = shutil.get_terminal_size()
-            return l[1], l[0]
-    else:
-        def get_size():
-            b = unix.ioctl(0, termios.TIOCGWINSZ, 8)
-            return struct.unpack(util.S2F * 4, b)[:2]
+    def in_tmux_screen():
+        return os.getenv("STY") is not None
+
+    def in_tmux_tmux():
+        return os.getenv("TMUX") is not None
+
+    def in_windows_prompt():
+        return False
 
     def getch(fd):
         return ord(fd.read(1))
@@ -74,6 +73,7 @@ else:
     import msvcrt
 
     from . import ascii
+    from . import windows as _terminal
 
     def get_lang():
         return ""
@@ -81,14 +81,14 @@ else:
     def get_type():
         return ""
 
-    if util.is_python_version_or_ht(3, 3):
-        def get_size():
-            l = shutil.get_terminal_size()
-            return l[1], l[0]
-    else:
-        def get_size():
-            assert False
-            return -1, -1
+    def in_tmux_screen():
+        return False
+
+    def in_tmux_tmux():
+        return False
+
+    def in_windows_prompt():
+        return os.getenv("PROMPT") is not None
 
     def getch(fd):
         ret = ord(msvcrt.getch())
@@ -102,6 +102,13 @@ else:
 
     def cleanup_getch(fd):
         return
+
+if util.is_python_version_or_ht(3, 3):
+    def get_size():
+        x, y = shutil.get_terminal_size()
+        return y, x
+else:
+    get_size = _terminal.get_terminal_size
 
 def is_vtxxx():
     return get_type().startswith("vt")
@@ -135,9 +142,3 @@ def is_linux():
 
 def is_dumb():
     return get_type().startswith("dumb")
-
-def in_tmux_tmux():
-    return os.getenv("TMUX") is not None
-
-def in_windows_prompt():
-    return kernel.is_windows() and os.getenv("PROMPT") is not None

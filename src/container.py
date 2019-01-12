@@ -733,6 +733,9 @@ class Container (object):
             self.__raise_random_stream("Flush {0}".format(f))
         return self.__cur_workspace.flush(f)
 
+    def init_buffer(self, b):
+        return self.__cur_workspace.init_buffer(b)
+
     def read(self, x, n):
         return self.__cur_workspace.read(x, n)
 

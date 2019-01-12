@@ -23,7 +23,6 @@
 
 if __name__ == '__main__':
     import os
-    import platform
     import sys
 
     if not os.path.isfile("./setup.py") or not os.path.isdir("./src"):
@@ -48,7 +47,7 @@ if __name__ == '__main__':
             sys.argv.remove(s)
 
     # Force Windows specific behavior.
-    if platform.system() == "Windows":
+    if src.nodep.is_windows():
         ext_modules = None
         f = "bin/fileobj.py"
     else:

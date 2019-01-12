@@ -21,5 +21,8 @@ REM ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 REM (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 REM SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-python ./setup.py clean --all
-python ./setup.py install --force --record ./install.out.txt
+REM Use "py -2.7" to install against Python 2.7 when Python 3.x exists.
+REM https://docs.python.org/3/using/windows.html#from-the-command-line
+
+%~1 ./setup.py clean --all
+%~1 ./setup.py install --force --record ./install.out.txt

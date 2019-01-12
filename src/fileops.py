@@ -254,6 +254,9 @@ class Fileops (object):
     def iter_rsearch(self, x, word):
         return self.__ref.iter_rsearch(self.__get_normalized_pos(x), word)
 
+    def init_buffer(self, b):
+        return self.__ref.init_buffer(b)
+
     def __init_ops(self):
         if setting.use_debug:
             self.read    = self.__debug_read

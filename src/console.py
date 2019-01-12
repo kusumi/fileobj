@@ -311,7 +311,10 @@ def set_message(o, cursor=-1):
     if o is None:
         return # ignore None
     s = str(o)
-    if isinstance(o, Exception):
+    if isinstance(o, AssertionError):
+        _message = repr(o) # always show "AssertionError" as s may be ""
+        _cursor = -1
+    elif isinstance(o, Exception):
         _message = s if s else repr(o)
         _cursor = -1
     else:

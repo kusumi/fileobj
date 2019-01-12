@@ -39,6 +39,7 @@ import tempfile
 import time
 import traceback
 
+from . import nodep
 from . import package
 from . import setting
 
@@ -625,7 +626,11 @@ def __get_uid_gid(f):
 
 def is_same_file(a, b):
     if os.path.exists(a) and os.path.exists(b):
-        return os.path.samefile(a, b)
+        try:
+            return os.path.samefile(a, b)
+        except AttributeError:
+            # https://docs.python.org/3/library/os.path.html#os.path.samefile
+            return False # not Python 3.2+ on Windows
     else:
         return False
 
@@ -720,8 +725,23 @@ def get_hash(name, b):
         fn = getattr(hashlib, name)
         return fn(b).hexdigest()
 
+try:
+    FileNotFoundError # since Python 3.3
+except NameError:
+    FileNotFoundError = OSError
+try:
+    WindowsError # XXX move this to windows
+except NameError:
+    WindowsError = OSError
+
 def execute(*l):
-    return __execute(False, l)
+    if nodep.is_windows():
+        try:
+            return __execute(False, l)
+        except (WindowsError, FileNotFoundError):
+            return __execute(True, l)
+    else:
+        return __execute(False, l)
 
 def execute_sh(cmd):
     return __execute(True, (cmd,))

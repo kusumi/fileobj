@@ -22,10 +22,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import platform
 import sys
 
 from . import env
+from . import nodep
 
 def get_home_dir():
     return _home_dir
@@ -37,7 +37,7 @@ _windows_suffix = ".txt"
 
 def get_env_path():
     f = os.path.join(get_user_dir(), "env")
-    if platform.system() == "Windows":
+    if nodep.is_windows():
         return f + _windows_suffix
     else:
         return f
