@@ -725,6 +725,13 @@ def get_hash(name, b):
         fn = getattr(hashlib, name)
         return fn(b).hexdigest()
 
+def get_hash_binary(name, b):
+    if isinstance(b, str):
+        b = _(b)
+    if b:
+        fn = getattr(hashlib, name)
+        return fn(b).digest()
+
 try:
     FileNotFoundError # since Python 3.3
 except NameError:

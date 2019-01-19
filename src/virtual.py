@@ -40,7 +40,14 @@ class _canvas (panel.Canvas):
     def fill(self, low):
         super(_canvas, self).fill(low)
         pos = self.fileops.get_pos()
-        assert 0 <= pos <= self.fileops.get_max_pos(), pos
+        # XXX There are still a few cases where current position doesn't meet
+        # below after previous command (e.g. Gr<RIGHT> for not moving -1/left),
+        # so keep auto adjustment until all gone.
+        #assert 0 <= pos <= self.fileops.get_max_pos(), pos
+        if pos > self.fileops.get_max_pos():
+            self.go_to(self.fileops.get_max_pos())
+        elif pos < 0:
+            self.go_to(0)
 
     def noutrefresh(self):
         return

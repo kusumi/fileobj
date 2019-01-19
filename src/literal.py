@@ -485,14 +485,24 @@ def init():
     setattr(this, "s_qaneg", SlowLiteral(":qa!", None, "Close all windows and quit program without writing"))
     setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
     setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
-    setattr(this, "s_b64_enc", SlowLiteral(":base64_encode", None, "Open base64 encoded buffer"))
-    setattr(this, "s_b64_dec", SlowLiteral(":base64_decode", None, "Open base64 decoded buffer"))
-    setattr(this, "s_b32_enc", SlowLiteral(":base32_encode", None, "Open base32 encoded buffer"))
-    setattr(this, "s_b32_dec", SlowLiteral(":base32_decode", None, "Open base32 decoded buffer"))
-    setattr(this, "s_b16_enc", SlowLiteral(":base16_encode", None, "Open base16 encoded buffer"))
-    setattr(this, "s_b16_dec", SlowLiteral(":base16_decode", None, "Open base16 decoded buffer"))
-    setattr(this, "s_b85_enc", SlowLiteral(":base85_encode", None, "Open base85 encoded buffer"))
-    setattr(this, "s_b85_dec", SlowLiteral(":base85_decode", None, "Open base85 decoded buffer"))
+    setattr(this, "s_open_md5", SlowLiteral(":open_md5", None, "Open md5 message digest of the current buffer"))
+    setattr(this, "s_open_sha1", SlowLiteral(":open_sha1", None, "Open sha1 message digest of the current buffer"))
+    setattr(this, "s_open_sha224", SlowLiteral(":open_sha224", None, "Open sha224 message digest of the current buffer"))
+    setattr(this, "s_open_sha256", SlowLiteral(":open_sha256", None, "Open sha256 message digest of the current buffer"))
+    setattr(this, "s_open_sha384", SlowLiteral(":open_sha384", None, "Open sha384 message digest of the current buffer"))
+    setattr(this, "s_open_sha512", SlowLiteral(":open_sha512", None, "Open sha512 message digest of the current buffer"))
+    setattr(this, "s_open_sha3_224", SlowLiteral(":open_sha3_224", None, "Open sha3_224 message digest of the current buffer"))
+    setattr(this, "s_open_sha3_256", SlowLiteral(":open_sha3_256", None, "Open sha3_256 message digest of the current buffer"))
+    setattr(this, "s_open_sha3_384", SlowLiteral(":open_sha3_384", None, "Open sha3_384 message digest of the current buffer"))
+    setattr(this, "s_open_sha3_512", SlowLiteral(":open_sha3_512", None, "Open sha3_512 message digest of the current buffer"))
+    setattr(this, "s_open_b64e", SlowLiteral(":open_base64_encode", None, "Open base64 encoded buffer of the current buffer"))
+    setattr(this, "s_open_b64d", SlowLiteral(":open_base64_decode", None, "Open base64 decoded buffer of the current buffer"))
+    setattr(this, "s_open_b32e", SlowLiteral(":open_base32_encode", None, "Open base32 encoded buffer of the current buffer"))
+    setattr(this, "s_open_b32d", SlowLiteral(":open_base32_decode", None, "Open base32 decoded buffer of the current buffer"))
+    setattr(this, "s_open_b16e", SlowLiteral(":open_base16_encode", None, "Open base16 encoded buffer of the current buffer"))
+    setattr(this, "s_open_b16d", SlowLiteral(":open_base16_decode", None, "Open base16 decoded buffer of the current buffer"))
+    setattr(this, "s_open_b85e", SlowLiteral(":open_base85_encode", None, "Open base85 encoded buffer of the current buffer"))
+    setattr(this, "s_open_b85d", SlowLiteral(":open_base85_decode", None, "Open base85 decoded buffer of the current buffer"))
     setattr(this, "s_fsearchw", SearchLiteral("/", None, "Search forward"))
     setattr(this, "s_rsearchw", SearchLiteral("?", None, "Search backward"))
 
@@ -556,9 +566,12 @@ def init():
         (this.s_cmpneg, this.s_cmp),
         (this.s_delmarksneg, this.s_delmarks),
         (this.s_rsearchw, this.s_fsearchw),
+        (this.rsearchc, this.fsearchc),
+        (this.rsearchcb, this.fsearchcb),
+        (this.comma, this.semicolon),
         ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
 
-    # edit._deleteconsole currently requires delete variants are of size 1
+    # edit.DeleteConsole currently requires delete variants are of size 1
     assert len(this.delete.seq) == 1, this.delete
     l = [this.delete.seq[0]]
     for o in this.delete.children:

@@ -1,3 +1,27 @@
+v0.7.85
+=======
+- Minor fixes and cleanups
+- Use half byte cursor for binary window only when binary editing
+- Fix a bug caused "-- INSERT --", "-- REPLACE --" banner to disappear (since v0.7.81)
+- Rename :base64_encode to :open_base64_encode
+- Rename :base64_decode to :open_base64_decode
+- Rename :base32_encode to :open_base32_encode
+- Rename :base32_decode to :open_base32_decode
+- Rename :base16_encode to :open_base16_encode
+- Rename :base16_decode to :open_base16_decode
+- Rename :base85_encode to :open_base85_encode
+- Rename :base85_decode to :open_base85_decode
+- Add :open_md5
+- Add :open_sha1
+- Add :open_sha224
+- Add :open_sha256
+- Add :open_sha384
+- Add :open_sha512
+- Add :open_sha3_224
+- Add :open_sha3_256
+- Add :open_sha3_384
+- Add :open_sha3_512
+
 v0.7.84
 =======
 - Minor fixes and cleanups

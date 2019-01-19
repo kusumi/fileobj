@@ -41,6 +41,7 @@ from . import util
 #             virtual.ExtCanvas
 #         DisplayCanvas
 #             BinaryCanvas
+#                 edit.WriteBinaryCanvas
 #                 visual.BinaryCanvas
 #             TextCanvas
 #                 visual.TextCanvas
@@ -384,7 +385,7 @@ class DisplayCanvas (Canvas):
 
     def set_focus(self, *arg):
         super(DisplayCanvas, self).set_focus(*arg)
-        self.update_highlight(False)
+        self.update_highlight(False, True)
         self.noutrefresh()
 
     # cell distance from beg to end (end inclusive)
@@ -456,12 +457,8 @@ class DisplayCanvas (Canvas):
             self.fill_posstr()
 
     def __fill_post(self, low):
-        # update position
-        self.update_highlight(low)
-        # update search strings
-        self.page_update_search(self.fileops.get_pos())
-        # done in this fill if any
-        self.need_full_repaint = False
+        self.update_highlight(low, False)
+        self.need_full_repaint = False # done in this fill if any
 
     def fill(self, low):
         self.__fill_pre()
@@ -547,7 +544,7 @@ class DisplayCanvas (Canvas):
                         log.error(self, e, (y, xx), _)
             j += unitlen
 
-    def update_highlight(self, low):
+    def update_highlight(self, low, range_update):
         # update previous position first
         ppos = self.fileops.get_prev_pos()
         if ppos <= self.fileops.get_max_pos(): # may be invalid after delete
@@ -555,21 +552,26 @@ class DisplayCanvas (Canvas):
             attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
             self.chgat_posstr(ppos, screen.A_NONE)
             self.chgat_cursor(ppos, attr, attr, low)
-        # update current position
+        # update search strings before update current position
         pos = self.fileops.get_pos()
-        attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_STANDOUT
-        b = self.fileops.read(pos, 1)
-        attr2 = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
-        self.chgat_posstr(pos, self.attr_posstr)
-        self.chgat_cursor(pos, attr1, attr2, low)
-        # update search strings
         if not self.in_same_page(pos, ppos):
             ppos = self.get_page_offset()
-        self.range_update_search(pos, ppos, pos)
+        if range_update:
+            d = self.range_update_search(pos, ppos, pos)
+        else:
+            d = self.page_update_search(self.fileops.get_pos())
+        # update current position
+        attr = screen.A_COLOR_CURRENT if self.current else screen.A_STANDOUT
+        if d != -1 and pos in d:
+            l = d[pos] # synthesize attrs from search strings
+        else:
+            l = screen.A_NONE, screen.A_NONE
+        self.chgat_posstr(pos, self.attr_posstr)
+        self.chgat_cursor(pos, attr | l[0], attr | l[1], low)
 
     def sync_cursor(self):
         if not self.is_page_changed():
-            self.update_highlight(False)
+            self.update_highlight(False, True)
             self.noutrefresh()
         else:
             return -1 # need repaint
@@ -625,7 +627,7 @@ class DisplayCanvas (Canvas):
             return -1
         beg = self.get_page_offset()
         end = self.get_next_page_offset()
-        self.__update_search(pos, beg, end, s)
+        return self.__update_search(pos, beg, end, s)
 
     def range_update_search(self, pos, beg, end):
         s = self.fileops.get_search_word()
@@ -635,15 +637,15 @@ class DisplayCanvas (Canvas):
             beg, end = end, beg
         beg -= (len(s) - 1)
         end += len(s)
-        self.__update_search(pos, beg, end, s)
+        return self.__update_search(pos, beg, end, s)
 
     def __update_search(self, pos, beg, end, s):
-        attr_cursor = self.attr_search
         if beg < 0:
             beg = 0
+        d = {}
         b = self.fileops.read(beg, end - beg) # end not inclusive
         if not b:
-            return
+            return d
         found = 0
         while True:
             found = util.find_string(b, s, found)
@@ -654,12 +656,19 @@ class DisplayCanvas (Canvas):
                 break
             for j, _ in enumerate(filebytes.iter_ords(s)):
                 x = i + j
-                here = (x == pos)
-                if here and self.current:
-                    attr_cursor |= screen.A_COLOR_CURRENT
-                attr_search = self.attr_search | screen.buf_attr[_]
-                self.chgat_search(x, attr_cursor, attr_search, here)
+                d[x] = self.update_search(x, screen.buf_attr[_], x == pos)
             found += 1
+        return d # XXX refactor
+
+    def update_search(self, pos, attr_bytes, here):
+        if here and self.current:
+            attr1 = self.attr_search | screen.A_COLOR_CURRENT
+            attr2 = attr1
+        else:
+            attr1 = self.attr_search
+            attr2 = self.attr_search | attr_bytes
+        self.chgat_search(pos, attr1, attr2, here)
+        return attr1, attr2
 
 def _get_binary_str_single():
     d = {}

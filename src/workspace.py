@@ -415,6 +415,8 @@ class Workspace (object):
                 o = self.__get_virtual_window(void.ExtConsole)
             elif util.is_subclass(cls, edit.Console):
                 o = self.__def_vwindow
+            else:
+                assert False, cls
             self.__build_virtual_window(o)
             self.__vwindows[cls] = o
         return self.__vwindows[cls]
@@ -429,8 +431,14 @@ class Workspace (object):
                 o = window.Window(visual.BinaryCanvas, panel.Frame)
             elif cls is visual.ExtConsole:
                 o = window.Window(visual.ExtBinaryCanvas, panel.Frame)
-            elif util.is_subclass(cls, edit.Console):
+            elif util.is_subclass(cls, edit.WriteBinaryConsole):
+                o = window.Window(edit.WriteBinaryCanvas, panel.Frame)
+            elif util.is_subclass(cls, edit.WriteAsciiConsole):
                 o = self.__def_bwindow
+            elif util.is_subclass(cls, edit.DeleteConsole):
+                o = self.__def_bwindow
+            else:
+                assert False, cls
             self.__build_binary_window(o)
             self.__bwindows[cls] = o
         return self.__bwindows[cls]
@@ -449,6 +457,8 @@ class Workspace (object):
                 o = self.__get_text_window(void.ExtConsole)
             elif util.is_subclass(cls, edit.Console):
                 o = self.__def_twindow
+            else:
+                assert False, cls
             self.__build_text_window(o)
             self.__twindows[cls] = o
         return self.__twindows[cls]
@@ -465,6 +475,8 @@ class Workspace (object):
                 o = self.__def_swindow
             elif util.is_subclass(cls, edit.Console):
                 o = self.__def_swindow
+            else:
+                assert False, cls
             self.__build_status_window(o)
             self.__swindows[cls] = o
         return self.__swindows[cls]

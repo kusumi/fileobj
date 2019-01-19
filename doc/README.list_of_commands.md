@@ -35,7 +35,6 @@
         ]                      End reading buffered [count] value
         {                      Go to the previous non zero character
         }                      Go to the next non zero character
-        ,                      Repeat the latest character search toward backward
         .                      Repeat last change
         /                      Search forward
         ?                      Search backward
@@ -44,14 +43,6 @@
         :args                  Print buffer list with the current buffer in brackets
         :argv                  Print arguments of this program
         :auto                  Optimize editor window size based on the current terminal size
-        :base16_decode         Open base16 decoded buffer
-        :base16_encode         Open base16 encoded buffer
-        :base32_decode         Open base32 decoded buffer
-        :base32_encode         Open base32 encoded buffer
-        :base64_decode         Open base64 decoded buffer
-        :base64_encode         Open base64 encoded buffer
-        :base85_decode         Open base85 decoded buffer
-        :base85_encode         Open base85 encoded buffer
         :bfirst                Go to the first buffer in buffer list
         :brewind               Go to the first buffer in buffer list
         :bind                  Run/bind given :command in argument, replayable with @:
@@ -87,6 +78,24 @@
         :only                  Make the current window the only one
         <CTRL>wo               Make the current window the only one
         <CTRL>w<CTRL>o         Make the current window the only one
+        :open_base16_decode    Open base16 decoded buffer of the current buffer
+        :open_base16_encode    Open base16 encoded buffer of the current buffer
+        :open_base32_decode    Open base32 decoded buffer of the current buffer
+        :open_base32_encode    Open base32 encoded buffer of the current buffer
+        :open_base64_decode    Open base64 decoded buffer of the current buffer
+        :open_base64_encode    Open base64 encoded buffer of the current buffer
+        :open_base85_decode    Open base85 decoded buffer of the current buffer
+        :open_base85_encode    Open base85 encoded buffer of the current buffer
+        :open_md5              Open md5 message digest of the current buffer
+        :open_sha1             Open sha1 message digest of the current buffer
+        :open_sha224           Open sha224 message digest of the current buffer
+        :open_sha256           Open sha256 message digest of the current buffer
+        :open_sha384           Open sha384 message digest of the current buffer
+        :open_sha3_224         Open sha3_224 message digest of the current buffer
+        :open_sha3_256         Open sha3_256 message digest of the current buffer
+        :open_sha3_384         Open sha3_384 message digest of the current buffer
+        :open_sha3_512         Open sha3_512 message digest of the current buffer
+        :open_sha512           Open sha512 message digest of the current buffer
         :osdep                 Print OS dependent information
         :platform              Print platform
         :pwd                   Print the current directory name
@@ -137,13 +146,13 @@
         :x                     Like :wq, but write only when changes have been made
         ZZ                     Like :wq, but write only when changes have been made
         ;                      Repeat the latest character search
+        ,                      Repeat the latest character search toward backward
         >>                     Rotate [count] bits to right
         <<                     Rotate [count] bits to left
         @:                     Execute the binded command
         @[0-9a-zA-Z]           Execute the contents of register [count] times
         @@                     Execute the previous @ command [count] times
         D                      Delete characters under the cursor until the end of buffer
-        F?                     Search character backward
         G                      Go to line [count] (default last line)
         gg                     Go to line [count] (default first line)
         H                      Go to line [count] from top of window
@@ -155,12 +164,12 @@
         o                      Replace the text after the cursor [count] times
         P                      Put the text before the cursor [count] times
         p                      Put the text after the cursor [count] times
-        T?                     Search character backward until before occurrence
         U                      Undo all changes
         X                      Delete [count] characters before the cursor
         Y                      Yank characters under the cursor until the end of buffer
         y                      Yank [count] characters
         f?                     Search character forward
+        F?                     Search character backward
         go                     Go to [count] byte in the buffer (default first byte)
         i                      Start insert edit mode
         A                      Start append edit mode at the end of buffer
@@ -182,6 +191,7 @@
         sl                     Go [count] sectors to the right
         s<SPACE>               Go [count] sectors to the right
         t?                     Search character forward until before occurrence
+        T?                     Search character backward until before occurrence
         u                      Undo changes
         v                      Start/End visual mode
         <CTRL>v                Start/End block visual mode

@@ -35,9 +35,9 @@ class Operand (object):
         self.__history = history.History(None)
         self.__prev = util.Namespace(key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
-        l = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete", "b64_enc", \
-            "b64_dec", "b32_enc", "b32_dec", "b16_enc", "b16_dec", "b85_enc", \
-            "b85_dec" # XXX
+        l = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete", "open_b64e", \
+            "open_b64d", "open_b32e", "open_b32d", "open_b16e", "open_b16d", \
+            "open_b85e", "open_b85d" # XXX
         self.__path_li = tuple(getattr(literal, "s_" + _) for _ in l)
         self.__path_li_str = tuple(_.str for _ in self.__path_li)
 

@@ -42,18 +42,18 @@ from . import util
 #         visual.Console
 #         visual.ExtConsole
 #     edit.Console
-#         edit._writeconsole
-#             edit._binary
+#         edit.WriteConsole
+#             edit.WriteBinaryConsole
 #                 edit.BI
 #                 edit.BR
 #                     edit.RangeBR
 #                     edit.BlockBR
-#             edit._ascii
+#             edit.WriteAsciiConsole
 #                 edit.AI
 #                 edit.AR
 #                     edit.RangeAR
 #                     edit.BlockAR
-#         edit._deleteconsole
+#         edit.DeleteConsole
 
 seqno = 0
 

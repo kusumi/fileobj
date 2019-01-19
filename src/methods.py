@@ -974,153 +974,129 @@ def show_args(self, amp, opc, args, raw):
 
 # md5
 def show_md5(self, amp, opc, args, raw):
-    __show_hash(self, "md5", 0, self.co.get_size())
+    __show_hash(self, "md5")
 
 def range_show_md5(self, amp, opc, args, raw):
-    __range_show_hash(self, "md5")
+    __show_hash_partial(self, __range_read, "md5")
 
 def block_show_md5(self, amp, opc, args, raw):
-    __block_show_hash(self, "md5")
+    __show_hash_partial(self, __block_read, "md5")
 
 # sha1
 def show_sha1(self, amp, opc, args, raw):
-    __show_hash(self, "sha1", 0, self.co.get_size())
+    __show_hash(self, "sha1")
 
 def range_show_sha1(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha1")
+    __show_hash_partial(self, __range_read, "sha1")
 
 def block_show_sha1(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha1")
+    __show_hash_partial(self, __block_read, "sha1")
 
 # sha224
 def show_sha224(self, amp, opc, args, raw):
-    __show_hash(self, "sha224", 0, self.co.get_size())
+    __show_hash(self, "sha224")
 
 def range_show_sha224(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha224")
+    __show_hash_partial(self, __range_read, "sha224")
 
 def block_show_sha224(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha224")
+    __show_hash_partial(self, __block_read, "sha224")
 
 # sha256
 def show_sha256(self, amp, opc, args, raw):
-    __show_hash(self, "sha256", 0, self.co.get_size())
+    __show_hash(self, "sha256")
 
 def range_show_sha256(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha256")
+    __show_hash_partial(self, __range_read, "sha256")
 
 def block_show_sha256(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha256")
+    __show_hash_partial(self, __block_read, "sha256")
 
 # sha384
 def show_sha384(self, amp, opc, args, raw):
-    __show_hash(self, "sha384", 0, self.co.get_size())
+    __show_hash(self, "sha384")
 
 def range_show_sha384(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha384")
+    __show_hash_partial(self, __range_read, "sha384")
 
 def block_show_sha384(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha384")
+    __show_hash_partial(self, __block_read, "sha384")
 
 # sha512
 def show_sha512(self, amp, opc, args, raw):
-    __show_hash(self, "sha512", 0, self.co.get_size())
+    __show_hash(self, "sha512")
 
 def range_show_sha512(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha512")
+    __show_hash_partial(self, __range_read, "sha512")
 
 def block_show_sha512(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha512")
+    __show_hash_partial(self, __block_read, "sha512")
 
 # sha3_224
 def show_sha3_224(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_224", 0, self.co.get_size())
+    __show_hash(self, "sha3_224")
 
 def range_show_sha3_224(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha3_224")
+    __show_hash_partial(self, __range_read, "sha3_224")
 
 def block_show_sha3_224(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha3_224")
+    __show_hash_partial(self, __block_read, "sha3_224")
 
 # sha3_256
 def show_sha3_256(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_256", 0, self.co.get_size())
+    __show_hash(self, "sha3_256")
 
 def range_show_sha3_256(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha3_256")
+    __show_hash_partial(self, __range_read, "sha3_256")
 
 def block_show_sha3_256(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha3_256")
+    __show_hash_partial(self, __block_read, "sha3_256")
 
 # sha3_384
 def show_sha3_384(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_384", 0, self.co.get_size())
+    __show_hash(self, "sha3_384")
 
 def range_show_sha3_384(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha3_384")
+    __show_hash_partial(self, __range_read, "sha3_384")
 
 def block_show_sha3_384(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha3_384")
+    __show_hash_partial(self, __block_read, "sha3_384")
 
 # sha3_512
 def show_sha3_512(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_512", 0, self.co.get_size())
+    __show_hash(self, "sha3_512")
 
 def range_show_sha3_512(self, amp, opc, args, raw):
-    __range_show_hash(self, "sha3_512")
+    __show_hash_partial(self, __range_read, "sha3_512")
 
 def block_show_sha3_512(self, amp, opc, args, raw):
-    __block_show_hash(self, "sha3_512")
+    __show_hash_partial(self, __block_read, "sha3_512")
 
-def __show_hash(self, name, beg, end):
-    siz = self.co.get_buffer_size()
-    pos = beg
-    l = []
-    while True:
-        b = self.co.read(pos, siz)
-        if not b: # visual on empty buffer comes here
-            break
-        if pos + len(b) > end:
-            n = pos + len(b) - end
-            b = b[:-n]
-        l.append(b)
-        if screen.test_signal():
-            self.co.flash("Interrupted ({0})".format(pos))
-            return
-        pos += len(b)
-        if pos >= end:
-            break
-    __get_hash(self, name, l)
-
-def __range_show_hash(self, name):
-    beg, siz = __get_range(self)
-    __show_hash(self, name, beg, beg + siz)
-
-def __block_show_hash(self, name):
-    beg, end, mapx, siz, cnt = __get_block(self)
-    pos = beg
-    l = []
-    for i in util.get_xrange(cnt):
-        b = self.co.read(pos, siz)
-        assert len(b) == siz, (pos, siz)
-        l.append(b)
-        if screen.test_signal():
-            self.co.flash("Interrupted ({0})".format(pos))
-            return
-        pos += mapx
-        if pos >= end:
-            break
-    __get_hash(self, name, l)
-
-def __get_hash(self, name, l):
-    b = filebytes.join(l)
-    if not b:
-        self.co.flash("No buffer")
-        return
+def __show_hash(self, s):
     try:
-        self.co.show(util.get_hash(name, b))
+        buf = self.co.readall()
+        if not buf:
+            self.co.flash("No buffer")
+            return
+        __print_hash(self, s, buf)
+    except Exception as e:
+        self.co.flash(e)
+
+def __show_hash_partial(self, fn, s):
+    try:
+        buf = fn(self)
+        if not buf:
+            self.co.flash("No buffer selected")
+            return
+        __print_hash(self, s, buf)
+    except Exception as e:
+        self.co.flash(e)
+
+def __print_hash(self, s, buf):
+    try:
+        self.co.show(util.get_hash(s, buf))
     except AttributeError:
-        self.co.flash("{0} not supported by {1}".format(name,
+        self.co.flash("{0} unsupported by {1}".format(s,
             util.get_python_string()))
 
 def __is_equal(a, b):
@@ -2668,6 +2644,47 @@ def block_save_buffer_quit(self, amp, opc, args, raw):
     if __save_partial(self, args, __block_read, False) != -1:
         return quit(self, amp, opc, args, raw)
 
+def escape(self, amp, opc, args, raw):
+    self.co.clear_delayed_input()
+    self.co.show('')
+
+def _md5(b):
+    return __get_hash_binary("md5", b)
+
+def _sha1(b):
+    return __get_hash_binary("sha1", b)
+
+def _sha224(b):
+    return __get_hash_binary("sha224", b)
+
+def _sha256(b):
+    return __get_hash_binary("sha256", b)
+
+def _sha384(b):
+    return __get_hash_binary("sha384", b)
+
+def _sha512(b):
+    return __get_hash_binary("sha512", b)
+
+def _sha3_224(b):
+    return __get_hash_binary("sha3_224", b)
+
+def _sha3_256(b):
+    return __get_hash_binary("sha3_256", b)
+
+def _sha3_384(b):
+    return __get_hash_binary("sha3_384", b)
+
+def _sha3_512(b):
+    return __get_hash_binary("sha3_512", b)
+
+def __get_hash_binary(name, b):
+    try:
+        return util.get_hash_binary(name, b)
+    except AttributeError:
+        raise Exception("{0} unsupported by {1}".format(name,
+            util.get_python_string()))
+
 def _b64encode(b):
     return base64.standard_b64encode(b)
 
@@ -2698,85 +2715,185 @@ def _b85decode(b):
     except AttributeError:
         raise Exception("Base85 unsupported by " + util.get_python_string())
 
+# md5
+def open_md5(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _md5)
+
+def range_open_md5(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _md5)
+
+def block_open_md5(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _md5)
+
+# sha1
+def open_sha1(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha1)
+
+def range_open_sha1(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha1)
+
+def block_open_sha1(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha1)
+
+# sha224
+def open_sha224(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha224)
+
+def range_open_sha224(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha224)
+
+def block_open_sha224(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha224)
+
+# sha256
+def open_sha256(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha256)
+
+def range_open_sha256(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha256)
+
+def block_open_sha256(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha256)
+
+# sha384
+def open_sha384(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha384)
+
+def range_open_sha384(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha384)
+
+def block_open_sha384(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha384)
+
+# sha512
+def open_sha512(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha512)
+
+def range_open_sha512(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha512)
+
+def block_open_sha512(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha512)
+
+# sha3_224
+def open_sha3_224(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha3_224)
+
+def range_open_sha3_224(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_224)
+
+def block_open_sha3_224(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_224)
+
+# sha3_256
+def open_sha3_256(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha3_256)
+
+def range_open_sha3_256(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_256)
+
+def block_open_sha3_256(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_256)
+
+# sha3_384
+def open_sha3_384(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha3_384)
+
+def range_open_sha3_384(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_384)
+
+def block_open_sha3_384(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_384)
+
+# sha3_512
+def open_sha3_512(self, amp, opc, args, raw):
+    __open_inmemory_buffer(self, args, _sha3_512)
+
+def range_open_sha3_512(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_512)
+
+def block_open_sha3_512(self, amp, opc, args, raw):
+    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_512)
+
 # base64
 def open_base64_encode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b64encode)
+    __open_inmemory_buffer(self, args, _b64encode)
 
 def open_base64_decode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b64decode)
+    __open_inmemory_buffer(self, args, _b64decode)
 
 def range_open_base64_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b64encode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b64encode)
 
 def range_open_base64_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b64decode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b64decode)
 
 def block_open_base64_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b64encode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b64encode)
 
 def block_open_base64_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b64decode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b64decode)
 
 # base32
 def open_base32_encode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b32encode)
+    __open_inmemory_buffer(self, args, _b32encode)
 
 def open_base32_decode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b32decode)
+    __open_inmemory_buffer(self, args, _b32decode)
 
 def range_open_base32_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b32encode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b32encode)
 
 def range_open_base32_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b32decode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b32decode)
 
 def block_open_base32_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b32encode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b32encode)
 
 def block_open_base32_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b32decode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b32decode)
 
 # base16
 def open_base16_encode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b16encode)
+    __open_inmemory_buffer(self, args, _b16encode)
 
 def open_base16_decode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b16decode)
+    __open_inmemory_buffer(self, args, _b16decode)
 
 def range_open_base16_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b16encode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b16encode)
 
 def range_open_base16_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b16decode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b16decode)
 
 def block_open_base16_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b16encode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b16encode)
 
 def block_open_base16_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b16decode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b16decode)
 
 # base85
 def open_base85_encode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b85encode)
+    __open_inmemory_buffer(self, args, _b85encode)
 
 def open_base85_decode(self, amp, opc, args, raw):
-    __open_basex_encoding(self, args, _b85decode)
+    __open_inmemory_buffer(self, args, _b85decode)
 
 def range_open_base85_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b85encode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b85encode)
 
 def range_open_base85_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __range_read, _b85decode)
+    __open_inmemory_buffer_partial(self, args, __range_read, _b85decode)
 
 def block_open_base85_encode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b85encode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b85encode)
 
 def block_open_base85_decode(self, amp, opc, args, raw):
-    __open_basex_encoding_partial(self, args, __block_read, _b85decode)
+    __open_inmemory_buffer_partial(self, args, __block_read, _b85decode)
 
-def __open_basex_encoding(self, args, efn):
+def __open_inmemory_buffer(self, args, efn):
     # returns -1 if not written
-    f = __get_open_basex_encoding_path(self, args, efn)
+    f = __get_inmemory_buffer_path(self, args, efn)
     if f is None:
         return -1
     assert not os.path.exists(f), f
@@ -2795,9 +2912,9 @@ def __open_basex_encoding(self, args, efn):
         self.co.flash(e)
         return -1
 
-def __open_basex_encoding_partial(self, args, fn, efn):
+def __open_inmemory_buffer_partial(self, args, fn, efn):
     # returns -1 if not written
-    f = __get_open_basex_encoding_path(self, args, efn)
+    f = __get_inmemory_buffer_path(self, args, efn)
     if f is None:
         return -1
     assert not os.path.exists(f), f
@@ -2816,7 +2933,7 @@ def __open_basex_encoding_partial(self, args, fn, efn):
         self.co.flash(e)
         return -1
 
-def __get_open_basex_encoding_path(self, args, efn):
+def __get_inmemory_buffer_path(self, args, efn):
     if len(args) > 1:
         self.co.flash("Only one file name allowed")
         return
@@ -2835,7 +2952,3 @@ def __get_open_basex_encoding_path(self, args, efn):
         self.co.flash(f + " exists")
     else:
         return f
-
-def escape(self, amp, opc, args, raw):
-    self.co.clear_delayed_input()
-    self.co.show('')

@@ -31,6 +31,8 @@ from . import fileobj
 from . import kbd
 from . import literal
 from . import methods
+from . import panel
+from . import screen
 from . import setting
 from . import terminal
 from . import util
@@ -39,6 +41,42 @@ EDIT   = "EDIT"
 DELETE = "DELETE"
 MOTION = "MOTION"
 ESCAPE = "ESCAPE"
+
+class WriteBinaryCanvas (panel.BinaryCanvas):
+    def update_highlight(self, low, range_update):
+        # update previous position first
+        ppos = self.fileops.get_prev_pos()
+        b = self.fileops.read(ppos, 1)
+        attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
+        self.chgat_posstr(ppos, screen.A_NONE)
+        self.chgat_cursor(ppos, attr, attr, low)
+        # update search strings before update current position
+        pos = self.fileops.get_pos()
+        if not self.in_same_page(pos, ppos):
+            ppos = self.get_page_offset()
+        if range_update:
+            d = self.range_update_search(pos, ppos, pos)
+        else:
+            d = self.page_update_search(self.fileops.get_pos())
+        # update current position
+        attr1 = screen.A_COLOR_CURRENT if self.current else screen.A_STANDOUT
+        b = self.fileops.read(pos, 1)
+        attr2 = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
+        if d != -1 and pos in d:
+            l = d[pos] # synthesize attrs from search strings
+        else:
+            l = screen.A_NONE, screen.A_NONE
+        self.chgat_posstr(pos, self.attr_posstr)
+        self.chgat_cursor(pos, attr1 | l[0], attr2 | l[1], low)
+
+    def update_search(self, pos, attr_bytes, here):
+        if here and self.current:
+            attr1 = self.attr_search | screen.A_COLOR_CURRENT
+        else:
+            attr1 = self.attr_search
+        attr2 = self.attr_search | attr_bytes
+        self.chgat_search(pos, attr1, attr2, here)
+        return attr1, attr2
 
 class Console (console.Console):
     def handle_signal(self):
@@ -80,9 +118,6 @@ class Console (console.Console):
             if setting.use_debug:
                 console.set_banner(self.co.get_barrier_range())
 
-    def test(self):
-        return
-
     def init_cursor(self):
         return
 
@@ -98,7 +133,7 @@ class Console (console.Console):
     def process_command(self, arg, x, cmd, l):
         util.raise_no_impl("process_command")
 
-class _writeconsole (Console):
+class WriteConsole (Console):
     def init_cursor(self):
         self.co.discard_eof()
 
@@ -194,7 +229,7 @@ class _writeconsole (Console):
         elif cmd == MOTION:
             self.co.set_pos(seq[-1])
 
-class _deleteconsole (Console):
+class DeleteConsole (Console):
     def test(self):
         try:
             methods.test_delete_raise(self)
@@ -240,10 +275,10 @@ class _replace (object):
 
 _hexdigits = tuple(ord(x) for x in string.hexdigits)
 
-class _binary (_writeconsole):
+class WriteBinaryConsole (WriteConsole):
     def dispatch(self, arg):
         self.low = False
-        return super(_binary, self).dispatch(arg)
+        return super(WriteBinaryConsole, self).dispatch(arg)
 
     def test_write(self, x):
         return x in _hexdigits
@@ -300,7 +335,7 @@ class _binary (_writeconsole):
         ret = self._do_write_buffer(n, seq, pad)
         self.co.add_pos(ret)
 
-class BI (_binary, _insert):
+class BI (WriteBinaryConsole, _insert):
     def repaint(self, arg):
         self.co.lrepaintf(arg)
 
@@ -316,7 +351,7 @@ class BI (_binary, _insert):
         self.co.insert_current(l)
         return len(l)
 
-class BR (_binary, _replace):
+class BR (WriteBinaryConsole, _replace):
     def repaint(self, arg):
         self.co.prepaintf(-1, arg)
 
@@ -355,7 +390,7 @@ class BlockBR (BR):
         methods.block_replace(self, None, None, get_ascii(*seq[:2]), None)
         return -1
 
-class _ascii (_writeconsole):
+class WriteAsciiConsole (WriteConsole):
     def test_write(self, x):
         # include 9 to 13 -> \t\n\v\f\r
         return util.isgraph(x) or util.isspace(x)
@@ -397,7 +432,7 @@ class _ascii (_writeconsole):
         ret = self._do_write_buffer(n, seq)
         self.co.add_pos(ret)
 
-class AI (_ascii, _insert):
+class AI (WriteAsciiConsole, _insert):
     def repaint(self, arg):
         self.co.lrepaintf(arg)
 
@@ -409,7 +444,7 @@ class AI (_ascii, _insert):
         self.co.insert_current(l)
         return len(l)
 
-class AR (_ascii, _replace):
+class AR (WriteAsciiConsole, _replace):
     def repaint(self, arg):
         self.co.prepaintf(-1, arg)
 
@@ -454,7 +489,7 @@ def get_block_replace_class():
     return __get_class("Block{0}R")
 
 def get_delete_class():
-    return _deleteconsole
+    return DeleteConsole
 
 def __get_class(s):
     this = sys.modules[__name__]

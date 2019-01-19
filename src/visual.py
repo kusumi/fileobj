@@ -407,7 +407,7 @@ class BinaryCanvas (panel.BinaryCanvas, _visual_methods):
         super(BinaryCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self, low):
+    def update_highlight(self, low, range_update):
         self.require_full_repaint()
         self.update_visual(False)
 
@@ -421,7 +421,7 @@ class TextCanvas (panel.TextCanvas, _visual_methods):
         super(TextCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self, low):
+    def update_highlight(self, low, range_update):
         self.require_full_repaint()
         self.update_visual(False)
 
@@ -435,7 +435,7 @@ class ExtBinaryCanvas (extension.ExtBinaryCanvas, _visual_methods):
         super(ExtBinaryCanvas, self).fill(low)
         self.update_visual(True)
 
-    def update_highlight(self, low):
+    def update_highlight(self, low, range_update):
         self.require_full_repaint()
         self.update_visual(False)
 
@@ -570,14 +570,24 @@ class _console (console.Console):
         self.add_method(literal.s_qneg       , this,    "_queue_input")
         self.add_method(literal.s_qa         , this,    "_queue_input")
         self.add_method(literal.s_qaneg      , this,    "_queue_input")
-        self.add_method(literal.s_b64_enc    , this,    "_open_base64_encode")
-        self.add_method(literal.s_b64_dec    , this,    "_open_base64_decode")
-        self.add_method(literal.s_b32_enc    , this,    "_open_base32_encode")
-        self.add_method(literal.s_b32_dec    , this,    "_open_base32_decode")
-        self.add_method(literal.s_b16_enc    , this,    "_open_base16_encode")
-        self.add_method(literal.s_b16_dec    , this,    "_open_base16_decode")
-        self.add_method(literal.s_b85_enc    , this,    "_open_base85_encode")
-        self.add_method(literal.s_b85_dec    , this,    "_open_base85_decode")
+        self.add_method(literal.s_open_md5   , this,    "_open_md5")
+        self.add_method(literal.s_open_sha1  , this,    "_open_sha1")
+        self.add_method(literal.s_open_sha224, this,    "_open_sha224")
+        self.add_method(literal.s_open_sha256, this,    "_open_sha256")
+        self.add_method(literal.s_open_sha384, this,    "_open_sha384")
+        self.add_method(literal.s_open_sha512, this,    "_open_sha512")
+        self.add_method(literal.s_open_sha3_224, this,  "_open_sha3_224")
+        self.add_method(literal.s_open_sha3_256, this,  "_open_sha3_256")
+        self.add_method(literal.s_open_sha3_384, this,  "_open_sha3_384")
+        self.add_method(literal.s_open_sha3_512, this,  "_open_sha3_512")
+        self.add_method(literal.s_open_b64e  , this,    "_open_base64_encode")
+        self.add_method(literal.s_open_b64d  , this,    "_open_base64_decode")
+        self.add_method(literal.s_open_b32e  , this,    "_open_base32_encode")
+        self.add_method(literal.s_open_b32d  , this,    "_open_base32_decode")
+        self.add_method(literal.s_open_b16e  , this,    "_open_base16_encode")
+        self.add_method(literal.s_open_b16d  , this,    "_open_base16_decode")
+        self.add_method(literal.s_open_b85e  , this,    "_open_base85_encode")
+        self.add_method(literal.s_open_b85d  , this,    "_open_base85_decode")
         self.add_method(literal.s_fsearchw   , methods, "search_word_forward")
         self.add_method(literal.s_rsearchw   , methods, "search_word_backward")
         self.add_method(literal.n            , methods, "search_word_next_forward")
@@ -757,6 +767,46 @@ def _force_save_buffer(self, amp, opc, args, raw):
 
 @_(methods.range_save_buffer_quit, methods.block_save_buffer_quit)
 def _save_buffer_quit(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_md5, methods.block_open_md5)
+def _open_md5(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha1, methods.block_open_sha1)
+def _open_sha1(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha224, methods.block_open_sha224)
+def _open_sha224(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha256, methods.block_open_sha256)
+def _open_sha256(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha384, methods.block_open_sha384)
+def _open_sha384(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha512, methods.block_open_sha512)
+def _open_sha512(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha3_224, methods.block_open_sha3_224)
+def _open_sha3_224(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha3_256, methods.block_open_sha3_256)
+def _open_sha3_256(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha3_384, methods.block_open_sha3_384)
+def _open_sha3_384(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_sha3_512, methods.block_open_sha3_512)
+def _open_sha3_512(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_open_base64_encode, methods.block_open_base64_encode)
