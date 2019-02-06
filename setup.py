@@ -52,6 +52,7 @@ if __name__ == '__main__':
         f = "bin/fileobj.py"
     else:
         f = "bin/fileobj"
+    assert os.path.isfile(f), f
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too

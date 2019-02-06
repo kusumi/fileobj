@@ -172,19 +172,9 @@ class Fileops (object):
     def __set_pos(self, pos):
         self.__ppos = self.__pos
         if pos > self.get_max_pos():
-            if False: # fall through disabled
-                self.__pos = pos - self.get_max_pos() - 1
-                if self.__pos > self.get_max_pos():
-                    self.__pos = self.get_max_pos()
-            else:
-                self.__pos = self.get_max_pos()
+            self.__pos = self.get_max_pos()
         elif pos < 0:
-            if False: # fall through disabled
-                self.__pos = self.get_max_pos() + pos + 1
-                if self.__pos < 0:
-                    self.__pos = 0
-            else:
-                self.__pos = 0
+            self.__pos = 0
         else:
             self.__pos = pos
 
@@ -200,10 +190,10 @@ class Fileops (object):
         unitlen = setting.bytes_per_unit
         self.set_pos((n // unitlen) * unitlen)
 
-    def discard_eof(self):
+    def open_eof_insert(self):
         self.__trail = self.test_insert() * 1
 
-    def restore_eof(self):
+    def close_eof_insert(self):
         self.__trail = 0
 
     def has_region(self):
@@ -284,12 +274,12 @@ class Fileops (object):
     def __decorate_insert(self, fn):
         def _(x, l, rec=True):
             try:
-                self.discard_eof()
+                self.open_eof_insert()
                 x = self.__get_normalized_pos(x)
                 l = self.__get_normalized_input(l)
                 fn(x, l, rec)
             finally:
-                self.restore_eof()
+                self.close_eof_insert()
         return _
 
     def __decorate_replace(self, fn):

@@ -87,7 +87,7 @@ def iter_color_name():
     yield "white"
 
 def getmouse():
-    return (-1, -1, -1, -1, -1)
+    return -1, -1, -1, -1, 0
 
 def get_mouse_event_name(bstate):
     return ""

@@ -230,7 +230,10 @@ def __iter_color_pair():
             yield s, v
 
 def getmouse():
-    return curses.getmouse()
+    try:
+        return curses.getmouse()
+    except curses.error: # for *BSD
+        return -1, -1, -1, -1, 0
 
 _mouse_event_name = {}
 def get_mouse_event_name(bstate):

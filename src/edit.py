@@ -135,10 +135,10 @@ class Console (console.Console):
 
 class WriteConsole (Console):
     def init_cursor(self):
-        self.co.discard_eof()
+        self.co.open_eof_insert()
 
     def cleanup_cursor(self):
-        self.co.restore_eof()
+        self.co.close_eof_insert()
 
     def init_listen(self, arg):
         self.go_right(arg.delta)

@@ -2329,13 +2329,13 @@ def __put(self, amp, opc, mov):
         buf = filebytes.ords(self.co.get_yank_buffer()) * amp
         pos = self.co.get_pos() + mov
         try:
-            self.co.discard_eof()
+            self.co.open_eof_insert()
             if pos > self.co.get_max_pos():
                 pos = self.co.get_max_pos()
             self.co.insert(pos, buf)
             go_right(self, mov + len(buf) - 1)
         finally:
-            self.co.restore_eof()
+            self.co.close_eof_insert()
     __exec_lrepaint(self, fn)
 
 @_cleanup
@@ -2367,14 +2367,14 @@ def range_put(self, amp, opc, args, raw):
     test_delete_raise(self)
     try:
         self.co.disconnect_workspace()
-        self.co.discard_eof()
+        self.co.open_eof_insert()
         buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
         range_delete(self, amp, opc, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
-        self.co.restore_eof()
+        self.co.close_eof_insert()
         self.co.reconnect_workspace()
         self.co.lrepaintf()
 
@@ -2384,14 +2384,14 @@ def block_put(self, amp, opc, args, raw):
     test_delete_raise(self)
     try:
         self.co.disconnect_workspace()
-        self.co.discard_eof()
+        self.co.open_eof_insert()
         buf = filebytes.ords(self.co.get_yank_buffer()) * get_int(amp)
         und = self.co.get_undo_size()
         block_delete(self, amp, opc, args, raw)
         self.co.insert_current(buf)
         self.co.merge_undo_until(und)
     finally:
-        self.co.restore_eof()
+        self.co.close_eof_insert()
         self.co.reconnect_workspace()
         self.co.lrepaintf()
 
