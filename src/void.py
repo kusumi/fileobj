@@ -230,11 +230,18 @@ def _enter_edit_insert_head(self, amp, opc, args, raw):
     return self.set_console(edit.get_insert_class(), arg)
 
 def _enter_edit_append(self, amp, opc, args, raw):
-    arg = edit.Arg(amp=methods.get_int(amp), delta=1)
+    pos = self.co.get_pos()
+    delta = 1
+    if setting.use_unit_based and pos == self.co.get_max_pos():
+        delta += self.co.get_size() - pos # not .get_max_pos()
+    arg = edit.Arg(amp=methods.get_int(amp), delta=delta)
     return self.set_console(edit.get_insert_class(), arg)
 
 def _enter_edit_append_tail(self, amp, opc, args, raw):
-    delta = self.co.get_max_pos() - self.co.get_pos() + 1
+    pos = self.co.get_pos()
+    delta = self.co.get_max_pos() - pos + 1
+    if setting.use_unit_based:
+        delta += self.co.get_size() - pos # not .get_max_pos()
     arg = edit.Arg(amp=methods.get_int(amp), delta=delta)
     return self.set_console(edit.get_insert_class(), arg)
 

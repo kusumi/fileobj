@@ -547,11 +547,13 @@ class DisplayCanvas (Canvas):
     def update_highlight(self, low, range_update):
         # update previous position first
         ppos = self.fileops.get_prev_pos()
+        self.chgat_posstr(ppos, screen.A_NONE)
         if ppos <= self.fileops.get_max_pos(): # may be invalid after delete
             b = self.fileops.read(ppos, 1)
             attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
-            self.chgat_posstr(ppos, screen.A_NONE)
             self.chgat_cursor(ppos, attr, attr, low)
+        else:
+            self.chgat_cursor(ppos, screen.A_NONE, screen.A_NONE, low)
         # update search strings before update current position
         pos = self.fileops.get_pos()
         if not self.in_same_page(pos, ppos):

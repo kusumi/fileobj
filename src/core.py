@@ -419,7 +419,7 @@ def __update_screen(scr, repaint, l):
                 s = "."
             scr.addstr(12, 1,
                 "Check if above appear as they should{0}".format(s))
-            if kernel.is_windows(): # XXX can't handle signal
+            if kernel.is_windows(): # can't handle signal
                 scr.addstr(14, 1, "Press {0} to exit.".format(
                     _quit_test_screen))
             else:
@@ -429,7 +429,7 @@ def __update_screen(scr, repaint, l):
     elif siz >= 3:
         if repaint:
             scr.addstr(1, 1, "Not enough room.")
-            if kernel.is_windows(): # XXX can't handle signal
+            if kernel.is_windows(): # can't handle signal
                 scr.addstr(2, 1, "Press {0} to exit.".format(_quit_test_screen))
             else:
                 scr.addstr(2, 1, "Press {0} or {1} to exit.".format(

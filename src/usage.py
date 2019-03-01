@@ -164,6 +164,11 @@ If set to "false", do not use mouse events.
 Defaults to use mouse events if undefined.
 """)
 
+FILEOBJ_USE_UNIT_BASED = _("""
+If defined, editor operations are on per unit basis where possible.
+Defaults to on per byte basis.
+""")
+
 FILEOBJ_USE_BACKUP = _("""
 If defined, create backup files under \fI~/.fileobj\fP.
 Backup files start with '.'.

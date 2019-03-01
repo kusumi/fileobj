@@ -48,6 +48,10 @@ class _canvas (panel.Canvas):
             self.go_to(self.fileops.get_max_pos())
         elif pos < 0:
             self.go_to(0)
+        # XXX Adjust if current position isn't aligned with bpu.
+        if setting.use_unit_based:
+            if pos % setting.bytes_per_unit:
+                self.fileops.set_unit_pos(pos)
 
     def noutrefresh(self):
         return

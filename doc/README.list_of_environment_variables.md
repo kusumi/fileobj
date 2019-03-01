@@ -20,4 +20,5 @@
         FILEOBJ_USE_READONLY     If defined, use read-only mode (equivalent to -R).
         FILEOBJ_USE_SIPREFIX     If defined, use 10^3(K) for kilo (equivalent to :set si). Defaults to 2^10(Ki) if undefined.
         FILEOBJ_USE_TEXT_WINDOW  If set to "false", do not use text window. Defaults to use text window if undefined.
+        FILEOBJ_USE_UNIT_BASED   If defined, editor operations are on per unit basis where possible. Defaults to on per byte basis.
         FILEOBJ_USE_WRAPSCAN     If defined, search wraps around the end of the buffer (equivalent to :set ws). Defaults to no wrap around if undefined.

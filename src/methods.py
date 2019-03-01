@@ -116,6 +116,15 @@ def __call_context_prepaint(self, fn, num, i=0):
     fn(i)
     self.co.prepaintf(num)
 
+def __assert_bpu_aligned(self):
+    if not setting.use_unit_based:
+        return
+    pos = self.co.get_pos()
+    if setting.use_debug:
+        assert pos % setting.bytes_per_unit == 0, pos
+    elif pos % setting.bytes_per_unit:
+        self.co.set_unit_pos(pos)
+
 def cursor_up(self, amp, opc, args, raw):
     go_up(self, amp)
 
@@ -583,7 +592,7 @@ def __mouse_end_scroll_visual(self, devid, y, x):
     _mouse_event_visual_pressed = None
 
 def __exit_visual(self):
-    from . import visual # XXX
+    from . import visual
     return visual._exit_visual(self)
 
 def resize_container(self, amp, opc, args, raw):
@@ -1287,8 +1296,8 @@ def __cmp_buffer_goto(self, pos):
 
 @_cleanup
 def inc_number(self, amp, opc, args, raw):
-    __do_replace_number(self, get_int(amp), self.co.get_unit_pos(),
-        setting.bytes_per_unit)
+    siz = setting.bytes_per_unit if setting.use_unit_based else 1
+    __do_replace_number(self, get_int(amp), self.co.get_unit_pos(), siz)
 
 @_cleanup
 def range_inc_number(self, amp, opc, args, raw):
@@ -1307,8 +1316,8 @@ def block_inc_number(self, amp, opc, args, raw):
 
 @_cleanup
 def dec_number(self, amp, opc, args, raw):
-    __do_replace_number(self, -get_int(amp), self.co.get_unit_pos(),
-        setting.bytes_per_unit)
+    siz = setting.bytes_per_unit if setting.use_unit_based else 1
+    __do_replace_number(self, -get_int(amp), self.co.get_unit_pos(), siz)
 
 @_cleanup
 def range_dec_number(self, amp, opc, args, raw):
@@ -1521,6 +1530,8 @@ def __do_search(self, pos, s, is_forward, is_last):
             x = self.co.get_max_pos()
         ret = fn(x, b, pos)
 
+    # XXX allowing non aligned position after search leads to inconsistency
+    #setting.discard_unit_based() # destination may not be aligned with bpu
     retval = None
     if ret == fileobj.NOTFOUND:
         self.co.flash("Search '{0}' failed".format(filebytes.str(word)))
@@ -1536,10 +1547,10 @@ def __do_search(self, pos, s, is_forward, is_last):
     # refresh if last or error (e.g. clear old valid search word)
     if is_last or retval == -1:
         self.co.lrepaintf()
+    #setting.restore_unit_based()
     return retval
 
-@_cleanup
-def delete(self, amp, opc, args, raw):
+def generic_delete(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
     def fn(_):
@@ -1550,13 +1561,14 @@ def delete(self, amp, opc, args, raw):
             self.co.set_delete_buffer(buf)
         else:
             self.co.right_add_delete_buffer(buf)
-        # require full repaint if deleted end of buffer
+        # If current position has changed, delete was at end of buffer.
+        # XXX Require full repaint for now even though
+        # DisplayCanvas.update_highlight() does clear previous position.
         if self.co.get_pos() != pos:
             self.co.require_full_repaint()
     __exec_lrepaint(self, fn)
 
-@_cleanup
-def backspace(self, amp, opc, args, raw):
+def generic_backspace(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
     def fn(_):
@@ -1573,13 +1585,29 @@ def backspace(self, amp, opc, args, raw):
 def delete_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
     if x > 0:
-        delete(self, x, opc, args, raw)
+        generic_delete(self, x, opc, args, raw)
+
+@_cleanup
+def delete(self, amp, opc, args, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_delete(self, amp, opc, args, raw)
+
+@_cleanup
+def backspace(self, amp, opc, args, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_backspace(self, amp, opc, args, raw)
 
 @_cleanup
 def range_delete(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    delete(self, siz, opc, [], raw)
+    generic_delete(self, siz, opc, [], raw)
 
 @_cleanup
 def block_delete(self, amp, opc, args, raw):
@@ -1608,8 +1636,7 @@ def block_delete(self, amp, opc, args, raw):
         self.co.merge_undo(i + 1)
     __exec_lrepaint(self, fn)
 
-@_cleanup
-def toggle(self, amp, opc, args, raw):
+def generic_toggle(self, amp, opc, args, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     amp = get_int(amp)
@@ -1659,10 +1686,18 @@ def __buffered_toggle(self, pos, amp):
     return 1
 
 @_cleanup
+def toggle(self, amp, opc, args, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_toggle(self, amp, opc, args, raw)
+
+@_cleanup
 def range_toggle(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    toggle(self, siz, opc, [], raw)
+    generic_toggle(self, siz, opc, [], raw)
 
 @_cleanup
 def block_toggle(self, amp, opc, args, raw):
@@ -2084,6 +2119,7 @@ def redo(self, amp, opc, args, raw):
         "Redo interrupted")
 
 def __undo(self, amp, fn, msg_notfound, msg_interrupt):
+    pos = self.co.get_pos()
     ret, msg = fn(get_int(amp))
     if ret == fileobj.ERROR:
         self.co.flash(msg)
@@ -2093,6 +2129,12 @@ def __undo(self, amp, fn, msg_notfound, msg_interrupt):
         self.co.flash(msg_interrupt)
     elif ret >= 0 and ret != self.co.get_pos():
         self.co.set_pos(ret)
+    # Require full repaint for potential delete at end of buffer.
+    # This is needed even though DisplayCanvas.update_highlight() does clear
+    # previous position, because of extra self.co.set_pos() above.
+    # (also see methods.generic_delete())
+    if self.co.get_pos() != pos:
+        self.co.require_full_repaint()
     self.co.lrepaintf()
 
 def set_mark(self, amp, opc, args, raw):
@@ -2192,8 +2234,7 @@ def _get_bit_ops():
         literal.bit_or.key : __get_or_ops,
         literal.bit_xor.key: __get_xor_ops, }
 
-@_cleanup
-def logical_bit_operation(self, amp, opc, arg, raw):
+def generic_logical_bit_operation(self, amp, opc, arg, raw):
     test_replace_raise(self)
     test_empty_raise(self)
     amp = get_int(amp)
@@ -2240,10 +2281,18 @@ def __buffered_logical_bit_operation(self, pos, amp, fn):
     return 1
 
 @_cleanup
+def logical_bit_operation(self, amp, opc, arg, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_logical_bit_operation(self, amp, opc, arg, raw)
+
+@_cleanup
 def range_logical_bit_operation(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    logical_bit_operation(self, siz, opc, [], raw)
+    generic_logical_bit_operation(self, siz, opc, [], raw)
 
 @_cleanup
 def block_logical_bit_operation(self, amp, opc, args, raw):
@@ -2272,7 +2321,7 @@ def start_register(self, amp, opc, args, raw):
     self.co.start_register(opc[1])
     return REWIND
 
-def yank(self, amp, opc, args, raw):
+def generic_yank(self, amp, opc, args, raw):
     try:
         b = self.co.read(self.co.get_pos(), get_int(amp))
     except Exception as e:
@@ -2282,15 +2331,22 @@ def yank(self, amp, opc, args, raw):
         s = util.get_size_repr(self.co.get_yank_buffer_size())
         self.co.show(s + " yanked")
 
+def yank(self, amp, opc, arg, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_yank(self, amp, opc, arg, raw)
+
 def yank_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
     if x > 0:
-        yank(self, x, opc, args, raw)
+        generic_yank(self, x, opc, args, raw)
 
 def range_yank(self, amp, opc, args, raw):
     beg, siz = __get_range(self)
     self.co.set_pos(beg)
-    yank(self, siz, opc, [], raw)
+    generic_yank(self, siz, opc, [], raw)
 
 def block_yank(self, amp, opc, args, raw):
     beg, end, mapx, siz, cnt = __get_block(self)
@@ -2325,6 +2381,10 @@ def __put(self, amp, opc, mov):
         self.co.flash("Nothing to put")
         return
     amp = get_int(amp)
+    if setting.use_unit_based:
+        mov *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+
     def fn(_):
         buf = filebytes.ords(self.co.get_yank_buffer()) * amp
         pos = self.co.get_pos() + mov
@@ -2333,7 +2393,10 @@ def __put(self, amp, opc, mov):
             if pos > self.co.get_max_pos():
                 pos = self.co.get_max_pos()
             self.co.insert(pos, buf)
-            go_right(self, mov + len(buf) - 1)
+            setting.discard_unit_based() # to move specified bytes
+            go_right(self, mov + len(buf) - 1 * setting.bytes_per_unit)
+            setting.restore_unit_based()
+            __assert_bpu_aligned(self)
         finally:
             self.co.close_eof_insert()
     __exec_lrepaint(self, fn)

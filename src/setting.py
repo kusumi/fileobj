@@ -201,6 +201,23 @@ def disable_buffer_attr():
     this.color_print = None
     this.color_default = None
 
+_use_unit_based_save = None
+_use_unit_based_aux = 0
+
+def discard_unit_based():
+    global _use_unit_based_save, _use_unit_based_aux
+    _use_unit_based_save = this.use_unit_based
+    this.use_unit_based = False
+    assert _use_unit_based_aux == 0, _use_unit_based_aux
+    _use_unit_based_aux += 1
+
+def restore_unit_based():
+    global _use_unit_based_aux
+    assert _use_unit_based_aux == 1, _use_unit_based_aux
+    _use_unit_based_aux -= 1
+    assert _use_unit_based_save is not None, _use_unit_based_save
+    this.use_unit_based = _use_unit_based_save
+
 # non env based settings
 use_even_size_window = False
 

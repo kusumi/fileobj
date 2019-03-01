@@ -25,13 +25,20 @@
 
 if __name__ == '__main__':
     import os
+    import re
     import sys
 
     try:
         import fileobj.util
+        import fileobj.version
     except ImportError as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
+
+    if len(sys.argv) > 1 and sys.argv[1] == "all":
+        release_log = True
+    else:
+        release_log = False
 
     d = os.path.basename(os.getcwd())
     assert d.startswith("fileobj-devel"), os.getcwd()
@@ -146,6 +153,78 @@ if __name__ == '__main__':
         s = o.stdout
         print("--")
         print(s)
+    except Exception as e:
+        sys.stderr.write("{0}\n".format(e))
+        sys.exit(1)
+
+    # done unless generating release log
+    if not release_log:
+        sys.exit(0)
+
+    if os.system("git status | grep \"working directory clean\""):
+        sys.stderr.write("Git repository must be clean\n")
+        sys.exit(1)
+
+    # shortcut for Python 3
+    cmd = "du -a | grep \"__pycache__/.*\.pyc\""
+    if not os.system(cmd):
+        sys.stderr.write("Found invalid files\n")
+        os.system("{0} | xargs rm".format(cmd))
+        if not os.system(cmd):
+            sys.stderr.write("Failed to remove invalid files\n")
+            sys.exit(1)
+
+    if not os.system("du -a | grep \"\.pyc\""):
+        sys.stderr.write("Found invalid files\n")
+        sys.exit(1)
+
+    if not os.system("du -a | grep \"\.swp\""):
+        sys.stderr.write("Found invalid files\n")
+        sys.exit(1)
+
+    try:
+        def checkout(b):
+            cmd = "git checkout {0}".format(b)
+            if os.system(cmd):
+                sys.exit(1)
+
+        def wc():
+            cmd = "find . -type f -not -path \"./.git/*\" | xargs wc -cl | tail -1"
+            o = fileobj.util.execute_sh(cmd)
+            assert o.retval == 0, (cmd, o.retval)
+            return o.stdout.rstrip()
+
+        cmd = "git rev-parse --abbrev-ref HEAD"
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        orig = o.stdout.rstrip()
+
+        cmd = "git log --no-walk --tags --pretty=\"%d %ad\" --decorate=full"
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        sl = o.stdout.split("\n")
+
+        cmd = "git log -1 --pretty=\"%ad\""
+        o = fileobj.util.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        t = fileobj.version.get_tag_string()
+        sl.insert(0, " (refs/tags/{0}) {1}".format(t, o.stdout.rstrip()))
+
+        regex = re.compile(r"^\s+\(.*refs/tags/(v\d\.\d\.\d+).*\)\s+(.+)$")
+        f = "./RELEASES"
+        l = []
+        for x in sl:
+            m = regex.match(x)
+            if m:
+                tag, date = m.groups()
+                if tag == fileobj.version.get_tag_string():
+                    checkout("HEAD")
+                else:
+                    checkout(tag)
+                l.append("{0} {1} {2}".format(tag, date, wc()))
+        checkout(orig)
+        assert l, l
+        writel(f, l)
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)

@@ -35,6 +35,7 @@ def __iter_env_name():
     yield "FILEOBJ_USE_WRAPSCAN" # :set ws
     yield "FILEOBJ_USE_TEXT_WINDOW"
     yield "FILEOBJ_USE_MOUSE_EVENTS"
+    yield "FILEOBJ_USE_UNIT_BASED"
     yield "FILEOBJ_USE_BACKUP"
     yield "FILEOBJ_ENDIANNESS" # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX" # :set address
@@ -59,7 +60,6 @@ def __iter_env_name_private():
     yield "__FILEOBJ_USE_PID_PATH"
     yield "__FILEOBJ_USE_TRACE"
     yield "__FILEOBJ_USE_ALT_CHGAT"
-    yield "__FILEOBJ_USE_UNIT_BASED"
     yield "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
     yield "__FILEOBJ_USE_SINGLE_OPERATION"
     yield "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
@@ -94,6 +94,7 @@ _env_default_value = {
     "FILEOBJ_USE_WRAPSCAN" : True,
     "FILEOBJ_USE_TEXT_WINDOW" : True,
     "FILEOBJ_USE_MOUSE_EVENTS" : True,
+    "FILEOBJ_USE_UNIT_BASED" : False,
     "FILEOBJ_USE_BACKUP" : False,
     "FILEOBJ_ENDIANNESS" : None,
     "FILEOBJ_ADDRESS_RADIX" : 16,
@@ -117,7 +118,6 @@ _env_default_value = {
     "__FILEOBJ_USE_PID_PATH" : True,
     "__FILEOBJ_USE_TRACE" : False,
     "__FILEOBJ_USE_ALT_CHGAT" : False,
-    "__FILEOBJ_USE_UNIT_BASED" : False,
     "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT" : True,
     "__FILEOBJ_USE_SINGLE_OPERATION" : False,
     "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST" : True,
@@ -213,6 +213,9 @@ def __get_setting_use_text_window():
 
 def __get_setting_use_mouse_events():
     return test_bool("FILEOBJ_USE_MOUSE_EVENTS")
+
+def __get_setting_use_unit_based():
+    return test_bool("FILEOBJ_USE_UNIT_BASED")
 
 def __get_setting_use_backup():
     return test_bool("FILEOBJ_USE_BACKUP")
@@ -344,9 +347,6 @@ def __get_setting_use_trace():
 
 def __get_setting_use_alt_chgat():
     return test_bool("__FILEOBJ_USE_ALT_CHGAT")
-
-def __get_setting_use_unit_based():
-    return test_bool("__FILEOBJ_USE_UNIT_BASED")
 
 def __get_setting_use_circular_bit_shift():
     return test_bool("__FILEOBJ_USE_CIRCULAR_BIT_SHIFT")

@@ -111,6 +111,10 @@ ENVIRONMENT
            If set to "false", do not use mouse events.  Defaults to use mouse
            events if undefined.
 
+       FILEOBJ_USE_UNIT_BASED
+           If defined, editor operations are on per unit basis where possible.
+           Defaults to on per byte basis.
+
        FILEOBJ_USE_BACKUP
            If defined, create backup files under ~/.fileobj.  Backup files
            start with '.'.  Only applies to regular files.
@@ -220,4 +224,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.86                 February 4, 2019                     FILEOBJ(1)
+FILEOBJ 0.7.87                   March 1, 2019                      FILEOBJ(1)
