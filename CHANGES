@@ -1,3 +1,9 @@
+v0.7.88
+=======
+- Minor fixes and cleanups
+- Fix chgat bug on page transition (since v0.7.81)
+- Fix repaint bug on page transition in replace edit mode (since v0.7.82)
+
 v0.7.87
 =======
 - Minor fixes and cleanups

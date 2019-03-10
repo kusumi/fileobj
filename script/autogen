@@ -165,15 +165,6 @@ if __name__ == '__main__':
         sys.stderr.write("Git repository must be clean\n")
         sys.exit(1)
 
-    # shortcut for Python 3
-    cmd = "du -a | grep \"__pycache__/.*\.pyc\""
-    if not os.system(cmd):
-        sys.stderr.write("Found invalid files\n")
-        os.system("{0} | xargs rm".format(cmd))
-        if not os.system(cmd):
-            sys.stderr.write("Failed to remove invalid files\n")
-            sys.exit(1)
-
     if not os.system("du -a | grep \"\.pyc\""):
         sys.stderr.write("Found invalid files\n")
         sys.exit(1)

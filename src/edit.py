@@ -44,17 +44,18 @@ ESCAPE = "ESCAPE"
 
 class WriteBinaryCanvas (panel.BinaryCanvas):
     def update_highlight(self, low, range_update):
-        # update previous position first
-        ppos = self.fileops.get_prev_pos()
-        self.chgat_posstr(ppos, screen.A_NONE)
-        if ppos <= self.fileops.get_max_pos(): # may be false on exit from edit
-            b = self.fileops.read(ppos, 1)
-            attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
-            self.chgat_cursor(ppos, attr, attr, low)
-        else:
-            self.chgat_cursor(ppos, screen.A_NONE, screen.A_NONE, low)
-        # update search strings before update current position
         pos = self.fileops.get_pos()
+        ppos = self.fileops.get_prev_pos()
+        # update previous position first
+        self.chgat_posstr(ppos, screen.A_NONE)
+        if self.in_same_page(pos, ppos):
+            if ppos <= self.fileops.get_max_pos(): # may be false on exit edit
+                b = self.fileops.read(ppos, 1)
+                attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
+                self.chgat_cursor(ppos, attr, attr, low)
+            else:
+                self.chgat_cursor(ppos, screen.A_NONE, screen.A_NONE, low)
+        # update search strings before update current position
         if not self.in_same_page(pos, ppos):
             ppos = self.get_page_offset()
         if range_update:
@@ -328,7 +329,7 @@ class WriteBinaryConsole (WriteConsole):
     def write(self, x):
         self._do_write(x)
         if self.low:
-            self.co.add_pos(1)
+            methods.go_right(self, 1)
         self.low = not self.low
 
     def write_buffer(self, n, seq):
@@ -338,7 +339,7 @@ class WriteBinaryConsole (WriteConsole):
             seq.append(0x30) # '0'
         self.low = False
         ret = self._do_write_buffer(n, seq, pad)
-        self.co.add_pos(ret)
+        methods.go_right(self, ret)
 
 class BI (WriteBinaryConsole, _insert):
     def repaint(self, arg):
@@ -431,11 +432,11 @@ class WriteAsciiConsole (WriteConsole):
 
     def write(self, x):
         self._do_write(x)
-        self.co.add_pos(1)
+        methods.go_right(self, 1)
 
     def write_buffer(self, n, seq):
         ret = self._do_write_buffer(n, seq)
-        self.co.add_pos(ret)
+        methods.go_right(self, ret)
 
 class AI (WriteAsciiConsole, _insert):
     def repaint(self, arg):
