@@ -183,25 +183,28 @@ if __name__ == '__main__':
             cmd = "find . -type f -not -path \"./.git/*\" | xargs wc -cl | tail -1"
             o = fileobj.util.execute_sh(cmd)
             assert o.retval == 0, (cmd, o.retval)
-            return o.stdout.rstrip()
+            s = o.stdout.rstrip()
+            if s.endswith(" total"):
+                s = s[:-len(" total")]
+            return s
 
         cmd = "git rev-parse --abbrev-ref HEAD"
         o = fileobj.util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         orig = o.stdout.rstrip()
 
-        cmd = "git log --no-walk --tags --pretty=\"%d %ad\" --decorate=full"
+        cmd = "git log --no-walk --tags --pretty=\"%d %ai\" --decorate=full"
         o = fileobj.util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         sl = o.stdout.split("\n")
 
-        cmd = "git log -1 --pretty=\"%ad\""
+        cmd = "git log -1 --pretty=\"%ai\""
         o = fileobj.util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         t = fileobj.version.get_tag_string()
         sl.insert(0, " (refs/tags/{0}) {1}".format(t, o.stdout.rstrip()))
 
-        regex = re.compile(r"^\s+\(.*refs/tags/(v\d\.\d\.\d+).*\)\s+(.+)$")
+        regex = re.compile(r"^\s+\(.*refs/tags/(v\d\.\d\.\d+).*\)\s+(\d\d\d\d-\d\d-\d\d)\s")
         f = "./RELEASES"
         l = []
         for x in sl:

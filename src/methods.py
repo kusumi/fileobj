@@ -639,16 +639,19 @@ def switch_to_bottom_workspace(self, amp, opc, args, raw):
         return RETURN
 
 def add_workspace(self, amp, opc, args, raw):
-    __add_workspace(self, amp, opc, args, raw, False)
-
-def add_workspace_vertical(self, amp, opc, args, raw):
-    __add_workspace(self, amp, opc, args, raw, True)
-
-def __add_workspace(self, amp, opc, args, raw, vertical):
     for x in util.get_xrange(get_int(amp)):
-        if self.co.add_workspace(vertical) == -1:
+        if self.co.add_workspace(False) == -1:
             break
     self.co.repaint()
+
+def add_workspace_vertical(self, amp, opc, args, raw):
+    for x in util.get_xrange(get_int(amp)):
+        if self.co.add_workspace(True) == -1:
+            break
+    if self.co.test_and_set_max_bytes_per_line() != -1:
+        __rebuild(self)
+    else:
+        self.co.repaint()
 
 def split_workspace(self, amp, opc, args, raw):
     __split_workspace(self, amp, opc, args, raw, False)

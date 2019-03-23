@@ -70,6 +70,7 @@ class Container (object):
         self.__cur_workspace = None
         self.__in_vertical = False
         self.__in_random = False
+        self.__is_max_bpl = False
         self.set_prev_context(None)
 
     def __getattr__(self, name):
@@ -500,9 +501,13 @@ class Container (object):
                     bpl //= 2 # this is good (not bpu)
                     if bpl < 1:
                         return ret
+                    # keep the original value which gets updated in below
+                    is_max_bpl = self.__is_max_bpl
                     # window.get_max_bytes_per_line() may fail on resize
                     if self.set_bytes_per_line_in_vertical(bpl, True) == -1:
+                        self.__is_max_bpl = is_max_bpl
                         return ret
+                    self.__is_max_bpl = is_max_bpl
                     return workspace.BUILD_RETRY
             x += o.guess_width()
 
@@ -643,7 +648,10 @@ class Container (object):
                 self.switch_to_next_workspace()
             self.__remove_workspace(o)
             if self.__in_vertical:
-                self.set_bytes_per_line("auto")
+                if self.__is_max_bpl:
+                    self.set_bytes_per_line("max")
+                else:
+                    self.set_bytes_per_line("auto")
             self.build()
             return self.__get_workspace_index()
         else:
@@ -659,7 +667,10 @@ class Container (object):
             assert len(self) == 1
             self.__set_workspace(self.__workspaces[0])
             if self.__in_vertical:
-                self.set_bytes_per_line("auto")
+                if self.__is_max_bpl:
+                    self.set_bytes_per_line("max")
+                else:
+                    self.set_bytes_per_line("auto")
             self.build()
             return self.__get_workspace_index()
         else:
@@ -1191,6 +1202,7 @@ class Container (object):
             return ret
 
     def __do_find_bytes_per_line(self, arg):
+        self.__is_max_bpl = False # reset
         if self.__in_vertical:
             n = len(self)
         else:
@@ -1203,6 +1215,7 @@ class Container (object):
         if arg == "min":
             return 1
         elif arg == "max":
+            self.__is_max_bpl = True
             return max_bpl
         elif arg == "auto":
             unitlen = setting.bytes_per_unit
@@ -1231,6 +1244,12 @@ class Container (object):
                     return ret
             except ValueError:
                 return -1
+
+    def test_and_set_max_bytes_per_line(self):
+        if self.__in_vertical and self.__is_max_bpl:
+            return self.set_bytes_per_line("max")
+        else:
+            return -1
 
     def get_lines_per_window(self):
         if self.__bpw == -1:

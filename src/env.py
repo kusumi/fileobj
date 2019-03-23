@@ -26,123 +26,66 @@ import os
 import re
 import sys
 
-def __iter_env_name():
-    yield "FILEOBJ_USE_READONLY" # -R
-    yield "FILEOBJ_USE_BYTES_BUFFER" # -B
-    yield "FILEOBJ_USE_ASCII_EDIT" # :set binary,ascii
-    yield "FILEOBJ_USE_IGNORECASE" # :set ic
-    yield "FILEOBJ_USE_SIPREFIX" # :set si
-    yield "FILEOBJ_USE_WRAPSCAN" # :set ws
-    yield "FILEOBJ_USE_TEXT_WINDOW"
-    yield "FILEOBJ_USE_MOUSE_EVENTS"
-    yield "FILEOBJ_USE_UNIT_BASED"
-    yield "FILEOBJ_USE_BACKUP"
-    yield "FILEOBJ_ENDIANNESS" # :set le,be
-    yield "FILEOBJ_ADDRESS_RADIX" # :set address
-    yield "FILEOBJ_BYTES_PER_LINE" # --bytes_per_line, :set bytes_per_line
-    yield "FILEOBJ_BYTES_PER_WINDOW" # --bytes_per_window, :set bytes_per_window
-    yield "FILEOBJ_BYTES_PER_UNIT" # --bytes_per_unit, :set bytes_per_unit
-    yield "FILEOBJ_COLOR_CURRENT"
-    yield "FILEOBJ_COLOR_ZERO"
-    yield "FILEOBJ_COLOR_FF"
-    yield "FILEOBJ_COLOR_PRINT"
-    yield "FILEOBJ_COLOR_DEFAULT"
-    yield "FILEOBJ_COLOR_VISUAL"
+def __iter_env():
+    yield "FILEOBJ_USE_READONLY", False # -R
+    yield "FILEOBJ_USE_BYTES_BUFFER", False # -B
+    yield "FILEOBJ_USE_ASCII_EDIT", False # :set binary,ascii
+    yield "FILEOBJ_USE_IGNORECASE", False # :set ic
+    yield "FILEOBJ_USE_SIPREFIX", False # :set si
+    yield "FILEOBJ_USE_WRAPSCAN", True # :set ws
+    yield "FILEOBJ_USE_TEXT_WINDOW", True
+    yield "FILEOBJ_USE_MOUSE_EVENTS", True
+    yield "FILEOBJ_USE_UNIT_BASED", False
+    yield "FILEOBJ_USE_BACKUP", False
+    yield "FILEOBJ_ENDIANNESS", None # :set le,be
+    yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address
+    yield "FILEOBJ_BYTES_PER_LINE", None # --bytes_per_line, :set bytes_per_line
+    yield "FILEOBJ_BYTES_PER_WINDOW", None # --bytes_per_window, :set bytes_per_window
+    yield "FILEOBJ_BYTES_PER_UNIT", 1 # --bytes_per_unit, :set bytes_per_unit
+    yield "FILEOBJ_COLOR_CURRENT", "black,green"
+    yield "FILEOBJ_COLOR_ZERO", "green"
+    yield "FILEOBJ_COLOR_FF", "magenta"
+    yield "FILEOBJ_COLOR_PRINT", "cyan"
+    yield "FILEOBJ_COLOR_DEFAULT", "white"
+    yield "FILEOBJ_COLOR_VISUAL", "red,yellow"
 
-def __iter_env_name_private():
-    yield "__FILEOBJ_USE_DEBUG" # --debug, unittest (true)
-    yield "__FILEOBJ_USE_GETCH" # unittest (false)
-    yield "__FILEOBJ_USE_STDOUT" # unittest (true)
-    yield "__FILEOBJ_USE_CONSOLE_LOG" # unittest (false)
-    yield "__FILEOBJ_USE_SESSION_POSITION" # unittest (false)
-    yield "__FILEOBJ_USE_NATIVE"
-    yield "__FILEOBJ_USE_PATH_ATTR"
-    yield "__FILEOBJ_USE_PID_PATH"
-    yield "__FILEOBJ_USE_TRACE"
-    yield "__FILEOBJ_USE_ALT_CHGAT"
-    yield "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT"
-    yield "__FILEOBJ_USE_SINGLE_OPERATION"
-    yield "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST"
-    yield "__FILEOBJ_USE_STATUS_WINDOW_VERBOSE"
-    yield "__FILEOBJ_USE_STATUS_WINDOW_FRAME"
-    yield "__FILEOBJ_USE_AUTO_FILEOPS_ADJUST" # unittest (false)
-    yield "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP" # unittest (false)
-    yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT"
-    yield "__FILEOBJ_USE_DELETE_CONSOLE" # unittest (false)
-    yield "__FILEOBJ_STDOUT_VERBOSE" # unittest (0)
-    yield "__FILEOBJ_TRACE_WORD_SIZE"
-    yield "__FILEOBJ_LOG_LEVEL"
-    yield "__FILEOBJ_MAX_HISTORY"
-    yield "__FILEOBJ_BARRIER_SIZE"
-    yield "__FILEOBJ_BARRIER_EXTEND"
-    yield "__FILEOBJ_REGFILE_SOFT_LIMIT"
-    yield "__FILEOBJ_BUFFER_CHUNK_SIZE"
-    yield "__FILEOBJ_BUFFER_CHUNK_BALANCE_INTERVAL"
-    yield "__FILEOBJ_TERMINAL_HEIGHT"
-    yield "__FILEOBJ_TERMINAL_WIDTH"
-    yield "__FILEOBJ_TEMP_SIZE"
-    yield "__FILEOBJ_PATH_STREAM"
-    yield "__FILEOBJ_COLOR_FG"
-    yield "__FILEOBJ_COLOR_BG"
+def __iter_env_private():
+    yield "__FILEOBJ_USE_DEBUG", False # --debug, unittest (true)
+    yield "__FILEOBJ_USE_GETCH", True # unittest (false)
+    yield "__FILEOBJ_USE_STDOUT", False # unittest (true)
+    yield "__FILEOBJ_USE_CONSOLE_LOG", False # unittest (false)
+    yield "__FILEOBJ_USE_SESSION_POSITION", True # unittest (false)
+    yield "__FILEOBJ_USE_NATIVE", True
+    yield "__FILEOBJ_USE_PATH_ATTR", True
+    yield "__FILEOBJ_USE_PID_PATH", True
+    yield "__FILEOBJ_USE_TRACE", False
+    yield "__FILEOBJ_USE_ALT_CHGAT", False
+    yield "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT", True
+    yield "__FILEOBJ_USE_SINGLE_OPERATION", False
+    yield "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST", True
+    yield "__FILEOBJ_USE_STATUS_WINDOW_VERBOSE", False
+    yield "__FILEOBJ_USE_STATUS_WINDOW_FRAME", False
+    yield "__FILEOBJ_USE_AUTO_FILEOPS_ADJUST", True # unittest (false)
+    yield "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True # unittest (false)
+    yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT", False
+    yield "__FILEOBJ_USE_DELETE_CONSOLE", True # unittest (false)
+    yield "__FILEOBJ_STDOUT_VERBOSE", 1 # unittest (0)
+    yield "__FILEOBJ_TRACE_WORD_SIZE", 2
+    yield "__FILEOBJ_LOG_LEVEL", "INFO"
+    yield "__FILEOBJ_MAX_HISTORY", 1000
+    yield "__FILEOBJ_BARRIER_SIZE", 8192
+    yield "__FILEOBJ_BARRIER_EXTEND", 1024
+    yield "__FILEOBJ_REGFILE_SOFT_LIMIT", ((1 << 20) * 100)
+    yield "__FILEOBJ_BUFFER_CHUNK_SIZE", -1
+    yield "__FILEOBJ_BUFFER_CHUNK_BALANCE_INTERVAL", 100
+    yield "__FILEOBJ_TERMINAL_HEIGHT", -1
+    yield "__FILEOBJ_TERMINAL_WIDTH", -1
+    yield "__FILEOBJ_TEMP_SIZE", -1
+    yield "__FILEOBJ_PATH_STREAM", None
+    yield "__FILEOBJ_COLOR_FG", None
+    yield "__FILEOBJ_COLOR_BG", None
 
-_env_default_value = {
-    "FILEOBJ_USE_READONLY" : False,
-    "FILEOBJ_USE_BYTES_BUFFER" : False,
-    "FILEOBJ_USE_ASCII_EDIT" : False,
-    "FILEOBJ_USE_IGNORECASE" : False,
-    "FILEOBJ_USE_SIPREFIX" : False,
-    "FILEOBJ_USE_WRAPSCAN" : True,
-    "FILEOBJ_USE_TEXT_WINDOW" : True,
-    "FILEOBJ_USE_MOUSE_EVENTS" : True,
-    "FILEOBJ_USE_UNIT_BASED" : False,
-    "FILEOBJ_USE_BACKUP" : False,
-    "FILEOBJ_ENDIANNESS" : None,
-    "FILEOBJ_ADDRESS_RADIX" : 16,
-    "FILEOBJ_BYTES_PER_LINE" : None,
-    "FILEOBJ_BYTES_PER_WINDOW" : None,
-    "FILEOBJ_BYTES_PER_UNIT" : 1,
-    "FILEOBJ_COLOR_CURRENT" : "black,green",
-    "FILEOBJ_COLOR_ZERO" : "green",
-    "FILEOBJ_COLOR_FF" : "magenta",
-    "FILEOBJ_COLOR_PRINT" : "cyan",
-    "FILEOBJ_COLOR_DEFAULT" : "white",
-    "FILEOBJ_COLOR_VISUAL" : "red,yellow",
-
-    "__FILEOBJ_USE_DEBUG" : False,
-    "__FILEOBJ_USE_GETCH" : True,
-    "__FILEOBJ_USE_STDOUT" : False,
-    "__FILEOBJ_USE_CONSOLE_LOG" : False,
-    "__FILEOBJ_USE_SESSION_POSITION" : True,
-    "__FILEOBJ_USE_NATIVE" : True,
-    "__FILEOBJ_USE_PATH_ATTR" : True,
-    "__FILEOBJ_USE_PID_PATH" : True,
-    "__FILEOBJ_USE_TRACE" : False,
-    "__FILEOBJ_USE_ALT_CHGAT" : False,
-    "__FILEOBJ_USE_CIRCULAR_BIT_SHIFT" : True,
-    "__FILEOBJ_USE_SINGLE_OPERATION" : False,
-    "__FILEOBJ_USE_DOWNWARD_WINDOW_ADJUST" : True,
-    "__FILEOBJ_USE_STATUS_WINDOW_VERBOSE" : False,
-    "__FILEOBJ_USE_STATUS_WINDOW_FRAME" : False,
-    "__FILEOBJ_USE_AUTO_FILEOPS_ADJUST" : True,
-    "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP" : True,
-    "__FILEOBJ_USE_VM_SYNC_ON_EDIT" : False,
-    "__FILEOBJ_USE_DELETE_CONSOLE" : True,
-    "__FILEOBJ_STDOUT_VERBOSE" : 1,
-    "__FILEOBJ_TRACE_WORD_SIZE" : 2,
-    "__FILEOBJ_LOG_LEVEL" : "INFO",
-    "__FILEOBJ_MAX_HISTORY" : 1000,
-    "__FILEOBJ_BARRIER_SIZE" : 8192,
-    "__FILEOBJ_BARRIER_EXTEND" : 1024,
-    "__FILEOBJ_REGFILE_SOFT_LIMIT" : ((1 << 20) * 100),
-    "__FILEOBJ_BUFFER_CHUNK_SIZE" : -1,
-    "__FILEOBJ_BUFFER_CHUNK_BALANCE_INTERVAL" : 100,
-    "__FILEOBJ_TERMINAL_HEIGHT" : -1,
-    "__FILEOBJ_TERMINAL_WIDTH" : -1,
-    "__FILEOBJ_TEMP_SIZE" : -1,
-    "__FILEOBJ_PATH_STREAM" : None,
-    "__FILEOBJ_COLOR_FG" : None,
-    "__FILEOBJ_COLOR_BG" : None,
-}
+_env_default_value = {}
 
 def get_default(envname, default=None):
     return _env_default_value.get(envname, default)
@@ -442,12 +385,12 @@ def __get_setting_color_bg():
         return e.lower()
 
 def iter_env_name():
-    for x in sorted(__iter_env_name()):
-        yield x
+    for l in sorted(__iter_env()):
+        yield l[0]
 
 def iter_env_name_private():
-    for x in sorted(__iter_env_name_private()):
-        yield x
+    for l in sorted(__iter_env_private()):
+        yield l[0]
 
 def iter_defined_env():
     envs = list(iter_env_name()) + list(iter_env_name_private())
@@ -485,6 +428,12 @@ def get_config():
 
 # called from setting import, i.e. can't use other fileobj modules
 def init(f):
+    global _env_default_value
+    for k, v in __iter_env():
+        _env_default_value[k] = v
+    for k, v in __iter_env_private():
+        _env_default_value[k] = v
+
     assert f, f
     if not os.path.isfile(f):
         try:
