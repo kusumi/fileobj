@@ -1,44 +1,12 @@
-# fileobj ([v0.7.89](https://github.com/kusumi/fileobj/releases/tag/v0.7.89))
+# fileobj ([v0.7.90](https://github.com/kusumi/fileobj/releases/tag/v0.7.90))
 
 ## About
 
 + Ncurses based hex editor with vi interface.
 
-![fileobj-linux](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.85/linux.png)
+![fileobj-linux](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.90/linux.png)
 
 ![fileobj-windows](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.85/windows.png)
-
-## Features
-
-+ vi(1) interface
-
-+ Insert, replace, delete
-
-+ Undo and redo
-
-+ Search
-
-+ Visual select in normal, line, block mode
-
-+ Cut and paste
-
-+ Partial file load via offset/length specification
-
-+ Open multiple editor buffer
-
-+ Compare editor buffer contents
-
-+ Split editor window into vertical or horizontal direction
-
-+ Configurable color
-
-+ Block device support
-
-+ Visualize data in C struct format
-
-+ ptrace(2) based process userspace edit
-
-+ and more
 
 ## Supported platforms
 
@@ -68,7 +36,7 @@
         $ sudo bash ./script/install_misc.sh
         /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, from Unix, max compression
 
-+ See *[Notes](doc/README.notes.md)* for compilation error due to a missing header file *Python.h*, and other platform specific information.
++ See *[Notes](doc/README.notes.md)* for installation failure due to a missing header file *Python.h*.
 
 ## Uninstall
 

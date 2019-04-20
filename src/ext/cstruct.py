@@ -257,7 +257,9 @@ def get_text(co, fo, args):
     return l
 
 def init():
-    setting.ext_add_name("path_cstruct", "cstruct")
+    setting.ext_add_name("path_cstruct", "cstruct",
+        "Set configuration file path for :cstruct. "
+        "Defaults to ~/.fileobj/cstruct if undefined.")
     __init_class()
     # create an empty file
     f = setting.get_ext_path("cstruct")

@@ -399,8 +399,10 @@ def iter_defined_env():
             yield l
 
 def iter_defined_ext_env():
+    from . import setting # XXX
+    _ = tuple(setting.iter_ext_env_name())
     for l in __iter_os_environ():
-        if l[0].startswith("FILEOBJ_EXT_"):
+        if l[0] in _:
             yield l
 
 def __iter_os_environ():
@@ -428,12 +430,29 @@ def get_config():
 
 # called from setting import, i.e. can't use other fileobj modules
 def init(f):
-    global _env_default_value
     for k, v in __iter_env():
         _env_default_value[k] = v
     for k, v in __iter_env_private():
         _env_default_value[k] = v
 
+    _config.clear()
+    assert f, f
+    if os.path.isfile(f):
+        for l in open(f):
+            l = l.strip()
+            if l.startswith("#"):
+                continue
+            if not l.startswith("FILEOBJ_") and not l.startswith("__FILEOBJ_"):
+                continue
+            m = _regex.match(l)
+            if not m:
+                continue
+            k, v = m.groups()
+            if k not in os.environ: # env variables precede config
+                os.environ[k] = v
+                _config[k] = v
+
+def cleanup(f):
     assert f, f
     if not os.path.isfile(f):
         try:
@@ -441,28 +460,11 @@ def init(f):
             if not os.path.isdir(d):
                 os.makedirs(d)
             with open(f, "w") as fd:
-                # XXX missing FILEOBJ_EXT_XXX
-                for x in iter_env_name():
+                from . import setting # XXX
+                for x in setting.iter_env_name():
                     fd.write("#{0}={1}\n".format(x, get_default(x)))
-                if __get_setting_use_debug():
+                if setting.use_debug:
                     for x in iter_env_name_private():
                         fd.write("#{0}={1}\n".format(x, get_default(x)))
         except Exception:
             pass # ignore
-    if not os.path.isfile(f):
-        return -1
-
-    _config.clear()
-    for l in open(f):
-        l = l.strip()
-        if l.startswith("#"):
-            continue
-        if not l.startswith("FILEOBJ_") and not l.startswith("__FILEOBJ_"):
-            continue
-        m = _regex.match(l)
-        if not m:
-            continue
-        k, v = m.groups()
-        if k not in os.environ: # env variables precede config
-            os.environ[k] = v
-            _config[k] = v

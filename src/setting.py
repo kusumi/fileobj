@@ -110,7 +110,9 @@ def __init(g):
         add(*_)
 
 def cleanup():
+    env.cleanup(get_env_path())
     _attr.clear()
+    _ext_env.clear()
 
 def add(k, v):
     if k not in _attr:
@@ -154,28 +156,28 @@ def iter_setting():
     for k in iter_setting_name():
         yield k, getattr(this, k)
 
-def ext_add(k):
-    s, e = __ext_get(k)
+def ext_add(k, desc):
+    s, e = __ext_get(k, desc)
     return __ext_add(s, env.getenv(e))
 
-def ext_add_bool(k, v):
-    s, e = __ext_get(k)
+def ext_add_bool(k, v, desc):
+    s, e = __ext_get(k, desc)
     return __ext_add(s, env.test_bool(e, v))
 
-def ext_add_name(k, v):
-    s, e = __ext_get(k)
+def ext_add_name(k, v, desc):
+    s, e = __ext_get(k, desc)
     return __ext_add(s, env.test_name(e, v))
 
-def ext_add_gt_zero(k, v):
-    s, e = __ext_get(k)
+def ext_add_gt_zero(k, v, desc):
+    s, e = __ext_get(k, desc)
     return __ext_add(s, env.test_gt_zero(e, v))
 
-def ext_add_ge_zero(k, v):
-    s, e = __ext_get(k)
+def ext_add_ge_zero(k, v, desc):
+    s, e = __ext_get(k, desc)
     return __ext_add(s, env.test_ge_zero(e, v))
 
 def ext_delete(k):
-    s, e = __ext_get(k)
+    s, e = __ext_get(k, None) # XXX
     return __ext_delete(s)
 
 def __ext_add(k, v):
@@ -186,10 +188,26 @@ def __ext_delete(k):
     # assert k in _attr, k
     return delete(k)
 
-def __ext_get(k):
+def __ext_get(k, desc):
     s = "ext_" + k
     e = "FILEOBJ_EXT_" + k.upper()
+    if e not in _ext_env:
+        _ext_env[e] = desc
     return s, e
+
+def get_ext_env_desc(k):
+    return _ext_env.get(k, "")
+
+def iter_ext_env_name():
+    for x in sorted(_ext_env.keys()):
+        yield x
+
+# non private env + ext env
+def iter_env_name():
+    for x in env.iter_env_name():
+        yield x
+    for x in iter_ext_env_name(): # no sorting against above
+        yield x
 
 def has_buffer_attr():
     return not (this.color_zero is None and this.color_ff is None and \
@@ -226,6 +244,7 @@ _user_dir = os.path.join(_home_dir, ".fileobj")
 
 _attr = {}
 _snap = dict(_attr)
+_ext_env = {}
 
 this = sys.modules[__name__]
 init()

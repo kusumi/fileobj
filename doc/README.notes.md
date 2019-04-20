@@ -40,7 +40,13 @@
 
 ## PuTTY
 
-+ Window frames are corrupted. -> **Modify the section *"Window -> Appearance"*. Modify the section *"Window -> Translation"* to use *"Use font encoding"*.**
++ Window frames are corrupted. ->
+
+    + **Modify the section *"Window -> Appearance"*.**
+
+    + **Modify the section *"Window -> Translation"* to use *"Use font encoding"*.**
+
+    + **Try different *TERM* variable.**
 
 ## NetBSD
 
@@ -66,7 +72,3 @@
 + Window frames do not resize upon console window resizing. -> ***windows-curses* module does not seem to be able to handle resize event.**
 
 + There is no *fileobj* package in site-packages directory. -> **On Windows, *fileobj* package is installed as *fileobj_*.**
-
-## Cygwin
-
-+ Can not run *fileobj* after successful installation. -> **If Python is installed for both Windows and Cygwin, shebang line of *fileobj* (e.g. */usr/bin/fileobj*) may be Windows path instead of Cygwin path which then needs to be manually modified to Cygwin path (e.g. *#!/usr/bin/python*).**

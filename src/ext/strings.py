@@ -78,7 +78,9 @@ def get_text(co, fo, args):
     return sl
 
 def init():
-    setting.ext_add_gt_zero("strings_thresh", 3)
+    setting.ext_add_gt_zero("strings_thresh", 3,
+        "Set number of minimum string length for :strings. "
+        "Defaults to 3 if undefined.")
 
 def cleanup():
     setting.ext_delete("strings_thresh")

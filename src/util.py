@@ -837,6 +837,10 @@ def iter_site_ext_module():
             if o:
                 yield o
 
+def load_site_ext_module():
+    for _ in iter_site_ext_module():
+        pass
+
 def iter_dir_items(obj):
     k = dir(obj)
     v = [getattr(obj, x) for x in k]

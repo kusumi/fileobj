@@ -134,16 +134,20 @@ def dispatch(optargs=None):
     if opts.debug:
         setting.use_debug = True
 
+    util.load_site_ext_module()
     if opts.command:
         literal.print_literal()
         return
     if opts.env:
-        # XXX missing FILEOBJ_EXT_XXX
-        n = max([len(s) for s in env.iter_env_name()])
+        l = tuple(setting.iter_env_name())
+        n = max([len(s) for s in l])
         f = "{{0:<{0}}} {{1}}".format(n)
-        for x in env.iter_env_name():
-            assert hasattr(usage, x), x
-            s = getattr(usage, x)
+        for x in l:
+            s = getattr(usage, x, None)
+            if s is None:
+                s = setting.get_ext_env_desc(x)
+                if not s:
+                    s = "-"
             s = s.replace("\n", " ").rstrip()
             util.printf(f.format(x, s))
         return
