@@ -1,4 +1,4 @@
-# fileobj ([v0.7.90](https://github.com/kusumi/fileobj/releases/tag/v0.7.90))
+# fileobj ([v0.7.91](https://github.com/kusumi/fileobj/releases/tag/v0.7.91))
 
 ## About
 
@@ -46,7 +46,7 @@
 
 ## Usage
 
-+ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* or *length* syntax. On Windows, run *fileobj.py* unless ".PY" is in *PATHEXT* environment variable.
++ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* and/or *length* syntax. On Windows, run *fileobj.py* unless ".PY" is in *PATHEXT* environment variable.
 
         $ fileobj [options]... [paths]...
         $ fileobj [options]... [paths[@offset:length]]...

@@ -1,3 +1,7 @@
+v0.7.91
+=======
+- Fix edit mode bug (assert failure) for block device (since v0.7.87)
+
 v0.7.90
 =======
 - Minor fixes and cleanups

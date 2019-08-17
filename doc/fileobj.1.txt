@@ -224,4 +224,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.90                  April 20, 2019                      FILEOBJ(1)
+FILEOBJ 0.7.91                  August 18, 2019                     FILEOBJ(1)

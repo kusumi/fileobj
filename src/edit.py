@@ -89,8 +89,8 @@ class Console (console.Console):
 
     def dispatch(self, arg):
         try:
-            self.test()
             self.init_cursor()
+            self.test()
             self.co.lrepaintf()
             self.__listen(arg)
             assert not self.co.is_barrier_active()
@@ -98,7 +98,7 @@ class Console (console.Console):
             self.co.flash(e)
         finally:
             self.co.cleanup_region()
-            self.cleanup_cursor()
+            self.cleanup_cursor() # must have called init_cursor()
             self.co.lrepaintf()
             self.set_console(None)
 
