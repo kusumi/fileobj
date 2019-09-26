@@ -24,15 +24,14 @@
 from __future__ import division
 
 from . import candidate
-from . import history
 from . import kbd
 from . import literal
 from . import screen
 from . import util
 
 class Operand (object):
-    def __init__(self):
-        self.__history = history.History(None)
+    def __init__(self, h):
+        self.__history = h
         self.__prev = util.Namespace(key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
         l = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete", "open_b64e", \
@@ -56,7 +55,7 @@ class Operand (object):
         self.clear()
 
     def cleanup(self):
-        self.__history.flush()
+        return
 
     def clear(self):
         self.__pos = 0

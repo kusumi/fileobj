@@ -32,8 +32,10 @@ from . import extension
 from . import fileattr
 from . import filebytes
 from . import fileops
+from . import history
 from . import kbd
 from . import kernel
+from . import literal
 from . import log
 from . import marks
 from . import operand
@@ -63,8 +65,12 @@ class Container (object):
         self.__register = DEF_REG
         self.__init_yank_buffer()
         self.__delayed_input = []
+        self.__prev_delayed_buf = ""
+        self.__prev_delayed_key = kbd.ERROR
         self.__stream = collections.deque()
-        self.__operand = operand.Operand()
+        self.__history = history.History(None,
+            literal.get_slow_strings() + (literal.bracket2_beg.str,))
+        self.__operand = operand.Operand(self.__history)
         self.__marks = marks.Marks(setting.get_marks_path())
         self.__session = marks.Marks(setting.get_session_path())
         self.__cur_workspace = None
@@ -126,6 +132,7 @@ class Container (object):
         self.__marks.flush()
         self.__session.flush()
         self.__operand.cleanup()
+        self.__history.flush()
 
     def dispatch(self):
         self.__load_stream()
@@ -806,8 +813,15 @@ class Container (object):
         self.__cur_workspace.require_full_repaint()
 
     # regular repaint
+    # XXX Under certain condition, scr.noutrefresh() seems to actually clear a
+    # screen prior to calling screen.doupdate(), and this causes canvas repaint
+    # to leave posstr part that was cleared by frame repaint. To avoid this,
+    # always require full repaint, or otherwise stop conditional canvas repaint
+    # entirely. See DisplayCanvas.__fill_pre().
+    # https://docs.python.org/3/library/curses.html#curses.window.noutrefresh
     def repaint(self, low=False):
         for o in self.__workspaces:
+            o.require_full_repaint()
             o.repaint(self.__cur_workspace is o)
         if low:
             self.lrepaint(low)
@@ -973,34 +987,111 @@ class Container (object):
 
     def start_read_delayed_input(self, x, term):
         assert not self.__delayed_input
-        self.__delayed_input_term = term
+        #self.__delayed_input_beg_key = x
+        self.__delayed_input_beg_str = chr(x)
+        self.__delayed_input_end_key = term
+        self.__delayed_input_end_str = chr(term)
         self.add_delayed_input(x)
 
     def end_read_delayed_input(self):
-        l = [chr(x) for x in self.__delayed_input[1:-1]]
-        self.clear_delayed_input()
-        return ''.join(l)
+        s = self.__delayed_input_string()
+        self.__add_delayed_input_history()
+        return s[1:-1] # drop brackets
 
     def add_delayed_input(self, x):
+        # scan and update prev input first
+        if self.__prev_delayed_key not in _arrows and x in _arrows:
+            self.__prev_delayed_buf = self.__delayed_input_string()
+        elif self.__prev_delayed_key in _arrows and x not in _arrows:
+            self.__prev_delayed_buf = ""
+        self.__assert_delayed_input(self.__prev_delayed_buf)
+        self.__prev_delayed_key = x
+
         if util.isprint(x):
             self.__delayed_input.append(x)
+            self.__reset_delayed_input_cursor()
         elif x == kbd.ESCAPE:
+            self.__add_delayed_input_history()
+            self.__reset_delayed_input_cursor()
+        elif x == kbd.RESIZE:
             self.clear_delayed_input()
+            self.__reset_delayed_input_cursor()
+            return x # no need to do rest
+        elif x == kbd.ENTER:
+            x = self.__delayed_input_end_key
+            self.__delayed_input.append(x)
+            self.__reset_delayed_input_cursor()
         elif x in kbd.get_backspaces():
             if len(self.__delayed_input) > 1:
                 self.__delayed_input.pop()
             else:
                 self.clear_delayed_input()
-        l = [chr(i) for i in self.__delayed_input]
-        self.show(''.join(l))
-        if x == self.__delayed_input_term:
+            self.__reset_delayed_input_cursor()
+        elif x in _up:
+            # taken from Operand.__get_older_history()
+            b = self.__prev_delayed_buf
+            assert b, b
+            # XXX this doesn't work properly with TERM=vt*00 ???
+            s = self.__history.get_older(b[0], b)
+            if not s:
+                s = self.__history.get_newer(b[0], b)
+                if not s:
+                    s = b
+            assert s[0] == b[0], (s, b)
+            self.__delayed_input = [ord(_) for _ in s]
+        elif x in _down:
+            # taken from Operand.__get_newer_history()
+            b = self.__prev_delayed_buf
+            assert b, b
+            # XXX this doesn't work properly with TERM=vt*00 ???
+            s = self.__history.get_newer(b[0], b)
+            if not s:
+                s = b
+            assert s[0] == b[0], (s, b)
+            self.__delayed_input = [ord(_) for _ in s]
+        elif x in (kbd.LEFT, kbd.RIGHT):
+            self.flash()
+
+        self.show(self.__delayed_input_string())
+        if x == self.__delayed_input_end_key:
             return x
         else:
             return kbd.ERROR
 
     def clear_delayed_input(self):
         self.__delayed_input = []
+        self.__prev_delayed_buf = ""
+        self.__prev_delayed_key = kbd.ERROR
         self.show('')
+
+    def __delayed_input_string(self):
+        return ''.join([chr(i) for i in self.__delayed_input])
+
+    def __add_delayed_input_history(self):
+        s = self.__delayed_input_string()
+        if not s:
+            self.clear_delayed_input()
+            return
+        key = s[0]
+        assert key == self.__delayed_input_beg_str, s
+        if s[-1] == self.__delayed_input_end_str:
+            value = s[:-1]
+        else:
+            value = s
+        if value != key:
+            if self.__history.get_latest(key) != value:
+                self.__history.append(key, value)
+            self.__reset_delayed_input_cursor()
+        self.clear_delayed_input()
+
+    def __reset_delayed_input_cursor(self):
+        self.__history.reset_cursor(self.__delayed_input_beg_str)
+
+    def __assert_delayed_input(self, s):
+        assert isinstance(s, str), (s, type(s))
+        if s:
+            assert s[0] == self.__delayed_input_beg_str, s
+            assert s[-1] != self.__delayed_input_end_str, s
 
     def __init_yank_buffer(self):
         self.__yank_buffer = {}
@@ -1316,3 +1407,7 @@ class Container (object):
                 return int(arg)
             except ValueError:
                 return -1
+
+_arrows = kbd.UP, util.ctrl('p'), kbd.DOWN, util.ctrl('n')
+_up = _arrows[:2]
+_down = _arrows[2:]

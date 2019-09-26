@@ -2121,6 +2121,10 @@ def redo(self, amp, opc, args, raw):
     __undo(self, amp, self.co.redo, "Already at newest change",
         "Redo interrupted")
 
+def redo_all(self, amp, opc, args, raw):
+    siz = self.co.get_redo_size()
+    redo(self, siz if siz else 1, opc, args, raw)
+
 def __undo(self, amp, fn, msg_notfound, msg_interrupt):
     pos = self.co.get_pos()
     ret, msg = fn(get_int(amp))

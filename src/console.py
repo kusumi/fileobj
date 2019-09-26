@@ -271,7 +271,7 @@ def resize():
 
 def addstr(x, s, attr=screen.A_NONE):
     if len(s) > get_size_x():
-        s = s[:get_size_x()-1]
+        s = s[:get_size_x()-2]
         s += "~"
     try:
         _scr.addstr(0, x, s, attr | screen.A_COLOR_FB)

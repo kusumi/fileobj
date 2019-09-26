@@ -105,6 +105,7 @@
         ZQ                     Close current window if more than 1 windows exist else quit program without writing
         :qa                    Close all windows and quit program
         :qa!                   Close all windows and quit program without writing
+        :redo_all              Redo all changes
         :screen                Print screen information
         :sector                Print sector size for block device
         :self                  Print current console instance string

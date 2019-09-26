@@ -202,7 +202,11 @@ flash = curses.flash
 
 def newwin(leny, lenx, begy, begx, ref=None):
     if kbd.parse_sequence:
-        scr = Window(leny, lenx, begy, begx, ref)
+        scr = SeqWindow(leny, lenx, begy, begx, ref)
+        scr.init()
+        return scr
+    elif setting.use_debug:
+        scr = GenericWindow(leny, lenx, begy, begx, ref)
         scr.init()
         return scr
     else:
@@ -256,44 +260,15 @@ def __init_mouse_event_name():
 
 # APIs must be compatible with
 # https://docs.python.org/3/library/curses.html
-class Window (object):
+class GenericWindow (object):
     def __init__(self, leny, lenx, begy, begx, ref):
         self.__scr = curses.newwin(leny, lenx, begy, begx)
 
     def init(self):
-        self.__ib = collections.deque()
-        self.__ob = collections.deque()
-        _windows.append(self)
+        return
 
     def cleanup(self):
-        self.__clear_input()
-        self.__clear_output()
-        _windows.remove(self)
-
-    def __clear_input(self):
-        self.__ib.clear()
-
-    def __clear_output(self):
-        self.__ob.clear()
-
-    def __queue_input(self, l):
-        for x in l:
-            assert isinstance(x, int)
-        self.__ib.extend(l)
-
-    def __queue_output(self, l):
-        for x in l:
-            assert isinstance(x, int)
-        self.__ob.extend(l)
-
-    def __fetch_output(self):
-        try:
-            return self.__ob.popleft()
-        except IndexError:
-            return
-
-    def __input_to_seq(self):
-        return tuple(self.__ib)
+        return
 
     def keypad(self, yes):
         return self.__scr.keypad(yes)
@@ -349,8 +324,50 @@ class Window (object):
     def getbegyx(self):
         return self.__scr.getbegyx()
 
+    def getch(self):
+        return self._getch()
+
     def _getch(self):
         return self.__scr.getch()
+
+class SeqWindow (GenericWindow):
+    def __init__(self, leny, lenx, begy, begx, ref):
+        super(SeqWindow, self).__init__(leny, lenx, begy, begx, ref)
+
+    def init(self):
+        self.__ib = collections.deque()
+        self.__ob = collections.deque()
+        _windows.append(self)
+
+    def cleanup(self):
+        self.__clear_input()
+        self.__clear_output()
+        _windows.remove(self)
+
+    def __clear_input(self):
+        self.__ib.clear()
+
+    def __clear_output(self):
+        self.__ob.clear()
+
+    def __queue_input(self, l):
+        for x in l:
+            assert isinstance(x, int)
+        self.__ib.extend(l)
+
+    def __queue_output(self, l):
+        for x in l:
+            assert isinstance(x, int)
+        self.__ob.extend(l)
+
+    def __fetch_output(self):
+        try:
+            return self.__ob.popleft()
+        except IndexError:
+            return
+
+    def __input_to_seq(self):
+        return tuple(self.__ib)
 
     def preprocess(self, x, l):
         return

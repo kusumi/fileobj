@@ -543,6 +543,7 @@ class _console (console.Console):
         self.add_method(literal.u            , this,    "_queue_input")
         self.add_method(literal.U            , this,    "_queue_input")
         self.add_method(literal.ctrlr        , this,    "_queue_input")
+        self.add_method(literal.s_redo_all   , this,    "_queue_input")
         self.add_method(literal.reg_reg      , methods, "start_register")
         self.add_method(literal.m_reg        , this,    "_queue_input")
         self.add_method(literal.backtick_reg , this,    "_queue_input")

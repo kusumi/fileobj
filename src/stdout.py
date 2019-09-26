@@ -94,7 +94,7 @@ def get_mouse_event_name(bstate):
 
 # APIs must be compatible with
 # https://docs.python.org/3/library/curses.html
-class _window (ncurses.Window):
+class _window (ncurses.SeqWindow):
     def __init__(self, leny, lenx, begy, begx, ref):
         self.__siz = util.Pair(leny, lenx)
         self.__pos = util.Pair(begy, begx)

@@ -44,8 +44,9 @@ class Literal (object):
     def __init__(self, str, seq, desc):
         self.str = str
         if not seq:
-            seq = [ord(x) for x in self.str]
-        self.seq = tuple(seq)
+            self.seq = tuple(ord(x) for x in self.str)
+        else:
+            self.seq = tuple(seq)
         self.desc = desc
         self.ref = None
         self.ali = None
@@ -65,20 +66,21 @@ class Literal (object):
         else:
             return self.str
 
+    # faster than "self.seq.__{eq,gt,ge,lt,le}__(o.seq)"
     def __eq__(self, o):
-        return self.seq.__eq__(o.seq)
+        return self.seq == o.seq
 
     def __gt__(self, o):
-        return self.seq.__gt__(o.seq)
+        return self.seq > o.seq
 
     def __ge__(self, o):
-        return self.seq.__ge__(o.seq)
+        return self.seq >= o.seq
 
     def __lt__(self, o):
-        return self.seq.__lt__(o.seq)
+        return self.seq < o.seq
 
     def __le__(self, o):
-        return self.seq.__le__(o.seq)
+        return self.seq <= o.seq
 
     def cleanup(self):
         if self.ref and self in self.ref.children:
@@ -485,6 +487,7 @@ def init():
     setattr(this, "s_qaneg", SlowLiteral(":qa!", None, "Close all windows and quit program without writing"))
     setattr(this, "s_bind", SlowLiteral(":bind", None, "Run/bind given :command in argument, replayable with {0}".format(this.atsign_colon.str)))
     setattr(this, "s_auto", SlowLiteral(":auto", None, "Optimize editor window size based on the current terminal size"))
+    setattr(this, "s_redo_all", SlowLiteral(":redo_all", None, "Redo all changes"))
     setattr(this, "s_open_md5", SlowLiteral(":open_md5", None, "Open md5 message digest of the current buffer"))
     setattr(this, "s_open_sha1", SlowLiteral(":open_sha1", None, "Open sha1 message digest of the current buffer"))
     setattr(this, "s_open_sha224", SlowLiteral(":open_sha224", None, "Open sha224 message digest of the current buffer"))

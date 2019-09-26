@@ -139,6 +139,7 @@ class _console (console.Console):
         self.add_method(literal.u            , methods, "undo")
         self.add_method(literal.U            , methods, "undo_all")
         self.add_method(literal.ctrlr        , methods, "redo")
+        self.add_method(literal.s_redo_all   , methods, "redo_all")
         self.add_method(literal.reg_reg      , methods, "start_register")
         self.add_method(literal.m_reg        , methods, "set_mark")
         self.add_method(literal.backtick_reg , methods, "get_mark")

@@ -1,3 +1,10 @@
+v0.7.92
+=======
+- Minor fixes and cleanups
+- Fix minor repaint bug on creating a new window (since v0.7.81)
+- Support history for '[' buffered [count] value
+- Add :redo_all
+
 v0.7.91
 =======
 - Fix edit mode bug (assert failure) for block device (since v0.7.87)
