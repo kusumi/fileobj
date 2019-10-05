@@ -556,6 +556,7 @@ def init():
         ((this.ctrlv, this.V), this.v),
         (this.g_ctrlg, this.ctrlg),
         (this.rol, this.ror),
+        ((this.U, this.ctrlr, this.s_redo_all), this.u),
         (this.y, this.Y),
         (this.p, this.P),
         (this.o, this.O),

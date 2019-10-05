@@ -111,6 +111,13 @@ ENVIRONMENT
            If set to "false", do not use mouse events.  Defaults to use mouse
            events if undefined.
 
+       FILEOBJ_USE_COLOR
+           If set to "false", do not use color for buffer contents (equivalent
+           to --no_color).  This set to "false" is equivalent to
+           FILEOBJ_COLOR_ZERO, FILEOBJ_COLOR_FF, FILEOBJ_COLOR_PRINT,
+           FILEOBJ_COLOR_DEFAULT set to "none" or "white".  Defaults to use
+           color if undefined.
+
        FILEOBJ_USE_UNIT_BASED
            If defined, editor operations are on per unit basis where possible.
            Defaults to on per byte basis.
@@ -224,4 +231,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.92                September 26, 2019                    FILEOBJ(1)
+FILEOBJ 0.7.93                  October 6, 2019                     FILEOBJ(1)

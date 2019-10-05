@@ -104,6 +104,9 @@ def init_user():
 def init():
     env.init(get_env_path())
     __init(env.iter_setting())
+    assert isinstance(this.use_color, bool)
+    if not this.use_color:
+        disable_color()
 
 def __init(g):
     for _ in g:
@@ -213,11 +216,14 @@ def has_buffer_attr():
     return not (this.color_zero is None and this.color_ff is None and \
         this.color_print is None and this.color_default is None)
 
-def disable_buffer_attr():
+def disable_color():
+    # keep color_current and color_visual
+    #this.color_current = None
     this.color_zero = None
     this.color_ff = None
     this.color_print = None
     this.color_default = None
+    #this.color_visual = None
 
 _use_unit_based_save = None
 _use_unit_based_aux = 0

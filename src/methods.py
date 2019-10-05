@@ -589,6 +589,12 @@ def __mouse_end_scroll_visual(self, devid, y, x):
         go_down(self, d)
     elif d < 0:
         go_up(self, -d)
+    # x delta is less trivial
+    #d = (x - start_x) // (setting.bytes_per_unit + 1) # XXX
+    #if d > 0:
+    #    go_right(self, d)
+    #elif d < 0:
+    #    go_left(self, -d)
     _mouse_event_visual_pressed = None
 
 def __exit_visual(self):

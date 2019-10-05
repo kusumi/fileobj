@@ -35,6 +35,7 @@ def __iter_env():
     yield "FILEOBJ_USE_WRAPSCAN", True # :set ws
     yield "FILEOBJ_USE_TEXT_WINDOW", True
     yield "FILEOBJ_USE_MOUSE_EVENTS", True
+    yield "FILEOBJ_USE_COLOR", True
     yield "FILEOBJ_USE_UNIT_BASED", False
     yield "FILEOBJ_USE_BACKUP", False
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
@@ -156,6 +157,9 @@ def __get_setting_use_text_window():
 
 def __get_setting_use_mouse_events():
     return test_bool("FILEOBJ_USE_MOUSE_EVENTS")
+
+def __get_setting_use_color():
+    return test_bool("FILEOBJ_USE_COLOR")
 
 def __get_setting_use_unit_based():
     return test_bool("FILEOBJ_USE_UNIT_BASED")

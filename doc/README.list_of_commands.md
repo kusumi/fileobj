@@ -9,7 +9,6 @@
         <CTRL>g                Print current size and position
         g<CTRL>g               Print current size and position in sector for block device
         <CTRL>l                Refresh screen
-        <CTRL>r                Redo changes
         <CTRL>w+               Increase current window height [count] lines
         <CTRL>w-               Decrease current window height [count] lines
         <CTRL>wW               Change to the prev window
@@ -105,7 +104,6 @@
         ZQ                     Close current window if more than 1 windows exist else quit program without writing
         :qa                    Close all windows and quit program
         :qa!                   Close all windows and quit program without writing
-        :redo_all              Redo all changes
         :screen                Print screen information
         :sector                Print sector size for block device
         :self                  Print current console instance string
@@ -165,7 +163,6 @@
         o                      Replace the text after the cursor [count] times
         P                      Put the text before the cursor [count] times
         p                      Put the text after the cursor [count] times
-        U                      Undo all changes
         X                      Delete [count] characters before the cursor
         Y                      Yank characters under the cursor until the end of buffer
         y                      Yank [count] characters
@@ -194,6 +191,9 @@
         t?                     Search character forward until before occurrence
         T?                     Search character backward until before occurrence
         u                      Undo changes
+        <CTRL>r                Redo changes
+        :redo_all              Redo all changes
+        U                      Undo all changes
         v                      Start/End visual mode
         <CTRL>v                Start/End block visual mode
         V                      Start/End line visual mode

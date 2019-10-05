@@ -1,4 +1,4 @@
-# fileobj ([v0.7.92](https://github.com/kusumi/fileobj/releases/tag/v0.7.92))
+# fileobj ([v0.7.93](https://github.com/kusumi/fileobj/releases/tag/v0.7.93))
 
 ## About
 
@@ -58,9 +58,9 @@
 
 ## Resource
 
-+ Upstream [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
++ [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
 
-+ Repository [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
++ [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
 
 ## [Notes](doc/README.notes.md)
 

@@ -164,6 +164,12 @@ If set to "false", do not use mouse events.
 Defaults to use mouse events if undefined.
 """)
 
+FILEOBJ_USE_COLOR = _("""
+If set to "false", do not use color for buffer contents (equivalent to \fB\-\-no_color\fP).
+This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP set to "none" or "white".
+Defaults to use color if undefined.
+""")
+
 FILEOBJ_USE_UNIT_BASED = _("""
 If defined, editor operations are on per unit basis where possible.
 Defaults to on per byte basis.

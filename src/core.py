@@ -219,8 +219,7 @@ def dispatch(optargs=None):
         assert isinstance(setting.use_mouse_events, bool)
         setting.use_mouse_events = False
     if opts.no_color:
-        setting.disable_buffer_attr()
-        setting.color_visual = None
+        setting.disable_color()
 
     l = []
     for _ in env.iter_defined_env():

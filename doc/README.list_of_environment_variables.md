@@ -15,6 +15,7 @@
         FILEOBJ_USE_ASCII_EDIT     If defined, use ASCII edit mode (equivalent to :set ascii). Defaults to binary edit mode if undefined.
         FILEOBJ_USE_BACKUP         If defined, create backup files under ~/.fileobj. Backup files start with '.'. Only applies to regular files.
         FILEOBJ_USE_BYTES_BUFFER   If defined, use Python bytes based buffer for regular files (equivalent to -B).
+        FILEOBJ_USE_COLOR          If set to "false", do not use color for buffer contents (equivalent to --no_color). This set to "false" is equivalent to FILEOBJ_COLOR_ZERO, FILEOBJ_COLOR_FF, FILEOBJ_COLOR_PRINT, FILEOBJ_COLOR_DEFAULT set to "none" or "white". Defaults to use color if undefined.
         FILEOBJ_USE_IGNORECASE     If defined, search operation is case-insensitive (equivalent to :set ic). Defaults to case-sensitive if undefined.
         FILEOBJ_USE_MOUSE_EVENTS   If set to "false", do not use mouse events. Defaults to use mouse events if undefined.
         FILEOBJ_USE_READONLY       If defined, use read-only mode (equivalent to -R).

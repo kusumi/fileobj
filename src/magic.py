@@ -361,6 +361,18 @@ HAMMER_FSBUF_VOLUME in sys/vfs/hammer/hammer_disk.h"""
     def get_name(self):
         return "hammerfs"
 
+class HAMMER2FSMagic (_blk_magic):
+    """Magic definition is taken from
+HAMMER2_VOLUME_ID_HBO in sys/vfs/hammer2/hammer2_disk.h"""
+    def test(self, fo):
+        return self.read(fo, 0, 8) == self.get_magic()
+
+    def get_magic(self):
+        return _("\x11\x20\x17\x05\x32\x4d\x41\x48") # le
+
+    def get_name(self):
+        return "hammer2fs"
+
 class MBRMagic (_blk_magic):
     def test(self, fo):
         return self.read(fo, 510, 2) == self.get_magic()
@@ -411,6 +423,7 @@ CPIOMagic, \
 ISO9660Magic, \
 LVM2PVMagic, \
 HAMMERFSMagic, \
+HAMMER2FSMagic, \
 MBRMagic,
 # MBRMagic comes last
 

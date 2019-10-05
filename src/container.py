@@ -54,6 +54,7 @@ MAX_LOG_N_BPL = 10
 
 class Container (object):
     def __init__(self, backup_files=None):
+        self.__getch_count = 0
         self.__baks = backup_files
         self.__bpw = -1
         self.__workspaces = []
@@ -64,6 +65,7 @@ class Container (object):
         self.__records_key = ''
         self.__register = DEF_REG
         self.__init_yank_buffer()
+        self.__delayed_input_beg_key = None
         self.__delayed_input = []
         self.__prev_delayed_buf = ""
         self.__prev_delayed_key = kbd.ERROR
@@ -145,6 +147,7 @@ class Container (object):
             x = self.__read_stream()
         else:
             x = console.getch()
+        self.__getch_count += 1
         if self.__records_key:
             x = self.add_record(x)
         if self.__delayed_input:
@@ -987,7 +990,8 @@ class Container (object):
 
     def start_read_delayed_input(self, x, term):
         assert not self.__delayed_input
-        #self.__delayed_input_beg_key = x
+        assert x is not None, x
+        self.__delayed_input_beg_key = x
         self.__delayed_input_beg_str = chr(x)
         self.__delayed_input_end_key = term
         self.__delayed_input_end_str = chr(term)
@@ -999,6 +1003,18 @@ class Container (object):
         return s[1:-1] # drop brackets
 
     def add_delayed_input(self, x):
+        # XXX Heuristics to ignore below after certain inputs.
+        # Initially pressing a cursor key reads 3 inputs starting "\x1b".
+        if self.__getch_count <= 6:
+            # Ignore a subset of ANSI sequences to avoid being stucked
+            # initially on pressing a cursor key. These sequences aren't
+            # useful for anything.
+            s = self.__delayed_input_string()
+            if s in ("[A", "[B", "[C", "[D",):
+                self.clear_delayed_input()
+                self.flash()
+                return self.__delayed_input_end_key
+
         # scan and update prev input first
         if self.__prev_delayed_key not in _arrows and x in _arrows:
             self.__prev_delayed_buf = self.__delayed_input_string()
@@ -1015,7 +1031,6 @@ class Container (object):
             self.__reset_delayed_input_cursor()
         elif x == kbd.RESIZE:
             self.clear_delayed_input()
-            self.__reset_delayed_input_cursor()
             return x # no need to do rest
         elif x == kbd.ENTER:
             x = self.__delayed_input_end_key
@@ -1062,6 +1077,7 @@ class Container (object):
         self.__delayed_input = []
         self.__prev_delayed_buf = ""
         self.__prev_delayed_key = kbd.ERROR
+        self.__reset_delayed_input_cursor()
         self.show('')
 
     def __delayed_input_string(self):
@@ -1081,11 +1097,12 @@ class Container (object):
         if value != key:
             if self.__history.get_latest(key) != value:
                 self.__history.append(key, value)
-            self.__reset_delayed_input_cursor()
         self.clear_delayed_input()
 
     def __reset_delayed_input_cursor(self):
-        self.__history.reset_cursor(self.__delayed_input_beg_str)
+        # methods.escape() may call this without having been in delayed input
+        if self.__delayed_input_beg_key is not None:
+            self.__history.reset_cursor(self.__delayed_input_beg_str)
 
     def __assert_delayed_input(self, s):
         assert isinstance(s, str), (s, type(s))
