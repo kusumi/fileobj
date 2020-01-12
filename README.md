@@ -1,4 +1,4 @@
-# fileobj ([v0.7.93](https://github.com/kusumi/fileobj/releases/tag/v0.7.93))
+# fileobj ([v0.7.94](https://github.com/kusumi/fileobj/releases/tag/v0.7.94))
 
 ## About
 
@@ -20,13 +20,13 @@
 
 ## Requirements
 
-+ Python 2.7 or Python 3.2+
++ Python 3.2 or above
 
 + ncurses (curses Python module)
 
 ## Install
 
-+ Run *setup.py* as follows. Use *python3* for Python 3. On Windows, run without *sudo* with appropriate permission.
++ Run *setup.py* as follows. Use *python3* if the Python executable is *python3*. On Windows, run without *sudo* with appropriate permission.
 
         $ sudo python ./setup.py clean --all
         $ sudo python ./setup.py install --force --record ./install.out

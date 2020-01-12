@@ -30,7 +30,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     import src.nodep
-    src.nodep.test()
+    src.nodep.test(installation=True)
     pkg = src.nodep.get_package_name()
 
     from distutils.core import setup, Extension

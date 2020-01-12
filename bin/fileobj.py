@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2018, Tomohiro Kusumi
 # All rights reserved.
 #
@@ -23,7 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# This script is for Windows.
+# This script is for Windows only.
 # All other platforms use bin/fileobj.
 
 if __name__ == '__main__':

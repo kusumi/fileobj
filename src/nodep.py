@@ -21,7 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# this script must run on Python 2.4+
+# This script must run on Python 2.4 or above.
+# Although Python 2 is unsupported, it needs to exit with an error message.
 
 import os
 import platform
@@ -38,25 +39,39 @@ def get_package_name():
     else:
         return "fileobj" # XXX integrate with above
 
-def __test(version, name):
+def __test(version, name, permissive):
     version = tuple(version[:3])
     if name == "Windows":
-        __test_windows(version, name)
+        __test_windows(version, name, permissive)
     else:
-        __test_xnix(version, name)
+        __test_xnix(version, name, permissive)
     import curses
     curses
     del curses
 
-def __test_xnix(version, name):
+def __test_xnix(version, name, permissive):
     if name.startswith("CYGWIN") and sys.executable[0] in "ABCDEFG":
         raise Exception("Cygwin Python is required on Cygwin")
-    __test_common(version, name)
+    __test_common(version, name, permissive)
 
-def __test_windows(version, name):
-    __test_common(version, name)
+def __test_windows(version, name, permissive):
+    __test_common(version, name, permissive)
 
-def __test_common(version, name):
+def __test_common(version, name, permissive):
+    if permissive:
+        __test_permissive_install(version, name)
+    else:
+        __test_strict_install(version, name)
+
+# https://www.python.org/doc/sunset-python-2/
+# Given EOL of Python 2.7, fileobj no longer officially supports Python 2,
+# but the code still runs on Python 2.7 as of January 2020.
+
+def __test_strict_install(version, name):
+    if version[0] <= 2 or ((3, 0, 0) <= version < (3, 2, 0)):
+        raise Exception("Python 3.2 or above is required")
+
+def __test_permissive_install(version, name):
     if not support_if_argparse:
         if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
             raise Exception("Python 2.7 or Python 3.2+ is required")
@@ -72,15 +87,24 @@ def __test_common(version, name):
             except ImportError:
                 raise Exception("Python 2.7 or Python 3.2+ is required")
 
-def test():
+def test(installation=False):
     e = os.getenv("__FILEOBJ_USE_DEBUG")
     if e is None:
         debug = False
     else:
         debug = e.lower() != "false"
+
+    e = os.getenv("__FILEOBJ_USE_PERMISSIVE_INSTALL")
+    if e is None:
+        permissive = False
+    else:
+        permissive = e.lower() != "false"
+    if not installation:
+        permissive = True # allow Python 2.7 unless installation
+
     try:
         name = platform.system()
-        __test(sys.version_info, name)
+        __test(sys.version_info, name, permissive)
     except Exception:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)

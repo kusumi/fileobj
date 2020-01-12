@@ -30,8 +30,6 @@
 
 + Can not enter block visual mode via *CTRL-v*. -> **The terminal may require *CTRL-v CTRL-v* if *CTRL-v* does not work.**
 
-+ Support for old Python versions. -> **Python 2.6, 3.0, 3.1 are supported if *argparse* module is installed, since some platforms have backported *argparse*.**
-
 ## Terminal multiplexer
 
 + Window frames are corrupted with Python 3. -> **Try different *TERM* variable other than *"screen"*.**
@@ -50,7 +48,7 @@
 
 ## NetBSD
 
-+ Can not install due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. The binary package name would be for example *py27-curses* for Python 2.7.**
++ Can not install due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. The binary package name would be for example *py37-curses* for Python 3.7.**
 
         $ uname
         NetBSD
