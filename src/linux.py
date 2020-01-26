@@ -26,6 +26,7 @@ import re
 
 from . import libc
 from . import log
+from . import platform
 from . import unix
 from . import util
 
@@ -136,7 +137,18 @@ def mmap_partial(fileno, offset, length, readonly=False):
 def has_mmap():
     return True
 
+# >>> import platform
+# >>> platform.release()
+# '4.4.0-18362-Microsoft'
+# >>> import fileobj.unix
+# >>> fileobj.unix.test_mmap_resize(1024, 2048)
+# (True, None)
+# >>> fileobj.unix.test_mmap_resize(2048, 1024)
+# (False, '[Errno 22] Invalid argument')
+
 def has_mremap():
+    if "Microsoft" in platform.release(): # XXX assume WSL
+        return False
     return True
 
 def test_mmap_resize(osiz, nsiz):
