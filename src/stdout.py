@@ -82,6 +82,9 @@ def has_color():
 def use_color():
     return False
 
+def use_mouse():
+    return False
+
 def iter_color_name():
     yield "black"
     yield "white"

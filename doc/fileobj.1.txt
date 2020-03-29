@@ -231,4 +231,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.95                 January 26, 2020                     FILEOBJ(1)
+FILEOBJ 0.7.96                  March 29, 2020                      FILEOBJ(1)

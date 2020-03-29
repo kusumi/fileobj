@@ -198,6 +198,9 @@ def has_color():
 def use_color():
     return _screen.use_color()
 
+def use_mouse():
+    return _screen.use_mouse()
+
 def iter_color_name():
     for s in _screen.iter_color_name():
         yield s

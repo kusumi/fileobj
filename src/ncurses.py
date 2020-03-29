@@ -33,6 +33,7 @@ Error = curses.error
 
 _has_chgat = True
 _use_color = True
+_use_mouse = True
 _windows = []
 
 A_NONE      = curses.A_NORMAL
@@ -41,12 +42,21 @@ A_REVERSE   = curses.A_REVERSE
 A_STANDOUT  = curses.A_STANDOUT
 A_UNDERLINE = curses.A_UNDERLINE
 
-BUTTON1_CLICKED        = curses.BUTTON1_CLICKED
-BUTTON1_PRESSED        = curses.BUTTON1_PRESSED
-BUTTON1_RELEASED       = curses.BUTTON1_RELEASED
-BUTTON1_DOUBLE_CLICKED = curses.BUTTON1_DOUBLE_CLICKED
-BUTTON1_TRIPLE_CLICKED = curses.BUTTON1_TRIPLE_CLICKED
-REPORT_MOUSE_POSITION  = curses.REPORT_MOUSE_POSITION
+try:
+    BUTTON1_CLICKED        = curses.BUTTON1_CLICKED
+    BUTTON1_PRESSED        = curses.BUTTON1_PRESSED
+    BUTTON1_RELEASED       = curses.BUTTON1_RELEASED
+    BUTTON1_DOUBLE_CLICKED = curses.BUTTON1_DOUBLE_CLICKED
+    BUTTON1_TRIPLE_CLICKED = curses.BUTTON1_TRIPLE_CLICKED
+    REPORT_MOUSE_POSITION  = curses.REPORT_MOUSE_POSITION
+except AttributeError: # curses via NetBSD pkgsrc
+    _use_mouse = False
+    BUTTON1_CLICKED        = 0
+    BUTTON1_PRESSED        = 0
+    BUTTON1_RELEASED       = 0
+    BUTTON1_DOUBLE_CLICKED = 0
+    BUTTON1_TRIPLE_CLICKED = 0
+    REPORT_MOUSE_POSITION  = 0
 
 COLOR_INITIALIZED = 1
 COLOR_UNSUPPORTED = 2
@@ -55,7 +65,7 @@ _default_color = None
 _pair_number = 1
 
 def init():
-    global _has_chgat, _use_color
+    global _has_chgat, _use_color, _use_mouse
     __init_mouse_event_name()
     std = curses.initscr()
     color_fb = A_NONE
@@ -91,8 +101,11 @@ def init():
         else:
             assert False, ret
 
-    if __init_curses_io() == -1:
-        log.debug("Failed to init curses io")
+    if __init_curses() == -1:
+        log.debug("Failed to init curses")
+    if __init_curses_mouse() == -1:
+        log.debug("Failed to init curses mouse")
+        _use_mouse = False
     if __test_curses_chgat(std) == -1:
         log.debug("Failed to test curses chgat")
         _has_chgat = False
@@ -113,18 +126,24 @@ def cleanup_windows():
     while _windows:
         _windows[0].cleanup()
 
-def __init_curses_io():
+def __init_curses():
     curses.noecho()
     curses.cbreak()
-    if setting.use_mouse_events:
-        l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
-        log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
-            hex(l[1])))
     try:
         curses.curs_set(0) # vt100 fails here but just ignore
     except curses.error as e:
         log.debug(e)
         return -1
+
+def __init_curses_mouse():
+    if setting.use_mouse_events:
+        if hasattr(curses, "mousemask"):
+            l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
+            log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
+                hex(l[1])))
+        else: # curses via NetBSD pkgsrc
+            log.debug("curses mouse mask unsupported")
+            return -1
 
 def __init_curses_color():
     global _default_color
@@ -221,6 +240,9 @@ def has_color():
 def use_color():
     return _use_color
 
+def use_mouse():
+    return _use_mouse
+
 def iter_color_name():
     for k, v in __iter_color_pair():
         yield k
@@ -234,6 +256,8 @@ def __iter_color_pair():
             yield s, v
 
 def getmouse():
+    if not use_mouse():
+        return -1, -1, -1, -1, 0
     try:
         return curses.getmouse()
     except curses.error: # for *BSD
