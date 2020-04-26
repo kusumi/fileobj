@@ -1,3 +1,16 @@
+v0.7.97
+=======
+- Minor fixes and cleanups
+- setup.py optionally supports man page installation
+- Remove --no-native option for setup.py
+- Add __FILEOBJ_SETUP_USE_NO_NATIVE for setup.py
+- Add __FILEOBJ_SETUP_USE_MAN for setup.py
+- Add __FILEOBJ_SETUP_USE_GZIP for setup.py
+- Rename script/install_misc.sh to script/install_man.sh
+- Rename script/autogen to script/autogen.py
+- Rename script/profile to script/perf.py
+- Add --list_color
+
 v0.7.96
 =======
 - Minor fixes and cleanups

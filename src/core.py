@@ -115,6 +115,7 @@ def dispatch(optargs=None):
     parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
+    parser.add_argument("--list_color", action="store_true", default=False, help=usage.list_color)
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
@@ -135,6 +136,10 @@ def dispatch(optargs=None):
         setting.use_debug = True
 
     util.load_site_ext_module()
+    if opts.list_color:
+        for s in screen.iter_color_name():
+            util.printf(s)
+        return
     if opts.command:
         literal.print_literal()
         return

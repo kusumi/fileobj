@@ -57,7 +57,7 @@ if __name__ == '__main__':
             sys.stderr.write("No {0}\n".format(d))
             sys.exit(1)
 
-    s = util.get_stamp("profile")
+    s = util.get_stamp("perf")
     f = os.path.join(d, s) + ".txt"
     if os.path.isfile(f):
         sys.stderr.write("{0} exists\n".format(f))
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     profile = cProfile.Profile()
     profile.enable()
-    assert util.is_running_script_profile()
+    assert util.is_running_script_perf()
     ret = core.dispatch()
     screen.cleanup()
     profile.disable()
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     stats.print_stats()
     fd.close()
 
-    l = os.path.join(os.path.dirname(f), "profile.txt")
+    l = os.path.join(os.path.dirname(f), "perf.txt")
     if os.path.islink(l):
         os.unlink(l)
     if kernel.symlink(os.path.basename(f), l) != -1:

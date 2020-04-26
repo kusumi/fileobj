@@ -127,8 +127,8 @@ def is_running_script(name=None):
 def is_running_script_fileobj():
     return is_running_script("fileobj") or is_running_script("fileobj.py")
 
-def is_running_script_profile():
-    return is_running_script("profile")
+def is_running_script_perf():
+    return is_running_script("perf.py")
 
 def get_os_name():
     # e.g. 'Linux'

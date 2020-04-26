@@ -41,7 +41,7 @@ if __name__ == '__main__':
     d = os.path.basename(os.getcwd())
     assert d.startswith("fileobj-devel"), os.getcwd()
 
-    f = "./script/autogen"
+    f = "./script/autogen.py"
     assert os.path.isfile(f), "No " + f
     assert os.path.samefile(sys.argv[0], f), "Not " + f
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     try:
         f = "./doc/fileobj.1.txt"
-        cmd = "LESS= man fileobj | col -bx > {0}".format(f)
+        cmd = "LESS= man ./doc/fileobj.1 | col -bx > {0}".format(f)
         o = fileobj.util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         print(f)

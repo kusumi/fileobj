@@ -23,68 +23,67 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if [ ! -f ./doc/fileobj.1 ]; then
-	echo "Missing ./doc/fileobj.1"
+MANDIR=$1
+MANNAME=fileobj.1
+GZNAME=fileobj.1.gz
+
+if [ ! -f ./doc/${MANNAME} ]; then
+	echo "Missing ./doc/${MANNAME}"
 	exit 1
 fi
 
-MANDIR_USER=$1
-MANDIR_LOCAL=/usr/local/share/man/man1 # default
-MANDIR_SYSTEM=/usr/share/man/man1
-
-if [ "${MANDIR_USER}" != "" ]; then
-	if [ -d ${MANDIR_USER} ]; then
-		MANDIR=${MANDIR_USER}
-	else
-		echo "No such directory ${MANDIR_USER}"
-		exit 1
-	fi
-elif [ -d ${MANDIR_LOCAL} ]; then
-	MANDIR=${MANDIR_LOCAL}
-elif [ -d ${MANDIR_SYSTEM} ]; then
-	MANDIR=${MANDIR_SYSTEM}
-else
-	echo "Missing target directory ${MANDIR_LOCAL} or ${MANDIR_SYSTEM}"
+if [ "${MANDIR}" = "" ]; then
+	echo "No directory specified"
+	exit 1
+elif [ ! -d "${MANDIR}" ]; then
+	echo "No such directory ${MANDIR}"
 	exit 1
 fi
 
 UNAME=`uname`
 case "${UNAME}" in
-	Linux | *BSD | DragonFly | CYGWIN*)
-		if [ -f ./doc/fileobj.1.gz ]; then
-			echo "./doc/fileobj.1.gz exists"
+	Linux | FreeBSD | DragonFly | CYGWIN*)
+		if [ -f ./doc/${GZNAME} ]; then
+			echo "Remove existing ./doc/${GZNAME}"
+			rm ./doc/${GZNAME}
 			exit 1
 		fi
-		cat ./doc/fileobj.1 | gzip -9 -n > ./doc/fileobj.1.gz
+		cat ./doc/${MANNAME} | gzip -9 -n > ./doc/${GZNAME}
 		if [ $? -ne 0 ]; then
-			echo "Failed to gzip manpage"
+			if [ -f ./doc/${GZNAME} ]; then
+				rm ./doc/${GZNAME}
+			fi
+			echo "Failed to gzip man page"
 			exit 1
 		fi
-		install -m 644 ./doc/fileobj.1.gz ${MANDIR}/fileobj.1.gz
+		install -m 644 ./doc/${GZNAME} ${MANDIR}/${GZNAME}
 		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
+			if [ -f ./doc/${GZNAME} ]; then
+				rm ./doc/${GZNAME}
+			fi
+			echo "Failed to install man page"
 			exit 1
 		fi
-		file ${MANDIR}/fileobj.1.gz
-		rm ./doc/fileobj.1.gz
+		file ${MANDIR}/${GZNAME}
+		rm ./doc/${GZNAME}
 		;;
-	Darwin)
-		install -m 644 ./doc/fileobj.1 ${MANDIR}/fileobj.1
+	NetBSD | OpenBSD | Darwin)
+		install -m 644 ./doc/${MANNAME} ${MANDIR}/${MANNAME}
 		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
+			echo "Failed to install man page"
 			exit 1
 		fi
-		file ${MANDIR}/fileobj.1
+		file ${MANDIR}/${MANNAME}
 		;;
 	SunOS)
-		install -m 644 -f ${MANDIR} ./doc/fileobj.1
+		install -m 644 -f ${MANDIR} ./doc/${MANNAME}
 		if [ $? -ne 0 ]; then
-			echo "Failed to install manpage"
+			echo "Failed to install man page"
 			exit 1
 		fi
-		file ${MANDIR}/fileobj.1
+		file ${MANDIR}/${MANNAME}
 		;;
 	*)
-		echo "No manpage available for ${UNAME}" # XXX
+		echo "Not installing man page for ${UNAME}"
 		;;
 esac

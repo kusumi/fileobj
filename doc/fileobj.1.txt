@@ -70,6 +70,9 @@ OPTIONS
        --test_screen
            Enter ncurses(3) screen test mode.
 
+       --list_color
+           Print list of available screen colors and exit.
+
        --env
            Print list of environment variables and exit.
 
@@ -150,38 +153,32 @@ ENVIRONMENT
 
        FILEOBJ_COLOR_CURRENT
            Set current cursor and window color.  Defaults to "black,green" if
-           undefined.  Set blank string to disable.  Available colors are
-           "black", "blue", "cyan", "green", "magenta", "red", "white",
-           "yellow".
+           undefined.  Set blank string to disable.  See --list_color for
+           available colors.
 
        FILEOBJ_COLOR_ZERO
            Set color for zero (0) bytes within buffer contents.  Defaults to
-           "green" if undefined.  Set blank string to disable.  Available
-           colors are "black", "blue", "cyan", "green", "magenta", "red",
-           "white", "yellow".
+           "green" if undefined.  Set blank string to disable.  See
+           --list_color for available colors.
 
        FILEOBJ_COLOR_FF
            Set color for 0xff bytes within buffer contents.  Defaults to
-           "magenta" if undefined.  Set blank string to disable.  Available
-           colors are "black", "blue", "cyan", "green", "magenta", "red",
-           "white", "yellow".
+           "magenta" if undefined.  Set blank string to disable.  See
+           --list_color for available colors.
 
        FILEOBJ_COLOR_PRINT
            Set color for printable bytes within buffer contents.  Defaults to
-           "cyan" if undefined.  Set blank string to disable.  Available
-           colors are "black", "blue", "cyan", "green", "magenta", "red",
-           "white", "yellow".
+           "cyan" if undefined.  Set blank string to disable.  See
+           --list_color for available colors.
 
        FILEOBJ_COLOR_DEFAULT
            Set default color for buffer contents.  Defaults to "white" if
-           undefined.  Available colors are "black", "blue", "cyan", "green",
-           "magenta", "red", "white", "yellow".
+           undefined.  See --list_color for available colors.
 
        FILEOBJ_COLOR_VISUAL
            Set color for visual region.  Defaults to "red,yellow" if
-           undefined.  Set blank string to disable.  Available colors are
-           "black", "blue", "cyan", "green", "magenta", "red", "white",
-           "yellow".
+           undefined.  Set blank string to disable.  See --list_color for
+           available colors.
 
 FILES
        ~/.fileobj
@@ -231,4 +228,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.96                  March 29, 2020                      FILEOBJ(1)
+FILEOBJ 0.7.97                  April 27, 2020                      FILEOBJ(1)

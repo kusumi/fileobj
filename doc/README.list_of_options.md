@@ -42,6 +42,7 @@
           --no_color            Disable color for buffer contents.
           --force               Ignore warnings which can be ignored.
           --test_screen         Enter ncurses(3) screen test mode.
+          --list_color          Print list of available screen colors and exit.
           --env                 Print list of environment variables and exit.
           --command             Print list of editor commands and exit. Also see
                                 :help.

@@ -114,6 +114,10 @@ test_screen = _("""
 Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
+list_color = _("""
+Print list of available screen colors and exit.
+""")
+
 env = _("""
 Print list of environment variables and exit.
 """)
@@ -207,39 +211,39 @@ FILEOBJ_COLOR_CURRENT = _("""
 Set current cursor and window color.
 Defaults to "black,green" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)
 
 FILEOBJ_COLOR_ZERO = _("""
 Set color for zero (0) bytes within buffer contents.
 Defaults to "green" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)
 
 FILEOBJ_COLOR_FF = _("""
 Set color for 0xff bytes within buffer contents.
 Defaults to "magenta" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)
 
 FILEOBJ_COLOR_PRINT = _("""
 Set color for printable bytes within buffer contents.
 Defaults to "cyan" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)
 
 FILEOBJ_COLOR_DEFAULT = _("""
 Set default color for buffer contents.
 Defaults to "white" if undefined.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)
 
 FILEOBJ_COLOR_VISUAL = _("""
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 """)

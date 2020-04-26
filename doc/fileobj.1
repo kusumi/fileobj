@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 29, 2020" "FILEOBJ 0.7.96"
+.TH FILEOBJ 1 "April 27, 2020" "FILEOBJ 0.7.97"
 .nh
 .ad l
 .SH NAME
@@ -119,6 +119,11 @@ Ignore warnings which can be ignored.
 \fB\-\-test_screen\fP
 .RS 4
 Enter \fBncurses\fP\|(3) screen test mode.
+.RE
+.PP
+\fB\-\-list_color\fP
+.RS 4
+Print list of available screen colors and exit.
 .RE
 .PP
 \fB\-\-env\fP
@@ -236,7 +241,7 @@ Set number of bytes printed per unit (equivalent to \fB\-\-bytes_per_unit\fP and
 Set current cursor and window color.
 Defaults to "black,green" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
 \fBFILEOBJ_COLOR_ZERO\fP
@@ -244,7 +249,7 @@ Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white"
 Set color for zero (0) bytes within buffer contents.
 Defaults to "green" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
 \fBFILEOBJ_COLOR_FF\fP
@@ -252,7 +257,7 @@ Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white"
 Set color for 0xff bytes within buffer contents.
 Defaults to "magenta" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
 \fBFILEOBJ_COLOR_PRINT\fP
@@ -260,14 +265,14 @@ Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white"
 Set color for printable bytes within buffer contents.
 Defaults to "cyan" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
 \fBFILEOBJ_COLOR_DEFAULT\fP
 .RS 4
 Set default color for buffer contents.
 Defaults to "white" if undefined.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
 \fBFILEOBJ_COLOR_VISUAL\fP
@@ -275,7 +280,7 @@ Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white"
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
-Available colors are "black", "blue", "cyan", "green", "magenta", "red", "white", "yellow".
+See \fB\-\-list_color\fP for available colors.
 .RE
 .SH FILES
 .PP

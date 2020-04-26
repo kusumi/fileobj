@@ -1,4 +1,4 @@
-# fileobj ([v0.7.96](https://github.com/kusumi/fileobj/releases/tag/v0.7.96))
+# fileobj ([v0.7.97](https://github.com/kusumi/fileobj/releases/tag/v0.7.97))
 
 ## About
 
@@ -10,13 +10,9 @@
 
 ## Supported platforms
 
-+ 1st tier - Linux
++ Linux and other Unix-likes
 
-+ 2nd tier - \*BSD, Darwin, Solaris/illumos, Cygwin
-
-+ 3rd tier - Other Unix-likes (untested)
-
-+ Experimental - Windows (feature limitations)
++ Windows (experimental, feature limitations)
 
 ## Requirements
 
@@ -24,29 +20,26 @@
 
 + ncurses (curses Python module)
 
++ C compiler (not required on Windows)
+
 ## Install
 
-+ Run *setup.py* as follows. Use *python3* if the Python executable is *python3*. On Windows, run without *sudo* with appropriate permission.
++ Optionally define *__FILEOBJ_SETUP_USE_MAN* environment variable to make *setup.py* install *[fileobj(1)](doc/fileobj.1.txt)* man page. Unsupported on Windows.
 
-        $ sudo python ./setup.py clean --all
-        $ sudo python ./setup.py install --force --record ./install.out
+        $ export __FILEOBJ_SETUP_USE_MAN=
 
-+ Run *./script/install_misc.sh* to install a manpage. The location defaults to /usr/local/share/man/man1, but can be specified by an argument. On Windows, see *[doc/fileobj.1.txt](doc/fileobj.1.txt)*.
++ Run *setup.py* with following arguments.
 
-        $ sudo bash ./script/install_misc.sh
-        /usr/local/share/man/man1/fileobj.1.gz: gzip compressed data, from Unix, max compression
-
-+ See *[Notes](doc/README.notes.md)* for installation failure due to a missing header file *Python.h*.
+        $ python ./setup.py clean --all
+        $ python ./setup.py install --force --record ./install.out
 
 ## Uninstall
 
-+ Remove files listed in *install.out* from installation.
-
-+ Remove the manpage if installed.
++ Remove files listed in *./install.out*.
 
 ## Usage
 
-+ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* and/or *length* syntax. On Windows, run *fileobj.py* unless ".PY" is in *PATHEXT* environment variable.
++ *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* and/or *length* specification. Run *fileobj.py* on Windows.
 
         $ fileobj [options]... [paths]...
         $ fileobj [options]... [paths[@offset:length]]...

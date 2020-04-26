@@ -369,7 +369,7 @@ class Container (object):
 
     def __assert_attr_key(self, f):
         # should have been renamed already or using the same name
-        if util.is_running_script_fileobj() or util.is_running_script_profile():
+        if util.is_running_script_fileobj() or util.is_running_script_perf():
             assert fileattr.has_key(f), fileattr.get_keys()
 
     def __get_buffer(self, f, cond=None):

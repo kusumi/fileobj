@@ -31,7 +31,7 @@ fi
 
 PYTHON=$2
 if [ "${PYTHON}" = "" ]; then
-	PYTHON=python
+	PYTHON=python3
 fi
 
 which ${PYTHON} >/dev/null 2>&1

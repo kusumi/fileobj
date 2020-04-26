@@ -25,7 +25,10 @@ if __name__ == '__main__':
     import os
     import sys
 
-    if not os.path.isfile("./setup.py") or not os.path.isdir("./src"):
+    if not os.path.isfile("./setup.py") or \
+        not os.path.isfile("./bin/fileobj") or \
+        not os.path.isfile("./doc/fileobj.1") or \
+        not os.path.isfile("./src/fileobj.py"):
         sys.stderr.write("Invalid current directory %s\n" % os.getcwd())
         sys.exit(1)
 
@@ -40,23 +43,59 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         sys.exit(0)
 
-    # The C extension is enabled by default.
-    ext_modules = [Extension(pkg + "._native", ["src/_native.c"])]
+    # __FILEOBJ_SETUP_USE_NO_NATIVE: Ignore C extension.
+    # __FILEOBJ_SETUP_USE_MAN: Install fileobj(1) man page.
+    # __FILEOBJ_SETUP_USE_GZIP: Gzip fileobj(1) man page.
+    def test_env(s):
+        e = os.getenv("__FILEOBJ_SETUP_%s" % s)
+        if e is None:
+            return False
+        else:
+            return e.lower() != "false"
 
-    # Ignore C extension if --no-native is specified.
-    s = "--no-native"
-    if s in sys.argv:
-        ext_modules = None
-        while s in sys.argv:
-            sys.argv.remove(s)
+    def create_gzip(src, dst):
+        import atexit
+        import gzip
+        import shutil
+        def cleanup(arg):
+            if os.path.isfile(arg):
+                os.unlink(arg)
+        atexit.register(cleanup, dst)
+        fd1 = open(src, "rb")
+        fd2 = gzip.open(dst, "wb")
+        shutil.copyfileobj(fd1, fd2)
+        fd2.close()
+        fd1.close()
 
-    # Force Windows specific behavior.
     if src.nodep.is_windows():
+        executable = "bin/fileobj.py"
         ext_modules = None
-        f = "bin/fileobj.py"
+        data_files = None
     else:
-        f = "bin/fileobj"
-    assert os.path.isfile(f), f
+        executable = "bin/fileobj"
+        if test_env("USE_NO_NATIVE"):
+            ext_modules = None
+        else:
+            ext_modules = [Extension(pkg + "._native", ["src/_native.c"])]
+        data_files = None
+        if test_env("USE_MAN"):
+            d = os.path.join(sys.prefix, "man/man1")
+            if os.path.isdir(d):
+                if test_env("USE_GZIP"):
+                    try:
+                        create_gzip("./doc/fileobj.1", "./doc/fileobj.1.gz")
+                    except:
+                        e = sys.exc_info()[1]
+                        sys.stderr.write("%s\n" % e)
+                        sys.exit(1)
+                    f = "./doc/fileobj.1.gz"
+                else:
+                    f = "./doc/fileobj.1"
+                assert os.path.isfile(f), f
+                data_files = [("man/man1", [f])]
+            else:
+                sys.stderr.write("No such directory %s\n" % d)
+    assert os.path.isfile(executable), executable
 
     # Two warnings expected on sdist.
     # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
@@ -68,7 +107,8 @@ if __name__ == '__main__':
         url         = "https://sourceforge.net/projects/fileobj/",
         description = "Ncurses based hex editor with vi interface",
         license     = "BSD License (2-clause)",
-        scripts     = [f],
+        scripts     = [executable],
         packages    = [pkg, pkg + ".ext"],
         package_dir = {pkg : "src", pkg + ".ext" : "src/ext",},
-        ext_modules = ext_modules,)
+        ext_modules = ext_modules,
+        data_files  = data_files,)

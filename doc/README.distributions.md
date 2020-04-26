@@ -1,39 +1,48 @@
+## NetBSD pkgsrc
+
++ [https://pkgsrc.se/editors/fileobj](https://pkgsrc.se/editors/fileobj)
+
++ [http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html](http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html)
+
+source package
+
+        $ uname
+        NetBSD
+        $ cd /usr/pkgsrc/editors/fileobj/
+        $ make install
+        $ pkg_info | grep fileobj
+        fileobj-0.7.96      Curses based hex editor with vi interface
+
+binary package
+
+        $ uname
+        NetBSD
+        $ pkg_add fileobj
+        $ pkg_info | grep fileobj
+        fileobj-0.7.96      Curses based hex editor with vi interface
+
 ## FreeBSD ports
 
-+ Most likely obsolete version, use upstream code instead.
++ Unmaintained, use latest upstream code instead.
 
 + [https://www.freebsd.org/cgi/ports.cgi?query=fileobj](https://www.freebsd.org/cgi/ports.cgi?query=fileobj)
 
-+ [https://www.freshports.org/editors/fileobj/](https://www.freshports.org/editors/fileobj/)
-
-        $ uname
-        FreeBSD
-        $ sudo pkg search fileobj
-        fileobj-0.7.55                 Portable hex editor with vi like interface
-        fileobj-py36-0.7.55            Portable hex editor with vi like interface
-        $ sudo pkg install fileobj
++ [https://www.freshports.org/editors/fileobj](https://www.freshports.org/editors/fileobj)
 
 ## DragonFlyBSD dports
 
-+ Most likely obsolete version, use upstream code instead.
++ Unmaintained, use latest upstream code instead.
 
-+ [https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj/](https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj/)
-
-        $ uname
-        DragonFly
-        $ sudo pkg search fileobj
-        fileobj-0.7.55                 Portable hex editor with vi like interface
-        fileobj-py36-0.7.55            Portable hex editor with vi like interface
-        $ sudo pkg install fileobj
++ [https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj](https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj)
 
 ## Arch Linux AUR
 
-+ Most likely obsolete version, use upstream code instead.
++ Unmaintained, use latest upstream code instead.
 
-+ [https://aur.archlinux.org/packages/fileobj/](https://aur.archlinux.org/packages/fileobj/)
++ [https://aur.archlinux.org/packages/fileobj](https://aur.archlinux.org/packages/fileobj)
 
 ## Exherbo
 
-+ Most likely obsolete version, use upstream code instead.
++ Unmaintained, use latest upstream code instead.
 
-+ [http://git.exherbo.org/summer/packages/app-editors/fileobj/](http://git.exherbo.org/summer/packages/app-editors/fileobj/)
++ [http://git.exherbo.org/summer/packages/app-editors/fileobj](http://git.exherbo.org/summer/packages/app-editors/fileobj)

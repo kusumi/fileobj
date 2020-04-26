@@ -469,7 +469,7 @@ def __alloc(f, name):
     return Fileops(obj)
 
 _not_builtin_script = not util.is_running_script_fileobj() and \
-    not util.is_running_script_profile()
+    not util.is_running_script_perf()
 
 if _not_builtin_script and setting.use_auto_fileops_cleanup:
     import atexit
