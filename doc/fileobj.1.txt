@@ -3,7 +3,7 @@ FILEOBJ(1)                                                          FILEOBJ(1)
 
 
 NAME
-       fileobj
+       fileobj - ncurses based hex editor with vi interface
 
 SYNOPSIS
        fileobj [options]... [paths]...
@@ -70,8 +70,12 @@ OPTIONS
        --test_screen
            Enter ncurses(3) screen test mode.
 
+       --test_color
+           Enter ncurses(3) color test mode.
+
        --list_color
-           Print list of available screen colors and exit.
+           Print list of available screen colors and exit.  "r:g:b" format is
+           printed if a terminal supports it.
 
        --env
            Print list of environment variables and exit.
@@ -228,4 +232,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.97                  April 27, 2020                      FILEOBJ(1)
+FILEOBJ 0.7.98                   May 27, 2020                       FILEOBJ(1)

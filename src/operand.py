@@ -34,10 +34,7 @@ class Operand (object):
         self.__history = h
         self.__prev = util.Namespace(key=kbd.ERROR, opc='', arg='', raw=[])
         self.init([], [], [])
-        l = "e", "w", "wneg", "wq", "split", "vsplit", "bdelete", "open_b64e", \
-            "open_b64d", "open_b32e", "open_b32d", "open_b16e", "open_b16d", \
-            "open_b85e", "open_b85d" # XXX
-        self.__path_li = tuple(getattr(literal, "s_" + _) for _ in l)
+        self.__path_li = tuple(literal.iter_patharg_literal())
         self.__path_li_str = tuple(_.str for _ in self.__path_li)
 
     def init(self, rl, fl, sl):

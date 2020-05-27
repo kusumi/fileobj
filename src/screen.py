@@ -68,8 +68,6 @@ REPORT_MOUSE_POSITION  = _screen.REPORT_MOUSE_POSITION
 def init():
     global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
         A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL
-    if update_size() == -1:
-        return -1
     if _std:
         return -1
     _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
@@ -77,6 +75,8 @@ def init():
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
+    if update_size() == -1:
+        return -1
 
     this = sys.modules[__name__]
     l = []
@@ -137,7 +137,9 @@ def get_size_x():
     return _size.x
 
 def update_size():
-    y, x = terminal.get_size()
+    y, x = _screen.get_size()
+    if y == -1 and x == -1:
+        y, x = terminal.get_size()
     y = __override_size(y, setting.terminal_height)
     x = __override_size(x, setting.terminal_width)
     if y > 0 and x > 0:
@@ -194,6 +196,12 @@ def use_alt_chgat():
 
 def has_color():
     return _screen.has_color()
+
+def can_change_color():
+    return _screen.can_change_color()
+
+def set_color_attr(s):
+    return _screen.set_color_attr(s)
 
 def use_color():
     return _screen.use_color()

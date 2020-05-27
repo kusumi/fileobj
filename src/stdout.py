@@ -73,11 +73,20 @@ def newwin(leny, lenx, begy, begx, ref=None):
     scr.init()
     return scr
 
+def get_size():
+    return -1, -1
+
 def has_chgat():
     return True
 
 def has_color():
     return False
+
+def can_change_color():
+    return False
+
+def set_color_attr(s):
+    return -1
 
 def use_color():
     return False

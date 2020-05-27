@@ -114,8 +114,13 @@ test_screen = _("""
 Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
+test_color = _("""
+Enter \fBncurses\fP\|(3) color test mode.
+""")
+
 list_color = _("""
 Print list of available screen colors and exit.
+"r:g:b" format is printed if a terminal supports it.
 """)
 
 env = _("""

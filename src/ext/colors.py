@@ -1,6 +1,4 @@
-#!/bin/sh
-
-# Copyright (c) 2017, Tomohiro Kusumi
+# Copyright (c) 2020, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,34 +21,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CMD=$1
-if [ "${CMD}" != "build" -a "${CMD}" != "clean" ]; then
-	echo "Usage: bash ${0} [build|clean] [python]"
-	exit 1
-fi
+from .. import setting
 
-PYTHON=$2
-if [ "${PYTHON}" = "" ]; then
-	PYTHON=python3
-fi
+def get_text(co, fo, args):
+    if setting.use_stdout:
+        return "Using stdout"
+    try:
+        import curses
+        from .. import ncurses
+    except ImportError as e:
+        return str(e)
 
-which ${PYTHON} >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-	echo "${PYTHON} does not exist"
-	exit 1
-fi
+    sl = []
+    try:
+        # https://docs.python.org/3/library/curses.html#curses.init_pair
+        sl.append("pair#")
+        for x in range(1, curses.COLOR_PAIRS-1 + 1):
+            if x >= ncurses._pair_number:
+                continue
+            a = curses.color_pair(x)
+            sl.append("{0} {1:x}".format(x, a))
+        sl.append("")
 
-${PYTHON} ./setup.py clean --all
-if [ $? -ne 0 ]; then
-	echo "Failed to clean"
-	exit 1
-fi
-if [ "${CMD}" = "clean" ]; then
-	exit 0
-fi
-
-${PYTHON} ./setup.py build
-if [ $? -ne 0 ]; then
-	echo "Failed to build"
-	exit 1
-fi
+        # https://docs.python.org/3/library/curses.html#curses.init_color
+        d = dict(list(ncurses.__iter_color_pair(True)))
+        sl.append("color#")
+        for x in range(0, curses.COLORS + 1):
+            if x >= ncurses._rgb_number:
+                continue
+            l = curses.color_content(x)
+            sl.append("{0} {1} {2}".format(x, l, d.get(x, "")))
+    except curses.error as e:
+        return str(e)
+    return sl

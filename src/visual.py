@@ -455,6 +455,8 @@ class _console (console.Console):
         self.add_method(literal.L            , methods, "cursor_ptail")
         self.add_method(literal.w            , methods, "cursor_next_char")
         self.add_method(literal.b            , methods, "cursor_prev_char")
+        self.add_method(literal.asterisk     , methods, "cursor_next_current")
+        self.add_method(literal.sharp        , methods, "cursor_prev_current")
         self.add_method(literal.parens_end   , methods, "cursor_next_zero")
         self.add_method(literal.parens_beg   , methods, "cursor_prev_zero")
         self.add_method(literal.bracket1_end , methods, "cursor_next_nonzero")
@@ -606,6 +608,7 @@ class _console (console.Console):
         #self.add_method(literal.A           , None,    None)
         self.add_method(literal.R            , this,    "_enter_edit_replace")
         self.add_method(literal.r            , this,    "_do_edit_replace")
+        self.add_method(literal.cw           , this,    "_delete_enter_edit_insert")
         self.add_method(literal.v            , this,    "_enter_visual")
         self.add_method(literal.V            , this,    "_enter_line_visual")
         self.add_method(literal.ctrlv        , this,    "_enter_block_visual")
@@ -856,3 +859,10 @@ def _do_edit_replace(self, amp, opc, args, raw):
     arg = edit.Arg(limit=edit.get_input_limit(),
         start=self.co.get_region_range()[0])
     return self.set_console(cls, arg)
+
+@_(methods.range_delete, methods.block_delete) # XXX don't insert on failure
+def _delete_enter_edit_insert(self, amp, opc, args, raw):
+    self.co.cleanup_region()
+    amp = 1
+    arg = edit.Arg(amp=methods.get_int(amp))
+    return self.set_console(edit.get_insert_class(), arg)

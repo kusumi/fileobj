@@ -24,6 +24,24 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PYTHON=$1
+if [ "${PYTHON}" = "" ]; then
+	PYTHON=python3
+fi
+
+which ${PYTHON} >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+	echo "${PYTHON} does not exist"
+	exit 1
+fi
 
 ${PYTHON} ./setup.py clean --all
+if [ $? -ne 0 ]; then
+	echo "Failed to clean"
+	exit 1
+fi
+
 ${PYTHON} ./setup.py install --force --record ./install.out
+if [ $? -ne 0 ]; then
+	echo "Failed to install"
+	exit 1
+fi

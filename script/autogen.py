@@ -22,18 +22,27 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 if __name__ == '__main__':
+    import argparse
     import os
     import re
     import sys
 
     try:
-        import fileobj.util
-        import fileobj.version
+        import fileobj.util as util
+        import fileobj.version as version
     except ImportError as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
-    if len(sys.argv) > 1 and sys.argv[1] == "all":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--all", action="store_true", default=False)
+    if util.is_python_version_or_ht(3, 7):
+        parse_args = parser.parse_intermixed_args
+    else:
+        parse_args = parser.parse_args
+    opts = parse_args()
+
+    if opts.all:
         release_log = True
     else:
         release_log = False
@@ -46,8 +55,8 @@ if __name__ == '__main__':
     assert os.path.samefile(sys.argv[0], f), "Not " + f
 
     try:
-        fileobj.util.execute("which", "fileobj")
-        fileobj.util.execute("which", "git")
+        util.execute("which", "fileobj")
+        util.execute("which", "git")
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
@@ -73,7 +82,7 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -91,7 +100,7 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -109,7 +118,7 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -124,7 +133,7 @@ if __name__ == '__main__':
     try:
         f = "./doc/fileobj.1.txt"
         cmd = "LESS= man ./doc/fileobj.1 | col -bx > {0}".format(f)
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         print(f)
     except Exception as e:
@@ -133,7 +142,7 @@ if __name__ == '__main__':
 
     try:
         cmd = "git log --pretty=\"%an\" | sort | uniq"
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         f = "./CONTRIBUTORS"
@@ -146,7 +155,7 @@ if __name__ == '__main__':
     # do this last
     try:
         cmd = "git status -s"
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         print("--")
@@ -179,7 +188,7 @@ if __name__ == '__main__':
 
         def wc():
             cmd = "find . -type f -not -path \"./.git/*\" | xargs wc -cl | tail -1"
-            o = fileobj.util.execute_sh(cmd)
+            o = util.execute_sh(cmd)
             assert o.retval == 0, (cmd, o.retval)
             s = o.stdout.rstrip()
             if s.endswith(" total"):
@@ -187,19 +196,19 @@ if __name__ == '__main__':
             return s
 
         cmd = "git rev-parse --abbrev-ref HEAD"
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         orig = o.stdout.rstrip()
 
         cmd = "git log --no-walk --tags --pretty=\"%d %ai\" --decorate=full"
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         sl = o.stdout.split("\n")
 
         cmd = "git log -1 --pretty=\"%ai\""
-        o = fileobj.util.execute_sh(cmd)
+        o = util.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
-        t = fileobj.version.get_tag_string()
+        t = version.get_tag_string()
         sl.insert(0, " (refs/tags/{0}) {1}".format(t, o.stdout.rstrip()))
 
         regex = re.compile(r"^\s+\(.*refs/tags/(v\d\.\d\.\d+).*\)\s+(\d\d\d\d-\d\d-\d\d)\s")
@@ -209,7 +218,7 @@ if __name__ == '__main__':
             m = regex.match(x)
             if m:
                 tag, date = m.groups()
-                if tag == fileobj.version.get_tag_string():
+                if tag == version.get_tag_string():
                     checkout("HEAD")
                 else:
                     checkout(tag)

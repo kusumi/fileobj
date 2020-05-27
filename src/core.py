@@ -80,12 +80,23 @@ def __cleanup_log_error(arg):
 def __cleanup_print_error(arg):
     if not arg.e:
         if log.has_error():
-            util.printe("*** Found error in {0}".format(log.get_path()))
+            __print_log_message("error", util.printe)
+        elif setting.use_debug:
+            __print_log_message("info", util.printf)
         return -1
     util.printe(arg.e)
     if not isinstance(arg.e, util.QuietError):
         for s in arg.tb:
             util.printe(s)
+
+def __print_log_message(s, fn):
+    level = getattr(log, s.upper())
+    assert isinstance(level, int), level
+    ll = log.get_message(level)
+    if ll:
+        fn("*** Found {0} in {1}".format(s.lower(), log.get_path()))
+        for l in ll:
+            fn("{0}: {1}".format(s, l[1]))
 
 def __sigint_handler(sig, frame):
     screen.sti()
@@ -115,6 +126,7 @@ def dispatch(optargs=None):
     parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
+    parser.add_argument("--test_color", action="store_true", default=False, help=usage.test_color)
     parser.add_argument("--list_color", action="store_true", default=False, help=usage.list_color)
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
@@ -139,6 +151,19 @@ def dispatch(optargs=None):
     if opts.list_color:
         for s in screen.iter_color_name():
             util.printf(s)
+        try:
+            need_cleanup = True
+            if screen.init() == -1:
+                raise Exception("Failed to initialize terminal")
+            ret = screen.can_change_color()
+            need_cleanup = False
+            screen.cleanup()
+            if ret:
+                util.printf("[0-255]:[0-255]:[0-255] (r:g:b specification)")
+        except Exception as e:
+            util.printe(e)
+            if need_cleanup:
+                screen.cleanup()
         return
     if opts.command:
         literal.print_literal()
@@ -249,6 +274,7 @@ def dispatch(optargs=None):
     signal.signal(signal.SIGTERM, __sigterm_handler)
 
     try:
+        util.init_elapsed_time()
         co = None
         if not kernel.get_kernel_module():
             __error(kernel.get_status_string())
@@ -265,7 +291,10 @@ def dispatch(optargs=None):
                 __error("Failed to initialize terminal")
             assert console.init() != -1
             if opts.test_screen:
-                test_screen()
+                __wait_screen(__update_screen)
+                return # done
+            elif opts.test_color:
+                __wait_screen(__update_color)
                 return # done
         except Exception as e:
             if setting.use_debug:
@@ -332,7 +361,7 @@ def dispatch(optargs=None):
 # provide a way to exit without relying on signal for portability
 _quit_test_screen = 'q'
 
-def test_screen():
+def __wait_screen(fn):
     scr = screen.alloc_all()
     repaint = True
     l = [kbd.ERROR, ""]
@@ -341,7 +370,7 @@ def test_screen():
         if repaint:
             scr.clear()
             scr.box()
-        __update_screen(scr, repaint, l)
+        fn(scr, repaint, l)
         scr.refresh()
 
         ret = scr.getch()
@@ -370,33 +399,26 @@ def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
     if siz >= 16:
         if repaint:
-            s = terminal.get_type()
-            if s:
-                scr.addstr(1, 1, "Running {0} on {1}.".format(
-                    util.get_python_string(), s))
-            else: # Windows
-                scr.addstr(1, 1, "Running {0} on {1} {2}.".format(
-                    util.get_python_string(), util.get_os_name(),
-                    util.get_os_release()))
+            __addstr_prologue(scr)
             # none
-            scr.addstr(3, 1, "This should look normal.", screen.A_NONE)
+            scr.addstr(5, 1, "This should look normal.", screen.A_NONE)
             # underline
             if terminal.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
-            scr.addstr(4, 1, "This {0} be underlined.".format(s),
+            scr.addstr(6, 1, "This {0} be underlined.".format(s),
                 screen.A_UNDERLINE)
             # bold
-            scr.addstr(5, 1, "This should be in bold.", screen.A_BOLD)
+            scr.addstr(7, 1, "This should be in bold.", screen.A_BOLD)
             # reverse
-            scr.addstr(6, 1, "This should look reversed.", screen.A_REVERSE)
+            scr.addstr(8, 1, "This should look reversed.", screen.A_REVERSE)
             # standout
             if terminal.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
-            scr.addstr(7, 1, "This {0} look reversed.".format(s),
+            scr.addstr(9, 1, "This {0} look reversed.".format(s),
                 screen.A_STANDOUT)
             # color
             if screen.has_color() and setting.color_current is not None:
@@ -412,37 +434,116 @@ def __update_screen(scr, repaint, l):
                     s = "not be in {0}".format(setting.color_current)
             else:
                 s = "not have any color"
-            scr.addstr(8, 1, "This should {0}.".format(s),
+            scr.addstr(10, 1, "This should {0}.".format(s),
                 screen.A_COLOR_CURRENT)
             # frame
-            scr.addstr(9, 1, "There should be a frame in the terminal outside "
+            scr.addstr(11, 1, "There should be a frame in the terminal outside "
                 "of this text.")
             # frame/resize
-            scr.addstr(10, 1, "The frame should resize if the terminal is "
+            scr.addstr(12, 1, "The frame should resize if the terminal is "
                 "resized.")
-            # end
+            # message
             if terminal.get_type():
                 s = ", if not try with different TERM value."
             else:
                 s = "."
-            scr.addstr(12, 1,
+            scr.addstr(14, 1,
                 "Check if above appear as they should{0}".format(s))
-            if kernel.is_windows(): # can't handle signal
-                scr.addstr(14, 1, "Press {0} to exit.".format(
-                    _quit_test_screen))
-            else:
-                scr.addstr(14, 1, "Press {0} or {1} to exit.".format(
-                    literal.ctrlc.str, _quit_test_screen))
-        __update_input(scr, 15, l)
+            __addstr_epilogue(scr, 16)
+        __update_input(scr, 17, l)
     elif siz >= 3:
         if repaint:
             scr.addstr(1, 1, "Not enough room.")
-            if kernel.is_windows(): # can't handle signal
-                scr.addstr(2, 1, "Press {0} to exit.".format(_quit_test_screen))
-            else:
-                scr.addstr(2, 1, "Press {0} or {1} to exit.".format(
-                    literal.ctrlc.str, _quit_test_screen))
+            __addstr_epilogue(scr, 2)
         __update_input(scr, 3, l)
+
+def __update_color(scr, repaint, l):
+    siz = screen.get_size_y() - 2 # frame
+    if siz >= 12:
+        if repaint:
+            __addstr_prologue(scr)
+            y = 5
+            for c in screen.iter_color_name():
+                s = "," + c
+                if screen.has_color():
+                    ret = screen.set_color_attr(s)
+                    if ret != -1:
+                        scr.addstr(y, 1, " ", ret)
+                        scr.addstr(y, 3, c)
+                        log.debug("{0} {1:x}".format(c, ret))
+                    else:
+                        scr.addstr(y, 1, __get_error_code(0))
+                else:
+                    scr.addstr(y, 1, __get_error_code(1))
+                y += 1
+            y += 1
+            x = 1
+            tot = 0
+            mod = 48 # for tot to not exceed 255
+            for r in range(256):
+                if r % mod:
+                    continue
+                for g in range(256):
+                    if g % mod:
+                        continue
+                    for b in range(256):
+                        if b % mod:
+                            continue
+                        if screen.has_color() and screen.can_change_color():
+                            l = r, g, b
+                            s = ",{0}:{1}:{2}".format(*l)
+                            ret = screen.set_color_attr(s)
+                            if ret != -1:
+                                scr.addstr(y, x, " ", ret)
+                                tot += 1
+                                assert tot < 256, tot
+                                log.debug("{0} {1} {2:x}".format(tot, l, ret))
+                            else:
+                                scr.addstr(y, x, __get_error_code(2))
+                        else:
+                            scr.addstr(y, x, __get_error_code(3))
+                        x += 1
+                        if x > 36:
+                            y += 1
+                            x = 1
+            y += 1
+            __addstr_epilogue(scr, y)
+        __update_input(scr, 22, l) # above totals 22
+    elif siz >= 3:
+        if repaint:
+            scr.addstr(1, 1, "Not enough room.")
+            __addstr_epilogue(scr, 2)
+        __update_input(scr, 3, l)
+
+def __get_error_code(x):
+    if setting.use_debug:
+        return chr(65 + x)
+    else:
+        return " "
+
+def __addstr_prologue(scr):
+    # OS
+    scr.addstr(1, 1, "{0} {1}".format(util.get_os_name(),
+        util.get_os_release()), screen.A_NONE)
+    # Python
+    s = util.get_program_path()
+    #if kernel.is_windows():
+    #    s = util.get_program_name() # likely a long path, so use file name
+    scr.addstr(2, 1, "{0} {1} {2}".format(util.get_python_string(),
+        s, version.get_tag_string()), screen.A_NONE)
+    # TERM
+    s = terminal.get_type()
+    if s is None:
+        s = "" # Windows
+    scr.addstr(3, 1, "TERM={0}".format(terminal.get_type()),
+        screen.A_NONE)
+
+def __addstr_epilogue(scr, y):
+    if kernel.is_windows(): # can't handle signal
+        scr.addstr(y, 1, "Press {0} to exit.".format(_quit_test_screen))
+    else:
+        scr.addstr(y, 1, "Press {0} or {1} to exit.".format(literal.ctrlc.str,
+            _quit_test_screen))
 
 def __update_input(scr, y, l):
     if l[0] != kbd.ERROR:

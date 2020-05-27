@@ -332,6 +332,16 @@ def __is_non_zero(b):
 def cursor_next_char(self, amp, opc, args, raw):
     __cursor_next_matched(self, get_int(amp), __isprint)
 
+def cursor_next_current(self, amp, opc, args, raw):
+    curb = self.co.read(self.co.get_pos(), 1)
+    if not curb:
+        def __is_current(b):
+            return False
+    else:
+        def __is_current(b):
+            return b == curb
+    __cursor_next_matched(self, get_int(amp), __is_current)
+
 def cursor_next_zero(self, amp, opc, args, raw):
     __cursor_next_matched(self, get_int(amp), __is_zero)
 
@@ -340,6 +350,16 @@ def cursor_next_nonzero(self, amp, opc, args, raw):
 
 def cursor_prev_char(self, amp, opc, args, raw):
     __cursor_prev_matched(self, get_int(amp), __isprint)
+
+def cursor_prev_current(self, amp, opc, args, raw):
+    curb = self.co.read(self.co.get_pos(), 1)
+    if not curb:
+        def __is_current(b):
+            return False
+    else:
+        def __is_current(b):
+            return b == curb
+    __cursor_prev_matched(self, get_int(amp), __is_current)
 
 def cursor_prev_zero(self, amp, opc, args, raw):
     __cursor_prev_matched(self, get_int(amp), __is_zero)
@@ -397,7 +417,11 @@ def __cursor_prev_matched(self, cnt, fn):
             self.co.flash("Search interrupted")
             return
 
+_initial_delayed_input_ignore_duration = 1000
 def start_read_delayed_input(self, amp, opc, args, raw):
+    # XXX heuristic
+    if util.get_elapsed_time() < _initial_delayed_input_ignore_duration:
+        return
     self.co.start_read_delayed_input(literal.bracket2_beg.seq[0],
         literal.bracket2_end.seq[0])
     self.co.show(opc[0])
@@ -1577,6 +1601,20 @@ def generic_delete(self, amp, opc, args, raw):
             self.co.require_full_repaint()
     __exec_lrepaint(self, fn)
 
+# generic_delete() without delete buffer modification
+def generic_raw_delete(self, amp, opc, args, raw):
+    test_delete_raise(self)
+    amp = get_int(amp)
+    def fn(_):
+        pos = self.co.get_pos()
+        self.co.delete_current(amp)
+        # If current position has changed, delete was at end of buffer.
+        # XXX Require full repaint for now even though
+        # DisplayCanvas.update_highlight() does clear previous position.
+        if self.co.get_pos() != pos:
+            self.co.require_full_repaint()
+    __exec_lrepaint(self, fn)
+
 def generic_backspace(self, amp, opc, args, raw):
     test_delete_raise(self)
     amp = get_int(amp)
@@ -1603,6 +1641,14 @@ def delete(self, amp, opc, args, raw):
         amp *= setting.bytes_per_unit
         __assert_bpu_aligned(self)
     generic_delete(self, amp, opc, args, raw)
+
+@_cleanup
+def raw_delete(self, amp, opc, args, raw):
+    amp = get_int(amp)
+    if setting.use_unit_based:
+        amp *= setting.bytes_per_unit
+        __assert_bpu_aligned(self)
+    generic_raw_delete(self, amp, opc, args, raw)
 
 @_cleanup
 def backspace(self, amp, opc, args, raw):

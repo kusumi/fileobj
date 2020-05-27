@@ -26,8 +26,16 @@ import logging
 from . import setting
 from . import util
 
+DEBUG    = logging.DEBUG
+INFO     = logging.INFO
+WARNING  = logging.WARNING
+ERROR    = logging.ERROR
+CRITICAL = logging.CRITICAL
+_levels  = DEBUG, INFO, WARNING, ERROR, CRITICAL
+
 def init(name, f=None):
     global _logger, _logmsg
+    assert DEBUG < INFO < WARNING < ERROR < CRITICAL, _levels
     if __get_level() is None:
         return -1
     if _logger:
@@ -123,10 +131,14 @@ def get_path():
         error(e)
         return ""
 
-def get_message():
-    if _logmsg is None:
-        return []
-    return _logmsg[:]
+def get_message(level=DEBUG):
+    return tuple(iter_message(level))
+
+def iter_message(level=DEBUG):
+    if _logmsg is not None:
+        for l in _logmsg:
+            if l[0] >= level:
+                yield l
 
 def has_error():
     for l in _logmsg:

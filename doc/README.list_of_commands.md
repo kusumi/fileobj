@@ -34,6 +34,8 @@
         ]                      End reading buffered [count] value
         {                      Go to the previous non zero character
         }                      Go to the next non zero character
+        *                      Go to the next occurrence of the character under the cursor
+        #                      Go to the previous occurrence of the character under the cursor
         .                      Repeat last change
         /                      Search forward
         ?                      Search backward
@@ -174,6 +176,8 @@
         I                      Start insert edit mode at the first byte of buffer
         R                      Start replace edit mode
         a                      Start append edit mode
+        cw                     Delete [count] characters under the cursor and start insert edit mode
+        cW                     Delete [count] characters under the cursor and start insert edit mode
         r                      Replace [count] characters under the cursor
         m[0-9a-zA-Z]           Set mark at cursor position, uppercase marks are valid between buffers
         `[0-9a-zA-Z]           Go to marked position

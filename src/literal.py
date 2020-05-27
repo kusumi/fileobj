@@ -320,6 +320,8 @@ def init():
     setattr(this, "L", FastLiteral("L", None, "Go to line [count] from bottom of window"))
     setattr(this, "w", FastLiteral("w", None, "Go to the next printable character"))
     setattr(this, "b", FastLiteral("b", None, "Go to the previous printable character"))
+    setattr(this, "asterisk", FastLiteral("*", None, "Go to the next occurrence of the character under the cursor"))
+    setattr(this, "sharp", FastLiteral("#", None, "Go to the previous occurrence of the character under the cursor"))
     setattr(this, "parens_end", FastLiteral(")", None, "Go to the next zero (\\x00)"))
     setattr(this, "parens_beg", FastLiteral("(", None, "Go to the previous zero (\\x00)"))
     setattr(this, "bracket1_end", FastLiteral("}", None, "Go to the next non zero character"))
@@ -327,6 +329,7 @@ def init():
     setattr(this, "bracket2_end", FastLiteral("]", None, "End reading buffered [count] value"))
     setattr(this, "bracket2_beg", FastLiteral("[", None, "Start reading buffered [count] value"))
     setattr(this, "go", FastLiteral("go", None, "Go to [count] byte in the buffer (default first byte)"))
+    # XXX "s*" literals prevent implementing "s".
     setattr(this, "sh", FastLiteral("sh", None, "Go [count] sectors to the left"))
     setattr(this, "sbspace", this.sh.create_alias("s<BACKSPACE>", (ord('s'), kbd.BACKSPACE,)))
     setattr(this, "sbspace2", this.sh.create_alias("s<BACKSPACE2>", (ord('s'), kbd.BACKSPACE2,)))
@@ -394,6 +397,8 @@ def init():
     setattr(this, "A", FastLiteral("A", None, "Start append edit mode at the end of buffer"))
     setattr(this, "R", FastLiteral("R", None, "Start replace edit mode"))
     setattr(this, "r", FastLiteral("r", None, "Replace [count] characters under the cursor"))
+    setattr(this, "cw", FastLiteral("cw", None, "Delete [count] characters under the cursor and start insert edit mode"))
+    setattr(this, "cW", this.cw.create_alias("cW", None))
     setattr(this, "v", FastLiteral("v", None, "Start/End visual mode"))
     setattr(this, "V", FastLiteral("V", None, "Start/End line visual mode"))
     setattr(this, "ctrlv", FastLiteral("<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode"))
@@ -550,6 +555,7 @@ def init():
         (this.doller, this.zero),
         ((this.L, this.M), this.H),
         (this.b, this.w),
+        (this.sharp, this.asterisk),
         ((this.bracket2_beg, this.bracket2_end, this.bracket1_beg, this.bracket1_end, this.parens_beg), this.parens_end),
         (this.ctrlu, this.ctrlb),
         (this.ctrld, this.ctrlf),
@@ -561,7 +567,7 @@ def init():
         (this.p, this.P),
         (this.o, this.O),
         (this.n, this.N),
-        ((this.r, this.R, this.A, this.a, this.I), this.i),
+        ((this.cw, this.r, this.R, this.A, this.a, this.I), this.i), # no cW
         (this.backtick_reg, this.m_reg),
         (this.q, this.q_reg),
         (this.atsign_at, this.atsign_reg),
@@ -574,6 +580,36 @@ def init():
         (this.rsearchcb, this.fsearchcb),
         (this.comma, this.semicolon),
         ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
+
+    def fn():
+        yield this.s_e
+        yield this.s_w
+        yield this.s_wneg
+        yield this.s_wq
+        yield this.s_split
+        yield this.s_vsplit
+        yield this.s_bdelete
+        yield this.s_open_md5
+        yield this.s_open_sha1
+        yield this.s_open_sha224
+        yield this.s_open_sha256
+        yield this.s_open_sha384
+        yield this.s_open_sha512
+        yield this.s_open_sha3_224
+        yield this.s_open_sha3_256
+        yield this.s_open_sha3_384
+        yield this.s_open_sha3_512
+        yield this.s_open_b64e
+        yield this.s_open_b64d
+        yield this.s_open_b32e
+        yield this.s_open_b32d
+        yield this.s_open_b16e
+        yield this.s_open_b16d
+        yield this.s_open_b85e
+        yield this.s_open_b85d
+    for li in fn():
+        assert isinstance(li, Literal)
+    setattr(this, "iter_patharg_literal", fn)
 
     # edit.DeleteConsole currently requires delete variants are of size 1
     assert len(this.delete.seq) == 1, this.delete

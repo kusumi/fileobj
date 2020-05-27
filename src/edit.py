@@ -246,7 +246,7 @@ class DeleteConsole (Console):
     def process_incoming(self, arg, x):
         for _ in literal.delete_cmds:
             if x == _:
-                self.delete(arg.amp)
+                self.raw_delete(arg.amp)
                 return DELETE
         else:
             self.co.push_input((x,))
@@ -268,6 +268,9 @@ class DeleteConsole (Console):
 
     def delete(self, x):
         methods.delete(self, x, None, None, None)
+
+    def raw_delete(self, x):
+        methods.raw_delete(self, x, None, None, None)
 
 class _insert (object):
     def test(self):

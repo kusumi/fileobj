@@ -25,6 +25,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 import contextlib
+import datetime
 import hashlib
 import inspect
 import os
@@ -964,3 +965,17 @@ def get_class_repr(cls):
 
 def get_builtin(name):
     return getattr(_builtin, name, None)
+
+_init_time = None
+def init_elapsed_time():
+    global _init_time
+    assert _init_time is None, _init_time
+    _init_time = datetime.datetime.now()
+
+def get_elapsed_time():
+    assert _init_time is not None, _init_time
+    d = datetime.datetime.now() - _init_time
+    ret = d.days * 24 * 60 * 60 * 1000
+    ret += d.seconds * 1000
+    ret += d.microseconds // 1000
+    return ret # in msec

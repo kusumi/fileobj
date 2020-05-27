@@ -84,8 +84,7 @@ def __iter_env_private():
     yield "__FILEOBJ_TERMINAL_WIDTH", -1
     yield "__FILEOBJ_TEMP_SIZE", -1
     yield "__FILEOBJ_PATH_STREAM", None
-    yield "__FILEOBJ_COLOR_FG", None
-    yield "__FILEOBJ_COLOR_BG", None
+    yield "__FILEOBJ_COLOR_FB", ","
 
 _env_default_value = {}
 
@@ -376,21 +375,12 @@ def __get_setting_temp_size():
 def __get_setting_path_stream():
     return getenv("__FILEOBJ_PATH_STREAM")
 
-def __get_setting_color_fg():
-    s = "__FILEOBJ_COLOR_FG"
-    e = getenv(s)
-    if e is None:
-        return get_default(s)
+def __get_setting_color_fb():
+    ret = test_name("__FILEOBJ_COLOR_FB")
+    if not ret or ret.lower() == "none":
+        return None
     else:
-        return e.lower()
-
-def __get_setting_color_bg():
-    s = "__FILEOBJ_COLOR_BG"
-    e = getenv(s)
-    if e is None:
-        return get_default(s)
-    else:
-        return e.lower()
+        return ret
 
 def iter_env_name():
     for l in sorted(__iter_env()):

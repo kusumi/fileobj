@@ -67,6 +67,7 @@ if __name__ == '__main__':
         fd2.close()
         fd1.close()
 
+    nonexistent_man_dir = None
     if src.nodep.is_windows():
         executable = "bin/fileobj.py"
         ext_modules = None
@@ -94,7 +95,7 @@ if __name__ == '__main__':
                 assert os.path.isfile(f), f
                 data_files = [("man/man1", [f])]
             else:
-                sys.stderr.write("No such directory %s\n" % d)
+                nonexistent_man_dir = d
     assert os.path.isfile(executable), executable
 
     # Two warnings expected on sdist.
@@ -112,3 +113,7 @@ if __name__ == '__main__':
         package_dir = {pkg : "src", pkg + ".ext" : "src/ext",},
         ext_modules = ext_modules,
         data_files  = data_files,)
+
+    if nonexistent_man_dir:
+        sys.stderr.write("No such directory %s to install fileobj.1\n" %
+            nonexistent_man_dir)

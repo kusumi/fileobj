@@ -21,8 +21,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 import collections
 import curses
+import re
 
 from . import kbd
 from . import log
@@ -62,7 +65,8 @@ COLOR_INITIALIZED = 1
 COLOR_UNSUPPORTED = 2
 
 _default_color = None
-_pair_number = 1
+_pair_number = -1
+_rgb_number = -1
 
 def init():
     global _has_chgat, _use_color, _use_mouse
@@ -70,26 +74,28 @@ def init():
     std = curses.initscr()
     color_fb = A_NONE
 
-    fg, bg = setting.color_fg, setting.color_bg
+    fb = setting.color_fb if setting.color_fb else ""
     arg = setting.color_current, setting.color_zero, setting.color_ff, \
         setting.color_print, setting.color_default, setting.color_visual,
     l = [A_STANDOUT, A_NONE, A_NONE, A_NONE, A_NONE, A_STANDOUT]
     assert len(arg) == len(l), (arg, l)
 
-    if not fg and not bg and not arg:
+    if __is_curses_color_string_empty(fb) and not arg:
         log.info("curses color unused")
     else:
         ret = __init_curses_color()
         if ret == COLOR_INITIALIZED:
-            ret = __set_curses_color(fg, bg)
+            ret = set_color_attr(fb)
             if ret == -1:
                 log.error("Failed to set curses color")
                 _use_color = False
             elif ret != A_NONE:
                 color_fb = ret
-            else: # set misc only if fg/bg is unused
+            else: # set other colors if fg/bg unused
                 for i, _ in enumerate(arg):
                     x = __set_curses_color_misc(_, l[i] == A_STANDOUT)
+                    if x == -1:
+                        x = A_NONE
                     if _ and x == A_NONE:
                         log.error("Failed to set curses color {0}".format(_))
                     l[i] = x
@@ -121,6 +127,7 @@ def cleanup():
     curses.echo()
     curses.nocbreak()
     curses.endwin()
+    cleanup_windows()
 
 def cleanup_windows():
     while _windows:
@@ -152,55 +159,161 @@ def __init_curses_color():
     try:
         curses.start_color()
         curses.use_default_colors()
+        assert _default_color is None, _default_color
         _default_color = -1
+        assert _pair_number == -1, _pair_number
+        __init_curses_color_pair_number()
+        assert _rgb_number == -1, _rgb_number
+        __init_curses_color_rgb_number()
+        log.debug("has_color={0} can_change_color={1}".format(has_color(),
+            can_change_color()))
+        log.debug("COLOR_PAIRS={0} COLORS={1}".format(curses.COLOR_PAIRS,
+            curses.COLORS))
         return COLOR_INITIALIZED
     except curses.error as e:
         log.error(e)
         return -1
 
-def __set_curses_color(fg, bg):
-    d = dict(list(__iter_color_pair()))
-    if fg or bg:
-        return __init_curses_pair(d.get(fg), d.get(bg))
+def __test_curses_color_pair_number():
+    # https://docs.python.org/3/library/curses.html#curses.init_pair
+    return 1 <= _pair_number <= curses.COLOR_PAIRS-1
+
+# curses.COLORS is probably 8 if color change unsupported, but something larger
+# (e.g. 256) if color change supported.
+def __test_curses_color_rgb_number():
+    # https://docs.python.org/3/library/curses.html#curses.init_color
+    # XXX curses.init_color() failed on an xterm-256color terminal where COLORS
+    # is 256 when it reached color# 256, so use limit of COLORS-1 if COLORS is
+    # 256 or above.
+    if curses.COLORS >= 256:
+        return 0 <= _rgb_number <= curses.COLORS-1
     else:
-        return A_NONE
+        return 0 <= _rgb_number <= curses.COLORS
+
+def __init_curses_color_pair_number():
+    global _pair_number
+    first_call = _pair_number == -1
+    _pair_number = 1
+    __log_curses_color_number("pair", _pair_number, first_call)
+    assert __test_curses_color_pair_number(), _pair_number
+
+def __init_curses_color_rgb_number():
+    global _rgb_number
+    first_call = _rgb_number == -1
+    d = dict(list(__iter_color_pair()))
+    assert len(d) > 0, d
+    _rgb_number = max(d.values()) + 1 # likely 8
+    __log_curses_color_number("rgb", _rgb_number, first_call)
+    assert __test_curses_color_rgb_number(), _rgb_number
+
+def __log_curses_color_number(name, value, first_call):
+    s = "{0}#={1}".format(name, value)
+    if first_call:
+        log.debug("Initial " + s)
+    else:
+        fn = log.error if setting.use_debug else log.info
+        fn("Restart " + s)
 
 def __set_curses_color_misc(s, reverse):
-    d = dict(list(__iter_color_pair()))
-    if s is None:
+    if __is_curses_color_string_empty(s):
         if reverse:
             s = "black,white"
         else:
             s = "white,black"
+    return set_color_attr(s)
+
+def set_color_attr(s):
+    assert isinstance(s, str), s
+    if not has_color():
+        return -1
     l = s.split(",", 1) # either side missing is valid
-    if len(l) == 1:
-        fg = d.get(l[0])
+    if len(l) == 1: # fg only
+        fg = __parse_curses_color_string(l[0])
         bg = None
-    elif len(l) == 2:
-        fg = d.get(l[0])
-        bg = d.get(l[1])
+    elif len(l) == 2: # "fg,bg" case including ",bg"
+        fg = __parse_curses_color_string(l[0])
+        bg = __parse_curses_color_string(l[1])
     else:
         assert False, s
+    # A_NONE if both are invalid input
     if fg is None and bg is None:
         return A_NONE
-    _ = __init_curses_pair(fg, bg)
-    if _ == -1:
-        return A_NONE
-    else:
-        return _
-
-def __init_curses_pair(fg, bg):
-    global _pair_number
-    # https://docs.python.org/3/library/curses.html#curses.init_pair
-    assert 1 <= _pair_number <= curses.COLOR_PAIRS-1, _pair_number
+    # failure if either one failed
+    if fg == -1 or bg == -1:
+        return -1
+    # use default color if either is invalid input
     if fg is None:
         fg = _default_color
     if bg is None:
         bg = _default_color
+    ret = __add_curses_color_pair_number(fg, bg)
+    if ret == -1:
+        return -1
+    try:
+        return curses.color_pair(ret)
+    except curses.error as e:
+        log.error(e)
+        return -1
+
+def __is_curses_color_string_empty(s):
+    if not s: # could be either "" or None
+        return True
+    l = s.split(",", 1)
+    for x in l:
+        if x != "":
+            return False
+    return True
+
+# Returns
+# 1) color number on success
+# 2) -1 on failure
+# 3) None for invalid input
+def __parse_curses_color_string(s):
+    if not s:
+        return
+    m = re.match(r"^(\d+):(\d+):(\d+)$", s)
+    if m:
+        l = [int(x) * 1000 // 255 for x in m.groups()]
+        assert len(l) == 3, l
+        for i, x in enumerate(l):
+            if x < 0 or x > 1000: # expect input string within 0-255
+                log.error("Invalid color {0} in {1}".format(m.group(i+1), s))
+                return
+        return __add_curses_color_rgb_number(*l)
+    else:
+        d = dict(list(__iter_color_pair()))
+        return d.get(s)
+
+def __add_curses_color_pair_number(fg, bg):
+    global _pair_number
+    assert has_color(), "!has_color"
+    assert isinstance(fg, int), fg
+    assert isinstance(bg, int), bg
+    if not __test_curses_color_pair_number():
+        __init_curses_color_pair_number() # the number may not be reusable
+    assert __test_curses_color_pair_number(), _pair_number
     try:
         curses.init_pair(_pair_number, fg, bg)
-        ret = curses.color_pair(_pair_number)
+        ret = _pair_number
         _pair_number += 1
+        return ret
+    except curses.error as e:
+        log.error(e)
+        return -1
+
+def __add_curses_color_rgb_number(r, g, b):
+    global _rgb_number
+    assert has_color(), "!has_color"
+    if not can_change_color():
+        log.info("curses color change unsupported")
+        return
+    if not __test_curses_color_rgb_number():
+        __init_curses_color_rgb_number() # the number may not be reusable
+    assert __test_curses_color_rgb_number(), _rgb_number
+    try:
+        curses.init_color(_rgb_number, r, g, b)
+        ret = _rgb_number
+        _rgb_number += 1
         return ret
     except curses.error as e:
         log.error(e)
@@ -231,11 +344,21 @@ def newwin(leny, lenx, begy, begx, ref=None):
     else:
         return curses.newwin(leny, lenx, begy, begx)
 
+def get_size():
+    if util.is_python_version_or_ht(3, 5):
+        curses.update_lines_cols()
+        return curses.LINES, curses.COLS
+    else:
+        return -1, -1
+
 def has_chgat():
     return _has_chgat
 
 def has_color():
     return curses.has_colors() # raise if before initscr()
+
+def can_change_color():
+    return curses.can_change_color() # raise if before initscr()
 
 def use_color():
     return _use_color
@@ -247,13 +370,13 @@ def iter_color_name():
     for k, v in __iter_color_pair():
         yield k
 
-def __iter_color_pair():
+def __iter_color_pair(reverse=False):
     for k, v in sorted(util.iter_dir_items(curses)):
         if k.startswith("COLOR_") and isinstance(v, int):
             if k == "COLOR_PAIRS": # not color name
                 continue
             s = k[len("COLOR_"):].lower()
-            yield s, v
+            yield (v, s) if reverse else (s, v)
 
 def getmouse():
     if not use_mouse():

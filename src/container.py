@@ -1005,6 +1005,8 @@ class Container (object):
     def add_delayed_input(self, x):
         # XXX Heuristics to ignore below after certain inputs.
         # Initially pressing a cursor key reads 3 inputs starting "\x1b".
+        # Note that there's also heuristic based ignore duration set in
+        # methods.start_read_delayed_input() before reaches here.
         if self.__getch_count <= 6:
             # Ignore a subset of ANSI sequences to avoid being stucked
             # initially on pressing a cursor key. These sequences aren't
