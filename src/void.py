@@ -258,9 +258,11 @@ def _do_edit_replace(self, amp, opc, args, raw):
     return self.set_console(edit.get_replace_class(), arg)
 
 def _delete_enter_edit_insert(self, amp, opc, args, raw):
-    methods.delete(self, amp, opc, args, raw) # XXX don't insert on failure
+    und = self.co.get_undo_size()
+    if methods.delete(self, amp, opc, args, raw) == methods.ERROR:
+        return
     amp = 1
-    arg = edit.Arg(amp=methods.get_int(amp))
+    arg = edit.Arg(amp=methods.get_int(amp), merge_undo=und)
     return self.set_console(edit.get_insert_class(), arg)
 
 def _enter_edit_delete(self, amp, opc, args, raw):

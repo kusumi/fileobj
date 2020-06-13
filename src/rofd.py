@@ -94,13 +94,15 @@ class Fileobj (fileobj.Fileobj):
         return self.__size
 
     def set_size(self, size):
-        assert self.__size == -1
+        assert self.__size == -1, self.__size
         length = self.get_mapping_length()
         if length:
             self.__size = length
         else:
             self.__size = size - self.get_mapping_offset()
-        assert self.__size > 0
+        if self.get_size() <= 0: # e.g. detached /dev/loop*
+            raise fileobj.Error("Invalid size {0} for {1}".format(
+                util.get_size_repr(self.get_size()), self.get_path()))
 
     def get_align(self):
         return self.__align
@@ -112,7 +114,7 @@ class Fileobj (fileobj.Fileobj):
             self.__align = 0
 
     def set_window(self, beg, end):
-        assert beg >= 0 and end >= 0
+        assert beg >= 0 and end >= 0, (beg, end)
         self.__ra_window = beg, end
 
     def find(self, x, s, end):

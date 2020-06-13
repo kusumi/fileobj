@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "May 27, 2020" "FILEOBJ 0.7.98"
+.TH FILEOBJ 1 "June 14, 2020" "FILEOBJ 0.7.99"
 .nh
 .ad l
 .SH NAME
@@ -121,6 +121,11 @@ Ignore warnings which can be ignored.
 Enter \fBncurses\fP\|(3) screen test mode.
 .RE
 .PP
+\fB\-\-test_mouse\fP
+.RS 4
+Enter \fBncurses\fP\|(3) mouse test mode.
+.RE
+.PP
 \fB\-\-test_color\fP
 .RS 4
 Enter \fBncurses\fP\|(3) color test mode.
@@ -198,7 +203,7 @@ Defaults to use mouse events if undefined.
 \fBFILEOBJ_USE_COLOR\fP
 .RS 4
 If set to "false", do not use color for buffer contents (equivalent to \fB\-\-no_color\fP).
-This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP set to "none" or "white".
+This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP, \fBFILEOBJ_COLOR_OFFSET\fP set to "none" or "white".
 Defaults to use color if undefined.
 .RE
 .PP
@@ -277,7 +282,7 @@ See \fB\-\-list_color\fP for available colors.
 \fBFILEOBJ_COLOR_DEFAULT\fP
 .RS 4
 Set default color for buffer contents.
-Defaults to "white" if undefined.
+Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
 .RE
 .PP
@@ -286,6 +291,13 @@ See \fB\-\-list_color\fP for available colors.
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
+See \fB\-\-list_color\fP for available colors.
+.RE
+.PP
+\fBFILEOBJ_COLOR_OFFSET\fP
+.RS 4
+Set color for offsets in editor windows.
+Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
 .RE
 .SH FILES

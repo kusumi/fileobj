@@ -224,6 +224,7 @@ def disable_color():
     this.color_print = None
     this.color_default = None
     #this.color_visual = None
+    this.color_offset = None
 
 _use_unit_based_save = None
 _use_unit_based_aux = 0

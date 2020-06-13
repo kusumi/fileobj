@@ -616,7 +616,7 @@ def do_atomic_write(dst, binary=True, fsync=None, rename=None):
             os.chown(dst, *l1)
     finally:
         if os.path.isfile(src):
-            os.unlink(src) # exception before rename
+            os.unlink(src) # exception before or on rename
         assert not os.path.exists(src)
 
 def __get_uid_gid(f):

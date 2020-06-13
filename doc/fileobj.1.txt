@@ -70,6 +70,9 @@ OPTIONS
        --test_screen
            Enter ncurses(3) screen test mode.
 
+       --test_mouse
+           Enter ncurses(3) mouse test mode.
+
        --test_color
            Enter ncurses(3) color test mode.
 
@@ -122,8 +125,8 @@ ENVIRONMENT
            If set to "false", do not use color for buffer contents (equivalent
            to --no_color).  This set to "false" is equivalent to
            FILEOBJ_COLOR_ZERO, FILEOBJ_COLOR_FF, FILEOBJ_COLOR_PRINT,
-           FILEOBJ_COLOR_DEFAULT set to "none" or "white".  Defaults to use
-           color if undefined.
+           FILEOBJ_COLOR_DEFAULT, FILEOBJ_COLOR_OFFSET set to "none" or
+           "white".  Defaults to use color if undefined.
 
        FILEOBJ_USE_UNIT_BASED
            If defined, editor operations are on per unit basis where possible.
@@ -176,13 +179,17 @@ ENVIRONMENT
            --list_color for available colors.
 
        FILEOBJ_COLOR_DEFAULT
-           Set default color for buffer contents.  Defaults to "white" if
+           Set default color for buffer contents.  Defaults to "none" if
            undefined.  See --list_color for available colors.
 
        FILEOBJ_COLOR_VISUAL
            Set color for visual region.  Defaults to "red,yellow" if
            undefined.  Set blank string to disable.  See --list_color for
            available colors.
+
+       FILEOBJ_COLOR_OFFSET
+           Set color for offsets in editor windows.  Defaults to "none" if
+           undefined.  See --list_color for available colors.
 
 FILES
        ~/.fileobj
@@ -232,4 +239,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.98                   May 27, 2020                       FILEOBJ(1)
+FILEOBJ 0.7.99                   June 14, 2020                      FILEOBJ(1)

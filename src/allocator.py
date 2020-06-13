@@ -34,8 +34,10 @@ class Error (util.GenericError):
 class Allocator (object):
     def __init__(self):
         for s in iter_module_name():
-            setattr(self, s, fileobj.get_class(s))
-        self.set_default_class("rwmap")
+            cls = fileobj.get_class(s)
+            assert cls is not None, s
+            setattr(self, s, cls)
+        assert self.set_default_class("rwmap") != -1
 
     def iter_class(self):
         for s in iter_module_name():
@@ -157,16 +159,17 @@ class Allocator (object):
     def __alloc(self, f, offset, length, cls):
         while cls:
             try:
-                log.debug("Attempt {0} for '{1}'".format(cls, f))
+                log.debug("Using {0} for '{1}'".format(cls, f))
                 ret = cls(f, offset, length)
                 ret.set_magic()
-                log.debug("Created {0} for '{1}'".format(repr(ret), f))
+                log.debug("Allocated {0} for '{1}'".format(repr(ret), f))
                 return ret
             except Exception as e:
+                s = "Using {0} for '{1}' failed: {2}".format(cls, f, e)
                 if isinstance(e, util.Message):
-                    log.debug(e)
+                    log.debug(s)
                 else:
-                    log.error(e)
+                    log.error(s)
                 cls = self.__get_alt_class(cls)
                 if not cls:
                     raise Error(str(e))

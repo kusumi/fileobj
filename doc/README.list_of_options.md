@@ -42,6 +42,7 @@
           --no_color            Disable color for buffer contents.
           --force               Ignore warnings which can be ignored.
           --test_screen         Enter ncurses(3) screen test mode.
+          --test_mouse          Enter ncurses(3) mouse test mode.
           --test_color          Enter ncurses(3) color test mode.
           --list_color          Print list of available screen colors and exit.
                                 "r:g:b" format is printed if a terminal supports it.

@@ -28,6 +28,7 @@ import curses
 import re
 
 from . import kbd
+from . import kernel
 from . import log
 from . import setting
 from . import util
@@ -39,11 +40,19 @@ _use_color = True
 _use_mouse = True
 _windows = []
 
-A_NONE      = curses.A_NORMAL
-A_BOLD      = curses.A_BOLD
-A_REVERSE   = curses.A_REVERSE
-A_STANDOUT  = curses.A_STANDOUT
-A_UNDERLINE = curses.A_UNDERLINE
+A_NONE          = curses.A_NORMAL
+A_BOLD          = curses.A_BOLD
+A_REVERSE       = curses.A_REVERSE
+A_STANDOUT      = curses.A_STANDOUT
+A_UNDERLINE     = curses.A_UNDERLINE
+A_COLOR_FB      = None
+A_COLOR_CURRENT = None
+A_COLOR_ZERO    = None
+A_COLOR_FF      = None
+A_COLOR_PRINT   = None
+A_COLOR_DEFAULT = None
+A_COLOR_VISUAL  = None
+A_COLOR_OFFSET  = None
 
 try:
     BUTTON1_CLICKED        = curses.BUTTON1_CLICKED
@@ -51,6 +60,25 @@ try:
     BUTTON1_RELEASED       = curses.BUTTON1_RELEASED
     BUTTON1_DOUBLE_CLICKED = curses.BUTTON1_DOUBLE_CLICKED
     BUTTON1_TRIPLE_CLICKED = curses.BUTTON1_TRIPLE_CLICKED
+
+    BUTTON2_CLICKED        = curses.BUTTON2_CLICKED
+    BUTTON2_PRESSED        = curses.BUTTON2_PRESSED
+    BUTTON2_RELEASED       = curses.BUTTON2_RELEASED
+    BUTTON2_DOUBLE_CLICKED = curses.BUTTON2_DOUBLE_CLICKED
+    BUTTON2_TRIPLE_CLICKED = curses.BUTTON2_TRIPLE_CLICKED
+
+    BUTTON3_CLICKED        = curses.BUTTON3_CLICKED
+    BUTTON3_PRESSED        = curses.BUTTON3_PRESSED
+    BUTTON3_RELEASED       = curses.BUTTON3_RELEASED
+    BUTTON3_DOUBLE_CLICKED = curses.BUTTON3_DOUBLE_CLICKED
+    BUTTON3_TRIPLE_CLICKED = curses.BUTTON3_TRIPLE_CLICKED
+
+    BUTTON4_CLICKED        = curses.BUTTON4_CLICKED
+    BUTTON4_PRESSED        = curses.BUTTON4_PRESSED
+    BUTTON4_RELEASED       = curses.BUTTON4_RELEASED
+    BUTTON4_DOUBLE_CLICKED = curses.BUTTON4_DOUBLE_CLICKED
+    BUTTON4_TRIPLE_CLICKED = curses.BUTTON4_TRIPLE_CLICKED
+
     REPORT_MOUSE_POSITION  = curses.REPORT_MOUSE_POSITION
 except AttributeError: # curses via NetBSD pkgsrc
     _use_mouse = False
@@ -59,6 +87,25 @@ except AttributeError: # curses via NetBSD pkgsrc
     BUTTON1_RELEASED       = 0
     BUTTON1_DOUBLE_CLICKED = 0
     BUTTON1_TRIPLE_CLICKED = 0
+
+    BUTTON2_CLICKED        = 0
+    BUTTON2_PRESSED        = 0
+    BUTTON2_RELEASED       = 0
+    BUTTON2_DOUBLE_CLICKED = 0
+    BUTTON2_TRIPLE_CLICKED = 0
+
+    BUTTON3_CLICKED        = 0
+    BUTTON3_PRESSED        = 0
+    BUTTON3_RELEASED       = 0
+    BUTTON3_DOUBLE_CLICKED = 0
+    BUTTON3_TRIPLE_CLICKED = 0
+
+    BUTTON4_CLICKED        = 0
+    BUTTON4_PRESSED        = 0
+    BUTTON4_RELEASED       = 0
+    BUTTON4_DOUBLE_CLICKED = 0
+    BUTTON4_TRIPLE_CLICKED = 0
+
     REPORT_MOUSE_POSITION  = 0
 
 COLOR_INITIALIZED = 1
@@ -69,15 +116,31 @@ _pair_number = -1
 _rgb_number = -1
 
 def init():
+    global A_NONE, A_BOLD, A_REVERSE, A_STANDOUT, A_UNDERLINE, \
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, A_COLOR_PRINT, \
+        A_COLOR_DEFAULT, A_COLOR_VISUAL, A_COLOR_OFFSET
+    l = __init()
+    A_NONE, A_BOLD, A_REVERSE, A_STANDOUT, A_UNDERLINE, \
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, A_COLOR_PRINT, \
+        A_COLOR_DEFAULT, A_COLOR_VISUAL, A_COLOR_OFFSET = l[1:]
+    return l
+
+def __init():
     global _has_chgat, _use_color, _use_mouse
     __init_mouse_event_name()
     std = curses.initscr()
     color_fb = A_NONE
 
     fb = setting.color_fb if setting.color_fb else ""
-    arg = setting.color_current, setting.color_zero, setting.color_ff, \
-        setting.color_print, setting.color_default, setting.color_visual,
-    l = [A_STANDOUT, A_NONE, A_NONE, A_NONE, A_NONE, A_STANDOUT]
+    z = (setting.color_current, A_STANDOUT), \
+        (setting.color_zero, A_NONE), \
+        (setting.color_ff, A_NONE), \
+        (setting.color_print, A_NONE), \
+        (setting.color_default, A_NONE), \
+        (setting.color_visual, A_STANDOUT), \
+        (setting.color_offset, A_NONE)
+    arg, l = zip(*z)
+    l = list(l)
     assert len(arg) == len(l), (arg, l)
 
     if __is_curses_color_string_empty(fb) and not arg:
@@ -96,8 +159,9 @@ def init():
                     x = __set_curses_color_misc(_, l[i] == A_STANDOUT)
                     if x == -1:
                         x = A_NONE
-                    if _ and x == A_NONE:
-                        log.error("Failed to set curses color {0}".format(_))
+                    if _ is not None and x == A_NONE:
+                        log.error("Failed to set curses color {0},{1}".format(
+                            i, _))
                     l[i] = x
         elif ret == COLOR_UNSUPPORTED:
             log.info("curses color unsupported")
@@ -115,7 +179,14 @@ def init():
     if __test_curses_chgat(std) == -1:
         log.debug("Failed to test curses chgat")
         _has_chgat = False
-    return [std, color_fb] + l
+
+    # A_UNDERLINE likely unsupported on *nix if color change supported
+    if can_change_color() and kernel.is_xnix():
+        aul = A_NONE
+    else:
+        aul = A_UNDERLINE
+    ret = [std, A_NONE, A_BOLD, A_REVERSE, A_STANDOUT, aul, color_fb] + l
+    return tuple(ret)
 
 def cleanup():
     try:
@@ -142,15 +213,23 @@ def __init_curses():
         log.debug(e)
         return -1
 
+# XXX native Windows 10 seems to ignore mouse event
 def __init_curses_mouse():
-    if setting.use_mouse_events:
-        if hasattr(curses, "mousemask"):
-            l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
-            log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
-                hex(l[1])))
-        else: # curses via NetBSD pkgsrc
-            log.debug("curses mouse mask unsupported")
-            return -1
+    global _use_mouse
+    if not setting.use_mouse_events:
+        _use_mouse = False
+        return
+    # XXX Windows Terminal can't properly receive kbd.MOUSE
+    #if not setting.use_debug and is_windows_terminal:
+    #    _use_mouse = False
+    #    return
+    if hasattr(curses, "mousemask"):
+        l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
+        log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
+            hex(l[1])))
+    else: # curses via NetBSD pkgsrc
+        log.debug("curses mouse mask unsupported")
+        return -1
 
 def __init_curses_color():
     global _default_color
@@ -165,8 +244,6 @@ def __init_curses_color():
         __init_curses_color_pair_number()
         assert _rgb_number == -1, _rgb_number
         __init_curses_color_rgb_number()
-        log.debug("has_color={0} can_change_color={1}".format(has_color(),
-            can_change_color()))
         log.debug("COLOR_PAIRS={0} COLORS={1}".format(curses.COLOR_PAIRS,
             curses.COLORS))
         return COLOR_INITIALIZED
@@ -217,9 +294,9 @@ def __log_curses_color_number(name, value, first_call):
 def __set_curses_color_misc(s, reverse):
     if __is_curses_color_string_empty(s):
         if reverse:
-            s = "black,white"
+            return A_STANDOUT
         else:
-            s = "white,black"
+            return A_NONE
     return set_color_attr(s)
 
 def set_color_attr(s):
@@ -284,6 +361,7 @@ def __parse_curses_color_string(s):
         d = dict(list(__iter_color_pair()))
         return d.get(s)
 
+_color_pair_number_dict = {} # only for debug
 def __add_curses_color_pair_number(fg, bg):
     global _pair_number
     assert has_color(), "!has_color"
@@ -295,6 +373,9 @@ def __add_curses_color_pair_number(fg, bg):
     try:
         curses.init_pair(_pair_number, fg, bg)
         ret = _pair_number
+        if setting.use_debug:
+            assert ret not in _color_pair_number_dict, _color_pair_number_dict
+        _color_pair_number_dict[ret] = fg, bg
         _pair_number += 1
         return ret
     except curses.error as e:

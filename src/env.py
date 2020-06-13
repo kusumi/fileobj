@@ -47,8 +47,9 @@ def __iter_env():
     yield "FILEOBJ_COLOR_ZERO", "green"
     yield "FILEOBJ_COLOR_FF", "magenta"
     yield "FILEOBJ_COLOR_PRINT", "cyan"
-    yield "FILEOBJ_COLOR_DEFAULT", "white"
+    yield "FILEOBJ_COLOR_DEFAULT", "none"
     yield "FILEOBJ_COLOR_VISUAL", "red,yellow"
+    yield "FILEOBJ_COLOR_OFFSET", "none"
 
 def __iter_env_private():
     yield "__FILEOBJ_USE_DEBUG", False # --debug, unittest (true)
@@ -84,7 +85,7 @@ def __iter_env_private():
     yield "__FILEOBJ_TERMINAL_WIDTH", -1
     yield "__FILEOBJ_TEMP_SIZE", -1
     yield "__FILEOBJ_PATH_STREAM", None
-    yield "__FILEOBJ_COLOR_FB", ","
+    yield "__FILEOBJ_COLOR_FB", "none"
 
 _env_default_value = {}
 
@@ -260,6 +261,13 @@ def __get_setting_color_default():
 
 def __get_setting_color_visual():
     ret = test_name("FILEOBJ_COLOR_VISUAL")
+    if not ret or ret.lower() == "none":
+        return None
+    else:
+        return ret
+
+def __get_setting_color_offset():
+    ret = test_name("FILEOBJ_COLOR_OFFSET")
     if not ret or ret.lower() == "none":
         return None
     else:

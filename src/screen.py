@@ -45,46 +45,60 @@ _soft_resize = False
 chr_repr = {}
 buf_attr = {}
 
-A_NONE          = _screen.A_NONE
-A_BOLD          = _screen.A_BOLD
-A_REVERSE       = _screen.A_REVERSE # unused
-A_STANDOUT      = _screen.A_STANDOUT
-A_UNDERLINE     = _screen.A_UNDERLINE
-A_COLOR_FB      = _screen.A_NONE
-A_COLOR_CURRENT = _screen.A_NONE
-A_COLOR_ZERO    = _screen.A_NONE
-A_COLOR_FF      = _screen.A_NONE
-A_COLOR_PRINT   = _screen.A_NONE
-A_COLOR_DEFAULT = _screen.A_NONE
-A_COLOR_VISUAL  = _screen.A_NONE
+A_NONE          = _screen.A_NONE # used by functions' default argument
+A_BOLD          = None
+A_REVERSE       = None # unused
+A_STANDOUT      = None
+A_UNDERLINE     = None
+A_COLOR_FB      = None
+A_COLOR_CURRENT = None
+A_COLOR_ZERO    = None
+A_COLOR_FF      = None
+A_COLOR_PRINT   = None
+A_COLOR_DEFAULT = None
+A_COLOR_VISUAL  = None
+A_COLOR_OFFSET  = None
 
 BUTTON1_CLICKED        = _screen.BUTTON1_CLICKED
 BUTTON1_PRESSED        = _screen.BUTTON1_PRESSED
 BUTTON1_RELEASED       = _screen.BUTTON1_RELEASED
 BUTTON1_DOUBLE_CLICKED = _screen.BUTTON1_DOUBLE_CLICKED
 BUTTON1_TRIPLE_CLICKED = _screen.BUTTON1_TRIPLE_CLICKED
+
+BUTTON2_CLICKED        = _screen.BUTTON2_CLICKED
+BUTTON2_PRESSED        = _screen.BUTTON2_PRESSED
+BUTTON2_RELEASED       = _screen.BUTTON2_RELEASED
+BUTTON2_DOUBLE_CLICKED = _screen.BUTTON2_DOUBLE_CLICKED
+BUTTON2_TRIPLE_CLICKED = _screen.BUTTON2_TRIPLE_CLICKED
+
+BUTTON3_CLICKED        = _screen.BUTTON3_CLICKED
+BUTTON3_PRESSED        = _screen.BUTTON3_PRESSED
+BUTTON3_RELEASED       = _screen.BUTTON3_RELEASED
+BUTTON3_DOUBLE_CLICKED = _screen.BUTTON3_DOUBLE_CLICKED
+BUTTON3_TRIPLE_CLICKED = _screen.BUTTON3_TRIPLE_CLICKED
+
+BUTTON4_CLICKED        = _screen.BUTTON4_CLICKED
+BUTTON4_PRESSED        = _screen.BUTTON4_PRESSED
+BUTTON4_RELEASED       = _screen.BUTTON4_RELEASED
+BUTTON4_DOUBLE_CLICKED = _screen.BUTTON4_DOUBLE_CLICKED
+BUTTON4_TRIPLE_CLICKED = _screen.BUTTON4_TRIPLE_CLICKED
+
 REPORT_MOUSE_POSITION  = _screen.REPORT_MOUSE_POSITION
 
 def init():
-    global _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
-        A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL
+    global _std, A_NONE, A_BOLD, A_REVERSE, A_STANDOUT, A_UNDERLINE, \
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, A_COLOR_PRINT, \
+        A_COLOR_DEFAULT, A_COLOR_VISUAL, A_COLOR_OFFSET
     if _std:
         return -1
-    _std, A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, \
-        A_COLOR_PRINT, A_COLOR_DEFAULT, A_COLOR_VISUAL = _screen.init()
+    _std, A_NONE, A_BOLD, A_REVERSE, A_STANDOUT, A_UNDERLINE, \
+        A_COLOR_FB, A_COLOR_CURRENT, A_COLOR_ZERO, A_COLOR_FF, A_COLOR_PRINT, \
+        A_COLOR_DEFAULT, A_COLOR_VISUAL, A_COLOR_OFFSET = _screen.init()
     _std.keypad(1)
     _std.bkgd(' ', A_COLOR_FB)
     _std.refresh()
     if update_size() == -1:
         return -1
-
-    this = sys.modules[__name__]
-    l = []
-    for x in ("NONE", "BOLD", "REVERSE", "STANDOUT", "UNDERLINE", "COLOR_FB",
-        "COLOR_CURRENT", "COLOR_ZERO", "COLOR_FF", "COLOR_PRINT",
-        "COLOR_DEFAULT", "COLOR_VISUAL"):
-        l.append("A_{0}=0x{1:X}".format(x, getattr(this, "A_" + x)))
-    log.debug("screen: {0}".format(l))
 
     chr_repr.clear()
     for x in util.get_xrange(0, 256):
@@ -104,7 +118,27 @@ def init():
         else:
             _ = A_NONE
         buf_attr[x] = _
-    log.debug("buf_attr: {0}".format(set(sorted(buf_attr.values()))))
+    if setting.use_debug:
+        __log_debug()
+
+def __log_debug():
+    this = sys.modules[__name__]
+    l = []
+    for x in ("NONE", "BOLD", "REVERSE", "STANDOUT", "UNDERLINE",
+        "COLOR_FB", "COLOR_CURRENT", "COLOR_ZERO", "COLOR_FF", "COLOR_PRINT",
+        "COLOR_DEFAULT", "COLOR_VISUAL", "COLOR_OFFSET"):
+        s = "A_" + x
+        assert hasattr(this, s), s
+        a = getattr(this, s)
+        assert a is not None, (s, a)
+        assert isinstance(a, int), (s, a)
+        l.append("{0}=0x{1:X}".format(s, a))
+
+    log.debug("screen: {0}".format(l))
+    log.debug("screen: has_color={0} can_change_color={1} use_color={2} "
+        "use_mouse={3}".format(has_color(), can_change_color(), use_color(),
+        use_mouse()))
+    log.debug("screen: buf_attr {0}".format(set(sorted(buf_attr.values()))))
 
 def cleanup():
     global _std

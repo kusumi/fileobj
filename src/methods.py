@@ -47,6 +47,7 @@ REWIND   = "REWIND"
 CONTINUE = "CONTINUE"
 RETURN   = "RETURN"
 QUIT     = "QUIT"
+ERROR    = "ERROR"
 
 def _cleanup(fn):
     def _(self, amp, opc, args, raw):
@@ -57,10 +58,12 @@ def _cleanup(fn):
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
             self.co.flash(e)
+            return ERROR
         except MemoryError as e: # do the same
             self.co.merge_undo_until(und)
             self.co.lrepaintf()
             self.co.flash(e)
+            return ERROR
     return _
 
 def __read_chr(self, pos):
@@ -368,13 +371,19 @@ def cursor_prev_nonzero(self, amp, opc, args, raw):
     __cursor_prev_matched(self, get_int(amp), __is_non_zero)
 
 def __cursor_next_matched(self, cnt, fn):
-    n = self.co.get_buffer_size()
     pos = self.co.get_pos()
-    while True:
-        pos += 1
-        if pos > self.co.get_max_pos():
+    end = self.co.get_max_pos() # stop if > end
+    ret, cnt = __cursor_next_matched_goto(self, pos + 1, end, cnt, fn)
+    if ret == -1:
+        if not setting.use_wrapscan or \
+            __cursor_next_matched_goto(self, 0, pos - 1, cnt, fn)[0] == -1:
             self.co.flash("Search failed")
-            return
+
+def __cursor_next_matched_goto(self, pos, end, cnt, fn):
+    n = self.co.get_buffer_size()
+    while True:
+        if pos > end:
+            return -1, cnt
         b = self.co.read(pos, n)
         d = 0
         for x in filebytes.iter(b):
@@ -382,19 +391,27 @@ def __cursor_next_matched(self, cnt, fn):
                 cnt -= 1
                 if not cnt:
                     go_to(self, pos + d)
-                    return
+                    return None, None
             d += 1
         pos += n
         if len(b) < n:
-            self.co.flash("Search failed")
-            return
+            return -1, cnt
         if screen.test_signal():
             self.co.flash("Search interrupted")
-            return
+            return None, None
 
 def __cursor_prev_matched(self, cnt, fn):
-    n = self.co.get_buffer_size()
     pos = self.co.get_pos()
+    end = 0 # stop if <= end
+    ret, cnt = __cursor_prev_matched_goto(self, pos, end, cnt, fn)
+    if ret == -1:
+        beg = self.co.get_max_pos() + 1 # need +1 to start at max pos
+        if not setting.use_wrapscan or \
+            __cursor_prev_matched_goto(self, beg, pos, cnt, fn)[0] == -1:
+            self.co.flash("Search failed")
+
+def __cursor_prev_matched_goto(self, pos, end, cnt, fn):
+    n = self.co.get_buffer_size()
     while True:
         if pos < n:
             n = pos
@@ -408,14 +425,13 @@ def __cursor_prev_matched(self, cnt, fn):
                 cnt -= 1
                 if not cnt:
                     go_to(self, pos + len(b) - 1 - d)
-                    return
+                    return None, None
             d += 1
-        if not pos:
-            self.co.flash("Search failed")
-            return
+        if pos <= end:
+            return -1, cnt
         if screen.test_signal():
             self.co.flash("Search interrupted")
-            return
+            return None, None
 
 _initial_delayed_input_ignore_duration = 1000
 def start_read_delayed_input(self, amp, opc, args, raw):

@@ -672,6 +672,28 @@ def _(a, b):
             ret = _fn(self, amp, opc, args, raw)
             if ret == methods.QUIT:
                 return methods.QUIT
+            if ret == methods.ERROR:
+                return
+            assert ret != methods.REWIND
+            assert ret != methods.CONTINUE
+            return fn(self, amp, opc, args, raw)
+        return _method
+    return _exit
+
+def _u(a, b):
+    def _exit(fn):
+        def _method(self, amp, opc, args, raw):
+            # the only difference in keeping undo size in args
+            und = self.co.get_undo_size()
+            assert isinstance(args, list), list
+            args.append(und)
+            # the rest is same as _
+            _fn = b if _in_block_visual(self) else a
+            ret = _fn(self, amp, opc, args, raw)
+            if ret == methods.QUIT:
+                return methods.QUIT
+            if ret == methods.ERROR:
+                return
             assert ret != methods.REWIND
             assert ret != methods.CONTINUE
             return fn(self, amp, opc, args, raw)
@@ -860,9 +882,12 @@ def _do_edit_replace(self, amp, opc, args, raw):
         start=self.co.get_region_range()[0])
     return self.set_console(cls, arg)
 
-@_(methods.range_delete, methods.block_delete) # XXX don't insert on failure
+@_u(methods.range_delete, methods.block_delete)
 def _delete_enter_edit_insert(self, amp, opc, args, raw):
+    assert len(args), args
+    und = args.pop()
+    assert isinstance(und, int), und
     self.co.cleanup_region()
     amp = 1
-    arg = edit.Arg(amp=methods.get_int(amp))
+    arg = edit.Arg(amp=methods.get_int(amp), merge_undo=und)
     return self.set_console(edit.get_insert_class(), arg)

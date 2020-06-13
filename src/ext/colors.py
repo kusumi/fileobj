@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from .. import screen
 from .. import setting
 
 def get_text(co, fo, args):
@@ -34,18 +35,37 @@ def get_text(co, fo, args):
 
     sl = []
     try:
-        # https://docs.python.org/3/library/curses.html#curses.init_pair
+        sl.append("has_color        {0}".format(screen.has_color()))
+        sl.append("can_change_color {0}".format(screen.can_change_color()))
+        sl.append("use_color        {0}".format(screen.use_color()))
+        sl.append("use_mouse        {0}".format(screen.use_mouse()))
+        sl.append("")
+
+        d = {
+            ncurses.A_COLOR_FB : "A_COLOR_FB",
+            ncurses.A_COLOR_CURRENT : "A_COLOR_CURRENT",
+            ncurses.A_COLOR_ZERO : "A_COLOR_ZERO",
+            ncurses.A_COLOR_FF : "A_COLOR_FF",
+            ncurses.A_COLOR_PRINT : "A_COLOR_PRINT",
+            ncurses.A_COLOR_DEFAULT : "A_COLOR_DEFAULT",
+            ncurses.A_COLOR_VISUAL : "A_COLOR_VISUAL",
+            ncurses.A_COLOR_OFFSET : "A_COLOR_OFFSET", }
         sl.append("pair#")
+
+        # https://docs.python.org/3/library/curses.html#curses.init_pair
         for x in range(1, curses.COLOR_PAIRS-1 + 1):
             if x >= ncurses._pair_number:
                 continue
             a = curses.color_pair(x)
-            sl.append("{0} {1:x}".format(x, a))
+            sl.append("{0} {1:x} {2} {3}".format(x, a,
+                ncurses._color_pair_number_dict.get(x, None),
+                d.get(a, "???")))
         sl.append("")
 
-        # https://docs.python.org/3/library/curses.html#curses.init_color
         d = dict(list(ncurses.__iter_color_pair(True)))
         sl.append("color#")
+
+        # https://docs.python.org/3/library/curses.html#curses.init_color
         for x in range(0, curses.COLORS + 1):
             if x >= ncurses._rgb_number:
                 continue

@@ -95,7 +95,7 @@ class Fileobj (fileobj.Fileobj):
         else:
             r = 0.5
         self.__thresh = int(self.get_size() * r)
-        log.debug("{0} has search thresh at {1}[B]/{2}[B]".format(
+        log.debug("'{0}' has search thresh at {1}[B]/{2}[B]".format(
             self.get_short_path(), self.__thresh, self.get_size()))
 
     def alloc_chunk(self, offset, buf):

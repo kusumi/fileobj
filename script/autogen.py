@@ -168,7 +168,7 @@ if __name__ == '__main__':
     if not release_log:
         sys.exit(0)
 
-    if os.system("git status | grep \"working directory clean\""):
+    if os.system("git status | grep \"working tree clean\""):
         sys.stderr.write("Git repository must be clean\n")
         sys.exit(1)
 

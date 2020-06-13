@@ -114,6 +114,10 @@ test_screen = _("""
 Enter \fBncurses\fP\|(3) screen test mode.
 """)
 
+test_mouse = _("""
+Enter \fBncurses\fP\|(3) mouse test mode.
+""")
+
 test_color = _("""
 Enter \fBncurses\fP\|(3) color test mode.
 """)
@@ -175,7 +179,7 @@ Defaults to use mouse events if undefined.
 
 FILEOBJ_USE_COLOR = _("""
 If set to "false", do not use color for buffer contents (equivalent to \fB\-\-no_color\fP).
-This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP set to "none" or "white".
+This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP, \fBFILEOBJ_COLOR_OFFSET\fP set to "none" or "white".
 Defaults to use color if undefined.
 """)
 
@@ -242,7 +246,7 @@ See \fB\-\-list_color\fP for available colors.
 
 FILEOBJ_COLOR_DEFAULT = _("""
 Set default color for buffer contents.
-Defaults to "white" if undefined.
+Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
 """)
 
@@ -250,5 +254,11 @@ FILEOBJ_COLOR_VISUAL = _("""
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
+See \fB\-\-list_color\fP for available colors.
+""")
+
+FILEOBJ_COLOR_OFFSET = _("""
+Set color for offsets in editor windows.
+Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
 """)

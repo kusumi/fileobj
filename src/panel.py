@@ -236,7 +236,13 @@ class Canvas (_panel):
             setting.barrier_size = x
 
     def chgat(self, y, x, num, attr=screen.A_NONE):
-        self.scr.chgat(y, x, num, attr | screen.A_COLOR_FB)
+        try:
+            # raise on minimizing terminal size (don't remove try/except)
+            # may raise on page change for previous pos (???)
+            self.scr.chgat(y, x, num, attr | screen.A_COLOR_FB)
+        except screen.Error:
+            if setting.use_debug:
+                raise
 
     def addstr(self, y, x, s, attr=screen.A_NONE):
         # don't forget to sync with inlined version in __fill_inline()
@@ -250,14 +256,19 @@ class Canvas (_panel):
             # 938311    0.978    0.000    0.978    0.000 {method 'addstr' of '_curses.window' objects}
             self.scr.addstr(y, x, s, attr | screen.A_COLOR_FB)
         except screen.Error as e:
-            # error unless attempt to write to lower right corner
+            # warning (not error) unless write to lower right corner
             if not ((y == self.get_size_y() - 1) and \
                 (x + len(s) - 1 == self.get_size_x() - 1)):
-                log.error(self, e, (y, x), s)
+                log.warning(self, e, (y, x), s)
 
     def clrl(self, y, x):
-        self.scr.move(y, x)
-        self.scr.clrtoeol()
+        try:
+            # raise on minimizing terminal size (don't remove try/except)
+            self.scr.move(y, x)
+            self.scr.clrtoeol()
+        except screen.Error:
+            if setting.use_debug:
+                raise
 
     def get_coordinate(self, pos):
         """Return coordinate of the position within the page"""
@@ -538,10 +549,10 @@ class DisplayCanvas (Canvas):
                 try:
                     self.scr.addstr(y, xx, _, a[j + k])
                 except screen.Error as e:
-                    # error unless attempt to write to lower right corner
+                    # warning (not error) unless write to lower right corner
                     if not ((y == self.get_size_y() - 1) and \
                         (xx + len(_) - 1 == self.get_size_x() - 1)):
-                        log.error(self, e, (y, xx), _)
+                        log.warning(self, e, (y, xx), _)
             j += unitlen
 
     def update_highlight(self, low, range_update):
@@ -738,16 +749,16 @@ class BinaryCanvas (DisplayCanvas, binary_attribute):
 
     def chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
-        self.chgat(0, x, self.get_cell_edge(1), screen.A_UNDERLINE | attr)
-        self.chgat(y, 0, self.offset.x - 1, screen.A_UNDERLINE | attr)
+        self.chgat(0, x, self.get_cell_edge(1), A_UNDERLINE | attr)
+        self.chgat(y, 0, self.offset.x - 1, A_UNDERLINE | attr)
 
     def alt_chgat_posstr(self, pos, attr):
         y, x = self.get_coordinate(pos)
         d = pos % self.bufmap.x
         self.addstr(0, x,
-            self.__get_column_posstr(d), screen.A_UNDERLINE | attr)
+            self.__get_column_posstr(d), A_UNDERLINE | attr)
         s = self.__get_line_posstr(self.get_line_offset(pos))[:-1]
-        self.addstr(y, 0, s, screen.A_UNDERLINE | attr)
+        self.addstr(y, 0, s, A_UNDERLINE | attr)
 
     def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
@@ -794,12 +805,12 @@ class BinaryCanvas (DisplayCanvas, binary_attribute):
             x = self.offset.x + self.get_unit_width(i)
             bx = ''.join([self.__get_column_posstr(_) for _ in
                 util.get_xrange(j, j + unitlen)])
-            self.addstr(0, x, bx, screen.A_UNDERLINE)
+            self.addstr(0, x, bx, A_UNDERLINE)
             j += unitlen
         n = self.get_page_offset()
         for i in util.get_xrange(self.bufmap.y):
             s = self.__get_line_posstr(n)
-            self.addstr(self.offset.y + i, 0, s, screen.A_UNDERLINE)
+            self.addstr(self.offset.y + i, 0, s, A_UNDERLINE)
             self.addstr(self.offset.y + i, len(s), ' ')
             n += self.bufmap.x
 
@@ -836,12 +847,12 @@ class TextCanvas (DisplayCanvas, text_attribute):
     def chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
         self.chgat(0, self.offset.x + self.get_cell_width(x),
-            self.get_cell_edge(1), screen.A_UNDERLINE | attr)
+            self.get_cell_edge(1), A_UNDERLINE | attr)
 
     def alt_chgat_posstr(self, pos, attr):
         x = pos % self.bufmap.x
         self.addstr(0, self.offset.x + self.get_cell_width(x),
-            self.__get_column_posstr(x), screen.A_UNDERLINE | attr)
+            self.__get_column_posstr(x), A_UNDERLINE | attr)
 
     def chgat_cursor(self, pos, attr1, attr2, low):
         y, x = self.get_coordinate(pos)
@@ -870,7 +881,7 @@ class TextCanvas (DisplayCanvas, text_attribute):
     def fill_posstr(self):
         s = ''.join([self.__get_column_posstr(x) for x in
             util.get_xrange(self.bufmap.x)])
-        self.addstr(0, self.offset.x, s, screen.A_UNDERLINE)
+        self.addstr(0, self.offset.x, s, A_UNDERLINE)
 
     def __get_column_posstr(self, n):
         return _text_cstr_fmt[setting.address_radix].format(n)[-1]
@@ -926,3 +937,15 @@ def get_min_position(cls):
         y -= _FRAME_MARGIN_Y
         x -= _FRAME_MARGIN_X
     return y, x
+
+A_UNDERLINE = None
+def init():
+    global A_UNDERLINE
+    assert screen.A_UNDERLINE is not None
+    assert screen.A_COLOR_OFFSET is not None
+    if screen.A_COLOR_OFFSET != screen.A_NONE or \
+        screen.A_UNDERLINE == screen.A_NONE:
+        A_UNDERLINE = screen.A_COLOR_OFFSET
+    else:
+        A_UNDERLINE = screen.A_UNDERLINE
+    assert A_UNDERLINE is not None

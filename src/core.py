@@ -37,6 +37,7 @@ from . import literal
 from . import log
 from . import methods
 from . import package
+from . import panel
 from . import path
 from . import screen
 from . import setting
@@ -94,9 +95,14 @@ def __print_log_message(s, fn):
     assert isinstance(level, int), level
     ll = log.get_message(level)
     if ll:
+        # not written yet
         fn("*** Found {0} in {1}".format(s.lower(), log.get_path()))
+        prev = ""
         for l in ll:
-            fn("{0}: {1}".format(s, l[1]))
+            msg = l[1]
+            if msg != prev:
+                fn("{0}: {1}".format(s, msg))
+                prev = msg
 
 def __sigint_handler(sig, frame):
     screen.sti()
@@ -126,6 +132,7 @@ def dispatch(optargs=None):
     parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
+    parser.add_argument("--test_mouse", action="store_true", default=False, help=usage.test_mouse)
     parser.add_argument("--test_color", action="store_true", default=False, help=usage.test_color)
     parser.add_argument("--list_color", action="store_true", default=False, help=usage.list_color)
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
@@ -221,11 +228,11 @@ def dispatch(optargs=None):
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
-            allocator.set_default_class(s)
+            assert allocator.set_default_class(s) != -1, s
     if opts.R:
         setting.use_readonly = True
     if opts.B:
-        allocator.set_default_buffer_class()
+        assert allocator.set_default_buffer_class() != -1
     wspnum = 1
     if opts.o is not None:
         if opts.o == -1:
@@ -290,8 +297,12 @@ def dispatch(optargs=None):
             if screen.init() == -1:
                 __error("Failed to initialize terminal")
             assert console.init() != -1
+            assert panel.init() != -1
             if opts.test_screen:
                 __wait_screen(__update_screen)
+                return # done
+            elif opts.test_mouse:
+                __wait_screen(__update_mouse)
                 return # done
             elif opts.test_color:
                 __wait_screen(__update_color)
@@ -397,13 +408,15 @@ def __wait_screen(fn):
 
 def __update_screen(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
-    if siz >= 16:
+    if siz >= 17:
         if repaint:
             __addstr_prologue(scr)
             # none
             scr.addstr(5, 1, "This should look normal.", screen.A_NONE)
             # underline
-            if terminal.is_screen() and screen.use_color():
+            if screen.A_UNDERLINE == screen.A_NONE:
+                s = "should not"
+            elif terminal.is_screen() and screen.use_color():
                 s = "may or may not"
             else:
                 s = "should"
@@ -459,7 +472,7 @@ def __update_screen(scr, repaint, l):
 
 def __update_color(scr, repaint, l):
     siz = screen.get_size_y() - 2 # frame
-    if siz >= 12:
+    if siz >= 22:
         if repaint:
             __addstr_prologue(scr)
             y = 5
@@ -520,6 +533,90 @@ def __get_error_code(x):
         return chr(65 + x)
     else:
         return " "
+
+def __update_mouse(scr, repaint, l):
+    siz = screen.get_size_y() - 2 # frame
+    if siz >= 10:
+        __addstr_prologue(scr)
+        if l[0] == kbd.MOUSE:
+            devid, x, y, z, bstate = screen.getmouse()
+            sl = []
+            if bstate & screen.BUTTON1_CLICKED:
+                sl.append("BUTTON1_CLICKED")
+            if bstate & screen.BUTTON1_PRESSED:
+                sl.append("BUTTON1_PRESSED")
+            if bstate & screen.BUTTON1_RELEASED:
+                sl.append("BUTTON1_RELEASED")
+            if bstate & screen.BUTTON1_DOUBLE_CLICKED:
+                sl.append("BUTTON1_DOUBLE_CLICKED")
+            if bstate & screen.BUTTON1_TRIPLE_CLICKED:
+                sl.append("BUTTON1_TRIPLE_CLICKED")
+
+            if bstate & screen.BUTTON2_CLICKED:
+                sl.append("BUTTON2_CLICKED")
+            if bstate & screen.BUTTON2_PRESSED:
+                sl.append("BUTTON2_PRESSED")
+            if bstate & screen.BUTTON2_RELEASED:
+                sl.append("BUTTON2_RELEASED")
+            if bstate & screen.BUTTON2_DOUBLE_CLICKED:
+                sl.append("BUTTON2_DOUBLE_CLICKED")
+            if bstate & screen.BUTTON2_TRIPLE_CLICKED:
+                sl.append("BUTTON2_TRIPLE_CLICKED")
+
+            if bstate & screen.BUTTON3_CLICKED:
+                sl.append("BUTTON3_CLICKED")
+            if bstate & screen.BUTTON3_PRESSED:
+                sl.append("BUTTON3_PRESSED")
+            if bstate & screen.BUTTON3_RELEASED:
+                sl.append("BUTTON3_RELEASED")
+            if bstate & screen.BUTTON3_DOUBLE_CLICKED:
+                sl.append("BUTTON3_DOUBLE_CLICKED")
+            if bstate & screen.BUTTON3_TRIPLE_CLICKED:
+                sl.append("BUTTON3_TRIPLE_CLICKED")
+
+            if bstate & screen.BUTTON4_CLICKED:
+                sl.append("BUTTON4_CLICKED")
+            if bstate & screen.BUTTON4_PRESSED:
+                sl.append("BUTTON4_PRESSED")
+            if bstate & screen.BUTTON4_RELEASED:
+                sl.append("BUTTON4_RELEASED")
+            if bstate & screen.BUTTON4_DOUBLE_CLICKED:
+                sl.append("BUTTON4_DOUBLE_CLICKED")
+            if bstate & screen.BUTTON4_TRIPLE_CLICKED:
+                sl.append("BUTTON4_TRIPLE_CLICKED")
+
+            if bstate & screen.REPORT_MOUSE_POSITION:
+                sl.append("REPORT_MOUSE_POSITION")
+            s = ",".join(sl)
+            if not s:
+                s = "???"
+            __clraddstr(scr, 5, 1, s)
+            __clraddstr(scr, 6, 1, str(devid))
+            __clraddstr(scr, 7, 1, str((x, y, z)))
+        elif l[0] != kbd.ERROR:
+            __clraddstr(scr, 5, 1, "Not a mouse event.")
+            __clraddstr(scr, 6, 1, "")
+            __clraddstr(scr, 7, 1, "")
+        elif not screen.use_mouse():
+            __clraddstr(scr, 5, 1, "Mouse event unsupported.")
+            __clraddstr(scr, 6, 1, "")
+            __clraddstr(scr, 7, 1, "")
+        else:
+            __clraddstr(scr, 5, 1, "")
+            __clraddstr(scr, 6, 1, "")
+            __clraddstr(scr, 7, 1, "")
+        __addstr_epilogue(scr, 9)
+        __update_input(scr, 10, l)
+    elif siz >= 3:
+        if repaint:
+            scr.addstr(1, 1, "Not enough room.")
+            __addstr_epilogue(scr, 2)
+        __update_input(scr, 3, l)
+
+def __clraddstr(scr, y, x, s, attr=screen.A_NONE):
+    scr.move(y, x)
+    scr.clrtoeol()
+    scr.addstr(y, x, s, attr)
 
 def __addstr_prologue(scr):
     # OS

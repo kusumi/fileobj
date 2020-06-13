@@ -232,6 +232,9 @@ class WriteConsole (Console):
                 finally:
                     self.cleanup_cursor()
             self.co.set_prev_context(fn)
+            if arg.merge_undo != -1:
+                self.co.merge_undo_until(arg.merge_undo)
+                arg.merge_undo = -1 # only first one applies
         elif cmd == MOTION:
             self.co.set_pos(seq[-1])
 
@@ -517,4 +520,5 @@ class Arg (util.Namespace):
         d.setdefault("start", -1)
         d.setdefault("delta", 0)
         d.setdefault("limit", -1)
+        d.setdefault("merge_undo", -1) # used by cw
         super(Arg, self).__init__(**d)

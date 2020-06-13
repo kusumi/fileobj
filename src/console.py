@@ -193,6 +193,8 @@ class Console (object):
             elif ret == methods.QUIT:
                 self.cleanup()
                 return -1
+            elif ret == methods.ERROR:
+                assert False, ret
 
 _scr = None
 _log = []
@@ -252,7 +254,12 @@ def refresh():
     _scr.refresh()
 
 def __chgat(x, s, attr):
-    _scr.chgat(0, x, 1, attr | screen.A_COLOR_FB)
+    try:
+        # may raise on minimizing terminal size
+        _scr.chgat(0, x, 1, attr | screen.A_COLOR_FB)
+    except screen.Error:
+        if setting.use_debug:
+            raise
 
 def __alt_chgat(x, s, attr):
     if x < len(s):
@@ -276,14 +283,19 @@ def addstr(x, s, attr=screen.A_NONE):
     try:
         _scr.addstr(0, x, s, attr | screen.A_COLOR_FB)
     except screen.Error as e:
-        # error unless attempt to write to lower right corner
+        # warning (not error) unless write to lower right corner
         if not ((0 == screen.get_size_y() - 1) and \
             (x + len(s) - 1 == screen.get_size_x() - 1)):
-            log.error(addstr, e, x, s)
+            log.warning(addstr, e, x, s)
 
 def clrl():
-    _scr.move(0, 0)
-    _scr.clrtoeol()
+    try:
+        # may raise on minimizing terminal size
+        _scr.move(0, 0)
+        _scr.clrtoeol()
+    except screen.Error:
+        if setting.use_debug:
+            raise
 
 _banner = ['']
 def set_banner(o):
