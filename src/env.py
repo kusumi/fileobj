@@ -72,6 +72,7 @@ def __iter_env_private():
     yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT", False
     yield "__FILEOBJ_USE_DELETE_CONSOLE", True # unittest (false)
     yield "__FILEOBJ_USE_PERMISSIVE_INSTALL", False
+    yield "__FILEOBJ_USE_WINDOWS_TERMINAL", False
     yield "__FILEOBJ_STDOUT_VERBOSE", 1 # unittest (0)
     yield "__FILEOBJ_TRACE_WORD_SIZE", 2
     yield "__FILEOBJ_LOG_LEVEL", "INFO"
@@ -332,6 +333,9 @@ def __get_setting_use_delete_console():
 
 def __get_setting_use_permissive_install():
     return test_bool("__FILEOBJ_USE_PERMISSIVE_INSTALL")
+
+def __get_setting_use_windows_terminal():
+    return test_bool("__FILEOBJ_USE_WINDOWS_TERMINAL")
 
 def __get_setting_stdout_verbose():
     return test_ge_zero("__FILEOBJ_STDOUT_VERBOSE")

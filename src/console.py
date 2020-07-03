@@ -284,7 +284,7 @@ def addstr(x, s, attr=screen.A_NONE):
         _scr.addstr(0, x, s, attr | screen.A_COLOR_FB)
     except screen.Error as e:
         # warning (not error) unless write to lower right corner
-        if not ((0 == screen.get_size_y() - 1) and \
+        if not ((0 == screen.get_size_y() - 1) and
             (x + len(s) - 1 == screen.get_size_x() - 1)):
             log.warning(addstr, e, x, s)
 

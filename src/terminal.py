@@ -142,3 +142,7 @@ def is_linux():
 
 def is_dumb():
     return get_type().startswith("dumb")
+
+# XXX
+def is_windows_terminal():
+    assert False, "is_windows_terminal"

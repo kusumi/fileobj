@@ -31,8 +31,7 @@ from . import setting
 from . import util
 
 # no mmap offset and rfind till Python 2.6
-_has_mmap_offset = \
-_has_mmap_rfind = util.is_python_version_or_ht(2, 6, 0)
+_has_mmap_offset = _has_mmap_rfind = util.is_python_version_or_ht(2, 6, 0)
 
 _has_right_mapping_length = \
     util.is_python2_version_or_ht(2, 7, 0) or \

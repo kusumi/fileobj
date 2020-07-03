@@ -213,7 +213,7 @@ def iter_env_name():
         yield x
 
 def has_buffer_attr():
-    return not (this.color_zero is None and this.color_ff is None and \
+    return not (this.color_zero is None and this.color_ff is None and
         this.color_print is None and this.color_default is None)
 
 def disable_color():

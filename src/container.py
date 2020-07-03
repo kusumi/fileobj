@@ -1405,7 +1405,7 @@ class Container (object):
                 if self.set_bytes_per_line(bpl) != -1 and \
                     ret <= self.get_bytes_per_window() and \
                     self.__build(self.__in_vertical, True) is None:
-                        return
+                    return
                 # could rollback bpl here for extra safety
             # failed, rollback bpl and bpw
             assert self.set_bytes_per_line(prev_bpl) != -1, prev_bpl

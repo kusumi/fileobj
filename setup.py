@@ -21,23 +21,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# This script supports Python 2.4+ (need to show a proper error message).
+
 if __name__ == '__main__':
+    import atexit
+    import gzip
     import os
+    import shutil
     import sys
+    from distutils.core import setup, Extension
 
     if not os.path.isfile("./setup.py") or \
         not os.path.isfile("./bin/fileobj") or \
         not os.path.isfile("./doc/fileobj.1") or \
-        not os.path.isfile("./src/fileobj.py"):
+        not os.path.isfile("./README.md"):
         sys.stderr.write("Invalid current directory %s\n" % os.getcwd())
         sys.exit(1)
 
     import src.nodep
+    import src.version
     src.nodep.test(installation=True)
     pkg = src.nodep.get_package_name()
-
-    from distutils.core import setup, Extension
-    import src.version
 
     # Pretend "test" is supported.
     if len(sys.argv) > 1 and sys.argv[1] == "test":
@@ -47,16 +51,13 @@ if __name__ == '__main__':
     # __FILEOBJ_SETUP_USE_MAN: Install fileobj(1) man page.
     # __FILEOBJ_SETUP_USE_GZIP: Gzip fileobj(1) man page.
     def test_env(s):
-        e = os.getenv("__FILEOBJ_SETUP_%s" % s)
+        e = os.getenv("__FILEOBJ_%s" % s)
         if e is None:
             return False
         else:
             return e.lower() != "false"
 
     def create_gzip(src, dst):
-        import atexit
-        import gzip
-        import shutil
         def cleanup(arg):
             if os.path.isfile(arg):
                 os.unlink(arg)
@@ -74,18 +75,18 @@ if __name__ == '__main__':
         data_files = None
     else:
         executable = "bin/fileobj"
-        if test_env("USE_NO_NATIVE"):
+        if test_env("SETUP_USE_NO_NATIVE"):
             ext_modules = None
         else:
             ext_modules = [Extension(pkg + "._native", ["src/_native.c"])]
         data_files = None
-        if test_env("USE_MAN"):
+        if test_env("SETUP_USE_MAN"):
             d = os.path.join(sys.prefix, "man/man1")
             if os.path.isdir(d):
-                if test_env("USE_GZIP"):
+                if test_env("SETUP_USE_GZIP"):
                     try:
                         create_gzip("./doc/fileobj.1", "./doc/fileobj.1.gz")
-                    except:
+                    except Exception:
                         e = sys.exc_info()[1]
                         sys.stderr.write("%s\n" % e)
                         sys.exit(1)
@@ -98,21 +99,27 @@ if __name__ == '__main__':
                 nonexistent_man_dir = d
     assert os.path.isfile(executable), executable
 
-    # Two warnings expected on sdist.
-    # warning: sdist: missing meta-data: if 'author' supplied, 'author_email' must be supplied too
-    # warning: sdist: standard file not found: should have one of README, README.txt
+    #long_description = open("./README.md").read()
 
     setup(name      = "fileobj",
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
         url         = "https://sourceforge.net/projects/fileobj/",
         description = "Ncurses based hex editor with vi interface",
+        #long_description = long_description,
+        #long_description_content_type = "text/markdown",
         license     = "BSD License (2-clause)",
         scripts     = [executable],
         packages    = [pkg, pkg + ".ext"],
         package_dir = {pkg : "src", pkg + ".ext" : "src/ext",},
         ext_modules = ext_modules,
-        data_files  = data_files,)
+        data_files  = data_files,
+        classifiers = [
+            "Programming Language :: Python :: 3",
+            "Programming Language :: C",
+            "License :: OSI Approved :: BSD License",
+            "Operating System :: OS Independent",],
+        python_requires = ">=3.2",)
 
     if nonexistent_man_dir:
         sys.stderr.write("No such directory %s to install fileobj.1\n" %

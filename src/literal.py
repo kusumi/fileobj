@@ -403,7 +403,7 @@ def init():
     setattr(this, "V", FastLiteral("V", None, "Start/End line visual mode"))
     # XXX On WSL, getch doesn't receive util.ctrl('v').
     # https://github.com/microsoft/WSL/issues/2588
-    # XXX On Windows Terminal, getch receives irrelevant bytes.
+    # XXX On Windows Terminal, getch receives copy/paste buffer bytes.
     # XXX On some BSD's, getch receive util.ctrl('v') with <CTRL>v<CTRL>v.
     setattr(this, "ctrlv", FastLiteral("<CTRL>v", (util.ctrl('v'),), "Start/End block visual mode"))
     setattr(this, "escape", FastLiteral("<ESCAPE>", (kbd.ESCAPE,), "Clear input or escape from current mode"))

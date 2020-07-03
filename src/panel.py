@@ -245,7 +245,7 @@ class Canvas (_panel):
                 raise
 
     def addstr(self, y, x, s, attr=screen.A_NONE):
-        # don't forget to sync with inlined version in __fill_inline()
+        # don't forget to sync with inlined version in __fill_line()
         try:
             # XXX Python 3 is too slow against Python 2.7 (2018-12-14)
             # Python 2.7
@@ -257,7 +257,7 @@ class Canvas (_panel):
             self.scr.addstr(y, x, s, attr | screen.A_COLOR_FB)
         except screen.Error as e:
             # warning (not error) unless write to lower right corner
-            if not ((y == self.get_size_y() - 1) and \
+            if not ((y == self.get_size_y() - 1) and
                 (x + len(s) - 1 == self.get_size_x() - 1)):
                 log.warning(self, e, (y, x), s)
 
@@ -427,7 +427,7 @@ class DisplayCanvas (Canvas):
     # <-------->            x=2
     # 0000 0000 0000 0000...
     def get_unit_width(self, x):
-        # don't forget to sync with inlined version in __fill_inline()
+        # don't forget to sync with inlined version in __fill_line()
         return self.__unit_width * x
 
     # e.g. when unit size is 2
@@ -550,7 +550,7 @@ class DisplayCanvas (Canvas):
                     self.scr.addstr(y, xx, _, a[j + k])
                 except screen.Error as e:
                     # warning (not error) unless write to lower right corner
-                    if not ((y == self.get_size_y() - 1) and \
+                    if not ((y == self.get_size_y() - 1) and
                         (xx + len(_) - 1 == self.get_size_x() - 1)):
                         log.warning(self, e, (y, xx), _)
             j += unitlen

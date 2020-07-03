@@ -220,9 +220,9 @@ def __init_curses_mouse():
         _use_mouse = False
         return
     # XXX Windows Terminal can't properly receive kbd.MOUSE
-    #if not setting.use_debug and is_windows_terminal:
-    #    _use_mouse = False
-    #    return
+    if setting.use_windows_terminal:
+        _use_mouse = False
+        return
     if hasattr(curses, "mousemask"):
         l = curses.mousemask(curses.ALL_MOUSE_EVENTS)
         log.debug("Set mouse mask avail={0} old={1}".format(hex(l[0]),
@@ -481,7 +481,7 @@ def get_mouse_event_name(bstate):
 def __init_mouse_event_name():
     _mouse_event_name.clear()
     for s in dir(curses):
-        if s.startswith("BUTTON"):
+        if s.startswith("BUTTON") or s == "REPORT_MOUSE_POSITION":
             k = getattr(curses, s) # should be of int
             if isinstance(k, int):
                 _mouse_event_name[k] = s

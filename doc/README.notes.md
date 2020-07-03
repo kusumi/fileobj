@@ -41,7 +41,7 @@
         $ cd /usr/pkgsrc/devel/py-curses
         $ make install
 
-## Windows
+## Windows 10
 
 + Can not install due to a missing module *_curses*. -> **Install *windows-curses*.**
 
@@ -51,8 +51,6 @@
 
 + *CTRL-c* can not interrupt ongoing editor command. -> ***windows-curses* module can not handle Unix signals, whereas regular Python applications on Windows can handle some Unix signals.**
 
-+ Window frames do not resize upon console window resizing. -> ***windows-curses* module can not handle resize event.**
-
 + There is no *fileobj* package in site-packages directory. -> **On Windows, *fileobj* package is installed as *fileobj_*.**
 
 ## Windows Subsystem for Linux
@@ -61,6 +59,6 @@
 
 ## Windows Terminal
 
-+ Can not enter block visual mode via *CTRL-v*. -> **Windows Terminal does not seem to support *CTRL-V*. Instead it receives irrelevant bytes.**
++ Can not enter block visual mode via *CTRL-v*. -> **Go to terminal settings (which opens *settings.json* file) and comment out *"{ "command": "paste", "keys": "ctrl+v" },"* line. Note that this disables pasting of copied buffer.**
 
 + Mouse events are ignored. -> **Windows Terminal does not seem to support mouse events. Instead it receives irrelevant bytes.**

@@ -52,11 +52,8 @@ class Workspace (object):
         self.__cur_fileops = None
         self.__cur_console = None
         self.__set_window(None)
-        self.__def_vwindow, \
-        self.__def_bwindow, \
-        self.__def_twindow, \
-        self.__def_swindow \
-        = self.__windows
+        self.__def_vwindow, self.__def_bwindow, self.__def_twindow, \
+            self.__def_swindow = self.__windows
 
     def __getattr__(self, name):
         if name == "_Workspace__cur_fileops":

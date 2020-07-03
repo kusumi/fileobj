@@ -22,11 +22,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
+import platform
 import re
 
 from . import libc
 from . import log
-from . import platform
 from . import unix
 from . import util
 

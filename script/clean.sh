@@ -39,3 +39,6 @@ if [ $? -ne 0 ]; then
 	echo "Failed to clean"
 	exit 1
 fi
+
+#find . -type f -name "*\.pyc" | xargs rm
+#rmdir ./src/__pycache__

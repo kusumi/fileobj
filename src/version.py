@@ -28,7 +28,7 @@
 
 MAJOR = 0
 MINOR1 = 7
-MINOR2 = 99
+MINOR2 = 100
 RELEASE = 1
 
 def get_version():
@@ -46,4 +46,7 @@ def get_release_string():
 def get_tag_string():
     return "v" + get_version_string()
 
-__version__ = get_version_string()
+try:
+    __version__ = get_version_string()
+except Exception:
+    __version__ = "???" # .format() unsupported

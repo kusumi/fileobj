@@ -1,5 +1,7 @@
 ## NetBSD pkgsrc
 
++ Maintained, but a recent change(s) to ncurses seems to have broke fileobj as of July 2020.
+
 + [https://pkgsrc.se/editors/fileobj](https://pkgsrc.se/editors/fileobj)
 
 + [http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html](http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html)

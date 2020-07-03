@@ -1,3 +1,8 @@
+v0.7.100
+========
+- Minor fixes and cleanups
+- Add __FILEOBJ_USE_WINDOWS_TERMINAL
+
 v0.7.99
 =======
 - Minor fixes and cleanups

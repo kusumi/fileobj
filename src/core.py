@@ -61,8 +61,7 @@ def __cleanup(arg):
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
-    __cleanup_log_error(arg)
-    __cleanup_print_error(arg)
+    __print_error(arg)
     log.debug("Cleanup")
     log.cleanup()
     # wait for input if error printed and double clicked on Windows
@@ -71,26 +70,25 @@ def __cleanup(arg):
         sys.stderr.write("Press Enter key to exit\n")
         sys.stdin.read(1)
 
-def __cleanup_log_error(arg):
-    if not arg.e:
-        return -1
-    log.error(arg.e)
-    for s in arg.tb:
-        log.error(s)
-
-def __cleanup_print_error(arg):
-    if not arg.e:
-        if log.has_error():
-            __print_log_message("error", util.printe)
-        elif setting.use_debug:
-            __print_log_message("info", util.printf)
-        return -1
-    util.printe(arg.e)
-    if not isinstance(arg.e, util.QuietError):
+def __print_error(arg):
+    if arg.e:
+        # log
+        log.error(arg.e)
         for s in arg.tb:
-            util.printe(s)
+            log.error(s)
+        # print
+        util.printe(arg.e)
+        if not isinstance(arg.e, util.QuietError):
+            for s in arg.tb:
+                util.printe(s)
+    else:
+        # print
+        if log.has_error():
+            __print_message("error", util.printe)
+        elif setting.use_debug:
+            __print_message("info", util.printf)
 
-def __print_log_message(s, fn):
+def __print_message(s, fn):
     level = getattr(log, s.upper())
     assert isinstance(level, int), level
     ll = log.get_message(level)
@@ -540,57 +538,7 @@ def __update_mouse(scr, repaint, l):
         __addstr_prologue(scr)
         if l[0] == kbd.MOUSE:
             devid, x, y, z, bstate = screen.getmouse()
-            sl = []
-            if bstate & screen.BUTTON1_CLICKED:
-                sl.append("BUTTON1_CLICKED")
-            if bstate & screen.BUTTON1_PRESSED:
-                sl.append("BUTTON1_PRESSED")
-            if bstate & screen.BUTTON1_RELEASED:
-                sl.append("BUTTON1_RELEASED")
-            if bstate & screen.BUTTON1_DOUBLE_CLICKED:
-                sl.append("BUTTON1_DOUBLE_CLICKED")
-            if bstate & screen.BUTTON1_TRIPLE_CLICKED:
-                sl.append("BUTTON1_TRIPLE_CLICKED")
-
-            if bstate & screen.BUTTON2_CLICKED:
-                sl.append("BUTTON2_CLICKED")
-            if bstate & screen.BUTTON2_PRESSED:
-                sl.append("BUTTON2_PRESSED")
-            if bstate & screen.BUTTON2_RELEASED:
-                sl.append("BUTTON2_RELEASED")
-            if bstate & screen.BUTTON2_DOUBLE_CLICKED:
-                sl.append("BUTTON2_DOUBLE_CLICKED")
-            if bstate & screen.BUTTON2_TRIPLE_CLICKED:
-                sl.append("BUTTON2_TRIPLE_CLICKED")
-
-            if bstate & screen.BUTTON3_CLICKED:
-                sl.append("BUTTON3_CLICKED")
-            if bstate & screen.BUTTON3_PRESSED:
-                sl.append("BUTTON3_PRESSED")
-            if bstate & screen.BUTTON3_RELEASED:
-                sl.append("BUTTON3_RELEASED")
-            if bstate & screen.BUTTON3_DOUBLE_CLICKED:
-                sl.append("BUTTON3_DOUBLE_CLICKED")
-            if bstate & screen.BUTTON3_TRIPLE_CLICKED:
-                sl.append("BUTTON3_TRIPLE_CLICKED")
-
-            if bstate & screen.BUTTON4_CLICKED:
-                sl.append("BUTTON4_CLICKED")
-            if bstate & screen.BUTTON4_PRESSED:
-                sl.append("BUTTON4_PRESSED")
-            if bstate & screen.BUTTON4_RELEASED:
-                sl.append("BUTTON4_RELEASED")
-            if bstate & screen.BUTTON4_DOUBLE_CLICKED:
-                sl.append("BUTTON4_DOUBLE_CLICKED")
-            if bstate & screen.BUTTON4_TRIPLE_CLICKED:
-                sl.append("BUTTON4_TRIPLE_CLICKED")
-
-            if bstate & screen.REPORT_MOUSE_POSITION:
-                sl.append("REPORT_MOUSE_POSITION")
-            s = ",".join(sl)
-            if not s:
-                s = "???"
-            __clraddstr(scr, 5, 1, s)
+            __clraddstr(scr, 5, 1, screen.get_mouse_event_name(bstate))
             __clraddstr(scr, 6, 1, str(devid))
             __clraddstr(scr, 7, 1, str((x, y, z)))
         elif l[0] != kbd.ERROR:

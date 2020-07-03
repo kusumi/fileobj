@@ -46,12 +46,12 @@ typedef struct blkdev_info {
 #if defined TARGET_OS_MAC /* OS X */
 #include "./_darwin.c"
 #else
-#include "./_xnix.h"
+#include "./_xnix.c"
 #endif
 #elif defined __sun__
 #include "./_illumos.c"
 #elif defined __CYGWIN__
 #include "./_cygwin.c"
 #else
-#include "./_xnix.h"
+#include "./_xnix.c"
 #endif

@@ -1164,7 +1164,7 @@ def __is_not_equal(a, b):
     return a != b
 
 def __cmp_to_find_equal(self, fn):
-    return fn(1, 1) == True
+    return fn(1, 1) is True
 
 # :cmp (compare from offset 0) variants
 def cmp_buffer(self, amp, opc, args, raw):

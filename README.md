@@ -1,4 +1,4 @@
-# fileobj ([v0.7.99](https://github.com/kusumi/fileobj/releases/tag/v0.7.99))
+# fileobj ([v0.7.100](https://github.com/kusumi/fileobj/releases/tag/v0.7.100))
 
 ## About
 
@@ -16,7 +16,7 @@
 
 ## Requirements
 
-+ Python 3.2 or above
++ Python 3.2+
 
 + ncurses (curses Python module)
 
@@ -24,7 +24,7 @@
 
 ## Install
 
-+ Optionally define *__FILEOBJ_SETUP_USE_MAN* environment variable to make *setup.py* install *[fileobj(1)](doc/fileobj.1.txt)* man page. Unsupported on Windows.
++ (Optionally define *__FILEOBJ_SETUP_USE_MAN* environment variable to make *setup.py* install *[fileobj(1)](doc/fileobj.1.txt)* man page. Unsupported on Windows.)
 
         $ export __FILEOBJ_SETUP_USE_MAN=
 

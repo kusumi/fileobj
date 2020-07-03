@@ -21,8 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# This script must run on Python 2.4 or above.
-# Although Python 2 is unsupported, it needs to exit with an error message.
+# This script supports Python 2.4+ (need to show a proper error message).
 
 import os
 import platform
@@ -69,7 +68,7 @@ def __test_common(version, name, permissive):
 
 def __test_strict_install(version, name):
     if version[0] <= 2 or ((3, 0, 0) <= version < (3, 2, 0)):
-        raise Exception("Python 3.2 or above is required")
+        raise Exception("Python 3.2+ is required")
 
 def __test_permissive_install(version, name):
     if not support_if_argparse:

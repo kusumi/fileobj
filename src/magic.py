@@ -402,32 +402,31 @@ def __get_sring(fo, l):
 
 # DEBMagic comes before ARMagic
 _magics = \
-ELFMagic, \
-EXEMagic, \
-PythonMagic, \
-JavaMagic, \
-RPMMagic, \
-DEBMagic, \
-BMPMagic, \
-JPEGMagic, \
-GIFMagic, \
-PNGMagic, \
-PDFMagic, \
-PSMagic, \
-MSOfficeMagic, \
-LHAMagic, \
-ZIPMagic, \
-GZIPMagic, \
-BZIPMagic, \
-ARMagic, \
-TARMagic, \
-CPIOMagic, \
-ISO9660Magic, \
-LVM2PVMagic, \
-HAMMERFSMagic, \
-HAMMER2FSMagic, \
-MBRMagic,
-# MBRMagic comes last
+    ELFMagic, \
+    EXEMagic, \
+    PythonMagic, \
+    JavaMagic, \
+    RPMMagic, \
+    DEBMagic, \
+    BMPMagic, \
+    JPEGMagic, \
+    GIFMagic, \
+    PNGMagic, \
+    PDFMagic, \
+    PSMagic, \
+    MSOfficeMagic, \
+    LHAMagic, \
+    ZIPMagic, \
+    GZIPMagic, \
+    BZIPMagic, \
+    ARMagic, \
+    TARMagic, \
+    CPIOMagic, \
+    ISO9660Magic, \
+    LVM2PVMagic, \
+    HAMMERFSMagic, \
+    HAMMER2FSMagic, \
+    MBRMagic, # MBRMagic comes last
 
 _blk_magics = tuple(cls for cls in _magics
     if util.is_subclass(cls, _blk_magic, False))
