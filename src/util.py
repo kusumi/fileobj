@@ -979,3 +979,22 @@ def get_elapsed_time():
     ret += d.seconds * 1000
     ret += d.microseconds // 1000
     return ret # in msec
+
+def get_man_path():
+    l = []
+    try:
+        ret = execute("manpath")
+        if not ret.retval:
+            manpath = ret.stdout.rstrip().split(":")
+            d = os.path.join(sys.prefix, "man")
+            if d not in manpath:
+                manpath.append(d)
+            manpath = [os.path.join(x, "man1") for x in manpath]
+            for d in manpath:
+                for x in ("fileobj.1", "fileobj.1.gz"):
+                    f = os.path.join(d, x)
+                    if os.path.isfile(f):
+                        l.append(f)
+    except FileNotFoundError:
+        pass
+    return tuple(l)

@@ -1,4 +1,4 @@
-# fileobj ([v0.7.100](https://github.com/kusumi/fileobj/releases/tag/v0.7.100))
+# fileobj ([v0.7.101](https://github.com/kusumi/fileobj/releases/tag/v0.7.101))
 
 ## About
 
@@ -45,9 +45,14 @@
         $ fileobj [options]... [paths[@offset:length]]...
         $ fileobj [options]... [paths[@offset-(offset+length)]]...
 
-+ Run with *--test_screen* to test appearance of ncurses.
++ Run with below to test appearance of ncurses.
 
         $ fileobj --test_screen
+        $ fileobj --test_color
+
++ Run with below to test mouse actions on ncurses.
+
+        $ fileobj --test_mouse
 
 ## Resource
 

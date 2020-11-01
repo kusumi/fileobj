@@ -34,11 +34,24 @@ HAMMER2_VOLUME_ID_HBO = _("\x11\x20\x17\x05\x32\x4d\x41\x48")
 HAMMER2_VOLUME_ID_ABO = _("\x48\x41\x4d\x32\x05\x17\x20\x11")
 
 def get_text(co, fo, args):
+    print_rsv = (args[0] == "all")
+    pos = args[-1]
+    if pos:
+        b = fo.read(pos, 65536)
+        return get_volume_header(b, print_rsv)
+    else:
+        l = []
+        for x in range(4):
+            b = fo.read((1 << 30) * 2 * x, 65536)
+            l.extend(get_volume_header(b, print_rsv))
+            if x != 3:
+                l.append("----------" * 4)
+        return l
+
+def get_volume_header(b, print_rsv):
     l = []
-    b = fo.read(args[-1], 65536)
     if len(b) != 65536:
         extension.fail("Invalid length: {0}".format(len(b)))
-    print_rsv = (args[0] == "all")
 
     # sector #0
     magic = b[:8]

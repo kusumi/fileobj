@@ -174,7 +174,9 @@ def dispatch(optargs=None):
         literal.print_literal()
         return
     if opts.env:
-        l = tuple(setting.iter_env_name())
+        l = list(setting.iter_env_name())
+        if setting.use_debug:
+            l.extend(setting.iter_env_name_private())
         n = max([len(s) for s in l])
         f = "{{0:<{0}}} {{1}}".format(n)
         for x in l:
@@ -192,9 +194,6 @@ def dispatch(optargs=None):
         return
 
     msg = [None, None]
-    targs = util.Namespace(e=None, tb=[], done=False, baks={})
-    atexit.register(__cleanup, targs)
-
     user_dir = setting.get_user_dir()
     ret = setting.init_user()
     if ret == setting.USER_DIR_NONE:
@@ -206,7 +205,14 @@ def dispatch(optargs=None):
     elif ret == setting.USER_DIR_MKDIR_FAILED:
         msg[0] = "Failed to create user directory {0}".format(user_dir)
 
-    log.init(util.get_program_name())
+    # Initialize before atexit.register() as this could fail,
+    # but after setting.init_user() created user directory.
+    if log.init(util.get_program_name()) == -1:
+        util.printe("Failed to initialize log")
+        return -1
+
+    targs = util.Namespace(e=None, tb=[], done=False, baks={})
+    atexit.register(__cleanup, targs)
 
     log.debug("-" * 50)
     log.debug("{0} {1}".format(util.get_program_path(),
@@ -223,6 +229,8 @@ def dispatch(optargs=None):
     log.debug("argv: {0}".format(sys.argv))
     log.debug("opts: {0}".format(opts))
     log.debug("args: {0}".format(args))
+    if setting.use_debug:
+        log.debug("man: {0}".format(util.get_man_path()))
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
@@ -538,21 +546,15 @@ def __update_mouse(scr, repaint, l):
         __addstr_prologue(scr)
         if l[0] == kbd.MOUSE:
             devid, x, y, z, bstate = screen.getmouse()
-            __clraddstr(scr, 5, 1, screen.get_mouse_event_name(bstate))
-            __clraddstr(scr, 6, 1, str(devid))
-            __clraddstr(scr, 7, 1, str((x, y, z)))
-        elif l[0] != kbd.ERROR:
-            __clraddstr(scr, 5, 1, "Not a mouse event.")
-            __clraddstr(scr, 6, 1, "")
-            __clraddstr(scr, 7, 1, "")
+            scr.addstr(5, 1, screen.get_mouse_event_name(bstate))
+            scr.addstr(6, 1, str(devid))
+            scr.addstr(7, 1, str((x, y, z)))
+        elif l[0] != kbd.ERROR and l[0] != kbd.ESCAPE:
+            __addmsg(scr, "Not a mouse event.")
         elif not screen.use_mouse():
-            __clraddstr(scr, 5, 1, "Mouse event unsupported.")
-            __clraddstr(scr, 6, 1, "")
-            __clraddstr(scr, 7, 1, "")
+            __addmsg(scr, "Mouse event unsupported.")
         else:
-            __clraddstr(scr, 5, 1, "")
-            __clraddstr(scr, 6, 1, "")
-            __clraddstr(scr, 7, 1, "")
+            __addmsg(scr, (screen.get_size_x() - 2) * ' ')
         __addstr_epilogue(scr, 9)
         __update_input(scr, 10, l)
     elif siz >= 3:
@@ -561,10 +563,10 @@ def __update_mouse(scr, repaint, l):
             __addstr_epilogue(scr, 2)
         __update_input(scr, 3, l)
 
-def __clraddstr(scr, y, x, s, attr=screen.A_NONE):
-    scr.move(y, x)
-    scr.clrtoeol()
-    scr.addstr(y, x, s, attr)
+def __addmsg(scr, msg, attr=screen.A_NONE):
+    scr.addstr(5, 1, msg, attr)
+    scr.addstr(6, 1, "", screen.A_NONE)
+    scr.addstr(7, 1, "", screen.A_NONE)
 
 def __addstr_prologue(scr):
     # OS

@@ -1,3 +1,9 @@
+v0.7.101
+========
+- Minor fixes and cleanups
+- Add Python 3.9 support
+- Add MidnightBSD support
+
 v0.7.100
 ========
 - Minor fixes and cleanups

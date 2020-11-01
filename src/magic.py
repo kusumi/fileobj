@@ -142,6 +142,8 @@ class PythonMagic (_magic):
             v = 3.7
         elif x in (3400, 3401, 3410, 3411, 3412, 3413):
             v = 3.8
+        elif x in (3420, 3421, 3422, 3423, 3424, 3425):
+            v = 3.9
         elif 3000 <= x < 4000: # is this good ?
             v = 3
         return v

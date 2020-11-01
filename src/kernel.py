@@ -49,6 +49,9 @@ def is_freebsd():
 def is_dragonflybsd():
     return __system_is("DragonFly") # No "BSD"
 
+def is_midnightbsd():
+    return __system_is("MidnightBSD")
+
 def is_darwin():
     return __system_is("Darwin")
 
@@ -101,7 +104,13 @@ def __is_xnix():
         return False
 
 def is_bsd():
-    return is_netbsd() or is_openbsd() or is_freebsd() or is_dragonflybsd() or \
+    return \
+        is_netbsd() or \
+        is_openbsd() or \
+        is_freebsd() or \
+        is_dragonflybsd() or \
+        is_midnightbsd() or \
+        is_kfreebsd() or \
         _system.endswith("BSD")
 
 def is_bsd_derived():
@@ -114,7 +123,6 @@ def is_xnix():
         is_darwin() or \
         is_cygwin() or \
         is_hurd() or \
-        is_kfreebsd() or \
         is_minix() or \
         is_solaris() or \
         is_illumos() or \
@@ -139,6 +147,8 @@ elif is_freebsd():
     from . import freebsd as _kmod
 elif is_dragonflybsd():
     from . import dragonflybsd as _kmod
+elif is_midnightbsd():
+    from . import midnightbsd as _kmod
 elif is_darwin():
     from . import darwin as _kmod
 elif is_windows():

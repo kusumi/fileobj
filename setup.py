@@ -118,8 +118,8 @@ if __name__ == '__main__':
             "Programming Language :: Python :: 3",
             "Programming Language :: C",
             "License :: OSI Approved :: BSD License",
-            "Operating System :: OS Independent",],
-        python_requires = ">=3.2",)
+            "Operating System :: OS Independent",],)
+        #python_requires = ">=3.2",)
 
     if nonexistent_man_dir:
         sys.stderr.write("No such directory %s to install fileobj.1\n" %

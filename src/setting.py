@@ -212,6 +212,10 @@ def iter_env_name():
     for x in iter_ext_env_name(): # no sorting against above
         yield x
 
+def iter_env_name_private():
+    for x in env.iter_env_name_private():
+        yield x
+
 def has_buffer_attr():
     return not (this.color_zero is None and this.color_ff is None and
         this.color_print is None and this.color_default is None)
