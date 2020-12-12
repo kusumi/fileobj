@@ -248,3 +248,16 @@ def get_path_failure_message(o, allow_link=True):
         return "Unknown path: " + f
     elif o.is_error:
         return "Invalid path: " + f
+
+def iter_blkdev(ignore_symlink=True):
+    d = "/dev"
+    if kernel.is_xnix() and os.path.isdir(d):
+        l = []
+        for root, dirs, files in os.walk(d):
+            for x in files:
+                f = os.path.join(root, x)
+                if kernel.is_blkdev(f):
+                    if not is_link(f) or not ignore_symlink:
+                        l.append(f)
+        for f in sorted(l):
+            yield f

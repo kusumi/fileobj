@@ -50,4 +50,6 @@
           --command             Print list of editor commands and exit. Also see
                                 :help.
           --sitepkg             Print python(1) site-package directory and exit.
+          --lsblk               Print list of block devices and exit. This prints
+                                character devices on some platforms.
           --version             show program's version number and exit

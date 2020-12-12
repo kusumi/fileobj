@@ -64,11 +64,9 @@ def __cleanup(arg):
     __print_error(arg)
     log.debug("Cleanup")
     log.cleanup()
-    # wait for input if error printed and double clicked on Windows
-    if kernel.is_windows() and util.did_print_error() and \
-        not terminal.in_windows_prompt():
-        sys.stderr.write("Press Enter key to exit\n")
-        sys.stdin.read(1)
+    if __test_wait_for_input():
+        if util.did_print_error():
+            __wait_for_input()
 
 def __print_error(arg):
     if arg.e:
@@ -102,6 +100,19 @@ def __print_message(s, fn):
                 fn("{0}: {1}".format(s, msg))
                 prev = msg
 
+# Return True if not in Windows Command Prompt
+# (e.g. double clicked on Windows, ran on Windows Terminal).
+def __test_wait_for_input():
+    return kernel.is_windows() and not terminal.in_windows_prompt()
+
+def __wait_for_input():
+    sys.stderr.write("Press Enter key to exit\n")
+    try:
+        sys.stdin.read(1)
+    except KeyboardInterrupt as e:
+        s = repr(e) if setting.use_debug else str(e)
+        sys.stderr.write("{0}\n".format(s))
+
 def __sigint_handler(sig, frame):
     screen.sti()
 
@@ -111,7 +122,18 @@ def __sigterm_handler(sig, frame):
 def __error(s):
     raise util.QuietError(s)
 
+_DID_PRINT_MESSAGE = 1
+
 def dispatch(optargs=None):
+    ret = __dispatch(optargs)
+    if ret == _DID_PRINT_MESSAGE:
+        if __test_wait_for_input():
+            __wait_for_input()
+        return None
+    else:
+        return ret
+
+def __dispatch(optargs=None):
     if setting.use_debug:
         suppress_help = str(None)
     else:
@@ -136,8 +158,15 @@ def dispatch(optargs=None):
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
-    parser.add_argument("--version", action="version", version=version.__version__)
+    if kernel.is_xnix():
+        parser.add_argument("--lsblk", action="store_true", default=False, help=usage.lsblk)
+    if __test_wait_for_input():
+        # XXX support -h
+        parser.add_argument("--version", action="store_true", default=False, help=usage.version)
+    else:
+        parser.add_argument("--version", action="version", version=version.__version__)
     parser.add_argument("--debug", action="store_true", default=setting.use_debug, help=suppress_help)
+    parser.add_argument("--info", action="store_true", default=False, help=suppress_help)
     parser.add_argument("args", nargs="*", help=suppress_help) # optargs
 
     for s in allocator.iter_module_name():
@@ -149,7 +178,8 @@ def dispatch(optargs=None):
         parse_args = parser.parse_args
     opts = parse_args(optargs)
     args = opts.args
-    if opts.debug:
+    # force debug mode if --info
+    if opts.debug or opts.info:
         setting.use_debug = True
 
     util.load_site_ext_module()
@@ -169,10 +199,10 @@ def dispatch(optargs=None):
             util.printe(e)
             if need_cleanup:
                 screen.cleanup()
-        return
+        return _DID_PRINT_MESSAGE
     if opts.command:
         literal.print_literal()
-        return
+        return _DID_PRINT_MESSAGE
     if opts.env:
         l = list(setting.iter_env_name())
         if setting.use_debug:
@@ -187,11 +217,52 @@ def dispatch(optargs=None):
                     s = "-"
             s = s.replace("\n", " ").rstrip()
             util.printf(f.format(x, s))
-        return
+        return _DID_PRINT_MESSAGE
     if opts.sitepkg:
         for x in package.get_paths():
             util.printf(x)
-        return
+        return _DID_PRINT_MESSAGE
+    # "lsblk" exists only if running on *nix
+    if hasattr(opts, "lsblk") and opts.lsblk:
+        def print_blkdev(f, print_error):
+            f = path.get_path(f)
+            try:
+                o = kernel.get_blkdev_info(f)
+                if not o.size and not setting.use_debug:
+                    return
+                s = "{0} {1} {2} {3} {4}".format(o.name, hex(o.size),
+                    hex(o.sector_size), util.get_size_repr(o.size),
+                    util.get_size_repr(o.sector_size))
+                if o.label:
+                    s += " {0}".format(o.label)
+                util.printf(s)
+            except Exception as e:
+                # XXX too many errors if printing chrdevs
+                s = str(e)
+                t = "Device busy" in s or \
+                    "Permission denied" in s
+                if print_error or kernel.is_linux() or setting.use_debug or \
+                    (kernel.has_blkdev() and t):
+                    util.printe("{0}: {1}".format(f, s))
+            except KeyboardInterrupt as e:
+                util.printe(e)
+                return -1
+        if args:
+            g = args
+            print_error = True
+        else:
+            g = path.iter_blkdev(False if setting.use_debug else True)
+            print_error = False
+        for f in g:
+            if print_blkdev(f, print_error) == -1:
+                break
+        return _DID_PRINT_MESSAGE
+    # "version" exists only if using custom version of --version
+    if hasattr(opts, "version") and opts.version:
+        if setting.use_debug:
+            assert __test_wait_for_input(), opts
+        util.printf(version.__version__)
+        return _DID_PRINT_MESSAGE
 
     msg = [None, None]
     user_dir = setting.get_user_dir()
@@ -205,32 +276,67 @@ def dispatch(optargs=None):
     elif ret == setting.USER_DIR_MKDIR_FAILED:
         msg[0] = "Failed to create user directory {0}".format(user_dir)
 
-    # Initialize before atexit.register() as this could fail,
-    # but after setting.init_user() created user directory.
+    # This must be after setting.init_user() created user directory.
+    # There is no chance of return or exit until atexit.register() call
+    # later in this function.
     if log.init(util.get_program_name()) == -1:
         util.printe("Failed to initialize log")
-        return -1
+        return _DID_PRINT_MESSAGE
 
-    targs = util.Namespace(e=None, tb=[], done=False, baks={})
-    atexit.register(__cleanup, targs)
+    if opts.info:
+        def __log_debug(s):
+            log.debug(s)
+            util.printf(s)
+        def __log_info(s):
+            log.info(s)
+            util.printf(s)
+        def __log_error(s):
+            log.error(s)
+            util.printf(s)
+    else:
+        def __log_debug(s):
+            log.debug(s)
+        def __log_info(s):
+            log.info(s)
+        def __log_error(s):
+            log.error(s)
+    def __log_debug_pair(k, v):
+        if isinstance(v, list):
+            v = tuple(v)
+        __log_debug("{0}: {1}".format(k, v))
 
-    log.debug("-" * 50)
-    log.debug("{0} {1}".format(util.get_program_path(),
-        version.get_tag_string()))
-    log.debug("{0} {1}".format(util.get_python_string(), sys.executable))
-    log.debug("uname: {0} {1}".format(util.get_os_name(),
-        util.get_os_release()))
-    log.debug("cpu: {0}".format(util.get_cpu_name()))
-    log.debug("ram: {0}".format(methods.get_meminfo_string()))
-    log.debug(methods.get_osdep_string())
-    log.debug("term: {0}".format(terminal.get_type()))
-    log.debug("lang: {0}".format(terminal.get_lang()))
-    log.debug("log: {0}".format(log.get_path()))
-    log.debug("argv: {0}".format(sys.argv))
-    log.debug("opts: {0}".format(opts))
-    log.debug("args: {0}".format(args))
     if setting.use_debug:
-        log.debug("man: {0}".format(util.get_man_path()))
+        log.debug("-" * 50)
+        __log_debug_pair("version", version.__version__)
+        __log_debug_pair("executable", util.get_program_path())
+        __log_debug_pair("python", sys.executable)
+        __log_debug_pair("os", util.get_os_name())
+        __log_debug_pair("release", util.get_os_release())
+        __log_debug_pair("arch", util.get_cpu_name())
+        __log_debug_pair("argv", sys.argv)
+        __log_debug_pair("args", args)
+        __log_debug_pair("opts", opts)
+        __log_debug_pair("ram", util.get_csv_tuple(
+            methods.get_meminfo_string()))
+        __log_debug_pair("osdep", util.get_csv_tuple(
+            methods.get_osdep_string()))
+        __log_debug_pair("term", terminal.get_type())
+        __log_debug_pair("lang", terminal.get_lang())
+        __log_debug_pair("man", util.get_man_path())
+        # setting paths
+        l = util.get_ordered_tuple(setting.get_paths())
+        __log_debug_pair("paths", l)
+        # env file
+        l = util.get_ordered_tuple(env.get_config())
+        __log_debug_pair("envs_config", l)
+        # envs
+        l = tuple(env.iter_defined_env()) + tuple(env.iter_defined_ext_env())
+        l = util.get_ordered_tuple(l)
+        __log_debug_pair("envs", l)
+        # settings
+        l = tuple(setting.iter_setting())
+        l = util.get_ordered_tuple(l)
+        __log_debug_pair("settings", l)
 
     for s in allocator.iter_module_name():
         if getattr(opts, s, False):
@@ -264,23 +370,18 @@ def dispatch(optargs=None):
     if opts.no_color:
         setting.disable_color()
 
-    l = []
-    for _ in env.iter_defined_env():
-        l.append("{0}={1}".format(*_))
-    for _ in env.iter_defined_ext_env():
-        l.append("{0}={1}".format(*_))
-    log.debug("envs_config: {0}".format(env.get_config()))
-    log.debug("envs: {0}".format(l))
-
-    l = []
-    for _ in setting.iter_setting():
-        l.append("{0}={1}".format(*_))
-    log.debug("settings: {0}".format(l))
-
     # log all error messages
     for s in msg:
         if s:
-            log.error(s)
+            __log_error(s)
+
+    # done if --info
+    if opts.info:
+        return _DID_PRINT_MESSAGE
+
+    # be prepared to cleanup resource
+    targs = util.Namespace(e=None, tb=[], done=False, baks={})
+    atexit.register(__cleanup, targs)
 
     # XXX Windows + ncurses can't handle signal
     signal.signal(signal.SIGINT, __sigint_handler)
@@ -330,7 +431,7 @@ def dispatch(optargs=None):
                         tot += siz
             s1 = "Required memory {0}".format(util.get_size_repr(tot))
             s2 = "use --force option to continue"
-            log.info(s1)
+            __log_info(s1)
             free_ram = kernel.get_free_ram()
             if free_ram != -1 and not opts.force and tot > free_ram:
                 __error("{0} exceeds free RAM size {1}, {2}".format(
@@ -546,6 +647,7 @@ def __update_mouse(scr, repaint, l):
         __addstr_prologue(scr)
         if l[0] == kbd.MOUSE:
             devid, x, y, z, bstate = screen.getmouse()
+            __clrmsg(scr)
             scr.addstr(5, 1, screen.get_mouse_event_name(bstate))
             scr.addstr(6, 1, str(devid))
             scr.addstr(7, 1, str((x, y, z)))
@@ -554,7 +656,7 @@ def __update_mouse(scr, repaint, l):
         elif not screen.use_mouse():
             __addmsg(scr, "Mouse event unsupported.")
         else:
-            __addmsg(scr, (screen.get_size_x() - 2) * ' ')
+            __clrmsg(scr)
         __addstr_epilogue(scr, 9)
         __update_input(scr, 10, l)
     elif siz >= 3:
@@ -564,20 +666,27 @@ def __update_mouse(scr, repaint, l):
         __update_input(scr, 3, l)
 
 def __addmsg(scr, msg, attr=screen.A_NONE):
+    __clrmsg(scr)
     scr.addstr(5, 1, msg, attr)
     scr.addstr(6, 1, "", screen.A_NONE)
     scr.addstr(7, 1, "", screen.A_NONE)
 
+def __clrmsg(scr):
+    s = (screen.get_size_x() - 2) * ' '
+    scr.addstr(5, 1, s, screen.A_NONE)
+    scr.addstr(6, 1, s, screen.A_NONE)
+    scr.addstr(7, 1, s, screen.A_NONE)
+
 def __addstr_prologue(scr):
-    # OS
-    scr.addstr(1, 1, "{0} {1}".format(util.get_os_name(),
-        util.get_os_release()), screen.A_NONE)
-    # Python
+    # fileobj
     s = util.get_program_path()
     #if kernel.is_windows():
     #    s = util.get_program_name() # likely a long path, so use file name
-    scr.addstr(2, 1, "{0} {1} {2}".format(util.get_python_string(),
-        s, version.get_tag_string()), screen.A_NONE)
+    scr.addstr(1, 1, "{0} {1}".format(s, version.__version__),
+        screen.A_NONE)
+    # OS
+    scr.addstr(2, 1, "{0} {1}".format(util.get_os_name(),
+        util.get_os_release()), screen.A_NONE)
     # TERM
     s = terminal.get_type()
     if s is None:

@@ -166,6 +166,9 @@ def get_total_ram():
 def get_free_ram():
     return -1
 
+def has_blkdev():
+    return False
+
 def is_blkdev(f):
     return False
 

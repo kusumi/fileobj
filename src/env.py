@@ -462,6 +462,12 @@ def init(f):
                 os.environ[k] = v
                 _config[k] = v
 
+def __write_config(fd, k):
+    v = get_default(k)
+    if v is None:
+        v = ""
+    fd.write("#{0}={1}\n".format(k, v))
+
 def cleanup(f):
     assert f, f
     if not os.path.isfile(f):
@@ -472,9 +478,9 @@ def cleanup(f):
             with open(f, "w") as fd:
                 from . import setting # XXX
                 for x in setting.iter_env_name():
-                    fd.write("#{0}={1}\n".format(x, get_default(x)))
+                    __write_config(fd, x)
                 if setting.use_debug:
                     for x in iter_env_name_private():
-                        fd.write("#{0}={1}\n".format(x, get_default(x)))
+                        __write_config(fd, x)
         except Exception:
             pass # ignore

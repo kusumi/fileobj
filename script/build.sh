@@ -26,6 +26,10 @@
 PYTHON=$1
 if [ "${PYTHON}" = "" ]; then
 	PYTHON=python3
+	which ${PYTHON} >/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		PYTHON=python
+	fi
 fi
 
 which ${PYTHON} >/dev/null 2>&1

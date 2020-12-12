@@ -31,6 +31,7 @@ from . import kbd
 from . import kernel
 from . import log
 from . import setting
+from . import terminal
 from . import util
 
 Error = curses.error
@@ -220,7 +221,7 @@ def __init_curses_mouse():
         _use_mouse = False
         return
     # XXX Windows Terminal can't properly receive kbd.MOUSE
-    if setting.use_windows_terminal:
+    if terminal.is_windows_terminal() or setting.use_windows_terminal:
         _use_mouse = False
         return
     if hasattr(curses, "mousemask"):

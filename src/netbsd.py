@@ -123,6 +123,9 @@ def get_total_ram():
 def get_free_ram():
     return linux.get_free_ram()
 
+def has_blkdev():
+    return True
+
 def is_blkdev(f):
     return unix.stat_is_blkdev(f)
 

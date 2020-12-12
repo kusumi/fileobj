@@ -11,7 +11,7 @@ SYNOPSIS
        fileobj [options]... [paths[@offset-(offset+length)]]...
 
 DESCRIPTION
-       ncurses(3) based hex editor with vi interface
+       ncurses(3) based hex editor with vi interface.
 
 OPTIONS
        --version
@@ -88,6 +88,10 @@ OPTIONS
 
        --sitepkg
            Print python(1) site-package directory and exit.
+
+       --lsblk
+           Print list of block devices and exit.  This prints character
+           devices on some platforms.
 
 ENVIRONMENT
        FILEOBJ_USE_READONLY
@@ -239,4 +243,4 @@ AUTHORS
 
 
 
-FILEOBJ 0.7.101                November 1, 2020                     FILEOBJ(1)
+FILEOBJ 0.7.102                December 12, 2020                    FILEOBJ(1)

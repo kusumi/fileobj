@@ -113,6 +113,9 @@ def get_total_ram():
 def get_free_ram():
     return unix.get_free_ram()
 
+def has_blkdev():
+    return True
+
 def is_blkdev(f):
     """
     [user@darwin ~]$ file /dev/disk0

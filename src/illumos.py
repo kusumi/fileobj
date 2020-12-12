@@ -122,6 +122,9 @@ def __get_kstat_system_pages(name):
         log.error(e)
         return -1
 
+def has_blkdev():
+    return False
+
 def is_blkdev(f):
     return unix.stat_is_chrdev(f)
 

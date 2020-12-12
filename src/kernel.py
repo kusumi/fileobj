@@ -346,6 +346,13 @@ def get_free_ram():
     else:
         return -1
 
+def has_blkdev():
+    o = get_kernel_module()
+    if o:
+        return o.has_blkdev()
+    else:
+        return False
+
 def is_blkdev(f):
     """Return True if f is block device"""
     o = get_kernel_module()

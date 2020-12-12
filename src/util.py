@@ -25,6 +25,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 import contextlib
+import collections
 import datetime
 import hashlib
 import inspect
@@ -59,11 +60,16 @@ class Message (GenericError):
 
 class Namespace (object):
     def __init__(self, **kwd):
+        self.__d = {}
         self.set(**kwd)
 
+    def items(self):
+        return dict(self.__d.items())
+
     def set(self, **kwd):
-        for l in kwd.items():
-            setattr(self, *l)
+        for k, v in kwd.items():
+            self.__d[k] = v
+            setattr(self, k, v)
 
 class Pair (object):
     def __init__(self, y=0, x=0):
@@ -75,6 +81,10 @@ class Pair (object):
     def set(self, y, x):
         self.y = y
         self.x = x
+
+# https://docs.python.org/ja/3/library/exceptions.html
+def raise_base_exception(s):
+    raise BaseException(s) # since Python 2.5
 
 def raise_no_impl(s):
     raise NotImplementedError("No " + s)
@@ -981,20 +991,62 @@ def get_elapsed_time():
     return ret # in msec
 
 def get_man_path():
-    l = []
+    l = [os.path.join(sys.prefix, "man")]
     try:
         ret = execute("manpath")
         if not ret.retval:
-            manpath = ret.stdout.rstrip().split(":")
-            d = os.path.join(sys.prefix, "man")
-            if d not in manpath:
-                manpath.append(d)
-            manpath = [os.path.join(x, "man1") for x in manpath]
-            for d in manpath:
-                for x in ("fileobj.1", "fileobj.1.gz"):
-                    f = os.path.join(d, x)
-                    if os.path.isfile(f):
-                        l.append(f)
+            for d in ret.stdout.rstrip().split(":"):
+                if d not in l:
+                    l.append(d)
     except FileNotFoundError:
         pass
-    return tuple(l)
+    assert len(l) == len(set(l)), l
+    ret = []
+    for d in sorted(l):
+        d = os.path.join(d, "man1")
+        for x in ("fileobj.1", "fileobj.1.gz"):
+            f = os.path.join(d, x)
+            if os.path.isfile(f):
+                ret.append(f)
+    return tuple(ret)
+
+def get_ordered_dict(d):
+    if is_seq(d):
+        d = dict(d)
+    if hasattr(collections, "OrderedDict"):
+        if isinstance(d, Namespace):
+            d = d.items()
+        return collections.OrderedDict(sorted(d.items(), key=lambda t: t[0]))
+    else: # <= Python 2.6 or Python 3.0
+        return dict(d) # unordered
+
+def get_ordered_tuple(d):
+    d = get_ordered_dict(d)
+    return tuple(d.items())
+
+# string -> tuple
+def get_csv_tuple(s, ordered=True):
+    assert "," in s, s
+    l = s.split(",")
+    if ordered:
+        _ = {}
+        for x in l:
+            assert "=" in x, x
+            k, v = x.split("=")
+            _[k] = v
+        return get_ordered_tuple(_)
+    else:
+        _ = []
+        for x in l:
+            assert "=" in x, x
+            _.append(tuple(x.split("=")))
+        return tuple(_)
+
+# tuple -> string
+def get_csv_string(l, ordered=True):
+    ret = []
+    if ordered:
+        l = sorted(l)
+    for k, v in l:
+        ret.append("{0}={1}".format(k, v))
+    return ",".join(ret)

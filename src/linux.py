@@ -122,6 +122,9 @@ def get_meminfo(s):
         log.error(e)
     return -1
 
+def has_blkdev():
+    return True
+
 def is_blkdev(f):
     return unix.stat_is_blkdev(f)
 

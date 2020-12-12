@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "November 1, 2020" "FILEOBJ 0.7.101"
+.TH FILEOBJ 1 "December 12, 2020" "FILEOBJ 0.7.102"
 .nh
 .ad l
 .SH NAME
@@ -35,7 +35,7 @@ fileobj \- ncurses based hex editor with vi interface
 \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset\-(offset+length)\fP]]...
 .PD
 .SH DESCRIPTION
-\fBncurses\fP\|(3) based hex editor with vi interface
+\fBncurses\fP\|(3) based hex editor with vi interface.
 .SH OPTIONS
 .PP
 \fB\-\-version\fP
@@ -150,6 +150,12 @@ Print list of editor commands and exit. Also see \fB:help\fP.
 \fB\-\-sitepkg\fP
 .RS 4
 Print \fBpython\fP\|(1) site\-package directory and exit.
+.RE
+.PP
+\fB\-\-lsblk\fP
+.RS 4
+Print list of block devices and exit.
+This prints character devices on some platforms.
 .RE
 .SH ENVIRONMENT
 .PP

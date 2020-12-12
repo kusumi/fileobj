@@ -143,6 +143,6 @@ def is_linux():
 def is_dumb():
     return get_type().startswith("dumb")
 
-# XXX
 def is_windows_terminal():
-    assert False, "is_windows_terminal"
+    return os.getenv("WT_SESSION") is not None or \
+        os.getenv("WT_PROFILE_ID") is not None

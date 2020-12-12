@@ -67,6 +67,14 @@ def get_stream_path():
 def get_ext_path(s):
     return __get_path("ext_path_{0}".format(s))
 
+def get_paths():
+    d = {}
+    for s in ("env", "trace", "log", "history", "marks", "session", "stream"):
+        fn = getattr(this, "get_{0}_path".format(s))
+        f = fn()
+        d[s] = f, os.path.isfile(f)
+    return d
+
 # use the setting if already a complete path,
 # otherwise consider it as a file name.
 def __get_path(s):

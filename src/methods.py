@@ -966,10 +966,10 @@ def show_meminfo(self, amp, opc, args, raw):
     self.co.show(get_meminfo_string())
 
 def get_meminfo_string():
-    return "total={0},free={1},page={2}".format(
-        util.get_size_repr(kernel.get_total_ram()),
-        util.get_size_repr(kernel.get_free_ram()),
-        util.get_size_repr(kernel.get_page_size()))
+    l = ("total", util.get_size_repr(kernel.get_total_ram())), \
+        ("free", util.get_size_repr(kernel.get_free_ram())), \
+        ("page", util.get_size_repr(kernel.get_page_size()))
+    return util.get_csv_string(l, False)
 
 def show_osdep(self, amp, opc, args, raw):
     self.co.show(get_osdep_string())
@@ -977,20 +977,14 @@ def show_osdep(self, amp, opc, args, raw):
 def get_osdep_string():
     def _(t):
         return "yes" if t else "no"
-    return "mmap={0}," \
-        "mremap={1}," \
-        "blkdev={2}," \
-        "ptrace={3}," \
-        "native={4}," \
-        "has_chgat={5}," \
-        "use_alt_chgat={6}".format(
-            _(kernel.has_mmap()),
-            _(kernel.has_mremap()),
-            _(kernel.is_blkdev_supported()),
-            _(kernel.has_ptrace()),
-            _(native.is_enabled()),
-            _(screen.has_chgat()),
-            _(screen.use_alt_chgat()))
+    l = ("mmap", _(kernel.has_mmap())), \
+        ("mremap", _(kernel.has_mremap())), \
+        ("blkdev", _(kernel.is_blkdev_supported())), \
+        ("ptrace", _(kernel.has_ptrace())), \
+        ("native", _(native.is_enabled())), \
+        ("has_chgat", _(screen.has_chgat())), \
+        ("use_alt_chgat", _(screen.use_alt_chgat()))
+    return util.get_csv_string(l, False)
 
 def show_screen(self, amp, opc, args, raw):
     self.co.show(__get_screen_string(self))

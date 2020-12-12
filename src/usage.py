@@ -139,6 +139,15 @@ sitepkg = _("""
 Print \fBpython\fP\|(1) site\-package directory and exit.
 """)
 
+lsblk = _("""
+Print list of block devices and exit.
+This prints character devices on some platforms.
+""")
+
+version = _("""
+Show program's version number and exit.
+""")
+
 FILEOBJ_USE_READONLY = _("""
 If defined, use read\-only mode (equivalent to \fB\-R\fP).
 """)
