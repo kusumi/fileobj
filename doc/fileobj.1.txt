@@ -1,6 +1,4 @@
-FILEOBJ(1)                                                          FILEOBJ(1)
-
-
+FILEOBJ(1)                  General Commands Manual                 FILEOBJ(1)
 
 NAME
        fileobj - ncurses based hex editor with vi interface
@@ -66,6 +64,9 @@ OPTIONS
 
        --force
            Ignore warnings which can be ignored.
+
+       --verbose
+           Enable verbose mode.
 
        --test_screen
            Enter ncurses(3) screen test mode.
@@ -235,12 +236,10 @@ DOCUMENTATION
        https://github.com/kusumi/fileobj/blob/master/README.md
 
 COPYING
-       Copyright (c) 2010-2020, Tomohiro Kusumi.  Free use of this software is
+       Copyright (c) 2010-2021, Tomohiro Kusumi.  Free use of this software is
        granted under the terms of the BSD License (2-clause).
 
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-
-
-FILEOBJ 0.7.102                December 12, 2020                    FILEOBJ(1)
+FILEOBJ 0.7.103                  March 7, 2021                      FILEOBJ(1)

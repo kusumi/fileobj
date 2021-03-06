@@ -1331,8 +1331,8 @@ class Container (object):
             unitlen = setting.bytes_per_unit
             if unitlen == 1:
                 unitlen = 2
-            for ret in reversed([unitlen ** x for x in
-                util.get_xrange(MAX_LOG_N_BPL)]):
+            range_max_log_bpl = util.get_xrange(MAX_LOG_N_BPL)
+            for ret in reversed([unitlen ** x for x in range_max_log_bpl]):
                 if ret <= max_bpl:
                     return ret
             return 1
@@ -1399,14 +1399,34 @@ class Container (object):
             unitlen = setting.bytes_per_unit
             if unitlen == 1:
                 unitlen = 2
-            for bpl in [unitlen ** x for x in util.get_xrange(MAX_LOG_N_BPL)]:
+            bpl_degen = -1
+            # path1
+            range_max_log_bpl = util.get_xrange(MAX_LOG_N_BPL)
+            for bpl in [unitlen ** x for x in range_max_log_bpl]:
                 if bpl < prev_bpl:
                     continue
-                if self.set_bytes_per_line(bpl) != -1 and \
-                    ret <= self.get_bytes_per_window() and \
-                    self.__build(self.__in_vertical, True) is None:
-                    return
+                if self.set_bytes_per_line(bpl) != -1:
+                    bpl_degen_enabled = True # XXX
+                    if bpl_degen_enabled and self.get_bytes_per_line() < bpl:
+                        bpl_degen = bpl
+                        break # bpl didn't make unitlen**x, goto path2
+                    elif ret <= self.get_bytes_per_window() and \
+                        self.__build(self.__in_vertical, True) is None:
+                        return
                 # could rollback bpl here for extra safety
+            # if bpl_degen is set, start path2
+            if bpl_degen != -1:
+                range_max_log_bpl = util.get_xrange(MAX_LOG_N_BPL)
+                for bpl in [unitlen ** x for x in range_max_log_bpl]:
+                    if bpl >= bpl_degen:
+                        break # bpl_degen or above won't make unitlen**x
+                    if self.set_bytes_per_line(bpl) != -1:
+                        # this will likely not match given path1 result
+                        if self.get_bytes_per_line() == bpl and \
+                            ret <= self.get_bytes_per_window() and \
+                            self.__build(self.__in_vertical, True) is None:
+                            return
+                    # could rollback bpl here for extra safety
             # failed, rollback bpl and bpw
             assert self.set_bytes_per_line(prev_bpl) != -1, prev_bpl
             self.__bpw = prev

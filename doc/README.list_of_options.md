@@ -41,6 +41,7 @@
           --no_mouse            Disable mouse events.
           --no_color            Disable color for buffer contents.
           --force               Ignore warnings which can be ignored.
+          --verbose             Enable verbose mode.
           --test_screen         Enter ncurses(3) screen test mode.
           --test_mouse          Enter ncurses(3) mouse test mode.
           --test_color          Enter ncurses(3) color test mode.

@@ -110,6 +110,10 @@ force = _("""
 Ignore warnings which can be ignored.
 """)
 
+verbose = _("""
+Enable verbose mode.
+""")
+
 test_screen = _("""
 Enter \fBncurses\fP\|(3) screen test mode.
 """)

@@ -409,8 +409,7 @@ def iter_defined_env():
             yield l
 
 def iter_defined_ext_env():
-    from . import setting # XXX
-    _ = tuple(setting.iter_ext_env_name())
+    _ = tuple(iter_ext_env_name())
     for l in __iter_os_environ():
         if l[0] in _:
             yield l
@@ -437,6 +436,24 @@ _config = {}
 
 def get_config():
     return _config.copy()
+
+# ext env related are handled separately
+_ext_env = {}
+
+def ext_env_add(k, v):
+    if v is None:
+        del _ext_env[k]
+    else:
+        assert isinstance(v, str), v
+        if k not in _ext_env:
+            _ext_env[k] = v
+
+def ext_env_get(k):
+    return _ext_env.get(k, "")
+
+def iter_ext_env_name():
+    for x in sorted(_ext_env.keys()):
+        yield x
 
 # called from setting import, i.e. can't use other fileobj modules
 def init(f):
@@ -468,7 +485,7 @@ def __write_config(fd, k):
         v = ""
     fd.write("#{0}={1}\n".format(k, v))
 
-def cleanup(f):
+def cleanup(f, use_debug):
     assert f, f
     if not os.path.isfile(f):
         try:
@@ -476,11 +493,14 @@ def cleanup(f):
             if not os.path.isdir(d):
                 os.makedirs(d)
             with open(f, "w") as fd:
-                from . import setting # XXX
-                for x in setting.iter_env_name():
+                for x in iter_env_name():
                     __write_config(fd, x)
-                if setting.use_debug:
+                for x in iter_ext_env_name():
+                    __write_config(fd, x)
+                if use_debug:
                     for x in iter_env_name_private():
                         __write_config(fd, x)
         except Exception:
-            pass # ignore
+            if use_debug: # ignore unless use_debug
+                raise
+    _ext_env.clear() # last

@@ -96,7 +96,7 @@ def __write_trace(tf, l):
 
 def __write_script(sf, tf, e, tb):
     with kernel.fcreat_text(sf) as fd:
-        ret = util.execute("which", "sh")
+        ret = kernel.execute("which", "sh")
         if not ret.retval:
             fd.write("#!{0}".format(ret.stdout))
         if e:

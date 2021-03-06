@@ -121,9 +121,8 @@ def __init(g):
         add(*_)
 
 def cleanup():
-    env.cleanup(get_env_path())
+    env.cleanup(get_env_path(), this.use_debug)
     _attr.clear()
-    _ext_env.clear()
 
 def add(k, v):
     if k not in _attr:
@@ -188,7 +187,7 @@ def ext_add_ge_zero(k, v, desc):
     return __ext_add(s, env.test_ge_zero(e, v))
 
 def ext_delete(k):
-    s, e = __ext_get(k, None) # XXX
+    s, e = __ext_get(k, None)
     return __ext_delete(s)
 
 def __ext_add(k, v):
@@ -202,22 +201,17 @@ def __ext_delete(k):
 def __ext_get(k, desc):
     s = "ext_" + k
     e = "FILEOBJ_EXT_" + k.upper()
-    if e not in _ext_env:
-        _ext_env[e] = desc
+    env.ext_env_add(e, desc)
     return s, e
 
 def get_ext_env_desc(k):
-    return _ext_env.get(k, "")
-
-def iter_ext_env_name():
-    for x in sorted(_ext_env.keys()):
-        yield x
+    return env.ext_env_get(k)
 
 # non private env + ext env
 def iter_env_name():
     for x in env.iter_env_name():
         yield x
-    for x in iter_ext_env_name(): # no sorting against above
+    for x in env.iter_ext_env_name(): # no sorting against above
         yield x
 
 def iter_env_name_private():
@@ -263,7 +257,6 @@ _user_dir = os.path.join(_home_dir, ".fileobj")
 
 _attr = {}
 _snap = dict(_attr)
-_ext_env = {}
 
 this = sys.modules[__name__]
 init()

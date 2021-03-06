@@ -62,14 +62,16 @@ def seek_end(f):
         except Exception:
             return -1
 
-# .st_ino on Windows looks to be a unique number on certain version of
-# Python 3 and above, at least on NTFS, but not on Python 2.
+# https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/stat-functions
+# .st_ino shows non-zero value since Python 3.x (not exactly sure which),
+# but not on Python 2. There is no guarantee this value is compatible with inode
+# number concept in *nix, so simply unsupport get_inode().
 def get_inode(f):
-    return 0 # XXX
-    if os.path.exists(f):
-        return os.stat(f).st_ino
-    else:
-        return -1
+    return 0
+    #if os.path.exists(f):
+    #    return os.stat(f).st_ino
+    #else:
+    #    return -1
 
 def fopen(f, mode='r'):
     return open(f, mode + 'b')
@@ -103,7 +105,7 @@ if util.is_python3():
             return -1
 else:
     def symlink(source, link_name):
-        return -1 # XXX
+        return -1 # os.symlink unsupported, and so is Python 2.x
 
 def fsync(fd):
     if fd and not fd.closed:
@@ -146,7 +148,12 @@ def get_page_size():
         return -1
 
 def get_buffer_size():
-    return get_page_size()
+    pg_siz = get_page_size()
+    buf_siz = 0x10000
+    if pg_siz > buf_siz:
+        return pg_siz
+    else:
+        return buf_siz
 
 def get_terminal_size():
     h = ctypes.windll.kernel32.GetStdHandle(-11) # STD_OUTPUT_HANDLE
@@ -229,6 +236,24 @@ def waitpid(pid, opts):
 
 def parse_waitpid_result(status):
     return ''
+
+try:
+    FileNotFoundError # since Python 3.3
+except NameError:
+    FileNotFoundError = OSError
+try:
+    WindowsError
+except NameError:
+    WindowsError = OSError
+
+def execute(*l):
+    try:
+        return util.execute(False, *l)
+    except (WindowsError, FileNotFoundError):
+        return util.execute(True, *l)
+
+def execute_sh(cmd):
+    return util.execute(True, cmd)
 
 def init():
     return

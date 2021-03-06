@@ -99,7 +99,7 @@ def __system_is(s):
 
 def __is_xnix():
     try:
-        return util.execute("true").retval == 0
+        return execute("true").retval == 0
     except Exception:
         return False
 
@@ -487,7 +487,7 @@ def __parse_objdump_path(f):
         section = m.group(2)
         elf = get_pid_name(pid)
         if not os.path.isfile(elf):
-            ret = util.execute_sh("which {0} 2>/dev/null".format(elf))
+            ret = execute_sh("which {0} 2>/dev/null".format(elf))
             if not ret.retval:
                 elf = ret.stdout.rstrip()
             else:
@@ -567,6 +567,20 @@ def parse_waitpid_result(status):
         return o.parse_waitpid_result(status)
     else:
         return ''
+
+def execute(*l):
+    o = get_kernel_module()
+    if o:
+        return o.execute(*l)
+    else:
+        return None
+
+def execute_sh(cmd):
+    o = get_kernel_module()
+    if o:
+        return o.execute_sh(cmd)
+    else:
+        return None
 
 def init():
     _blkdev_info_cache.clear()

@@ -24,5 +24,8 @@
 import os
 import platform
 
+if platform.system() == "Linux" and os.getenv("TERM") == "screen":
+    os.environ["TERM"] = "xterm"
+
 if platform.system() == "DragonFly" and os.getenv("TERM") == "xterm":
     os.environ["TERM"] = "rxvt"

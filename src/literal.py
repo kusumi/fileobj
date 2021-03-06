@@ -108,7 +108,11 @@ class Literal (object):
 
     def create_alias(self, str, seq):
         cls = util.get_class(self)
-        o = cls(str, seq, self.desc) # XXX may raise due to arg mismatch
+        try:
+            args = str, seq, self.desc
+            o = cls(*args)
+        except TypeError as e:
+            assert False, (repr(e), cls, args)
         assert o.str
         if o.str[0] == ':':
             assert str[0] == ':', (o.str, str)
@@ -641,7 +645,7 @@ def cleanup():
     if not hasattr(this, "_root"):
         return -1
     for s, o in util.iter_dir_items(this):
-        if this.is_Literal(o):
+        if hasattr(this, "is_Literal") and this.is_Literal(o):
             o.cleanup()
             delattr(this, s)
     _ld.clear()

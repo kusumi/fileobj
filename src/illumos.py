@@ -115,7 +115,7 @@ def __get_kstat_system_pages(name):
     """
     try:
         cmd = "kstat", "-n", "system_pages", "-p", "-s", name
-        s = util.execute(*cmd).stdout
+        s = execute(*cmd).stdout
         x = s.split("\t")[-1]
         return int(x)
     except Exception as e:
@@ -186,6 +186,12 @@ def waitpid(pid, opts):
 
 def parse_waitpid_result(status):
     return unix.parse_waitpid_result(status)
+
+def execute(*l):
+    return unix.execute(*l)
+
+def execute_sh(cmd):
+    return unix.execute_sh(cmd)
 
 def init():
     unix.init_procfs()

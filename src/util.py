@@ -41,7 +41,6 @@ import tempfile
 import time
 import traceback
 
-from . import nodep
 from . import package
 from . import setting
 
@@ -743,28 +742,7 @@ def get_hash_binary(name, b):
         fn = getattr(hashlib, name)
         return fn(b).digest()
 
-try:
-    FileNotFoundError # since Python 3.3
-except NameError:
-    FileNotFoundError = OSError
-try:
-    WindowsError # XXX move this to windows
-except NameError:
-    WindowsError = OSError
-
-def execute(*l):
-    if nodep.is_windows():
-        try:
-            return __execute(False, l)
-        except (WindowsError, FileNotFoundError):
-            return __execute(True, l)
-    else:
-        return __execute(False, l)
-
-def execute_sh(cmd):
-    return __execute(True, (cmd,))
-
-def __execute(shell, l):
+def execute(shell, *l):
     p = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         shell=shell)
     if is_python_version_or_ht(3, 3):
@@ -993,7 +971,7 @@ def get_elapsed_time():
 def get_man_path():
     l = [os.path.join(sys.prefix, "man")]
     try:
-        ret = execute("manpath")
+        ret = execute(False, "manpath")
         if not ret.retval:
             for d in ret.stdout.rstrip().split(":"):
                 if d not in l:

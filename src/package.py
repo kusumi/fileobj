@@ -35,10 +35,7 @@ try:
     if _major == 2:
         import __init__ as pkg
     else:
-        if nodep.is_windows():
-            import fileobj_ as pkg # avoid conflict with executable
-        else:
-            import fileobj as pkg # XXX integrate with above
+        pkg = nodep.import_package()
 except ImportError:
     pkg = None
     if setting.use_debug:

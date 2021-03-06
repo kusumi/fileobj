@@ -31,6 +31,7 @@ from . import allocator
 from . import console
 from . import container
 from . import env
+from . import extension
 from . import kbd
 from . import kernel
 from . import literal
@@ -151,6 +152,7 @@ def __dispatch(optargs=None):
     parser.add_argument("--no_mouse", action="store_true", default=False, help=usage.no_mouse)
     parser.add_argument("--no_color", action="store_true", default=False, help=usage.no_color)
     parser.add_argument("--force", action="store_true", default=False, help=usage.force)
+    parser.add_argument("--verbose", action="store_true", default=False, help=usage.verbose)
     parser.add_argument("--test_screen", action="store_true", default=False, help=usage.test_screen)
     parser.add_argument("--test_mouse", action="store_true", default=False, help=usage.test_mouse)
     parser.add_argument("--test_color", action="store_true", default=False, help=usage.test_color)
@@ -224,38 +226,14 @@ def __dispatch(optargs=None):
         return _DID_PRINT_MESSAGE
     # "lsblk" exists only if running on *nix
     if hasattr(opts, "lsblk") and opts.lsblk:
-        def print_blkdev(f, print_error):
-            f = path.get_path(f)
-            try:
-                o = kernel.get_blkdev_info(f)
-                if not o.size and not setting.use_debug:
-                    return
-                s = "{0} {1} {2} {3} {4}".format(o.name, hex(o.size),
-                    hex(o.sector_size), util.get_size_repr(o.size),
-                    util.get_size_repr(o.sector_size))
-                if o.label:
-                    s += " {0}".format(o.label)
-                util.printf(s)
-            except Exception as e:
-                # XXX too many errors if printing chrdevs
-                s = str(e)
-                t = "Device busy" in s or \
-                    "Permission denied" in s
-                if print_error or kernel.is_linux() or setting.use_debug or \
-                    (kernel.has_blkdev() and t):
-                    util.printe("{0}: {1}".format(f, s))
-            except KeyboardInterrupt as e:
-                util.printe(e)
-                return -1
+        verbose = opts.verbose or setting.use_debug
         if args:
             g = args
             print_error = True
         else:
-            g = path.iter_blkdev(False if setting.use_debug else True)
+            g = path.iter_blkdev(False if verbose else True)
             print_error = False
-        for f in g:
-            if print_blkdev(f, print_error) == -1:
-                break
+        __print_blkdev(g, print_error, verbose)
         return _DID_PRINT_MESSAGE
     # "version" exists only if using custom version of --version
     if hasattr(opts, "version") and opts.version:
@@ -475,6 +453,59 @@ def __dispatch(optargs=None):
         __cleanup(targs)
     if targs.e:
         return -1
+
+def __print_blkdev(g, print_error, verbose):
+    l1 = ["name"]
+    l2 = ["size"]
+    l3 = ["sector_size"]
+    l4 = ["size"]
+    l5 = ["sector_size"]
+    l6 = ["label"]
+    l7 = ["error"]
+
+    for _ in g:
+        f = path.get_path(_)
+        try:
+            o = kernel.get_blkdev_info(f)
+            if not o.size and not verbose:
+                continue
+            l1.append(o.name)
+            l2.append(hex(o.size))
+            l3.append(hex(o.sector_size))
+            l4.append(util.get_size_repr(o.size))
+            l5.append(util.get_size_repr(o.sector_size))
+            l6.append(o.label if o.label else "-")
+            l7.append("-")
+        except Exception as e:
+            # too many errors if printing chrdevs
+            s = str(e)
+            t = "Device busy" in s or \
+                "Permission denied" in s
+            if print_error or kernel.is_linux() or verbose or \
+                (kernel.has_blkdev() and t):
+                l1.append(f)
+                l2.append("-")
+                l3.append("-")
+                l4.append("-")
+                l5.append("-")
+                l6.append("-")
+                l7.append(repr(e) if setting.use_debug else s)
+        except KeyboardInterrupt as e:
+            util.printe(e)
+            return -1
+
+    fmt = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3:<{3}}} {{4:<{4}}} {{5:<{5}}} " \
+        "{{6:<{6}}} {{7}}".format(
+        extension.get_index_width(l1),
+        max([len(_) for _ in l1]),
+        max([len(_) for _ in l2]),
+        max([len(_) for _ in l3]),
+        max([len(_) for _ in l4]),
+        max([len(_) for _ in l5]),
+        max([len(_) for _ in l6]))
+    for i, o in enumerate(l1):
+        util.printf(fmt.format(i if i > 0 else "", l1[i], l2[i], l3[i], l4[i],
+            l5[i], l6[i], l7[i]))
 
 # provide a way to exit without relying on signal for portability
 _quit_test_screen = 'q'

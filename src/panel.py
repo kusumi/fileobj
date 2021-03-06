@@ -672,7 +672,7 @@ class DisplayCanvas (Canvas):
                 x = i + j
                 d[x] = self.update_search(x, screen.buf_attr[_], x == pos)
             found += 1
-        return d # XXX refactor
+        return d
 
     def update_search(self, pos, attr_bytes, here):
         if here and self.current:

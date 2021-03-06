@@ -48,23 +48,34 @@ def __read_reg_size(f):
 
 def __read_procfs_size(f):
     ret = os.stat(f).st_size
-    if ret > 0: # procfs may return 0
+    if ret > 0:
         return ret
-    return __read_buf_size(f) # XXX workaround for procfs
+    elif ret == 0: # virtual fs e.g. procfs may return 0
+        return __read_buf_size(f)
+    else:
+        assert False, ret
 
-# suboptimal, don't use this unless this is the only way
 def __read_buf_size(f):
     with fopen(f) as fd:
         if __set_non_blocking(fd) == -1:
             return -1
-        try:
-            ret = fd.read() # XXX add heuristic to return -1 if too big
-        except IOError: # Python 2.x raises exception
-            return -1
-        if ret is None: # Python 3.x returns None
-            return -1
-        else: # success
-            return len(ret)
+        ret = 0
+        bufsiz, bufcnt = 0x10000, 0x10000 # max 4GiB
+        for x in range(bufcnt):
+            try:
+                b = fd.read(bufsiz)
+            except IOError: # Python 2.x raises exception
+                return -1
+            if b is None: # Python 3.x returns None
+                return -1
+            elif len(b) == bufsiz and x == bufcnt - 1:
+                return -1
+            elif len(b) == 0:
+                break
+            else:
+                ret += len(b)
+        assert isinstance(ret, int), ret
+        return ret
 
 def seek_end(f):
     if not os.path.exists(f): # allow blkdev
@@ -191,7 +202,12 @@ def __get_mmap_page_size():
         return -1
 
 def get_buffer_size():
-    return get_page_size()
+    pg_siz = get_page_size()
+    buf_siz = 0x10000
+    if pg_siz > buf_siz:
+        return pg_siz
+    else:
+        return buf_siz
 
 def mmap_full(fileno, readonly=False):
     prot = __get_mmap_prot(readonly)
@@ -290,6 +306,12 @@ def kill_sig_zero(pid):
     except OSError:
         return False
 
+def execute(*l):
+    return util.execute(False, *l)
+
+def execute_sh(cmd):
+    return util.execute(True, cmd)
+
 def ps_has_pid(pid):
     for l in iter_ps("aux"):
         if pid == l[0]:
@@ -313,7 +335,7 @@ def get_pid_name_from_ps(pid):
 def iter_ps(opt=None):
     assert opt in ("aux", "ax"), opt
     try:
-        s = util.execute("ps", opt).stdout
+        s = execute("ps", opt).stdout
     except Exception:
         s = ''
     l = s.split('\n')
@@ -397,7 +419,7 @@ def get_procfs_mount_point(label=''):
 
 def get_fs_mount_point(*labels):
     try:
-        s = util.execute("mount").stdout
+        s = execute("mount").stdout
     except Exception:
         return ''
     for x in s.split('\n'):

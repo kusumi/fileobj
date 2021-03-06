@@ -21,68 +21,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if __name__ == '__main__':
-    import argparse
-    import os
-    import re
-    import sys
+import argparse
+import os
+import re
+import sys
 
-    try:
-        import fileobj.util as util
-        import fileobj.version as version
-    except ImportError as e:
-        sys.stderr.write("{0}\n".format(e))
-        sys.exit(1)
+try:
+    import fileobj.kernel as kernel
+    import fileobj.util as util
+    import fileobj.version as version
+except ImportError as e:
+    sys.stderr.write("{0}\n".format(e))
+    sys.exit(1)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--all", action="store_true", default=False)
-    if util.is_python_version_or_ht(3, 7):
-        parse_args = parser.parse_intermixed_args
-    else:
-        parse_args = parser.parse_args
-    opts = parse_args()
-
-    if opts.all:
-        release_log = True
-    else:
-        release_log = False
-
-    d = os.path.basename(os.getcwd())
-    assert d.startswith("fileobj-devel"), os.getcwd()
-
-    f = "./script/autogen.py"
+def write(f, s):
     assert os.path.isfile(f), "No " + f
-    assert os.path.samefile(sys.argv[0], f), "Not " + f
+    with open(f, "w") as fd:
+        fd.write(s)
+    assert os.path.isfile(f), "No " + f
 
-    try:
-        util.execute("which", "fileobj")
-        util.execute("which", "git")
-    except Exception as e:
-        sys.stderr.write("{0}\n".format(e))
-        sys.exit(1)
+def writel(f, l):
+    assert os.path.isfile(f), "No " + f
+    with open(f, "w") as fd:
+        for x in l:
+            fd.write("{0}\n".format(x))
+    assert os.path.isfile(f), "No " + f
 
-    def write(f, s):
-        assert os.path.isfile(f), "No " + f
-        with open(f, "w") as fd:
-            fd.write(s)
-        assert os.path.isfile(f), "No " + f
-
-    def writel(f, l):
-        assert os.path.isfile(f), "No " + f
-        with open(f, "w") as fd:
-            for x in l:
-                fd.write("{0}\n".format(x))
-        assert os.path.isfile(f), "No " + f
-
-    I = " " * 8
-
+def autogen(I):
     try:
         cmd = "fileobj --help"
         l = ["## List of options"]
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -100,7 +72,7 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -118,7 +90,7 @@ if __name__ == '__main__':
         l.append("")
         l.append("{0}$ {1}".format(I, cmd))
 
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         for x in s.split("\n")[:-1]:
@@ -131,18 +103,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        f = "./doc/fileobj.1.txt"
-        cmd = "LESS= man ./doc/fileobj.1 | col -bx > {0}".format(f)
-        o = util.execute_sh(cmd)
-        assert o.retval == 0, (cmd, o.retval)
-        print(f)
-    except Exception as e:
-        sys.stderr.write("{0}\n".format(e))
-        sys.exit(1)
-
-    try:
         cmd = "git log --pretty=\"%an\" | sort | uniq"
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         s = o.stdout
         f = "./CONTRIBUTORS"
@@ -152,22 +114,18 @@ if __name__ == '__main__':
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
-    # do this last
+def autogen_man():
     try:
-        cmd = "git status -s"
-        o = util.execute_sh(cmd)
+        f = "./doc/fileobj.1.txt"
+        cmd = "LESS= man ./doc/fileobj.1 | col -bx > {0}".format(f)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
-        s = o.stdout
-        print("--")
-        print(s)
+        print(f)
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)
 
-    # done unless generating release log
-    if not release_log:
-        sys.exit(0)
-
+def autogen_release():
     if os.system("git status | grep \"working tree clean\""):
         sys.stderr.write("Git repository must be clean\n")
         sys.exit(1)
@@ -188,7 +146,7 @@ if __name__ == '__main__':
 
         def wc():
             cmd = "find . -type f -not -path \"./.git/*\" | xargs wc -cl | tail -1"
-            o = util.execute_sh(cmd)
+            o = kernel.execute_sh(cmd)
             assert o.retval == 0, (cmd, o.retval)
             s = o.stdout.rstrip()
             if s.endswith(" total"):
@@ -196,17 +154,17 @@ if __name__ == '__main__':
             return s
 
         cmd = "git rev-parse --abbrev-ref HEAD"
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         orig = o.stdout.rstrip()
 
         cmd = "git log --no-walk --tags --pretty=\"%d %ai\" --decorate=full"
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         sl = o.stdout.split("\n")
 
         cmd = "git log -1 --pretty=\"%ai\""
-        o = util.execute_sh(cmd)
+        o = kernel.execute_sh(cmd)
         assert o.retval == 0, (cmd, o.retval)
         t = version.get_tag_string()
         sl.insert(0, " (refs/tags/{0}) {1}".format(t, o.stdout.rstrip()))
@@ -226,6 +184,49 @@ if __name__ == '__main__':
         checkout(orig)
         assert l, l
         writel(f, l)
+    except Exception as e:
+        sys.stderr.write("{0}\n".format(e))
+        sys.exit(1)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--man", action="store_true", default=False)
+    parser.add_argument("--release", action="store_true", default=False)
+    if util.is_python_version_or_ht(3, 7):
+        parse_args = parser.parse_intermixed_args
+    else:
+        parse_args = parser.parse_args
+    opts = parse_args()
+
+    d = os.path.basename(os.getcwd())
+    assert d.startswith("fileobj-devel"), os.getcwd()
+
+    f = "./script/autogen.py"
+    assert os.path.isfile(f), "No " + f
+    assert os.path.samefile(sys.argv[0], f), "Not " + f
+
+    try:
+        kernel.execute("which", "fileobj")
+        kernel.execute("which", "git")
+    except Exception as e:
+        sys.stderr.write("{0}\n".format(e))
+        sys.exit(1)
+
+    if opts.man:
+        autogen_man()
+    elif opts.release:
+        autogen_release()
+    else:
+        autogen(" " * 8)
+
+    # do this last
+    try:
+        cmd = "git status -s"
+        o = kernel.execute_sh(cmd)
+        assert o.retval == 0, (cmd, o.retval)
+        s = o.stdout
+        print("--")
+        print(s)
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)

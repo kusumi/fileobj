@@ -606,7 +606,6 @@ class SeqWindow (GenericWindow):
         if x is not None:
             return x
         x = self._getch()
-
         l = self.__input_to_seq()
         self.__queue_input((x,))
         self.preprocess(x, l)
@@ -625,8 +624,6 @@ class SeqWindow (GenericWindow):
                 self.__clear_input()
             return ret
 
-        #if l and x == l[-1]: # XXX
-        #    l = l[:-1]
         self.__queue_output(l)
         self.__queue_output((x,))
         self.__clear_input()

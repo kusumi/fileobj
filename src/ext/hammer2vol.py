@@ -33,16 +33,28 @@ _int = util.le_to_int
 HAMMER2_VOLUME_ID_HBO = _("\x11\x20\x17\x05\x32\x4d\x41\x48")
 HAMMER2_VOLUME_ID_ABO = _("\x48\x41\x4d\x32\x05\x17\x20\x11")
 
+VOLUME_HEADER_SIZE = 0x10000
+
 def get_text(co, fo, args):
     print_rsv = (args[0] == "all")
     pos = args[-1]
     if pos:
-        b = fo.read(pos, 65536)
+        b = fo.read(pos, VOLUME_HEADER_SIZE)
+        if len(b) != VOLUME_HEADER_SIZE:
+            extension.fail("Invalid length: {0}".format(len(b)))
         return get_volume_header(b, print_rsv)
     else:
         l = []
         for x in range(4):
-            b = fo.read((1 << 30) * 2 * x, 65536)
+            offset = (1 << 30) * 2 * x
+            l.append("volume header #{0} 0x{1:016X}".format(x, offset))
+            l.append("")
+            b = fo.read(offset, VOLUME_HEADER_SIZE)
+            if len(b) != VOLUME_HEADER_SIZE:
+                if x == 0:
+                    extension.fail("Invalid length: {0}".format(len(b)))
+                else:
+                    break
             l.extend(get_volume_header(b, print_rsv))
             if x != 3:
                 l.append("----------" * 4)
@@ -50,9 +62,6 @@ def get_text(co, fo, args):
 
 def get_volume_header(b, print_rsv):
     l = []
-    if len(b) != 65536:
-        extension.fail("Invalid length: {0}".format(len(b)))
-
     # sector #0
     magic = b[:8]
     if magic not in (HAMMER2_VOLUME_ID_HBO, HAMMER2_VOLUME_ID_ABO):
@@ -80,16 +89,20 @@ def get_volume_header(b, print_rsv):
     copyid = _int(b[56:57])
     freemap_version = _int(b[57:58])
     peer_type = _int(b[58:59])
-    reserved003B = _int(b[59:60])
-    reserved003C = _int(b[60:64])
+    volu_id = _int(b[59:60])
+    nvolumes = _int(b[60:61])
+    reserved003D = _int(b[61:62])
+    reserved003E = _int(b[62:64])
     l.append("version = {0}".format(version))
     l.append("flags = 0x{0:08X}".format(flags))
     l.append("copyid = {0}".format(copyid))
     l.append("freemap_version = {0}".format(freemap_version))
     l.append("peer_type = {0}".format(peer_type))
+    l.append("volu_id = {0}".format(volu_id))
+    l.append("nvolumes = {0}".format(nvolumes))
     if print_rsv:
-        l.append("reserved003B = {0}".format(reserved003B))
-        l.append("reserved003C = 0x{0:08X}".format(reserved003C))
+        l.append("reserved003D = {0}".format(reserved003D))
+        l.append("reserved003E = 0x{0:08X}".format(reserved003E))
     l.append("")
 
     # b[:] are (supposed to be) in le, but swap byte order for 4-2-2 part
@@ -124,7 +137,7 @@ def get_volume_header(b, print_rsv):
     reserved00A0.append(_int(b[168:176]))
     reserved00A0.append(_int(b[176:184]))
     reserved00A0.append(_int(b[184:192]))
-    reserved00A0.append(_int(b[192:200]))
+    total_size = _int(b[192:200])
     l.append("mirrod_tid   = 0x{0:016X}".format(mirror_tid))
     if print_rsv:
         l.append("reserved0080 = 0x{0:016X}".format(reserved0080))
@@ -132,9 +145,10 @@ def get_volume_header(b, print_rsv):
     l.append("freemap_tid  = 0x{0:016X}".format(freemap_tid))
     l.append("bulkfree_tid = 0x{0:016X}".format(bulkfree_tid))
     if print_rsv:
-        for x in util.get_xrange(5):
+        for x in util.get_xrange(4):
             l.append("reserved00A0[{0}] = 0x{1:016X}".format(
                 x, reserved00A0[x]))
+    l.append("total_size = 0x{0:016X}".format(total_size))
     l.append("")
 
     copyexists = []
@@ -180,7 +194,7 @@ def get_volume_header(b, print_rsv):
     # ignore sector3
 
     # sector #4
-    offset = 2048
+    offset = 512 * 4
     l.append("freemap_blockset")
     for x in range(4):
         l.append("blockref[{0}]".format(x))
@@ -195,10 +209,16 @@ def get_volume_header(b, print_rsv):
     # ignore sector6
 
     # sector #7
-    # ignore sector7
+    offset = 512 * 7
+    for x in range(64):
+        volu_loff = _int(b[offset:offset+8])
+        if volu_loff != 0xFFFFFFFFFFFFFFFF:
+            l.append("volu_loff[{0}] = 0x{1:016X}".format(x, volu_loff))
+        offset += 8
+    l.append("")
 
     # sector #8-
-    # XXX copyinfo
+    # copyinfo
     # ignore reserved0400
 
     icrc_volheader = _int(b[65532:65536])

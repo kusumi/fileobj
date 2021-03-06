@@ -68,9 +68,8 @@ def touch(f):
 def stat_type(f):
     return unix.stat_type(f)
 
-# XXX unix.get_page_size() is likely to return 65536
 def get_page_size():
-    return 4096
+    return 4096 # XXX don't use unix.get_page_size() which will return 65536
 
 def get_buffer_size():
     return unix.get_buffer_size()
@@ -143,6 +142,12 @@ def waitpid(pid, opts):
 
 def parse_waitpid_result(status):
     return unix.parse_waitpid_result(status)
+
+def execute(*l):
+    return unix.execute(*l)
+
+def execute_sh(cmd):
+    return unix.execute_sh(cmd)
 
 def init():
     unix.init_procfs()

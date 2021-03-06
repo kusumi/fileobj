@@ -24,13 +24,20 @@
 import re
 
 from . import log
-from . import util
+from . import nodep
+from . import unix # not kernel to prevent circular import
+
+def __execute_objdump(*args):
+    assert not nodep.is_windows(), "Windows unsupported"
+    cmd = ["objdump"]
+    cmd.extend(*args)
+    return unix.execute(*cmd)
 
 def get_elf_section_info(f, section):
-    cmd = "objdump", "-h", "-j", section, f,
-    ret = util.execute(*cmd)
+    args = "-h", "-j", section, f
+    ret = __execute_objdump(args)
     if ret.retval:
-        log.error("Failed to execute {0}".format(cmd))
+        log.error("Failed to execute objdump {0}".format(args))
         return
 
     pattern = r"^\s+[0-9]+\s+{0}\s+(\S+)\s+(\S+)".format(section)

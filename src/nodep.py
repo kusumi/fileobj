@@ -36,7 +36,14 @@ def get_package_name():
     if is_windows():
         return "fileobj_" # avoid conflict with executable
     else:
-        return "fileobj" # XXX integrate with above
+        return "fileobj"
+
+def import_package():
+    if is_windows():
+        import fileobj_ as pkg # avoid conflict with executable
+    else:
+        import fileobj as pkg
+    return pkg
 
 def __test(version, name, permissive):
     version = tuple(version[:3])
