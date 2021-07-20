@@ -299,6 +299,7 @@ def __dispatch(optargs=None):
         __log_debug_pair("osdep", util.get_csv_tuple(
             methods.get_osdep_string()))
         __log_debug_pair("term", terminal.get_type())
+        __log_debug_pair("term_orig", terminal.get_type_orig())
         __log_debug_pair("lang", terminal.get_lang())
         __log_debug_pair("man", util.get_man_path())
         # setting paths

@@ -242,4 +242,4 @@ COPYING
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.7.103                  March 7, 2021                      FILEOBJ(1)
+FILEOBJ 0.7.104                  July 21, 2021                      FILEOBJ(1)

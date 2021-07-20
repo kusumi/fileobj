@@ -38,6 +38,7 @@ Error = _screen.Error
 
 _std = None
 _size = util.Pair()
+_initial_size = util.Pair(-1, -1)
 _signaled = False
 _soft_resize = False
 
@@ -142,7 +143,7 @@ def __log_debug():
 
 def cleanup():
     global _std
-    clear_size()
+    __clear_size()
     if _std:
         _std.keypad(0)
         _std = None
@@ -170,6 +171,9 @@ def get_size_y():
 def get_size_x():
     return _size.x
 
+def is_size_changed_from_initial():
+    return _size.y != _initial_size.y or _size.x != _initial_size.x
+
 def update_size():
     y, x = _screen.get_size()
     if y == -1 and x == -1:
@@ -177,9 +181,11 @@ def update_size():
     y = __override_size(y, setting.terminal_height)
     x = __override_size(x, setting.terminal_width)
     if y > 0 and x > 0:
+        if _initial_size.y == -1 and _initial_size.x == -1:
+            _initial_size.set(y, x)
         _size.set(y, x)
     else:
-        clear_size()
+        __clear_size()
         return -1
 
 def __override_size(term_size, cfg_size):
@@ -194,7 +200,8 @@ def __override_size(term_size, cfg_size):
     else:
         return cfg_size
 
-def clear_size():
+def __clear_size():
+    _initial_size.set(-1, -1)
     _size.set(0, 0)
 
 def sti():
@@ -221,6 +228,9 @@ def clear_soft_resize():
 
 def test_soft_resize():
     return _soft_resize
+
+def is_resize_supported():
+    return setting.use_terminal_resize and _screen.is_resize_supported()
 
 def has_chgat():
     return _screen.has_chgat()

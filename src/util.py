@@ -140,6 +140,9 @@ def is_running_script_fileobj():
 def is_running_script_perf():
     return is_running_script("perf.py")
 
+def is_wsl():
+    return "Microsoft" in platform.release()
+
 def get_os_name():
     # e.g. 'Linux'
     ret = platform.system()

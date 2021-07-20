@@ -97,6 +97,9 @@ def newwin(leny, lenx, begy, begx, ref=None):
 def get_size():
     return -1, -1
 
+def is_resize_supported():
+    return False
+
 def has_chgat():
     return True
 

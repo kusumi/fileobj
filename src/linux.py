@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import with_statement
-import platform
 import re
 
 from . import libc
@@ -150,7 +149,7 @@ def has_mmap():
 # (False, '[Errno 22] Invalid argument')
 
 def has_mremap():
-    if "Microsoft" in platform.release(): # XXX assume WSL
+    if util.is_wsl():
         return False
     return True
 

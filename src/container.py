@@ -43,6 +43,7 @@ from . import panel
 from . import path
 from . import screen
 from . import setting
+from . import terminal
 from . import trace
 from . import util
 from . import void
@@ -1048,24 +1049,30 @@ class Container (object):
             # taken from Operand.__get_older_history()
             b = self.__prev_delayed_buf
             assert b, b
-            # XXX this doesn't work properly with TERM=vt*00 ???
-            s = self.__history.get_older(b[0], b)
-            if not s:
-                s = self.__history.get_newer(b[0], b)
+            # XXX this doesn't work properly with TERM=vt*00
+            if terminal.is_vtxxx():
+                self.flash() # will not flash
+            else:
+                s = self.__history.get_older(b[0], b)
                 if not s:
-                    s = b
-            assert s[0] == b[0], (s, b)
-            self.__delayed_input = [ord(_) for _ in s]
+                    s = self.__history.get_newer(b[0], b)
+                    if not s:
+                        s = b
+                assert s[0] == b[0], (s, b)
+                self.__delayed_input = [ord(_) for _ in s]
         elif x in _down:
             # taken from Operand.__get_newer_history()
             b = self.__prev_delayed_buf
             assert b, b
-            # XXX this doesn't work properly with TERM=vt*00 ???
-            s = self.__history.get_newer(b[0], b)
-            if not s:
-                s = b
-            assert s[0] == b[0], (s, b)
-            self.__delayed_input = [ord(_) for _ in s]
+            # XXX this doesn't work properly with TERM=vt*00
+            if terminal.is_vtxxx():
+                self.flash() # will not flash
+            else:
+                s = self.__history.get_newer(b[0], b)
+                if not s:
+                    s = b
+                assert s[0] == b[0], (s, b)
+                self.__delayed_input = [ord(_) for _ in s]
         elif x in (kbd.LEFT, kbd.RIGHT):
             self.flash()
 

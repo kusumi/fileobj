@@ -25,6 +25,7 @@ import os
 import shutil
 
 from . import kernel
+from . import setting
 from . import util
 
 if kernel.is_xnix():
@@ -38,6 +39,15 @@ if kernel.is_xnix():
 
     def get_type():
         return os.getenv("TERM", "")
+
+    def get_type_orig():
+        s = os.getenv("TERM_ORIG")
+        if setting.use_debug:
+            assert s is not None, "TERM_ORIG undefined"
+        if s is not None:
+            return s
+        else:
+            return ""
 
     def in_tmux_screen():
         return os.getenv("STY") is not None
@@ -79,6 +89,9 @@ else:
         return ""
 
     def get_type():
+        return ""
+
+    def get_type_orig():
         return ""
 
     def in_tmux_screen():

@@ -940,7 +940,7 @@ def get_min_position(cls):
 
 A_UNDERLINE = None
 def init():
-    global A_UNDERLINE
+    global A_UNDERLINE, _clear_on_fill
     assert screen.A_UNDERLINE is not None
     assert screen.A_COLOR_OFFSET is not None
     if screen.A_COLOR_OFFSET != screen.A_NONE or \
@@ -949,3 +949,7 @@ def init():
     else:
         A_UNDERLINE = screen.A_UNDERLINE
     assert A_UNDERLINE is not None
+
+    # XXX terminal.get_type_orig() can't be done on import-time.
+    terminal_was_not_screen = terminal.get_type_orig() != "screen"
+    _clear_on_fill = _clear_on_fill and terminal_was_not_screen

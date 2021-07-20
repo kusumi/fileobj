@@ -123,7 +123,10 @@ class Allocator (object):
 
         ret = path.get_path_failure_message(o)
         if ret:
-            log.error(ret)
+            if setting.use_debug:
+                log.error(ret)
+            else:
+                log.debug(ret)
             raise Error(ret)
 
         cls = self.__def_class

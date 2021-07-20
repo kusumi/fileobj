@@ -641,7 +641,31 @@ def __exit_visual(self):
     from . import visual
     return visual._exit_visual(self)
 
+def __raise_if_screen_resize_unsupported(self, amp, opc, args, raw):
+    if not screen.is_resize_supported():
+        screen.update_size() # must be first call after terminal resize
+        if screen.is_size_changed_from_initial():
+            # get a list of dirty buffers
+            def fn(o):
+                return o.is_dirty()
+            l = self.co.get_buffer_paths(fn)
+            # force quit, but not via QUIT
+            ret = force_quit_all(self, amp, opc, args, raw)
+            assert ret == QUIT, ret
+            # force flash now as there's no next refresh
+            screen.flash()
+            # ready to bail out
+            msg = ["Terminal resize unsupported on {0} {1}".format(
+                util.get_os_name(), util.get_os_release())]
+            if l:
+                msg.append("Unsaved buffer")
+                for f in l:
+                    msg.append(f)
+            raise util.QuietError('\n'.join(msg))
+
+# the common entry point for KEY_RESIZE
 def resize_container(self, amp, opc, args, raw):
+    __raise_if_screen_resize_unsupported(self, amp, opc, args, raw)
     self.co.resize()
     self.co.repaint()
 

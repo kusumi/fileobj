@@ -433,6 +433,11 @@ def get_size():
     else:
         return -1, -1
 
+def is_resize_supported():
+    if kernel.is_linux() and util.is_wsl():
+        return False
+    return True
+
 def has_chgat():
     return _has_chgat
 
