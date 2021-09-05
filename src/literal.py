@@ -377,7 +377,6 @@ def init():
     setattr(this, "bswap", FastLiteral("sb", None, "Swap byte order of [count] characters"))
     setattr(this, "delete", FastLiteral("<DELETE>", (kbd.DELETE,), "Delete [count] characters under and after the cursor"))
     setattr(this, "x", this.delete.create_alias("x", None))
-    setattr(this, "d", this.delete.create_alias("d", None))
     setattr(this, "X", FastLiteral("X", None, "Delete [count] characters before the cursor"))
     setattr(this, "D", FastLiteral("D", None, "Delete characters under the cursor until the end of buffer"))
     setattr(this, "u", FastLiteral("u", None, "Undo changes"))
@@ -405,6 +404,7 @@ def init():
     setattr(this, "cW", this.cw.create_alias("cW", None))
     setattr(this, "v", FastLiteral("v", None, "Start/End visual mode"))
     setattr(this, "V", FastLiteral("V", None, "Start/End line visual mode"))
+    setattr(this, "d", FastLiteral("d", None, "Disassemble buffer at current position"))
     # XXX On WSL, getch doesn't receive util.ctrl('v').
     # https://github.com/microsoft/WSL/issues/2588
     # XXX On Windows Terminal, getch receives copy/paste buffer bytes.

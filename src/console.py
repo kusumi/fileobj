@@ -146,6 +146,9 @@ class Console (object):
         else:
             return x
 
+    def assert_method_result(self, retval):
+        return
+
     def dispatch(self, arg):
         self.set_banner()
         self.set_operand()
@@ -174,13 +177,23 @@ class Console (object):
                 set_message(msg, cursor)
                 continue
 
+            just_queued = False
             fn = self.__fn.get(li.seq)
             if fn:
                 l = amp, opc, arg, raw
                 self.log(li.str, l)
                 ret = fn(*l)
+                if setting.use_debug:
+                    self.assert_method_result(ret)
+                # XXX don't unsave if just queued
+                just_queued = ret == methods.QUEUED
+                if not just_queued:
+                    self.co.unsave_region()
             else:
                 ret = self.handle_invalid_literal(li)
+            if not just_queued:
+                self.co.assert_unsaved_region()
+
             if ret == methods.HANDLED:
                 self.ope.clear()
                 self.co.clear_register()
@@ -190,6 +203,8 @@ class Console (object):
                 continue
             elif ret == methods.RETURN:
                 return
+            elif ret == methods.QUEUED:
+                return # same as RETURN
             elif ret == methods.QUIT:
                 self.cleanup()
                 return -1

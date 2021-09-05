@@ -29,34 +29,40 @@ from .. import setting
 from .. import util
 
 def get_text(co, fo, args):
-    tot = fo.get_size()
-    if not tot:
+    if not fo.get_size():
         return "Empty buffer"
 
-    beg = args.pop()
+    arg_pos = args.pop()
+    buf, beg, rem, typ = extension.parse_region(co, fo, arg_pos)
     pos = beg
-    rem = tot - pos
-    if extension.test_dryrun():
-        if rem > 1024:
-            rem = 1024
 
+    # XXX properly handle string overlapping >1 siz sized buffers
     siz = kernel.get_buffer_size()
+    lim = beg + rem - 1
     l = []
 
     while True:
-        b = fo.read(pos, siz)
-        if b:
-            n = 0
-            for i, c in enumerate(filebytes.iter_ords(b)):
-                if util.isprint(c):
-                    n += 1
-                else:
+        if buf:
+            relpos = pos - beg
+            b = buf[relpos:relpos + siz]
+        else:
+            b = fo.read(pos, siz)
+        assert b, (beg, pos, rem, len(b))
+        n = 0
+        for i, c in enumerate(filebytes.iter_ords(b)):
+            if util.isprint(c):
+                n += 1
+                if (pos + i == lim) or (i == len(b) - 1):
                     if n >= setting.ext_strings_thresh:
-                        s = filebytes.str(b[i - n:i])
-                        l.append((pos + i - n, s))
-                    n = 0
-            if len(b) == n:
-                l = [(pos, b)]
+                        # +1 difference from below
+                        s = filebytes.str(b[i - n + 1:i + 1])
+                        l.append((pos + i - n + 1, s))
+                        break
+            else:
+                if n >= setting.ext_strings_thresh:
+                    s = filebytes.str(b[i - n:i])
+                    l.append((pos + i - n, s))
+                n = 0
         pos += len(b)
         rem -= len(b)
         if rem <= 0:
@@ -65,16 +71,21 @@ def get_text(co, fo, args):
             co.flash("Interrupted ({0})".format(pos))
             break
 
-    sl = ["Range {0}-{1}".format(util.get_size_repr(beg),
+    sl = ["{0} {1}-{2}".format(typ, util.get_size_repr(beg),
         util.get_size_repr(pos - 1))]
-    sl.append("Found {0} strings".format(len(l)))
+    if setting.use_debug:
+        sl.append("{0} {1}-{2}".format(typ, hex(beg), hex(pos - 1)))
+    sl.append("Found {0} string{1}".format(len(l), "s" if len(l) > 1 else ""))
 
     if l:
         sl.append('')
-        n = max([len(str(x[0])) for x in l])
-        f = "{{0:{0}}} {{1}}".format(n)
+        n0 = max([len(str(x[0])) for x in l])
+        n1 = max([len(hex(x[0])) for x in l])
+        f = "{{0:>{0}}} {{1:>{1}}} {{2}}".format(n0, n1)
         for i, x in enumerate(l):
-            sl.append(f.format(x[0], x[1]))
+            offset0 = x[0]
+            offset1 = hex(offset0)
+            sl.append(f.format(offset0, offset1, x[1]))
     return sl
 
 def init():

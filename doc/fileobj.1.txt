@@ -196,6 +196,14 @@ ENVIRONMENT
            Set color for offsets in editor windows.  Defaults to "none" if
            undefined.  See --list_color for available colors.
 
+       FILEOBJ_DISAS_ARCH
+           Set architecture name to use for d command.  Defaults to "x86" if
+           undefined, and currently only "x86" is supported.
+
+       FILEOBJ_DISAS_PRIVATE
+           Set FILEOBJ_DISAS_ARCH specific data for d command.  Defaults to
+           use 64 bit mode on x86 if undefined.
+
 FILES
        ~/.fileobj
            A directory automatically created by fileobj(1).  Note that on
@@ -242,4 +250,4 @@ COPYING
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.7.104                  July 21, 2021                      FILEOBJ(1)
+FILEOBJ 0.7.105                 August 21, 2021                     FILEOBJ(1)

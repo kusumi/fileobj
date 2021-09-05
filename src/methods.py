@@ -29,6 +29,7 @@ import platform
 import sys
 import time
 
+from . import disas_x86
 from . import filebytes
 from . import fileobj
 from . import kbd
@@ -48,6 +49,7 @@ CONTINUE = "CONTINUE"
 RETURN   = "RETURN"
 QUIT     = "QUIT"
 ERROR    = "ERROR"
+QUEUED   = "QUEUED"
 
 def _cleanup(fn):
     def _(self, amp, opc, args, raw):
@@ -3108,3 +3110,51 @@ def __get_inmemory_buffer_path(self, args, efn):
         self.co.flash(f + " exists")
     else:
         return f
+
+def disas(self, amp, opc, args, raw):
+    arch = setting.disas_arch
+    if arch == "x86":
+        __disas_x86(self, amp, opc, args, raw)
+    else:
+        self.co.flash("{0} unsupported".format(arch))
+
+def __disas_x86(self, amp, opc, args, raw):
+    if not disas_x86.is_supported():
+        self.co.flash("Unsupported, install {0}".format(
+            disas_x86.get_module_name()))
+        return
+
+    priv = setting.disas_private
+    if priv is not None:
+        mode, move = priv.split(",")
+        if mode != "":
+            try:
+                mode = int(mode)
+                if mode not in disas_x86.valid_mode:
+                    self.co.flash("Invalid mode {0}".format(mode))
+                    return
+            except ValueError as e:
+                self.co.flash("Invalid mode: {0}".format(e))
+                return
+        else:
+            mode = disas_x86.default_mode
+        move = move != ""
+    else:
+        mode = disas_x86.default_mode
+        move = False
+
+    pos = self.co.get_pos()
+    buf = self.co.read(pos, 15)
+    if not buf:
+        self.co.flash("Empty buffer")
+        return
+    try:
+        l, _ = disas_x86.decode(pos, buf, mode)
+    except Exception as e:
+        self.co.flash("Failed to disassemble: {0}".format(e))
+        return
+    x = l[0]
+    s = "0x{0:x} {1}[B] {2} \"{3}\"".format(*x)
+    self.co.show(s)
+    if move:
+        go_right(self, x[1])

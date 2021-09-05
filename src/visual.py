@@ -612,6 +612,7 @@ class _console (console.Console):
         self.add_method(literal.v            , this,    "_enter_visual")
         self.add_method(literal.V            , this,    "_enter_line_visual")
         self.add_method(literal.ctrlv        , this,    "_enter_block_visual")
+        self.add_method(literal.d            , this,    "_queue_input")
         for li in literal.get_ext_literals():
             self.add_method(li, this, "_queue_input")
 
@@ -626,6 +627,10 @@ class _console (console.Console):
     def set_banner(self):
         console.set_banner(self.co.get_region_type())
 
+    def assert_method_result(self, retval):
+        if retval == methods.QUEUED:
+            assert isinstance(self, _console), str(self)
+
 class Console (_console):
     pass
 
@@ -635,8 +640,22 @@ class ExtConsole (_console):
 def _queue_input(self, amp, opc, args, raw):
     if raw[0] in literal.get_slow_ords():
         raw.append(kbd.ENTER)
+        # assert opc exists as a slow literal
+        if setting.use_debug:
+            found = False
+            for li in literal.get_slow_literals():
+                if li.str == opc:
+                    found = True
+                    break
+            assert found, "{0} is not a slow literal".format(opc)
+        # currently only save region for slow commands
+        if _in_block_visual(self):
+            self.co.save_block_region()
+        else:
+            self.co.save_range_region()
     self.co.queue_input(raw)
-    return _exit_visual(self)
+    _exit_visual(self)
+    return methods.QUEUED # not methods.RETURN
 
 def _enter_visual(self, amp, opc, args, raw):
     return __enter_visual(self, VISUAL)

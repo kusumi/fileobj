@@ -166,3 +166,36 @@ def test_dryrun():
     return _dryrun
 
 _dryrun = False
+
+# boilerplate function for extensions to handle range region
+def parse_region(co, fo, arg_pos):
+    # use range region if exists
+    buf = None
+    typ = None
+    if co.has_saved_region():
+        reg = co.get_saved_region()
+        if not reg.isblock: # ignore block region
+            buf = reg.buf
+            beg = reg.region[0]
+            rem = reg.region[1]
+            typ = "Range selected"
+            assert isinstance(buf, filebytes.TYPE), type(buf)
+        else:
+            typ = "Range (block ignored)"
+
+    # otherwise use current position
+    if buf is None:
+        beg = arg_pos
+        rem = fo.get_size() - beg
+        if typ is None:
+            typ = "Range"
+
+    if test_dryrun():
+        if rem > 1024:
+            rem = 1024
+
+    # buf - filebytes buffer to handle if exists
+    # beg - start offset
+    # rem - residual bytes
+    # typ - type string
+    return buf, beg, rem, typ

@@ -31,9 +31,11 @@ if __name__ == '__main__':
     import sys
     from distutils.core import setup, Extension
 
+    man_section = 1
+    man_file = "./doc/fileobj.{0}".format(man_section)
     if not os.path.isfile("./setup.py") or \
         not os.path.isfile("./bin/fileobj") or \
-        not os.path.isfile("./doc/fileobj.1") or \
+        not os.path.isfile(man_file) or \
         not os.path.isfile("./README.md"):
         sys.stderr.write("Invalid current directory %s\n" % os.getcwd())
         sys.exit(1)
@@ -68,7 +70,7 @@ if __name__ == '__main__':
         fd2.close()
         fd1.close()
 
-    nonexistent_man_dir = None
+    nonexistent_man_dir = []
     if src.nodep.is_windows():
         executable = "bin/fileobj.py"
         ext_modules = None
@@ -81,23 +83,38 @@ if __name__ == '__main__':
             ext_modules = [Extension(pkg + "._native", ["src/_native.c"])]
         data_files = None
         if test_env("SETUP_USE_MAN"):
-            d = os.path.join(sys.prefix, "man/man1")
-            if os.path.isdir(d):
-                if test_env("SETUP_USE_GZIP"):
-                    try:
-                        create_gzip("./doc/fileobj.1", "./doc/fileobj.1.gz")
-                    except Exception:
-                        e = sys.exc_info()[1]
-                        sys.stderr.write("%s\n" % e)
-                        sys.exit(1)
-                    f = "./doc/fileobj.1.gz"
+            man_dir_candidates = "man/man1", "share/man/man1"
+            for man_dir in man_dir_candidates:
+                d = os.path.join(sys.prefix, man_dir)
+                if os.path.isdir(d):
+                    if test_env("SETUP_USE_GZIP"):
+                        try:
+                            create_gzip(man_file, man_file + ".gz")
+                        except Exception:
+                            e = sys.exc_info()[1]
+                            sys.stderr.write("%s\n" % e)
+                            sys.exit(1)
+                        f = man_file + ".gz"
+                    else:
+                        f = man_file
+                    assert os.path.isfile(f), f
+                    data_files = [(man_dir, [f])]
+                    break
                 else:
-                    f = "./doc/fileobj.1"
-                assert os.path.isfile(f), f
-                data_files = [("man/man1", [f])]
-            else:
-                nonexistent_man_dir = d
+                    nonexistent_man_dir.append(d)
     assert os.path.isfile(executable), executable
+
+    def get_data_files_path(data_files):
+        d = os.path.join(sys.prefix, data_files[0][0])
+        s = os.path.basename(data_files[0][1][0])
+        f = os.path.join(d, s)
+        return os.path.realpath(f)
+
+    man_existed = False
+    if data_files:
+        f = get_data_files_path(data_files)
+        if os.path.isfile(f):
+            man_existed = True
 
     #long_description = open("./README.md").read()
 
@@ -121,6 +138,16 @@ if __name__ == '__main__':
             "Operating System :: OS Independent",],)
         #python_requires = ">=3.2",)
 
-    if nonexistent_man_dir:
-        sys.stderr.write("No such directory %s to install fileobj.1\n" %
-            nonexistent_man_dir)
+    man_installed = False
+    if data_files:
+        f = get_data_files_path(data_files)
+        if os.path.isfile(f):
+            if man_existed:
+                sys.stdout.write("Overwrote %s\n" % f)
+            else:
+                sys.stdout.write("Installed %s\n" % f)
+            man_installed = True # actually installed
+
+    if nonexistent_man_dir and not man_installed:
+        sys.stderr.write("No such directory %s to install %s\n" %
+            (nonexistent_man_dir, os.path.basename(man_file)))

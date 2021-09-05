@@ -208,6 +208,7 @@ class _console (console.Console):
         self.add_method(literal.v            , this,    "_enter_visual")
         self.add_method(literal.V            , this,    "_enter_line_visual")
         self.add_method(literal.ctrlv        , this,    "_enter_block_visual")
+        self.add_method(literal.d            , methods, "disas")
         for li in literal.get_ext_literals():
             self.add_method(li, methods, "open_extension")
 

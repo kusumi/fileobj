@@ -168,6 +168,7 @@
         X                      Delete [count] characters before the cursor
         Y                      Yank characters under the cursor until the end of buffer
         y                      Yank [count] characters
+        d                      Disassemble buffer at current position
         f?                     Search character forward
         F?                     Search character backward
         go                     Go to [count] byte in the buffer (default first byte)
@@ -217,7 +218,6 @@
         <SPACE>                Go [count] characters to the right
         l                      Go [count] characters to the right
         <DELETE>               Delete [count] characters under and after the cursor
-        d                      Delete [count] characters under and after the cursor
         x                      Delete [count] characters under and after the cursor
         <MOUSE_CLICKED>        Move cursor to clicked position in the window
         <MOUSE_PRESSED>        Start visual mode or start visual scroll (if already in visual mode) followed by <MOUSE_RELEASED> event

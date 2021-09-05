@@ -80,6 +80,10 @@ class Container (object):
         self.__in_vertical = False
         self.__in_random = False
         self.__is_max_bpl = False
+        self.__saved_region = util.Namespace(
+            buf=filebytes.BLANK,
+            isblock=False,
+            region=None)
         self.set_prev_context(None)
 
     def __getattr__(self, name):
@@ -881,6 +885,64 @@ class Container (object):
     def set_prev_context(self, fn, xfn=None):
         self.__prev_context = fn
         self.__xprev_context = xfn
+
+    # methods.__range_read() equivalent
+    def save_range_region(self):
+        # get range region
+        beg, end, map = self.get_region_range()
+        # read range region
+        siz = end - beg + 1
+        buf = self.read(beg, siz)
+        # save range region
+        if buf:
+            self.__save_region(buf, False, (beg, siz))
+
+    # methods.__block_read() equivalent
+    def save_block_region(self):
+        # get block region
+        beg, end, map = self.get_region_range()
+        siz = end % map.x - beg % map.x + 1
+        cnt = (end - beg) // map.x + 1
+        mapx = map.x
+        # read block region
+        l = []
+        for i in util.get_xrange(cnt):
+            l.append(self.read(beg + mapx * i, siz))
+            if screen.test_signal():
+                self.flash("Read interrupted ({0}/{1})".format(i, cnt))
+                return
+        buf = filebytes.join(l)
+        # save block region
+        if buf:
+            self.__save_region(buf, True, (beg, end, mapx, siz, cnt))
+
+    def __save_region(self, buf, isblock, region):
+        self.assert_unsaved_region()
+        assert isinstance(buf, filebytes.TYPE), type(buf)
+        self.__saved_region.buf = buf
+        self.__saved_region.isblock = isblock
+        self.__saved_region.region = region
+
+    def unsave_region(self):
+        reg = self.__saved_region
+        if self.has_saved_region():
+            assert isinstance(reg.buf, filebytes.TYPE), type(reg.buf)
+            self.__saved_region.buf = filebytes.BLANK
+            self.__saved_region.isblock = False
+            self.__saved_region.region = None
+
+    def assert_unsaved_region(self):
+        reg = self.__saved_region
+        assert isinstance(reg.buf, filebytes.TYPE), type(reg.buf)
+        assert reg.buf == filebytes.BLANK, len(reg.buf)
+
+    def has_saved_region(self):
+        reg = self.__saved_region
+        assert isinstance(reg.buf, filebytes.TYPE), type(reg.buf)
+        return True if len(reg.buf) > 0 else False
+
+    def get_saved_region(self):
+        return self.__saved_region
 
     def queue_input(self, l):
         self.__stream.extend(l)

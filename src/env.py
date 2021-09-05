@@ -50,6 +50,8 @@ def __iter_env():
     yield "FILEOBJ_COLOR_DEFAULT", "none"
     yield "FILEOBJ_COLOR_VISUAL", "red,yellow"
     yield "FILEOBJ_COLOR_OFFSET", "none"
+    yield "FILEOBJ_DISAS_ARCH", "x86"
+    yield "FILEOBJ_DISAS_PRIVATE", None
 
 def __iter_env_private():
     yield "__FILEOBJ_USE_DEBUG", False # --debug, unittest (true)
@@ -274,6 +276,12 @@ def __get_setting_color_offset():
         return None
     else:
         return ret
+
+def __get_setting_disas_arch():
+    return test_name("FILEOBJ_DISAS_ARCH").lower()
+
+def __get_setting_disas_private():
+    return test_name("FILEOBJ_DISAS_PRIVATE")
 
 def __get_setting_use_debug():
     return test_bool("__FILEOBJ_USE_DEBUG")

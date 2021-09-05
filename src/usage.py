@@ -275,3 +275,13 @@ Set color for offsets in editor windows.
 Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
 """)
+
+FILEOBJ_DISAS_ARCH = _("""
+Set architecture name to use for \fBd\fP command.
+Defaults to "x86" if undefined, and currently only "x86" is supported.
+""")
+
+FILEOBJ_DISAS_PRIVATE = _("""
+Set \fBFILEOBJ_DISAS_ARCH\fP specific data for \fBd\fP command.
+Defaults to use 64 bit mode on x86 if undefined.
+""")

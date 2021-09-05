@@ -950,6 +950,6 @@ def init():
         A_UNDERLINE = screen.A_UNDERLINE
     assert A_UNDERLINE is not None
 
-    # XXX terminal.get_type_orig() can't be done on import-time.
+    # terminal.get_type_orig() on import causes circular import
     terminal_was_not_screen = terminal.get_type_orig() != "screen"
-    _clear_on_fill = _clear_on_fill and terminal_was_not_screen
+    _clear_on_fill &= terminal_was_not_screen

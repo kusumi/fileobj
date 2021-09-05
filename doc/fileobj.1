@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "July 21, 2021" "FILEOBJ 0.7.104"
+.TH FILEOBJ 1 "August 21, 2021" "FILEOBJ 0.7.105"
 .nh
 .ad l
 .SH NAME
@@ -310,6 +310,18 @@ See \fB\-\-list_color\fP for available colors.
 Set color for offsets in editor windows.
 Defaults to "none" if undefined.
 See \fB\-\-list_color\fP for available colors.
+.RE
+.PP
+\fBFILEOBJ_DISAS_ARCH\fP
+.RS 4
+Set architecture name to use for \fBd\fP command.
+Defaults to "x86" if undefined, and currently only "x86" is supported.
+.RE
+.PP
+\fBFILEOBJ_DISAS_PRIVATE\fP
+.RS 4
+Set \fBFILEOBJ_DISAS_ARCH\fP specific data for \fBd\fP command.
+Defaults to use 64 bit mode on x86 if undefined.
 .RE
 .SH FILES
 .PP
