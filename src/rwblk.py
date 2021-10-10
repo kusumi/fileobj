@@ -30,6 +30,7 @@ class Fileobj (rwfd.Fileobj, blk.methods):
     _insert  = False
     _replace = True
     _delete  = False
+    _truncate= False
     _enabled = blk.enabled
     _partial = True
 

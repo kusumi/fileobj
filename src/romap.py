@@ -54,6 +54,7 @@ class Fileobj (fileobj.Fileobj):
     _insert  = False
     _replace = False
     _delete  = False
+    _truncate= False
     _enabled = kernel.has_mmap()
     _partial = _has_mmap_offset
 

@@ -38,6 +38,7 @@ def __iter_env():
     yield "FILEOBJ_USE_COLOR", True
     yield "FILEOBJ_USE_UNIT_BASED", False
     yield "FILEOBJ_USE_BACKUP", False
+    yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address
     yield "FILEOBJ_BYTES_PER_LINE", None # --bytes_per_line, :set bytes_per_line
@@ -171,6 +172,9 @@ def __get_setting_use_unit_based():
 
 def __get_setting_use_backup():
     return test_bool("FILEOBJ_USE_BACKUP")
+
+def __get_setting_use_truncate_shrink():
+    return test_bool("FILEOBJ_USE_TRUNCATE_SHRINK")
 
 def __get_setting_endianness():
     s = "FILEOBJ_ENDIANNESS"

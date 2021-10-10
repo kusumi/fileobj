@@ -28,6 +28,7 @@ class Fileobj (rofd.Fileobj, blk.methods):
     _insert  = False
     _replace = False
     _delete  = False
+    _truncate= False
     _enabled = blk.enabled
     _partial = True
 

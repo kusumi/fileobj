@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "August 21, 2021" "FILEOBJ 0.7.105"
+.TH FILEOBJ 1 "September 26, 2021" "FILEOBJ 0.7.106"
 .nh
 .ad l
 .SH NAME
@@ -229,6 +229,12 @@ Defaults to on per byte basis.
 If defined, create backup files under \fI~/.fileobj\fP.
 Backup files start with '.'.
 Only applies to regular files.
+.RE
+.PP
+\fBFILEOBJ_USE_TRUNCATE_SHRINK\fP
+.RS 4
+If defined, allow \fB:truncate\fP to shrink truncate.
+Defaults to disallow.
 .RE
 .PP
 \fBFILEOBJ_ENDIANNESS\fP

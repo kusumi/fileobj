@@ -33,6 +33,7 @@ class Fileobj (romap.Fileobj):
     _insert  = False
     _replace = True
     _delete  = False
+    _truncate= False
     _enabled = romap.Fileobj._enabled
     _partial = romap.Fileobj._partial
 
@@ -111,15 +112,19 @@ class Fileobj (romap.Fileobj):
         self.set_dirty()
 
     def get_no_support_string(self, s):
-        msg = "use -B option to enable " + s
-        if kernel.has_mremap():
-            return "Can not {0}, {1}".format(s, msg)
-        elif setting.use_debug:
-            try:
-                self.map.resize(self.get_size())
-                assert False, "mmap resize should fail"
-            except Exception as e:
-                return "{0}, {1}".format(repr(e), msg)
+        if s == "truncate":
+            return super(Fileobj, self).get_no_support_string(s)
         else:
-            return "{0} {1} has no mremap(2), {2}".format(util.get_os_name(),
-                util.get_os_release(), msg)
+            assert s in ("insert", "replace", "delete"), s
+            msg = "use -B option to enable " + s
+            if kernel.has_mremap():
+                return "Can not {0}, {1}".format(s, msg)
+            elif setting.use_debug:
+                try:
+                    self.map.resize(self.get_size())
+                    assert False, "mmap resize should fail"
+                except Exception as e:
+                    return "{0}, {1}".format(repr(e), msg)
+            else:
+                return "{0} {1} has no mremap(2), {2}".format(
+                    util.get_os_name(), util.get_os_release(), msg)

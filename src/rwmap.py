@@ -29,12 +29,14 @@ from . import fileobj
 from . import kernel
 from . import log
 from . import rrmap
+from . import setting
 from . import util
 
 class Fileobj (rrmap.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
+    _truncate= True
     _enabled = kernel.has_mremap()
     _partial = False
 
@@ -211,4 +213,48 @@ class Fileobj (rrmap.Fileobj):
             self.map.resize(size - n)
         else:
             self.__die()
+        self.set_dirty()
+
+    def truncate(self, n, rec=True):
+        size = self.get_size()
+        if size == n:
+            return # nothing to do
+        if n < 0:
+            raise fileobj.Error("Invalid size {0}".format(
+                util.get_size_repr(n)))
+
+        # both >= 0, but not both 0 at the same time
+        assert (size >= 0 and n >= 0) and (size > 0 or n > 0), (size, n)
+
+        # XXX limitation to prevent expand from 0
+        if size == 0:
+            raise fileobj.Error("Empty buffer unsupported")
+        # XXX limitation to prevent shrink to 0
+        if n == 0:
+            raise fileobj.Error("Can not truncate to {0}".format(
+                util.get_size_repr(n)))
+
+        if rec:
+            if n > size: # expand
+                def ufn(ref):
+                    ref.map.resize(size) # shrink
+                    self.set_dirty()
+                    return size - 1
+                def rfn(ref):
+                    ref.map.resize(n) # expand
+                    self.set_dirty()
+                    return size - 1
+            else: # shrink
+                assert setting.use_truncate_shrink
+                def ufn(ref):
+                    ref.map.resize(size) # expand
+                    self.set_dirty()
+                    return n - 1
+                def rfn(ref):
+                    ref.map.resize(n) # shrink
+                    self.set_dirty()
+                    return n - 1
+            self.add_undo(ufn, rfn)
+
+        self.map.resize(n) # expand or shrink
         self.set_dirty()

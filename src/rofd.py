@@ -35,6 +35,7 @@ class Fileobj (fileobj.Fileobj):
     _insert  = False
     _replace = False
     _delete  = False
+    _truncate= False
     _enabled = True
     _partial = True
 

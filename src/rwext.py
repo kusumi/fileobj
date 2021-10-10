@@ -28,6 +28,7 @@ class Fileobj (rwbuf.Fileobj, extension.methods):
     _insert  = True
     _replace = True
     _delete  = True
+    _truncate= False
     _enabled = True
     _partial = False
 

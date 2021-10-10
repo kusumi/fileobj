@@ -34,6 +34,7 @@ class Fileobj (robuf.Fileobj):
     _insert  = False
     _replace = True
     _delete  = False
+    _truncate= False
     _enabled = True
     _partial = True
 

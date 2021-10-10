@@ -28,6 +28,7 @@ class Fileobj (robuf.Fileobj, extension.methods):
     _insert  = False
     _replace = False
     _delete  = False
+    _truncate= False
     _enabled = True
     _partial = False
 

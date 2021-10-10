@@ -209,7 +209,10 @@ class Console (object):
                 self.cleanup()
                 return -1
             elif ret == methods.ERROR:
-                assert False, ret
+                # XXX Only methods._cleanup() would return methods.ERROR,
+                # but nothing special to do in here.
+                self.ope.clear()
+                self.co.clear_register()
 
 _scr = None
 _log = []

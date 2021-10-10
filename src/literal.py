@@ -519,6 +519,7 @@ def init():
     setattr(this, "s_open_b16d", SlowLiteral(":open_base16_decode", None, "Open base16 decoded buffer of the current buffer"))
     setattr(this, "s_open_b85e", SlowLiteral(":open_base85_encode", None, "Open base85 encoded buffer of the current buffer"))
     setattr(this, "s_open_b85d", SlowLiteral(":open_base85_decode", None, "Open base85 decoded buffer of the current buffer"))
+    setattr(this, "s_truncate", SlowLiteral(":truncate", None, "Truncate the current buffer to a specified length"))
     setattr(this, "s_fsearchw", SearchLiteral("/", None, "Search forward"))
     setattr(this, "s_rsearchw", SearchLiteral("?", None, "Search backward"))
 

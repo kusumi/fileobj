@@ -1,3 +1,12 @@
+v0.7.106
+========
+- Minor fixes and cleanups
+- Fix installation failure on Windows (since v0.7.104)
+- Fix assert failure bug (since v0.7.99)
+- Add :truncate
+- Add FILEOBJ_USE_TRUNCATE_SHRINK
+- Use rwmap.Fileobj by default for small,noent files if available
+
 v0.7.105
 ========
 - Minor fixes and cleanups

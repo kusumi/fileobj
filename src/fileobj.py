@@ -132,6 +132,9 @@ class Fileobj (object):
     def test_delete(self):
         return self._delete
 
+    def test_truncate(self):
+        return self._truncate
+
     def test_enabled(self):
         return self._enabled
 
@@ -145,6 +148,8 @@ class Fileobj (object):
         if self.test_replace():
             return False
         if self.test_delete():
+            return False
+        if self.test_truncate():
             return False
         return True
 
@@ -368,6 +373,9 @@ class Fileobj (object):
     def delete(self, x, n, rec=True):
         self.raise_no_support("delete")
 
+    def truncate(self, n, rec=True):
+        self.raise_no_support("truncate")
+
     def readall(self):
         return self.read(0, self.get_size())
 
@@ -385,13 +393,18 @@ class Fileobj (object):
                 break
 
     def raise_no_support(self, s):
-        if setting.use_readonly and s in ("insert", "replace", "delete"):
+        if setting.use_readonly and s in \
+            ("insert", "replace", "delete", "truncate"):
             raise Error("Using readonly mode")
         else:
             raise Error(self.get_no_support_string(s))
 
     def get_no_support_string(self, s):
-        return s + " not supported"
+        if s == "truncate":
+            return s + " not supported by {0}".format(repr(self))
+        else:
+            assert s in ("insert", "replace", "delete"), s
+            return s + " not supported"
 
     def has_undo(self):
         return self.get_undo_size() > 0
@@ -574,6 +587,9 @@ class Fileobj (object):
         self.__bdirty = True
         x -= self.__boffset
         del self.__bbuffer[x : x + n]
+
+    def barrier_truncate(self, n, rec=True):
+        assert False, (n, rec)
 
     def __test_barrier(self, x, n):
         size = setting.barrier_extend

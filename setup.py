@@ -97,8 +97,9 @@ if __name__ == '__main__':
                         f = man_file + ".gz"
                     else:
                         f = man_file
+                    assert os.path.isabs(d), d
                     assert os.path.isfile(f), f
-                    data_files = [(man_dir, [f])]
+                    data_files = [(d, [f])]
                     break
                 else:
                     nonexistent_man_dir.append(d)

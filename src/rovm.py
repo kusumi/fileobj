@@ -28,6 +28,7 @@ class Fileobj (robuf.Fileobj, vm.methods):
     _insert  = False
     _replace = False
     _delete  = False
+    _truncate= False
     _enabled = vm.enabled
     _partial = True
 

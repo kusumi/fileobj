@@ -786,6 +786,10 @@ class Container (object):
     def delete_current(self, n, rec=True):
         self.__cur_workspace.delete_current(n, rec)
 
+    # there is no truncate_current()
+    def truncate(self, n, rec=True):
+        self.__cur_workspace.truncate(n, rec)
+
     def resize(self):
         screen.set_soft_resize()
         self.__resize()

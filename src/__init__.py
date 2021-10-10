@@ -25,7 +25,7 @@ import os
 import platform
 
 if os.getenv("TERM_ORIG") is None:
-    os.environ["TERM_ORIG"] = os.getenv("TERM")
+    os.environ["TERM_ORIG"] = os.getenv("TERM", "")
 
 if platform.system() == "Linux" and os.getenv("TERM") == "screen":
     os.environ["TERM"] = "xterm"

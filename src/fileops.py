@@ -89,6 +89,9 @@ class Fileops (object):
     def test_delete(self):
         return self.__ref.test_delete()
 
+    def test_truncate(self):
+        return self.__ref.test_truncate()
+
     def is_killed(self):
         return self.__ref is None
 
@@ -253,16 +256,19 @@ class Fileops (object):
             self.insert  = self.__debug_insert
             self.replace = self.__debug_replace
             self.delete  = self.__debug_delete
+            self.truncate= self.__debug_truncate
         else:
             self.read    = self.__read
             self.insert  = self.__insert
             self.replace = self.__replace
             self.delete  = self.__delete
+            self.truncate= self.__truncate
         if _not_builtin_script and setting.use_auto_fileops_adjust:
             self.read    = self.__decorate_read(self.read)
             self.insert  = self.__decorate_insert(self.insert)
             self.replace = self.__decorate_replace(self.replace)
             self.delete  = self.__decorate_delete(self.delete)
+            self.truncate= self.__decorate_truncate(self.truncate)
 
     def __decorate_read(self, fn):
         def _(x, n):
@@ -294,6 +300,12 @@ class Fileops (object):
             x = self.__get_normalized_pos(x)
             n = self.__get_normalized_size(n)
             fn(x, n, rec)
+        return _
+
+    def __decorate_truncate(self, fn):
+        def _(n, rec=True):
+            n = self.__get_normalized_size(n)
+            fn(n, rec)
         return _
 
     def __get_normalized_pos(self, pos):
@@ -350,6 +362,9 @@ class Fileops (object):
         self.__assert_position(x)
         self.__delete(x, n, rec)
 
+    def __debug_truncate(self, n, rec=True):
+        self.__truncate(n, rec)
+
     def __assert_position(self, x):
         _max_pos = self.get_max_pos()
         assert 0 <= x <= _max_pos, (x, _max_pos)
@@ -385,6 +400,16 @@ class Fileops (object):
             self.__ref.barrier_delete(x, n, rec)
         else:
             self.__ref.delete(x, n, rec)
+        if self.get_pos() > self.get_max_pos():
+            self.set_pos(self.get_max_pos())
+
+    def __truncate(self, n, rec=True):
+        if n < 0:
+            n = 0
+        if self.__ref.is_barrier_active():
+            self.__ref.barrier_truncate(n, rec)
+        else:
+            self.__ref.truncate(n, rec)
         if self.get_pos() > self.get_max_pos():
             self.set_pos(self.get_max_pos())
 

@@ -141,6 +141,10 @@ ENVIRONMENT
            If defined, create backup files under ~/.fileobj.  Backup files
            start with '.'.  Only applies to regular files.
 
+       FILEOBJ_USE_TRUNCATE_SHRINK
+           If defined, allow :truncate to shrink truncate.  Defaults to
+           disallow.
+
        FILEOBJ_ENDIANNESS
            If set to "little" or "big", set endianness for multi-bytes data
            (equivalent to :set le and :set be).  Defaults to host endian if
@@ -250,4 +254,4 @@ COPYING
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.7.105                 August 21, 2021                     FILEOBJ(1)
+FILEOBJ 0.7.106               September 26, 2021                    FILEOBJ(1)

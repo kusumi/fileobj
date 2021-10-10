@@ -117,9 +117,13 @@ class Allocator (object):
         is_non = not f or o.is_noent
         is_pid = setting.use_pid_path and kernel.is_pid_path(f)
 
-        # always use rwbuf for noent (rwmap is not supported by all platforms)
         if is_non and not is_pid:
-            return self.__alloc(f, 0, 0, self.rwbuf)
+            # prefer rwmap to support truncate by default
+            if self.rwmap._enabled:
+                cls = self.rwmap
+            else:
+                cls = self.rwbuf
+            return self.__alloc(f, 0, 0, cls)
 
         ret = path.get_path_failure_message(o)
         if ret:
@@ -153,10 +157,12 @@ class Allocator (object):
         if size == -1:
             log.error("Failed to stat " + f)
         elif size < kernel.get_page_size():
-            if self.__is_ro_class(cls):
-                cls = self.robuf
-            else:
-                cls = self.rwbuf
+            # don't alter cls to support truncate by default
+            pass
+            #if self.__is_ro_class(cls):
+            #    cls = self.robuf
+            #else:
+            #    cls = self.rwbuf
         return cls
 
     def __alloc(self, f, offset, length, cls):

@@ -207,6 +207,11 @@ Backup files start with '.'.
 Only applies to regular files.
 """)
 
+FILEOBJ_USE_TRUNCATE_SHRINK = _("""
+If defined, allow \fB:truncate\fP to shrink truncate.
+Defaults to disallow.
+""")
+
 FILEOBJ_ENDIANNESS = _("""
 If set to "little" or "big", set endianness for multi-bytes data (equivalent to \fB:set le\fP and \fB:set be\fP).
 Defaults to host endian if undefined.

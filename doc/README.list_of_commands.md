@@ -139,6 +139,7 @@
         :sha512                Print sha512 message digest of the current buffer
         :split                 Split current window
         :term                  Print terminal type
+        :truncate              Truncate the current buffer to a specified length
         :version               Print version
         :vsplit                Split current window vertically
         :w                     Write the whole buffer to the file

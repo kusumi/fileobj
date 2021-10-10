@@ -32,6 +32,7 @@ class Fileobj (rrbuf.Fileobj, vm.methods):
     _insert  = False
     _replace = True
     _delete  = False
+    _truncate= False
     _enabled = vm.enabled
     _partial = True
 

@@ -35,6 +35,7 @@ class Fileobj (rrbuf.Fileobj):
     _insert  = True
     _replace = True
     _delete  = True
+    _truncate= False
     _enabled = True
     _partial = True
 

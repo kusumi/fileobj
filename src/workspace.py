@@ -505,6 +505,10 @@ class Workspace (object):
     def delete_current(self, n, rec=True):
         self.__cur_fileops.delete(self.get_pos(), n, rec)
 
+    # there is no truncate_current()
+    def truncate(self, n, rec=True):
+        self.__cur_fileops.truncate(n, rec)
+
     def set_focus(self, x):
         for o in self.__windows:
             if o:

@@ -187,6 +187,7 @@ class _console (console.Console):
         self.add_method(literal.s_open_b16d  , methods, "open_base16_decode")
         self.add_method(literal.s_open_b85e  , methods, "open_base85_encode")
         self.add_method(literal.s_open_b85d  , methods, "open_base85_decode")
+        self.add_method(literal.s_truncate   , methods, "truncate")
         self.add_method(literal.s_fsearchw   , methods, "search_word_forward")
         self.add_method(literal.s_rsearchw   , methods, "search_word_backward")
         self.add_method(literal.n            , methods, "search_word_next_forward")

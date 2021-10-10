@@ -80,6 +80,9 @@ def test_replace_raise(self):
 def test_delete_raise(self):
     __test_permission_raise(self, "delete")
 
+def test_truncate_raise(self):
+    __test_permission_raise(self, "truncate")
+
 def __test_permission_raise(self, s):
     fn = getattr(self.co, "test_" + s)
     if not fn():
@@ -3158,3 +3161,32 @@ def __disas_x86(self, amp, opc, args, raw):
     self.co.show(s)
     if move:
         go_right(self, x[1])
+
+@_cleanup
+def truncate(self, amp, opc, args, raw):
+    test_truncate_raise(self)
+    if not args:
+        self.co.flash("Argument required")
+        return
+    tgtsiz = util.parse_size_repr(args[0])
+    if not setting.use_truncate_shrink and tgtsiz < self.co.get_size():
+        self.co.flash("{0} specified, but shrink disabled by default".format(
+            util.get_size_repr(tgtsiz)))
+        return
+
+    try:
+        self.co.truncate(tgtsiz)
+    except Exception as e:
+        self.co.flash(e)
+        return
+    newsiz = self.co.get_size()
+    if newsiz == tgtsiz:
+        self.co.set_pos(tgtsiz)
+    else:
+        # this shouldn't happen
+        if setting.use_debug:
+            assert False, (tgtsiz, newsiz)
+        self.co.flash("Failed to truncate {0}, expecting {1}, got {2}".format(
+            self.co.get_path(), util.get_size_repr(tgtsiz),
+            util.get_size_repr(newsiz)))
+    self.co.lrepaintf()

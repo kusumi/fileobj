@@ -495,6 +495,17 @@ def __print_blkdev(g, print_error, verbose):
             util.printe(e)
             return -1
 
+    assert len(l1) == len(l2), (len(l1), len(l2))
+    assert len(l2) == len(l3), (len(l2), len(l3))
+    assert len(l3) == len(l4), (len(l3), len(l4))
+    assert len(l4) == len(l5), (len(l4), len(l5))
+    assert len(l5) == len(l6), (len(l5), len(l6))
+    assert len(l6) == len(l7), (len(l6), len(l7))
+
+    if len(l1) == 1:
+        util.printf("No block device")
+        return
+
     fmt = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3:<{3}}} {{4:<{4}}} {{5:<{5}}} " \
         "{{6:<{6}}} {{7}}".format(
         extension.get_index_width(l1),
