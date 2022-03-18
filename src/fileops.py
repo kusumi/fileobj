@@ -22,12 +22,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
+import os
 
 from . import allocator
 from . import blk
 from . import filebytes
 from . import fileobj
 from . import path
+from . import robuf
 from . import setting
 from . import util
 from . import vm
@@ -94,6 +96,9 @@ class Fileops (object):
 
     def is_killed(self):
         return self.__ref is None
+
+    def is_buf(self):
+        return isinstance(self.__ref, robuf.Fileobj)
 
     def is_blk(self):
         return isinstance(self.__ref, blk.methods)
@@ -483,7 +488,12 @@ class Fileops (object):
     def put_barrier(self):
         return self.__ref.put_barrier()
 
-def __alloc(f, name):
+def __alloc(f, readonly):
+    f = path.get_path(f)
+    obj = allocator.alloc(f, readonly)
+    return Fileops(obj)
+
+def __alloc_class(f, name):
     f = path.get_path(f)
     cls = fileobj.get_class(name)
     if cls:
@@ -496,19 +506,88 @@ def __alloc(f, name):
 _not_builtin_script = not util.is_running_script_fileobj() and \
     not util.is_running_script_perf()
 
+def __cleanup(args):
+    ops, printf = args
+    if not ops.is_killed():
+        l = ops.get_path(), ops.get_type() # get before cleanup
+        if ops.cleanup() != -1 and setting.use_debug:
+            printf("cleanup {0} {1}".format(*l))
+
 if _not_builtin_script and setting.use_auto_fileops_cleanup:
     import atexit
 
-    def __cleanup(ops):
-        if not ops.is_killed():
-            l = ops.get_path(), ops.get_type() # get before cleanup
-            if ops.cleanup() != -1 and setting.use_debug:
-                util.printf("Cleanup \"{0}\" of {1}".format(*l))
+    def alloc(f, readonly=False):
+        ops = __alloc(f, readonly)
+        atexit.register(__cleanup, (ops, util.printf))
+        return ops
 
-    def alloc(f, name=''):
-        ops = __alloc(f, name)
-        atexit.register(__cleanup, ops)
+    def alloc_class(f, name=""):
+        ops = __alloc_class(f, name)
+        atexit.register(__cleanup, (ops, util.printf))
         return ops
 else:
-    def alloc(f, name=''):
-        return __alloc(f, name)
+    def alloc(f, readonly=False):
+        return __alloc(f, readonly)
+
+    def alloc_class(f, name=""):
+        return __alloc_class(f, name)
+
+# bulk fileops allocation routine which fails if
+# 1. default class is of robuf
+# 2. underlying file path is nonexistent
+# 3. underlying >0 sized fileobj is of robuf
+
+def bulk_alloc(args, readonly, printf, printe):
+    # allow None for print functions
+    if printf is None:
+        printf = lambda o: None
+    if printe is None:
+        printe = lambda o: None
+
+    # disallow buf as default at this point
+    cls = allocator.get_default_class()
+    if setting.use_debug:
+        printf("default class {0}".format(cls))
+    if fileobj.is_subclass(cls, "robuf"):
+        printe("Invalid default class {0}".format(cls))
+        return None, None
+
+    # define cleanup closure
+    fileopsl = []
+    def bulk_cleanup():
+        for ops in fileopsl:
+            __cleanup((ops, printf))
+
+    # allocate fileops
+    for f in args:
+        try:
+            ops = __alloc(f, readonly)
+        except Exception as e:
+            printe(e)
+            bulk_cleanup()
+            return None, None
+        assert isinstance(ops, Fileops), ops
+        if setting.use_debug:
+            printf("{0} {1}".format(ops.get_path(), ops.get_type()))
+            x = ops.get_size()
+            printf("\tsize: {0} 0x{1:x}".format(x, x))
+            x = ops.get_mapping_offset()
+            printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
+            x = ops.get_mapping_length()
+            printf("\tmapping length: {0} 0x{1:x}".format(x, x))
+        fileopsl.append(ops)
+
+    # sanity checks
+    for ops in fileopsl:
+        f = ops.get_path()
+        if not os.path.exists(f):
+            printe("No such file {0}".format(f))
+            bulk_cleanup()
+            return None, None
+        assert os.path.exists(f), f
+        assert not readonly or ops.is_readonly()
+        if ops.get_size() > 0 and ops.is_buf(): # XXX vm is also buf
+            printe("Invalid class {0} for {1}".format(ops.get_type(), f))
+            bulk_cleanup()
+            return None, None
+    return tuple(fileopsl), bulk_cleanup

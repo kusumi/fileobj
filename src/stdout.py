@@ -106,6 +106,9 @@ def has_chgat():
 def has_color():
     return False
 
+def has_extended_color():
+    return False
+
 def can_change_color():
     return False
 

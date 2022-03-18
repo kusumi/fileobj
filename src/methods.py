@@ -1175,7 +1175,8 @@ def __show_hash_partial(self, fn, s):
 
 def __print_hash(self, s, buf):
     try:
-        self.co.show(util.get_hash(s, buf))
+        # XXX support hash object update
+        self.co.show(util.get_hash_string(s, buf))
     except AttributeError:
         self.co.flash("{0} unsupported by {1}".format(s,
             util.get_python_string()))
@@ -2841,6 +2842,7 @@ def _sha3_512(b):
 
 def __get_hash_binary(name, b):
     try:
+        # XXX support hash object update
         return util.get_hash_binary(name, b)
     except AttributeError:
         raise Exception("{0} unsupported by {1}".format(name,

@@ -444,6 +444,12 @@ def has_chgat():
 def has_color():
     return curses.has_colors() # raise if before initscr()
 
+def has_extended_color():
+    if hasattr(curses, "has_extended_color_support"): # Python 3.10+
+        return curses.has_extended_color_support()
+    else:
+        return None # can't tell
+
 def can_change_color():
     return curses.can_change_color() # raise if before initscr()
 

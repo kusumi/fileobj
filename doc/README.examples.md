@@ -1,20 +1,28 @@
 ## Examples
 
-+ Note that some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
+### Note
 
-+ Note that *offset 0* of buffer means first byte of the buffer. *offset 1* is second byte.
++ There are many options not mentioned in here, see *[List of options](README.list_of_options.md)* for details.
 
-+ Note that *sector 0* of buffer means first sector of the buffer. *sector 1* is second sector.
++ There are many environment variables not mentioned in here, see *[List of environment variables](README.list_of_environment_variables.md)* for details.
 
-+ Note that sector based commands use 512 bytes sector if the buffer is not block device.
++ There are many commands not mentioned in here, see *[List of commands](README.list_of_commands.md)* for details.
 
-### Command line options (also see *[List of options](README.list_of_options.md)*)
++ Some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
+
++ *offset 0* means first byte of a buffer.
+
++ *sector 0* means first sector of a buffer.
+
++ Sector based commands assume 512 bytes sector if a buffer is not of block device.
+
+### Command line options
 
 + Print help message and exit.
 
         $ fileobj -h
 
-+ Print the list of available editor commands and exit.
++ Print list of available editor commands and exit.
 
         $ fileobj --command
 
@@ -22,23 +30,15 @@
 
         $ fileobj -R
 
-+ Use verbose status window format instead of the default one.
-
-        $ fileobj --verbose_window
-
-+ Use green foreground and black background color.
-
-        $ fileobj --fg=green --bg=black
-
-+ Print fixed *bytes per line* within an editor window.
++ Use fixed *bytes per line* within an editor window.
 
         $ fileobj --bytes_per_line=8
 
-+ Print fixed *bytes per window* within an editor window.
++ Use fixed *bytes per window* within an editor window.
 
         $ fileobj --bytes_per_window=512
 
-+ Always keep the same window size after splitting a window.
++ Keep *bytes per window* the same for all editor windows.
 
         $ fileobj --bytes_per_window=even
 
@@ -48,30 +48,30 @@
 
         $ fileobj
 
-+ Run the program and then quit.
++ Quit the program.
 
         $ fileobj
           (command):q<ENTER>
 
-+ Run the program and discard incomplete command which has been typed after the previous command.
++ Discard incomplete commands via *ESC* key.
 
         $ fileobj
           (command)ttttttttt<ESC>
           (command):elhwefsdhnkfjsd<ESC>
           (command)[123456789<ESC>
 
-### Open a file
+### Open file
 
 + Open a file *./a.out*.
 
         $ fileobj ./a.out
 
-+ Open a file *./a.out* and quit the program.
++ Open a file *./a.out* and quit.
 
         $ fileobj ./a.out
           (command):q<ENTER>
 
-+ Open a file *./a.out* and quit the program without saving.
++ Open a file *./a.out* and quit without saving.
 
         $ fileobj ./a.out
           (command):q!<ENTER>
@@ -81,19 +81,19 @@
         $ fileobj ./a.out
           (command):w<ENTER>
 
-+ Open a file *./a.out* and quit the program after saving the buffer.
++ Open a file *./a.out* and quit after saving the buffer.
 
         $ fileobj ./a.out
           (command):wq<ENTER>
 
-+ Open an empty buffer and save it as *./a.out*.
++ Open an empty buffer and save as *./a.out*.
 
         $ fileobj
           (command):w ./a.out<ENTER>
 
-### Move a cursor
+### Move cursor
 
-+ Open a file *./a.out* and move the cursor.
++ Open a file *./a.out* and move a cursor.
 
         $ fileobj ./a.out
           (command)j
@@ -112,84 +112,84 @@
           or
           (command)<RIGHT>
 
-+ Open a file *./a.out* and move the cursor to offset 0 of the buffer.
++ Open a file *./a.out* and go to offset 0.
 
         $ fileobj ./a.out
-          (command)(move the cursor)
+          (command)(move a cursor)
           (command)gg
 
-+ Open a file *./a.out* and move the cursor to the last byte of the buffer.
++ Open a file *./a.out* and go to the last byte.
 
         $ fileobj ./a.out
           (command)G
 
-+ Open a file *./a.out* and move the cursor to offset 1024.
++ Open a file *./a.out* and go to offset 1024.
 
         $ fileobj ./a.out
           (command)1024go
 
-+ Open a file *./a.out* and move the cursor to the next printable character.
++ Open a file *./a.out* and go to the next printable character.
 
         $ fileobj ./a.out
           (command)w
 
-+ Open a file *./a.out* and move the cursor to the previous printable character.
++ Open a file *./a.out* and go to the previous printable character.
 
         $ fileobj ./a.out
           (command)b
 
-+ Open a file *./a.out* and move the cursor to the next zero (\x00).
++ Open a file *./a.out* and go to the next zero (\x00).
 
         $ fileobj ./a.out
           (command))
 
-+ Open a file *./a.out* and move the cursor to the previous zero (\x00).
++ Open a file *./a.out* and go to the previous zero (\x00).
 
         $ fileobj ./a.out
           (command)(
 
-+ Open a file *./a.out* and move the cursor to the next non-zero (not \x00).
++ Open a file *./a.out* and go to the next non-zero (not \x00).
 
         $ fileobj ./a.out
           (command)}
 
-+ Open a file *./a.out* and move the cursor to the previous non-zero (not \x00).
++ Open a file *./a.out* and go to the previous non-zero (not \x00).
 
         $ fileobj ./a.out
           (command){
 
-+ Open a file *./a.out* and move the cursor to the first byte of the current line.
++ Open a file *./a.out* and go to the first byte of the current line.
 
         $ fileobj ./a.out
-          (command)(move the cursor)
+          (command)(move a cursor)
           (command)0
 
-+ Open a file *./a.out* and move the cursor to the last byte of the current line.
++ Open a file *./a.out* and go to the last byte of the current line.
 
         $ fileobj ./a.out
           (command)$
 
-+ Open a file *./a.out* and move the cursor forward to the next page.
++ Open a file *./a.out* and move forward to the next page.
 
         $ fileobj ./a.out
           (command)CTRL-f
 
-+ Open a file *./a.out* and move the cursor forward for 1/2 page.
++ Open a file *./a.out* and move forward for 1/2 page.
 
         $ fileobj ./a.out
           (command)CTRL-d
 
-+ Open a file *./a.out* and move the cursor backward to the previous page.
++ Open a file *./a.out* and move backward to the previous page.
 
         $ fileobj ./a.out
           (command)CTRL-b
 
-+ Open a file *./a.out* and move the cursor backward for 1/2 page.
++ Open a file *./a.out* and move backward for 1/2 page.
 
         $ fileobj ./a.out
           (command)CTRL-u
 
-+ Open a file *./a.out* and move the cursor to offset 0x10000. The [...] syntax gets evaluated by eval(...) function in Python. If Python3 runs fileobj, [...] syntax requires 0o prefix for an octal value.
++ Open a file *./a.out* and go to offset 0x10000. *[...]* syntax is evaluated by Python's *eval()* function. Python3 requires *0o* prefix for an octal value.
 
         $ fileobj ./a.out
           (command)[0x10000]go
@@ -198,15 +198,15 @@
           or
           (command)65536go
 
-+ Open a file *./a.out* and print the current buffer size and position.
++ Open a file *./a.out* and show the current buffer size and position.
 
         $ fileobj ./a.out
-          (command)(move the cursor)
+          (command)(move a cursor)
           (command)CTRL-g
 
-### Edit a buffer
+### Edit buffer
 
-+ Open a file *./a.out* and delete a character.
++ Open a file *./a.out* and delete 1 byte.
 
         $ fileobj ./a.out
           (command)x
@@ -237,21 +237,21 @@
           then
           (command)256X
 
-+ Open a file *./a.out*, delete 256 bytes, and insert it 4 times at offset 1024 (before delete).
++ Open a file *./a.out*, delete (implicitly yank) 256 bytes, and insert 4 times at offset 1024.
 
         $ fileobj ./a.out
           (command)256x
-          (command)768go
+          (command)1024go
           (command)4P
 
-+ Open a file *./a.out*, delete 256 bytes, and replace with it 4 times at offset 1024 (before delete).
++ Open a file *./a.out*, delete (implicitly yank) 256 bytes, and replace 4 times at offset 1024.
 
         $ fileobj ./a.out
           (command)256x
-          (command)768go
+          (command)1024go
           (command)4O
 
-+ Open a file *./a.out* and yank a character.
++ Open a file *./a.out* and yank 1 byte.
 
         $ fileobj ./a.out
           (command)y
@@ -261,30 +261,7 @@
         $ fileobj ./a.out
           (command)256y
 
-+ Open a file *./a.out* and yank 256 bytes at offset 1024.
-
-        $ fileobj ./a.out
-          (command)1024go
-          or
-          (command)1024l
-          then
-          (command)256y
-
-+ Open a file *./a.out*, yank 256 bytes, and insert it 4 times at offset 1024.
-
-        $ fileobj ./a.out
-          (command)256y
-          (command)1024go
-          (command)4P
-
-+ Open a file *./a.out*, yank 256 bytes, and replace with it 4 times at offset 1024.
-
-        $ fileobj ./a.out
-          (command)256y
-          (command)1024go
-          (command)4O
-
-+ Open a file *./a.out* and toggle 256 bytes (switch upper <-> lower case for alphabets).
++ Open a file *./a.out* and toggle (switch upper <-> lower case for alphabets) 256 bytes.
 
         $ fileobj ./a.out
           (command)256~
@@ -304,12 +281,12 @@
         $ fileobj ./a.out
           (command)256^aa
 
-+ Open a file *./a.out* and swap byte order of 4 bytes from the current cursor.
++ Open a file *./a.out* and swap byte order of the next 4 bytes.
 
         $ fileobj ./a.out
           (command)4sb
 
-+ Open a file *./a.out* and enter insert edit mode to insert "\x41\x42\x43".
++ Open a file *./a.out*, enter insert edit mode to insert "\x41\x42\x43", and then exit.
 
         $ fileobj ./a.out
           (command)i414243<ESC>
@@ -317,7 +294,7 @@
           (command):set ascii<ENTER>
           (command)iABC<ESC>
 
-+ Open a file *./a.out* and enter insert edit mode to insert "\x41\x42\x43" for 4 times.
++ Open a file *./a.out*, enter insert edit mode to insert "\x41\x42\x43" for 4 times, and then exit.
 
         $ fileobj ./a.out
           (command)4i414243<ESC>
@@ -325,7 +302,7 @@
           (command):set ascii<ENTER>
           (command)4iABC<ESC>
 
-+ Open a file *./a.out* and enter append edit mode to insert "\x41\x42\x43".
++ Open a file *./a.out*, enter append edit mode to insert "\x41\x42\x43", and then exit.
 
         $ fileobj ./a.out
           (command)a414243<ESC>
@@ -333,7 +310,7 @@
           (command):set ascii<ENTER>
           (command)aABC<ESC>
 
-+ Open a file *./a.out* and enter append edit mode to insert "\x41\x42\x43" for 4 times.
++ Open a file *./a.out*, enter append edit mode to insert "\x41\x42\x43" for 4 times, and then exit.
 
         $ fileobj ./a.out
           (command)4a414243<ESC>
@@ -341,7 +318,7 @@
           (command):set ascii<ENTER>
           (command)4aABC<ESC>
 
-+ Open a file *./a.out* and enter replace edit mode to replace with "\x41\x42\x43".
++ Open a file *./a.out*, enter replace edit mode to replace with "\x41\x42\x43", and then exit.
 
         $ fileobj ./a.out
           (command)R414243<ESC>
@@ -349,7 +326,7 @@
           (command):set ascii<ENTER>
           (command)RABC<ESC>
 
-+ Open a file *./a.out* and enter replace edit mode to replace with "\x41\x42\x43" for 4 times.
++ Open a file *./a.out*, enter replace edit mode to replace with "\x41\x42\x43" for 4 times, and then exit.
 
         $ fileobj ./a.out
           (command)4R414243<ESC>
@@ -357,15 +334,15 @@
           (command):set ascii<ENTER>
           (command)4RABC<ESC>
 
-### Rotate a buffer contents
+### Rotate buffer contents
 
-+ Open an empty buffer and fill in the first 512 bytes with a pattern of "\x55\xaa" and save it as *./a.img*.
++ Open an empty buffer, insert 512 bytes with "\x55\xaa", and save it as *./a.img*.
 
         $ fileobj
           (command)256i55aa<ESC>
           (command):wq ./a.img<ENTER>
 
-+ Open above *./a.img* and overwrite the first 4 bytes with "\x7fELF".
++ Open a file *./a.img* and overwrite the first 4 bytes with "\x7fELF".
 
         $ fileobj ./a.img
           (command)R7f454c46<ESC>
@@ -375,53 +352,49 @@
           (command)l
           (command)RELF<ESC>
 
-+ Open above *./a.img* and rotate the whole buffer 1 bit to right and then restore.
++ Open a file *./a.img*, rotate the entire buffer 1 bit to right, and then 1 bit to left.
 
         $ fileobj ./a.img
           (command)>>
           (command)G
           (command)<<
 
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to right.
++ Open a file *./a.img*, rotate the entire buffer 8 bits (1 byte) to right, and then 8 bits (1 byte) to left.
 
         $ fileobj ./a.img
           (command)8>>
-
-+ Open above *./a.img* and rotate the whole buffer 8 bits (1 byte) to left.
-
-        $ fileobj ./a.img
           (command)G
           (command)8<<
 
-### Undo a buffer
+### Undo buffer changes
 
-+ Open a file *./a.out* and undo.
++ Open a file *./a.out* and undo changes.
 
         $ fileobj ./a.out
           (command)(do some edit)
           (command)u
 
-+ Open a file *./a.out* and undo all.
++ Open a file *./a.out* and undo all changes.
 
         $ fileobj ./a.out
           (command)(do some edit)
           (command)U
 
-+ Open a file *./a.out* and redo.
++ Open a file *./a.out* and redo the undo'ed changes.
 
         $ fileobj ./a.out
           (command)(do some edit)
           (command)(do undo)
           (command)CTRL-r
 
-### Search a buffer
+### Search buffer contents
 
 + Open a file *./a.out* and search forward for "GNU".
 
         $ fileobj ./a.out
           (command)/GNU<ENTER>
 
-+ Open a file *./a.out* and search forward (backward if the previous search was backward) for the next.
++ Open a file *./a.out* and search (forward or backward depending on previous direction) for the next.
 
         $ fileobj ./a.out
           (command)n
@@ -431,12 +404,12 @@
         $ fileobj ./a.out
           (command)?GNU<ENTER>
 
-+ Open a file *./a.out* and search backward (forward if the previous search was backward) for the next.
++ Open a file *./a.out* and search (backward or forward depending on previous direction) for the next.
 
         $ fileobj ./a.out
           (command)N
 
-+ Open a file *./a.out* and search for "\x7fELF" (can not search for ascii string in "\x??\x??.." or "\X??.." format).
++ Open a file *./a.out* and search for "\x7fELF" (limitation: can not search for ASCII string "\x??\x??.." or "\X??..").
 
         $ fileobj ./a.out
           (command)/\x7fELF<ENTER>
@@ -445,7 +418,7 @@
           or
           (command)/\X7f454c46<ENTER>
 
-+ Open a file *./a.out* and search for "\x41\x42\x43" (can not search for ascii string in "\x??\x??.." or "\X??.." format).
++ Open a file *./a.out* and search for "\x41\x42\x43" (limitation: can not search for ASCII string "\x??\x??.." or "\X??..").
 
         $ fileobj ./a.out
           (command)/\x41\x42\x43<ENTER>
@@ -454,20 +427,20 @@
           or
           (command)/ABC<ENTER>
 
-### Mark a buffer
+### Set mark
 
-+ Open a file *./a.out*, move the cursor to offset 1024, and mark that offset as 'a'.
++ Open a file *./a.out*, go to offset 1024, and mark the current position as 'a'.
 
         $ fileobj ./a.out
           (command)1024go
           (command)ma
 
-+ Open a file *./a.out* and jump to above mark 'a'.
++ Open a file *./a.out* and go to mark 'a' position.
 
         $ fileobj ./a.out
           (command)`a
 
-### Partially open a file
+### Partial open
 
 + Open a file *./a.out* from offset 1024.
 
@@ -477,7 +450,7 @@
         or
         $ fileobj ./a.out@02000
 
-+ Open a file *./a.out* and read 512 bytes from offset 1024.
++ Open a file *./a.out* from offset 1024 for 512 bytes.
 
         $ fileobj ./a.out@1024:512
         or
@@ -485,7 +458,7 @@
         or
         $ fileobj ./a.out@0x400-0x600
 
-+ Open a file *./a.out* and read the first 1024 bytes.
++ Open a file *./a.out* for first 1024 bytes.
 
         $ fileobj ./a.out@0:1024
         or
@@ -501,76 +474,60 @@
 
 ### Multiple files
 
-+ Open a file *./a.out* and close the buffer.
++ Open a file *./a.out* and then close.
 
         $ fileobj ./a.out
           (command):bdelete<ENTER>
 
-+ Open an empty buffer and then open *./a.out*.
++ Open a file *./a.out* via command.
 
         $ fileobj
           (command):e ./a.out<ENTER>
 
-+ Open a file *./a.out* and then open a file */path/to/b.out*.
++ Open a file *./a.out* and open another file */path/to/b.out* via command.
 
         $ fileobj ./a.out
           (command):e /path/to/b.out<ENTER>
 
-+ Open files *./a.out* and *./b.out*.
++ Open two files *./a.out* and *./b.out* via command line arguments.
 
         $ fileobj ./a.out ./b.out
 
-+ Open files *./a.out* and *./b.out*, and switch the buffer to *./b.out*.
++ After opening files, switch current buffer from one file to another.
 
         $ fileobj ./a.out ./b.out
           (command)<TAB>
           or
           (command):bnext<ENTER>
 
-+ Open files *./a.out* and *./b.out* with different offset/length for each.
-
-        $ fileobj ./a.out@0x400:0x200 ./b.out@:4096
-
 ### Multiple windows
 
-+ Open files *./a.out* and *./b.out*, and start with horizontally splitted windows assigned for each buffer.
++ Open two files *./a.out* and *./b.out* with horizontally splitted windows for each file respectively.
 
         $ fileobj ./a.out ./b.out -o
 
-+ Open files *./a.out* and *./b.out*, and start with vertically splitted windows assigned for each buffer.
++ Open two files *./a.out* and *./b.out* with vertically splitted windows for each file respectively.
 
         $ fileobj ./a.out ./b.out -O
 
-+ Open files *./a.out*, *./b.out*, *./c.out* with 3 windows, and move to the next window.
++ After opening files with multiple windows, change focus to the next window.
 
         $ fileobj ./a.out ./b.out ./c.out -o
           (command)CTRL-W w
 
-+ Open files *./a.out*, *./b.out*, *./c.out* with 3 windows, and close all windows except for the current window.
++ After opening files with multiple windows, close all windows except for the current one.
 
         $ fileobj ./a.out ./b.out ./c.out -o
           (command)CTRL-W o
           or
           (command):only<ENTER>
 
-+ Open files *./a.out*, *./b.out*, *./c.out* and print the list of buffers.
++ Open (split) another window, and then close.
 
-        $ fileobj ./a.out ./b.out ./c.out
-          (command):args<ENTER>
-          or
-          (command):ls<ENTER>
-
-+ Open a file *./a.out* and open (split) another window.
-
-        $ fileobj ./a.out
+        $ fileobj
           (command)CTRL-W s
           or
           (command):split<ENTER>
-
-+ Open a file *./a.out* and open (split) another window and then close it.
-
-        $ fileobj ./a.out
-          (command)(split window)
           then
           (command)CTRL-W c
           or
@@ -608,8 +565,7 @@
           or
           (command)CTRL-v
           then
-          (command)(move the cursor)
-          then
+          (command)(move a cursor)
           (command)x
 
 + Open a file *./a.out* and yank visually selected region.
@@ -621,8 +577,7 @@
           or
           (command)CTRL-v
           then
-          (command)(move the cursor)
-          then
+          (command)(move a cursor)
           (command)y
 
 + Open a file *./a.out* and replace visually selected region with \xff.
@@ -634,11 +589,10 @@
           or
           (command)CTRL-v
           then
-          (command)(move the cursor)
-          then
+          (command)(move a cursor)
           (command)rff
 
-+ Open a file *./a.out* and rotate visually selected region.
++ Open a file *./a.out* and right rotate visually selected region.
 
         $ fileobj ./a.out
           (command)v
@@ -647,11 +601,10 @@
           or
           (command)CTRL-v
           then
-          (command)(move the cursor)
-          then
+          (command)(move a cursor)
           (command)>>
 
-### Set editor options (also see *[List of commands](README.list_of_commands.md)*)
+### Set editor options
 
 + Set binary edit mode (unset ascii edit mode, default).
 
@@ -663,60 +616,54 @@
         $ fileobj ./a.out
           (command):set ascii<ENTER>
 
-+ Set *bytes per line* to the specified number, "max", "min" or "auto".
++ Set *bytes per line* to a specified number, "max", "min" or "auto".
 
         $ fileobj ./a.out
           (command):set bytes_per_line 8<ENTER>
           or
           (command):set bpl 8<ENTER>
 
-+ Set *bytes per window* to the specified number, "even" or "auto".
++ Set *bytes per window* to a specified number, "even" or "auto".
 
         $ fileobj ./a.out
           (command):set bytes_per_window 512<ENTER>
           or
           (command):set bpw 512<ENTER>
 
-+ Ignore the case of alphabets on search.
-
-        $ fileobj ./a.out
-          (command):set ic<ENTER>
-
-+ Unset above ic mode (default).
++ Enable case sensitive search (no ignore case, default).
 
         $ fileobj ./a.out
           (command):set noic<ENTER>
+
++ Enable case insensitive search (ignore case).
+
+        $ fileobj ./a.out
+          (command):set ic<ENTER>
 
 + Search wrap around the end of the buffer (default).
 
         $ fileobj ./a.out
           (command):set ws<ENTER>
 
-+ Unset above ws mode.
++ Search to not wrap around the end of the buffer.
 
         $ fileobj ./a.out
           (command):set nows<ENTER>
 
 ### Block device
 
-+ Open a loop device */dev/loop0* on Linux.
++ Open a block device */dev/sdb* on Linux.
 
-        $ sudo fileobj /dev/loop0
+        $ sudo fileobj /dev/sdb
 
-+ Open the first 512 bytes of a block device */dev/sdb* on Linux.
-
-        $ sudo fileobj /dev/sdb@:512
-          or
-        $ sudo fileobj /dev/sdb@:0x200
-
-+ Open the first 512 bytes of a block device */dev/sdb* and zero clear that.
++ Open a block device */dev/sdb* for first 512 bytes and zero clear that region.
 
         $ sudo fileobj /dev/sdb@:512
           (command)v
           (command)G
           (command)r00
 
-+ Open a block device */dev/sdb* and move the cursor to offset 320 MiB.
++ Open a block device */dev/sdb* and go to offset 320 MiB.
 
         $ sudo fileobj /dev/sdb
           (command)335544320go
@@ -725,43 +672,43 @@
           or
           (command)[327680KiB]go
 
-+ Open a block device */dev/sdb* and print sector size.
++ Open a block device */dev/sdb* and show sector size.
 
         $ sudo fileobj /dev/sdb
           (command):sector<ENTER>
 
-+ Open a block device */dev/sdb* and print the current buffer size and position in sector.
++ Open a block device */dev/sdb* and show the current buffer size and cursor position in sector.
 
         $ sudo fileobj /dev/sdb
-          (command)(move the cursor)
-          (command)gCTRL-g
+          (command)(move a cursor)
+          (command)g CTRL-g
 
-+ Open a block device */dev/sdb* and move the cursor to the previous sector. If currently not at the beginning of the sector, move to the beginning of the current sector. This is sector based version of `h`.
++ Open a block device */dev/sdb* and go to first byte of the previous sector. This is sector based version of `h`.
 
         $ sudo fileobj /dev/sdb
           (command)sh
 
-+ Open a block device */dev/sdb* and move the cursor to the next sector. This is sector based version of `l`.
++ Open a block device */dev/sdb* and go to first byte of the next sector. This is sector based version of `l`.
 
         $ sudo fileobj /dev/sdb
           (command)sl
 
-+ Open a block device */dev/sdb* and move the cursor to sector 128. This is sector based version of `go`.
++ Open a block device */dev/sdb* and go to sector 128. This is sector based version of `go`.
 
         $ sudo fileobj /dev/sdb
           (command)128sgo
 
-+ Open a block device */dev/sdb* and move the cursor to the first byte of the current sector. This is sector based version of `0`.
++ Open a block device */dev/sdb* and go to first byte of the current sector. This is sector based version of `0`.
 
         $ sudo fileobj /dev/sdb
           (command)s0
 
-+ Open a block device */dev/sdb* and move the cursor to the last byte of the current sector. This is sector based version of `$`.
++ Open a block device */dev/sdb* and go to last byte of the current sector. This is sector based version of `$`.
 
         $ sudo fileobj /dev/sdb
           (command)s$
 
-### Address space of a user process (experimental and platform specific feature)
+### Binary edit user space memory (experimental and platform specific feature)
 
 + Prepare a test program *test1* which continues to print "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
 
@@ -791,7 +738,7 @@
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ...
 
-+ Modify .rodata section while running *test1*.
++ Modify .rodata section of a running *test1* process. *pid<PID>* syntax indicates to open process address space provided *<PID>* exists.
 
         # objdump -s -j .rodata ./test1
         
@@ -807,7 +754,7 @@
           (command)26~
           (command):wq<ENTER>
 
-+ *test1* starts to print "abcdefghijklmnopqrstuvwxyz".
++ A running *test1* process starts to print "abcdefghijklmnopqrstuvwxyz".
 
         ...
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -845,6 +792,46 @@
         $ fileobj
           (command):help<ENTER>
 
+#### :ls extension
+
++ Open a list of buffers buffer.
+
+        $ fileobj ./a.out ./b.out ./c.out
+          (command):args<ENTER>
+          or
+          (command):ls<ENTER>
+
+#### :disas_x86 extension
+
++ Disassemble the current buffer assuming x86 instructions, and open a x86 assembly buffer.
+
+        $ fileobj ./a.out
+          (command):disas_x86<ENTER>
+
++ Disassemble the current buffer starting from offset 1024, and open a x86 assembly buffer.
+
+        $ fileobj ./a.out
+          (command)1024go
+          (command):disas_x86<ENTER>
+
++ Disassemble a visually selected region of the current buffer, and open a x86 assembly buffer.
+
+        $ fileobj ./a.out
+          (command)v
+          or
+          (command)V
+          or
+          (command)CTRL-v
+          then
+          (command)(move a cursor)
+          (command):disas_x86<ENTER>
+
++ Disassemble a single x86 instruction at the current position.
+
+        $ fileobj ./a.out
+          (command)(move a cursor)
+          (command)d
+
 #### :cstruct extension
 
 + Define a C struct *test1* in *${HOME}/.fileobj/cstruct*.
@@ -860,16 +847,21 @@
         > };
         > EOF
 
-+ Open a buffer */path/to/data* which contains the data in interest.
++ Open a file */path/to/data* which contains data in interest.
 
         $ fileobj /path/to/data
 
-+ Open a :cstruct buffer which maps data to the C struct *test1*. The source data starts from current cursor position, which is 0 in this case. The C struct must be defined in *${HOME}/.fileobj/cstruct*, unless the file path is specified in the first argument before the C struct name.
++ Open a *:cstruct* buffer with *test1* argument. The *test1* source starts from the current position, which is 0 in this case.
 
         $ fileobj /path/to/data
           (command):cstruct test1<ENTER>
 
-+ Save :cstruct buffer it as *./test1.out*.
++ C structs can be defined in external files.
+
+        $ fileobj /path/to/data
+          (command):cstruct /path/to/struct/defines test1<ENTER>
+
++ Save the *:cstruct* buffer as *./test1.out*.
 
         ...
           (command):wq ./test1.out<ENTER>
@@ -886,34 +878,56 @@
             string s[32]; "\x01"
         };
 
-+ Another example using a predefined example in *fileobj/script/cstruct/usb*.
+### Misc command line options
 
-        $ cd /path/to/fileobj/source
-        $ cp ./script/cstruct/usb ~/.fileobj/cstruct
-        $ cd /path/to/somewhere
-        $ od -tx1 -Ax ./usb_device_descriptor.bin
-        000000 12 01 00 03 09 00 03 09 6b 1d 03 00 06 02 03 02
-        000010 01 01
-        000012
-        $ fileobj ./usb_device_descriptor.bin
-          (command):cstruct usb_device_descriptor<ENTER>
-          (command):wq ./usb_device_descriptor.out<ENTER>
-        $ cat ./usb_device_descriptor.out
-        struct usb_device_descriptor {
-            struct usb_descriptor_header {
-                u8 bLength; 18 \x12 [.]
-                u8 bDescriptorType; 1 \x01 [.]
-            } hdr;
-            x16le bcdUSB; 0x0300 \x00\x03 [..]
-            u8 bDeviceClass; 9 \x09 [.]
-            u8 bDeviceSubClass; 0 \x00 [.]
-            u8 bDeviceProtocol; 3 \x03 [.]
-            u8 bMaxPacketSize0; 9 \x09 [.]
-            x16le idVendor; 0x1D6B \x6B\x1D [k.]
-            x16le idProduct; 0x0003 \x03\x00 [..]
-            x16le bcdDevice; 0x0206 \x06\x02 [..]
-            u8 iManufacturer; 3 \x03 [.]
-            u8 iProduct; 2 \x02 [.]
-            u8 iSerialNumber; 1 \x01 [.]
-            u8 bNumConfigurations; 1 \x01 [.]
-        };
++ *--lsblk* option lists block devices.
+
+        # fileobj --lsblk
+           name      size         sector_size size            sector_size label error
+         1 /dev/dm-0 0x2fffc00000 0x200       191.996094[GiB] 512[B]      -     -
+         2 /dev/dm-1 0x100000000  0x200       4[GiB]          512[B]      -     -
+         3 /dev/sda  0x500000000  0x200       20[GiB]         512[B]      -     -
+         4 /dev/sda1 0x4ff600000  0x200       19.990234[GiB]  512[B]      -     -
+         5 /dev/sda9 0x800000     0x200       8[MiB]          512[B]      -     -
+         6 /dev/sdb  0x3200000000 0x200       200[GiB]        512[B]      -     -
+         7 /dev/sdb1 0x100000000  0x200       4[GiB]          512[B]      -     -
+         8 /dev/sdb2 0x30fff00000 0x200       195.999023[GiB] 512[B]      -     -
+         9 /dev/sr0  -            -           -               -           -     [Errno 123] No medium found: '/dev/sr0'
+
++ *--md* option prints message digest of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_BUFFER_SIZE* environment variable.
+
+        $ fileobj ./a.out ./b.out ./c.out --md=sha256 --verbose
+        blake2b blake2s md4 md5 md5-sha1 ripemd160 sha1 sha224 [sha256] sha384 sha3_224 sha3_256 sha3_384 sha3_512 sha512 sha512_224 sha512_256 shake_128 shake_256 sm3 whirlpool
+        55350da17b75659b2a9b5aaa500f68051c2c1d75b783e50241b75d40fe8ecd07  /path/to/a.out
+        2bb675364295d86027ba1c366dd1f3c3eed73da74283c028d884538edf11a58f  /path/to/b.out
+        ef4130886a206f5c86093e74b4afa2b18e206d72c9c72897be3d4f8a8ab5dc2f  /path/to/c.out
+
+        $ fileobj ./a.out@1024:0x10000 ./b.out ./c.out@0x1000-0x2000 --md=md5 --verbose
+        blake2b blake2s md4 [md5] md5-sha1 ripemd160 sha1 sha224 sha256 sha384 sha3_224 sha3_256 sha3_384 sha3_512 sha512 sha512_224 sha512_256 shake_128 shake_256 sm3 whirlpool
+        64376d47e18eb5d130b1b9c27abd0a02  /path/to/a.out
+        62c81971892dcb0ca2c0d58b4811b6bf  /path/to/b.out
+        d3c205dbb1777dc60486ccfedc93cbe6  /path/to/c.out
+
++ *--cmp* option compares contents of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_BUFFER_SIZE* environment variable.
+
+        $ fileobj ./a.out ./b.out ./c.out --cmp
+        #0 0.0% 0x000000 -> 0 0x000000 (141, 21, 174) 1 65533/65536 100.0%
+        #1 13.3% 0x010000 -> 0 0x010000 (215, 158, 230) 1 65535/65536 100.0%
+        #2 26.5% 0x020000 -> 0 0x020000 (243, (98, 'b'), 214) 1 65535/65536 100.0%
+        #3 39.8% 0x030000 -> 0 0x030000 (207, (97, 'a'), 189) 1 65535/65536 100.0%
+        #4 53.1% 0x040000 -> 0 0x040000 (171, 217, 192) 1 65535/65536 100.0%
+        #5 66.4% 0x050000 -> 0 0x050000 (159, 217, 230) 1 65533/65536 100.0%
+        #6 79.6% 0x060000 -> 0 0x060000 (0, 218, (85, 'U')) 1 65535/65536 100.0%
+        #7 92.9% 0x070000 -> 0 0x070000 (128, 200, 240) 0 35048/35048 100.0%
+        scanned 8 blocks
+
+        $ fileobj ./a.out@1024:0x10000 ./b.out ./c.out@0x1000-0x2000 --cmp
+        #0 0.0% 0x000400|0x000000|0x001000 -> 0 0x000400|0x000000|0x001000 (2, 21, 27) 0 65536/65536 100.0%
+        #1 13.3% 0x010400|0x010000|0x011000 -> 0 0x010400|0x010000|0x011000 (None, 158, None) 0 65536/65536 100.0%
+        #2 26.5% 0x020400|0x020000|0x021000 -> 0 0x020400|0x020000|0x021000 (None, (98, 'b'), None) 0 65536/65536 100.0%
+        #3 39.8% 0x030400|0x030000|0x031000 -> 0 0x030400|0x030000|0x031000 (None, (97, 'a'), None) 0 65536/65536 100.0%
+        #4 53.1% 0x040400|0x040000|0x041000 -> 0 0x040400|0x040000|0x041000 (None, 217, None) 0 65536/65536 100.0%
+        #5 66.4% 0x050400|0x050000|0x051000 -> 0 0x050400|0x050000|0x051000 (None, 217, None) 0 65536/65536 100.0%
+        #6 79.6% 0x060400|0x060000|0x061000 -> 0 0x060400|0x060000|0x061000 (None, 218, None) 0 65536/65536 100.0%
+        #7 92.9% 0x070400|0x070000|0x071000 -> 0 0x070400|0x070000|0x071000 (None, 200, None) 0 35048/35048 100.0%
+        scanned 8 blocks

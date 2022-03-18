@@ -110,7 +110,7 @@ class Allocator (object):
         else:
             return self.rrvm
 
-    def alloc(self, f):
+    def alloc(self, f, readonly):
         f = path.get_path(f)
         f, offset, length = kernel.parse_file_path(f)
         o = path.Path(f)
@@ -134,7 +134,8 @@ class Allocator (object):
             raise Error(ret)
 
         cls = self.__def_class
-        if setting.use_readonly or (not is_pid and not util.is_write_ok(f)):
+        if setting.use_readonly or readonly or \
+            (not is_pid and not util.is_write_ok(f)):
             cls = self.__get_ro_class(cls)
         if kernel.is_blkdev(f):
             cls = self.__get_blk_class(cls)
@@ -167,6 +168,7 @@ class Allocator (object):
 
     def __alloc(self, f, offset, length, cls):
         while cls:
+            _ = None
             try:
                 log.debug("Using {0} for '{1}'".format(cls, f))
                 ret = cls(f, offset, length)
@@ -181,7 +183,10 @@ class Allocator (object):
                     log.error(s)
                 cls = self.__get_alt_class(cls)
                 if not cls:
-                    raise Error(str(e))
+                    _ = e
+            # can't raise another exception from except scope
+            if _ is not None:
+                raise Error(str(_))
 
 def iter_module_name():
     yield "romap"
@@ -214,7 +219,7 @@ def set_default_class(s):
 def set_default_buffer_class():
     return _allocator.set_default_buffer_class()
 
-def alloc(f):
-    return _allocator.alloc(f)
+def alloc(f, readonly=False):
+    return _allocator.alloc(f, readonly)
 
 _allocator = Allocator()

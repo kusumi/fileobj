@@ -713,8 +713,8 @@ def creat_backup(f, timestamp=""):
         if setting.use_debug:
             siz = os.stat(f).st_size
             if siz < 10 * MiB:
-                assert get_md5(open(f, "rb").read()) == \
-                    get_md5(open(dst, "rb").read()), (f, dst)
+                assert get_sha256(open(f, "rb").read()) == \
+                    get_sha256(open(dst, "rb").read()), (f, dst)
         return dst
 
 def get_timestamp(prefix=''):
@@ -729,21 +729,47 @@ def get_stamp(prefix=''):
         os.getpid())
 
 def get_md5(b):
-    return get_hash("md5", b)
+    return get_hash_string("md5", b)
 
-def get_hash(name, b):
+def get_sha256(b):
+    return get_hash_string("sha256", b)
+
+def get_hash_string(name, b):
     if isinstance(b, str):
         b = _(b)
     if b:
-        fn = getattr(hashlib, name)
-        return fn(b).hexdigest()
+        m = get_hash_object(name)
+        m = update_hash_object(m, b)
+        return m.hexdigest()
 
 def get_hash_binary(name, b):
     if isinstance(b, str):
         b = _(b)
     if b:
-        fn = getattr(hashlib, name)
-        return fn(b).digest()
+        m = get_hash_object(name)
+        m = update_hash_object(m, b)
+        return m.digest()
+
+def get_hash_object(name):
+    try:
+        return hashlib.new(name)
+    except ValueError:
+        return None
+
+def get_supported_hash_algorithms():
+    return tuple(sorted(hashlib.algorithms_available))
+
+_hash_buffer_thresh = MiB
+def update_hash_object(m, b):
+    siz = _hash_buffer_thresh
+    i = 0
+    while True:
+        tmp = b[i:i+siz]
+        if not tmp:
+            break
+        m.update(tmp)
+        i += len(tmp)
+    return m
 
 def execute(shell, *l):
     p = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

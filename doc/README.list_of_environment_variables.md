@@ -2,6 +2,7 @@
 
         $ fileobj --env
         FILEOBJ_ADDRESS_RADIX       If set to "16", "10" or "8", show address in either hexadecimal, decimal or octal (equivalent to :set address). Defaults to "16" if undefined.
+        FILEOBJ_BUFFER_SIZE         Set custom buffer size if larger than 0. Defaults to 0.
         FILEOBJ_BYTES_PER_LINE      Set number of bytes printed per line (equivalent to --bytes_per_line and :set bytes_per_line).
         FILEOBJ_BYTES_PER_UNIT      Set number of bytes printed per unit (equivalent to --bytes_per_unit and :set bytes_per_unit).
         FILEOBJ_BYTES_PER_WINDOW    Set number of bytes printed per window (equivalent to --bytes_per_window and :set bytes_per_window).

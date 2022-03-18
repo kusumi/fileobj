@@ -143,6 +143,16 @@ sitepkg = _("""
 Print \fBpython\fP\|(1) site\-package directory and exit.
 """)
 
+cmp = _("""
+Compare contents of files and exit.
+""")
+
+md = _("""
+Print message digest of files using \fI<hash_algorithm>\fP and exit.
+Defaults to use SHA256.
+""")
+md_metavar = _metavar("hash_algorithm")
+
 lsblk = _("""
 Print list of block devices and exit.
 This prints character devices on some platforms.
@@ -210,6 +220,11 @@ Only applies to regular files.
 FILEOBJ_USE_TRUNCATE_SHRINK = _("""
 If defined, allow \fB:truncate\fP to shrink truncate.
 Defaults to disallow.
+""")
+
+FILEOBJ_BUFFER_SIZE = _("""
+Set custom buffer size if larger than 0.
+Defaults to 0.
 """)
 
 FILEOBJ_ENDIANNESS = _("""

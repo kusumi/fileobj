@@ -136,8 +136,9 @@ def __log_debug():
         l.append("{0}=0x{1:X}".format(s, a))
 
     log.debug("screen: {0}".format(l))
-    log.debug("screen: has_color={0} can_change_color={1} use_color={2} "
-        "use_mouse={3}".format(has_color(), can_change_color(), use_color(),
+    log.debug("screen: has_color={0} has_extended_color={1} "
+        "can_change_color={2} use_color={3} use_mouse={4}".format(
+        has_color(), has_extended_color(), can_change_color(), use_color(),
         use_mouse()))
     log.debug("screen: buf_attr {0}".format(set(sorted(buf_attr.values()))))
 
@@ -240,6 +241,25 @@ def use_alt_chgat():
 
 def has_color():
     return _screen.has_color()
+
+def has_extended_color():
+    ret = _screen.has_extended_color()
+    assert isinstance(ret, bool) or ret is None
+    return ret
+
+def assert_extended_color_supported():
+    ret = has_extended_color()
+    if isinstance(ret, bool):
+        assert ret is True, ret
+    else:
+        assert ret is None, ret
+
+def assert_extended_color_unsupported():
+    ret = has_extended_color()
+    if isinstance(ret, bool):
+        assert ret is False, ret
+    else:
+        assert ret is None, ret
 
 def can_change_color():
     return _screen.can_change_color()

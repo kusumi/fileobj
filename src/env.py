@@ -39,6 +39,7 @@ def __iter_env():
     yield "FILEOBJ_USE_UNIT_BASED", False
     yield "FILEOBJ_USE_BACKUP", False
     yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
+    yield "FILEOBJ_BUFFER_SIZE", 0
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address
     yield "FILEOBJ_BYTES_PER_LINE", None # --bytes_per_line, :set bytes_per_line
@@ -88,7 +89,6 @@ def __iter_env_private():
     yield "__FILEOBJ_BUFFER_CHUNK_BALANCE_INTERVAL", 100
     yield "__FILEOBJ_TERMINAL_HEIGHT", -1
     yield "__FILEOBJ_TERMINAL_WIDTH", -1
-    yield "__FILEOBJ_TEMP_SIZE", -1
     yield "__FILEOBJ_PATH_STREAM", None
     yield "__FILEOBJ_COLOR_FB", "none"
 
@@ -175,6 +175,9 @@ def __get_setting_use_backup():
 
 def __get_setting_use_truncate_shrink():
     return test_bool("FILEOBJ_USE_TRUNCATE_SHRINK")
+
+def __get_setting_buffer_size():
+    return test_gt_zero("FILEOBJ_BUFFER_SIZE")
 
 def __get_setting_endianness():
     s = "FILEOBJ_ENDIANNESS"
@@ -396,9 +399,6 @@ def __get_setting_terminal_height():
 
 def __get_setting_terminal_width():
     return test_gt_zero("__FILEOBJ_TERMINAL_WIDTH")
-
-def __get_setting_temp_size():
-    return test_gt_zero("__FILEOBJ_TEMP_SIZE")
 
 def __get_setting_path_stream():
     return getenv("__FILEOBJ_PATH_STREAM")

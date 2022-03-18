@@ -6,7 +6,7 @@
           fileobj [options]... [paths[@offset:length]]...
           fileobj [options]... [paths[@offset-(offset+length)]]...
         
-        optional arguments:
+        options:
           -h, --help            show this help message and exit
           -R                    Use read-only mode.
           -B                    Use Python bytes based buffer for regular files. This
@@ -51,6 +51,10 @@
           --command             Print list of editor commands and exit. Also see
                                 :help.
           --sitepkg             Print python(1) site-package directory and exit.
+          --cmp                 Compare contents of files and exit.
+          --md [<hash_algorithm>]
+                                Print message digest of files using <hash_algorithm>
+                                and exit. Defaults to use SHA256.
           --lsblk               Print list of block devices and exit. This prints
                                 character devices on some platforms.
           --version             show program's version number and exit

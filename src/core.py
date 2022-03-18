@@ -28,6 +28,7 @@ import signal
 import sys
 
 from . import allocator
+from . import cmp
 from . import console
 from . import container
 from . import env
@@ -36,6 +37,7 @@ from . import kbd
 from . import kernel
 from . import literal
 from . import log
+from . import md
 from . import methods
 from . import package
 from . import panel
@@ -160,6 +162,8 @@ def __dispatch(optargs=None):
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
+    parser.add_argument("--cmp", action="store_true", default=False, help=usage.cmp)
+    parser.add_argument("--md", nargs="?", type=str, const="sha256", metavar=usage.md_metavar, help=usage.md)
     if kernel.is_xnix():
         parser.add_argument("--lsblk", action="store_true", default=False, help=usage.lsblk)
     if __test_wait_for_input():
@@ -223,6 +227,14 @@ def __dispatch(optargs=None):
     if opts.sitepkg:
         for x in package.get_paths():
             util.printf(x)
+        return _DID_PRINT_MESSAGE
+    if opts.cmp:
+        cmp.cmp(args, opts.verbose)
+        return _DID_PRINT_MESSAGE
+    if opts.md is not None:
+        if opts.md == "":
+            opts.md = "sha256"
+        md.md(args, opts.md, opts.verbose)
         return _DID_PRINT_MESSAGE
     # "lsblk" exists only if running on *nix
     if hasattr(opts, "lsblk") and opts.lsblk:
@@ -657,11 +669,17 @@ def __update_color(scr, repaint, l):
                             s = ",{0}:{1}:{2}".format(*l)
                             ret = screen.set_color_attr(s)
                             if ret != -1:
+                                if setting.use_debug:
+                                    # really ?
+                                    screen.assert_extended_color_supported()
                                 scr.addstr(y, x, " ", ret)
                                 tot += 1
                                 assert tot < 256, tot
                                 log.debug("{0} {1} {2:x}".format(tot, l, ret))
                             else:
+                                if setting.use_debug:
+                                    # really ?
+                                    screen.assert_extended_color_unsupported()
                                 scr.addstr(y, x, __get_error_code(2))
                         else:
                             scr.addstr(y, x, __get_error_code(3))

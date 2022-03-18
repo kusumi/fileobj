@@ -1,3 +1,11 @@
+v0.7.107
+========
+- Minor fixes and cleanups
+- Add Python 3.10 support
+- Add --cmp
+- Add --md
+- Rename __FILEOBJ_TEMP_SIZE to FILEOBJ_BUFFER_SIZE
+
 v0.7.106
 ========
 - Minor fixes and cleanups

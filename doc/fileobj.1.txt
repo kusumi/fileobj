@@ -90,6 +90,13 @@ OPTIONS
        --sitepkg
            Print python(1) site-package directory and exit.
 
+       --cmp
+           Compare contents of files and exit.
+
+       --md=[<hash_algorithm>]
+           Print message digest of files using <hash_algorithm> and exit.
+           Defaults to use SHA256.
+
        --lsblk
            Print list of block devices and exit.  This prints character
            devices on some platforms.
@@ -144,6 +151,9 @@ ENVIRONMENT
        FILEOBJ_USE_TRUNCATE_SHRINK
            If defined, allow :truncate to shrink truncate.  Defaults to
            disallow.
+
+       FILEOBJ_BUFFER_SIZE
+           Set custom buffer size if larger than 0.  Defaults to 0.
 
        FILEOBJ_ENDIANNESS
            If set to "little" or "big", set endianness for multi-bytes data
@@ -248,10 +258,10 @@ DOCUMENTATION
        https://github.com/kusumi/fileobj/blob/master/README.md
 
 COPYING
-       Copyright (c) 2010-2021, Tomohiro Kusumi.  Free use of this software is
+       Copyright (c) 2010-2022, Tomohiro Kusumi.  Free use of this software is
        granted under the terms of the BSD License (2-clause).
 
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.7.106               September 26, 2021                    FILEOBJ(1)
+FILEOBJ 0.7.107                 March 12, 2022                      FILEOBJ(1)

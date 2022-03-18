@@ -628,6 +628,9 @@ class Fileobj (object):
     def ioctl(self, arg):
         return
 
+def is_subclass(cls, s):
+    return util.is_subclass(cls, get_class(s))
+
 def get_class(s):
     if s:
         o = util.import_module(package.get_prefix() + s)

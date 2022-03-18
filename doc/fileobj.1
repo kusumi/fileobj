@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "September 26, 2021" "FILEOBJ 0.7.106"
+.TH FILEOBJ 1 "March 12, 2022" "FILEOBJ 0.7.107"
 .nh
 .ad l
 .SH NAME
@@ -157,6 +157,17 @@ Print list of editor commands and exit. Also see \fB:help\fP.
 Print \fBpython\fP\|(1) site\-package directory and exit.
 .RE
 .PP
+\fB\-\-cmp\fP
+.RS 4
+Compare contents of files and exit.
+.RE
+.PP
+\fB\-\-md\fP=[\fI<hash_algorithm>\fP]
+.RS 4
+Print message digest of files using \fI<hash_algorithm>\fP and exit.
+Defaults to use SHA256.
+.RE
+.PP
 \fB\-\-lsblk\fP
 .RS 4
 Print list of block devices and exit.
@@ -235,6 +246,12 @@ Only applies to regular files.
 .RS 4
 If defined, allow \fB:truncate\fP to shrink truncate.
 Defaults to disallow.
+.RE
+.PP
+\fBFILEOBJ_BUFFER_SIZE\fP
+.RS 4
+Set custom buffer size if larger than 0.
+Defaults to 0.
 .RE
 .PP
 \fBFILEOBJ_ENDIANNESS\fP
@@ -387,7 +404,7 @@ Temporary backup file format.
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/master/README.md\fP
 .SH COPYING
-Copyright (c) 2010\-2021, Tomohiro Kusumi.
+Copyright (c) 2010\-2022, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).
 .SH AUTHORS
 Tomohiro Kusumi <\fIkusumi.tomohiro@gmail.com\fP>
