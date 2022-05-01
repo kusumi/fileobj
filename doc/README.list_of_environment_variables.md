@@ -21,6 +21,7 @@
         FILEOBJ_USE_BYTES_BUFFER    If defined, use Python bytes based buffer for regular files (equivalent to -B).
         FILEOBJ_USE_COLOR           If set to "false", do not use color for buffer contents (equivalent to --no_color). This set to "false" is equivalent to FILEOBJ_COLOR_ZERO, FILEOBJ_COLOR_FF, FILEOBJ_COLOR_PRINT, FILEOBJ_COLOR_DEFAULT, FILEOBJ_COLOR_OFFSET set to "none" or "white". Defaults to use color if undefined.
         FILEOBJ_USE_IGNORECASE      If defined, search operation is case-insensitive (equivalent to :set ic). Defaults to case-sensitive if undefined.
+        FILEOBJ_USE_LINE_SCROLL     If defined, enable line scroll mode. Defaults to page scroll mode.
         FILEOBJ_USE_MOUSE_EVENTS    If set to "false", do not use mouse events. Defaults to use mouse events if undefined.
         FILEOBJ_USE_READONLY        If defined, use read-only mode (equivalent to -R).
         FILEOBJ_USE_SIPREFIX        If defined, use 10^3(K) for kilo (equivalent to :set si). Defaults to 2^10(Ki) if undefined.

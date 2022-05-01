@@ -472,6 +472,8 @@ def init():
     setattr(this, "s_sha256", SlowLiteral(":sha256", None, "Print sha256 message digest of the current buffer"))
     setattr(this, "s_sha384", SlowLiteral(":sha384", None, "Print sha384 message digest of the current buffer"))
     setattr(this, "s_sha512", SlowLiteral(":sha512", None, "Print sha512 message digest of the current buffer"))
+    setattr(this, "s_blake2b", SlowLiteral(":blake2b", None, "Print blake2b message digest of the current buffer"))
+    setattr(this, "s_blake2s", SlowLiteral(":blake2s", None, "Print blake2s message digest of the current buffer"))
     setattr(this, "s_sha3_224", SlowLiteral(":sha3_224", None, "Print sha3_224 message digest of the current buffer"))
     setattr(this, "s_sha3_256", SlowLiteral(":sha3_256", None, "Print sha3_256 message digest of the current buffer"))
     setattr(this, "s_sha3_384", SlowLiteral(":sha3_384", None, "Print sha3_384 message digest of the current buffer"))
@@ -507,6 +509,8 @@ def init():
     setattr(this, "s_open_sha256", SlowLiteral(":open_sha256", None, "Open sha256 message digest of the current buffer"))
     setattr(this, "s_open_sha384", SlowLiteral(":open_sha384", None, "Open sha384 message digest of the current buffer"))
     setattr(this, "s_open_sha512", SlowLiteral(":open_sha512", None, "Open sha512 message digest of the current buffer"))
+    setattr(this, "s_open_blake2b", SlowLiteral(":open_blake2b", None, "Open blake2b message digest of the current buffer"))
+    setattr(this, "s_open_blake2s", SlowLiteral(":open_blake2s", None, "Open blake2s message digest of the current buffer"))
     setattr(this, "s_open_sha3_224", SlowLiteral(":open_sha3_224", None, "Open sha3_224 message digest of the current buffer"))
     setattr(this, "s_open_sha3_256", SlowLiteral(":open_sha3_256", None, "Open sha3_256 message digest of the current buffer"))
     setattr(this, "s_open_sha3_384", SlowLiteral(":open_sha3_384", None, "Open sha3_384 message digest of the current buffer"))
@@ -604,6 +608,8 @@ def init():
         yield this.s_open_sha256
         yield this.s_open_sha384
         yield this.s_open_sha512
+        yield this.s_open_blake2b
+        yield this.s_open_blake2s
         yield this.s_open_sha3_224
         yield this.s_open_sha3_256
         yield this.s_open_sha3_384

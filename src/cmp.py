@@ -124,7 +124,7 @@ def _cmp(args, verbose, printf, printe):
         elif not setting.use_debug:
             assert resid >= 0, _ # could be < 0 if debug mode
 
-    printf("scanned {0} blocks".format((cmpsiz + blksiz - 1) // blksiz))
+    printf("scanned {0} blocks".format(util.howmany(cmpsiz, blksiz)))
     if not mismatch:
         printf("success")
 

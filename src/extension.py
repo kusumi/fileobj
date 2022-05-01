@@ -31,6 +31,7 @@ from . import filebytes
 from . import kernel
 from . import panel
 from . import screen
+from . import setting
 from . import util
 
 class Error (util.GenericError):
@@ -104,6 +105,19 @@ class ExtBinaryCanvas (panel.DisplayCanvas, panel.default_attribute):
             self.addstr(y, x, s, attr1)
         else:
             self.addstr(y, x, s, attr2)
+
+    def has_page_line_state_machine(self):
+        return True
+
+    # pls update which affects binary canvas and everything after
+    # 1. virtual canvas updates position first
+    # 2. binary canvas updates pls based on position change
+    # 3. binary canvas syncs cursor
+    # 4. remaining canvases sync cursor
+    def sync_cursor(self, reset_line_scroll):
+        if setting.use_line_scroll:
+            self.update_page_line_state_safe(reset_line_scroll)
+        return super(ExtBinaryCanvas, self).sync_cursor(reset_line_scroll)
 
 class ExtTextCanvas (panel.DisplayCanvas, panel.default_attribute):
     def iter_line_buffer(self):

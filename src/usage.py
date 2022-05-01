@@ -222,6 +222,11 @@ If defined, allow \fB:truncate\fP to shrink truncate.
 Defaults to disallow.
 """)
 
+FILEOBJ_USE_LINE_SCROLL = _("""
+If defined, enable line scroll mode.
+Defaults to page scroll mode.
+""")
+
 FILEOBJ_BUFFER_SIZE = _("""
 Set custom buffer size if larger than 0.
 Defaults to 0.

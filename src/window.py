@@ -41,6 +41,9 @@ class Window (object):
             raise AttributeError(name)
         return getattr(self.__canvas, name)
 
+    def __str__(self):
+        return "{0},{1}".format(self.__frame, self.__canvas)
+
     def update(self):
         self.__frame.update()
         self.__canvas.update()
@@ -58,6 +61,9 @@ class Window (object):
         y = self.get_position_y() - _get_diff_y(lf, lc)
         x = self.get_position_x() - _get_diff_x(lf, lc)
         return y, x
+
+    def has_buffer(self):
+        return self.__canvas.has_buffer()
 
     def set_buffer(self, fileops):
         self.__canvas.set_buffer(fileops)
@@ -105,6 +111,12 @@ class Window (object):
 
     def get_geom_pos(self, y, x):
         return self.__canvas.get_geom_pos(y, x)
+
+    def reset_page_line_state(self, fail_fast=False):
+        return self.__canvas.reset_page_line_state(fail_fast)
+
+    def has_page_line_state_machine(self):
+        return self.__canvas.has_page_line_state_machine()
 
 def _get_diff_y(a, b):
     return a[0] - b[0]
@@ -171,8 +183,7 @@ def get_max_bytes_per_line(wspnum):
     while True:
         r -= cell * wspnum
         if r < 0: # not "r < 1"
-            unitlen = setting.bytes_per_unit
-            return (ret // unitlen) * unitlen
+            return util.rounddown(ret, setting.bytes_per_unit)
         ret += 1
     assert False
 

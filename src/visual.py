@@ -520,6 +520,8 @@ class _console (console.Console):
         self.add_method(literal.s_sha256     , this,    "_show_sha256")
         self.add_method(literal.s_sha384     , this,    "_show_sha384")
         self.add_method(literal.s_sha512     , this,    "_show_sha512")
+        self.add_method(literal.s_blake2b    , this,    "_show_blake2b")
+        self.add_method(literal.s_blake2s    , this,    "_show_blake2s")
         self.add_method(literal.s_sha3_224   , this,    "_show_sha3_224")
         self.add_method(literal.s_sha3_256   , this,    "_show_sha3_256")
         self.add_method(literal.s_sha3_384   , this,    "_show_sha3_384")
@@ -579,6 +581,8 @@ class _console (console.Console):
         self.add_method(literal.s_open_sha256, this,    "_open_sha256")
         self.add_method(literal.s_open_sha384, this,    "_open_sha384")
         self.add_method(literal.s_open_sha512, this,    "_open_sha512")
+        self.add_method(literal.s_open_blake2b, this,   "_open_blake2b")
+        self.add_method(literal.s_open_blake2s, this,   "_open_blake2s")
         self.add_method(literal.s_open_sha3_224, this,  "_open_sha3_224")
         self.add_method(literal.s_open_sha3_256, this,  "_open_sha3_256")
         self.add_method(literal.s_open_sha3_384, this,  "_open_sha3_384")
@@ -747,6 +751,14 @@ def _show_sha384(self, amp, opc, args, raw):
 def _show_sha512(self, amp, opc, args, raw):
     return _exit_visual(self)
 
+@_(methods.range_show_blake2b, methods.block_show_blake2b)
+def _show_blake2b(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_show_blake2s, methods.block_show_blake2s)
+def _show_blake2s(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
 @_(methods.range_show_sha3_224, methods.block_show_sha3_224)
 def _show_sha3_224(self, amp, opc, args, raw):
     return _exit_visual(self)
@@ -837,6 +849,14 @@ def _open_sha384(self, amp, opc, args, raw):
 
 @_(methods.range_open_sha512, methods.block_open_sha512)
 def _open_sha512(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_blake2b, methods.block_open_blake2b)
+def _open_blake2b(self, amp, opc, args, raw):
+    return _exit_visual(self)
+
+@_(methods.range_open_blake2s, methods.block_open_blake2s)
+def _open_blake2s(self, amp, opc, args, raw):
     return _exit_visual(self)
 
 @_(methods.range_open_sha3_224, methods.block_open_sha3_224)

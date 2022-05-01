@@ -45,39 +45,39 @@ def import_package():
         import fileobj as pkg
     return pkg
 
-def __test(version, name, permissive):
+def __test(version, name, allow_python2):
     version = tuple(version[:3])
     if name == "Windows":
-        __test_windows(version, name, permissive)
+        __test_windows(version, name, allow_python2)
     else:
-        __test_xnix(version, name, permissive)
+        __test_xnix(version, name, allow_python2)
     import curses
     curses
     del curses
 
-def __test_xnix(version, name, permissive):
+def __test_xnix(version, name, allow_python2):
     if name.startswith("CYGWIN") and sys.executable[0] in "ABCDEFG":
         raise Exception("Cygwin Python is required on Cygwin")
-    __test_common(version, name, permissive)
+    __test_common(version, name, allow_python2)
 
-def __test_windows(version, name, permissive):
-    __test_common(version, name, permissive)
+def __test_windows(version, name, allow_python2):
+    __test_common(version, name, allow_python2)
 
-def __test_common(version, name, permissive):
-    if permissive:
-        __test_permissive_install(version, name)
+def __test_common(version, name, allow_python2):
+    if allow_python2:
+        __test_version_allow_python2(version, name)
     else:
-        __test_strict_install(version, name)
+        __test_version(version, name)
 
 # https://www.python.org/doc/sunset-python-2/
 # Given EOL of Python 2.7, fileobj no longer officially supports Python 2,
 # but the code still runs on Python 2.7 as of January 2020.
 
-def __test_strict_install(version, name):
+def __test_version(version, name):
     if version[0] <= 2 or ((3, 0, 0) <= version < (3, 2, 0)):
         raise Exception("Python 3.2+ is required")
 
-def __test_permissive_install(version, name):
+def __test_version_allow_python2(version, name):
     if not support_if_argparse:
         if version < (2, 7, 0) or ((3, 0, 0) <= version < (3, 2, 0)):
             raise Exception("Python 2.7 or Python 3.2+ is required")
@@ -100,17 +100,17 @@ def test(installation=False):
     else:
         debug = e.lower() != "false"
 
-    e = os.getenv("__FILEOBJ_USE_PERMISSIVE_INSTALL")
+    e = os.getenv("__FILEOBJ_USE_ALLOW_PYTHON2")
     if e is None:
-        permissive = False
+        allow_python2 = False
     else:
-        permissive = e.lower() != "false"
+        allow_python2 = e.lower() != "false"
     if not installation:
-        permissive = True # allow Python 2.7 unless installation
+        allow_python2 = True # allow Python 2.7 unless installation
 
     try:
         name = platform.system()
-        __test(sys.version_info, name, permissive)
+        __test(sys.version_info, name, allow_python2)
     except Exception:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)

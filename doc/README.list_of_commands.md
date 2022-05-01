@@ -47,6 +47,8 @@
         :bfirst                Go to the first buffer in buffer list
         :brewind               Go to the first buffer in buffer list
         :bind                  Run/bind given :command in argument, replayable with @:
+        :blake2b               Print blake2b message digest of the current buffer
+        :blake2s               Print blake2s message digest of the current buffer
         :blast                 Go to the last buffer in buffer list
         :bnext                 Change buffer to the next
         <TAB>                  Change buffer to the next
@@ -87,6 +89,8 @@
         :open_base64_encode    Open base64 encoded buffer of the current buffer
         :open_base85_decode    Open base85 decoded buffer of the current buffer
         :open_base85_encode    Open base85 encoded buffer of the current buffer
+        :open_blake2b          Open blake2b message digest of the current buffer
+        :open_blake2s          Open blake2s message digest of the current buffer
         :open_md5              Open md5 message digest of the current buffer
         :open_sha1             Open sha1 message digest of the current buffer
         :open_sha224           Open sha224 message digest of the current buffer

@@ -215,24 +215,21 @@ class Container (object):
 
     def __get_session_position(self, o):
         if setting.use_session_position:
-            ret = o.get_session_value('@')
-            if ret == -1:
-                return ret
-            ret -= o.get_mapping_offset()
-            if ret < 0:
-                return -1
-            return ret
+            k = self.__get_session_position_key(o)
+            return o.get_session_value(k)
         else:
             return -1
 
     def __set_session_position(self, o):
         if setting.use_session_position:
-            pos = o.get_mapping_offset() + o.get_pos()
-            if pos > o.get_max_pos():
-                return -1
-            return o.set_session_value('@', pos)
+            k = self.__get_session_position_key(o)
+            return o.set_session_value(k, o.get_pos())
         else:
             return -1
+
+    def __get_session_position_key(self, o):
+        return "{0},{1},{2}".format('@', o.get_mapping_offset(),
+            o.get_mapping_length())
 
     def __alloc_buffer(self, f, reload=False):
         if not self.has_buffer(f):
@@ -415,6 +412,7 @@ class Container (object):
         return tuple(l)
 
     def build(self, vertical=-1):
+        self.__reset_page_line_state(True)
         return self._build(False, vertical)
 
     def build_quiet(self, vertical=-1):
@@ -1360,8 +1358,7 @@ class Container (object):
                         ret = 1
                     break
         # bpl determined by vbuild retry may not be multiple of bpu
-        unitlen = setting.bytes_per_unit
-        ret = (ret // unitlen) * unitlen
+        ret = util.rounddown(ret, setting.bytes_per_unit)
         if not ret:
             return -1
         # update bpl
@@ -1417,8 +1414,7 @@ class Container (object):
                 elif ret <= 1:
                     return 1
                 else:
-                    unitlen = setting.bytes_per_unit
-                    ret = (ret // unitlen) * unitlen
+                    ret = util.rounddown(ret, setting.bytes_per_unit)
                     # redo the test
                     if ret >= max_bpl: # never true
                         return max_bpl
@@ -1437,8 +1433,7 @@ class Container (object):
     def get_lines_per_window(self):
         if self.__bpw == -1:
             return -1
-        bpl = self.get_bytes_per_line()
-        return (self.__bpw + bpl - 1) // bpl
+        return util.howmany(self.__bpw, self.get_bytes_per_line())
 
     # use Workspace.get_capacity() to get actual capacity
     def get_bytes_per_window(self):
@@ -1519,6 +1514,12 @@ class Container (object):
                 return int(arg)
             except ValueError:
                 return -1
+
+    def __reset_page_line_state(self, fail_fast=False):
+        # clear the entire pls rather than the ones for current fileops
+        #for o in self.__workspaces:
+        #    o.reset_page_line_state(fail_fast)
+        panel.clear_page_line_state()
 
 _arrows = kbd.UP, util.ctrl('p'), kbd.DOWN, util.ctrl('n')
 _up = _arrows[:2]

@@ -62,6 +62,13 @@ class Namespace (object):
         self.__d = {}
         self.set(**kwd)
 
+    def __str__(self):
+        l = []
+        for k in self.__d.keys(): # not sorted
+            v = getattr(self, k) # fields might not be updated via set()
+            l.append("{0}={1}".format(k, v))
+        return ",".join(l)
+
     def items(self):
         return dict(self.__d.items())
 
@@ -398,6 +405,15 @@ def __get_cpu_bits():
         else:
             return 32 # assume either 64 or 32
 _cpu_bits = __get_cpu_bits()
+
+def howmany(x, y):
+    return (x + y - 1) // y
+
+def roundup(x, y):
+    return ((x + y - 1) // y) * y
+
+def rounddown(x, y):
+    return (x // y) * y
 
 def align_range(beg, end, align):
     beg = align_head(beg, align)
@@ -756,8 +772,11 @@ def get_hash_object(name):
     except ValueError:
         return None
 
-def get_supported_hash_algorithms():
+def get_available_hash_algorithms():
     return tuple(sorted(hashlib.algorithms_available))
+
+def get_guaranteed_hash_algorithms():
+    return tuple(sorted(hashlib.algorithms_guaranteed))
 
 _hash_buffer_thresh = MiB
 def update_hash_object(m, b):
@@ -1057,3 +1076,15 @@ def get_csv_string(l, ordered=True):
     for k, v in l:
         ret.append("{0}={1}".format(k, v))
     return ",".join(ret)
+
+def iter_directory(d, expand_symlink=False):
+    assert os.path.isdir(d), d
+    for root, dirs, files in os.walk(d):
+        for _ in files:
+            f = os.path.join(root, _)
+            if expand_symlink:
+                f = os.path.realpath(f)
+            else:
+                f = os.path.normpath(f)
+            assert os.path.exists(f), f
+            yield f

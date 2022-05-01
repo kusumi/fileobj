@@ -39,6 +39,7 @@ def __iter_env():
     yield "FILEOBJ_USE_UNIT_BASED", False
     yield "FILEOBJ_USE_BACKUP", False
     yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
+    yield "FILEOBJ_USE_LINE_SCROLL", False
     yield "FILEOBJ_BUFFER_SIZE", 0
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address
@@ -75,7 +76,7 @@ def __iter_env_private():
     yield "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True # unittest (false)
     yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT", False
     yield "__FILEOBJ_USE_DELETE_CONSOLE", True # unittest (false)
-    yield "__FILEOBJ_USE_PERMISSIVE_INSTALL", False
+    yield "__FILEOBJ_USE_ALLOW_PYTHON2", False
     yield "__FILEOBJ_USE_WINDOWS_TERMINAL", False
     yield "__FILEOBJ_USE_TERMINAL_RESIZE", True
     yield "__FILEOBJ_STDOUT_VERBOSE", 1 # unittest (0)
@@ -175,6 +176,9 @@ def __get_setting_use_backup():
 
 def __get_setting_use_truncate_shrink():
     return test_bool("FILEOBJ_USE_TRUNCATE_SHRINK")
+
+def __get_setting_use_line_scroll():
+    return test_bool("FILEOBJ_USE_LINE_SCROLL")
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE")
@@ -347,8 +351,8 @@ def __get_setting_use_vm_sync_on_edit():
 def __get_setting_use_delete_console():
     return test_bool("__FILEOBJ_USE_DELETE_CONSOLE")
 
-def __get_setting_use_permissive_install():
-    return test_bool("__FILEOBJ_USE_PERMISSIVE_INSTALL")
+def __get_setting_use_allow_python2():
+    return test_bool("__FILEOBJ_USE_ALLOW_PYTHON2")
 
 def __get_setting_use_windows_terminal():
     return test_bool("__FILEOBJ_USE_WINDOWS_TERMINAL")

@@ -21,6 +21,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+
 from . import filebytes
 from . import fileops
 from . import setting
@@ -52,7 +54,7 @@ def _md(args, hash_algo, verbose, printf, printe):
         printe("No such hash algorithm \"{0}\", "
             "supported hash algorithms are as follows".format(hash_algo))
         printe("{0}".format(" ".join(
-            util.get_supported_hash_algorithms())))
+            util.get_available_hash_algorithms())))
         return -1
 
     # determine block size
@@ -61,8 +63,20 @@ def _md(args, hash_algo, verbose, printf, printe):
     else:
         blksiz = 1 << 16
 
+    # walk if args contains directory
+    real_args = []
+    for x in args:
+        if os.path.isdir(x):
+            for f in util.iter_directory(x):
+                real_args.append(f)
+                if len(real_args) > 10000: # XXX do one by one ?
+                    printe("Too many files in {0}".format(args))
+                    return -1
+        else:
+            real_args.append(x)
+
     # allocate fileops
-    fileopsl, bulk_cleanup = fileops.bulk_alloc(args, True, printf, printe)
+    fileopsl, bulk_cleanup = fileops.bulk_alloc(real_args, True, printf, printe)
     if fileopsl is None:
         return -1
     for ops in fileopsl:
@@ -79,7 +93,7 @@ def _md(args, hash_algo, verbose, printf, printe):
         printf("-" * 50)
     if verbose:
         l = []
-        for x in util.get_supported_hash_algorithms():
+        for x in util.get_available_hash_algorithms():
             if " " in x:
                 x = "'{0}'".format(x)
             if x == hash_algo:

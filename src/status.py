@@ -196,8 +196,8 @@ class VerboseStatusCanvas (StatusCanvas):
             self.iter_buffer_template = fn
 
     def iter_buffer_template(self):
-        yield 0, '', screen.A_NONE
-        yield 1, '', screen.A_NONE
+        yield 0, ''
+        yield 1, ''
 
     def iter_line_buffer(self):
         g = self.iter_buffer_template()
@@ -219,7 +219,7 @@ class VerboseStatusCanvas (StatusCanvas):
         s, attr = self.get_format_line(s)
         yield i, s, attr
 
-    def sync_cursor(self):
+    def sync_cursor(self, arg):
         self.repaint(None, False)
 
 class SingleStatusCanvas (StatusCanvas):
@@ -236,11 +236,18 @@ class SingleStatusCanvas (StatusCanvas):
             self.iter_buffer_template = fn
 
     def iter_buffer_template(self):
-        yield 0, '', screen.A_NONE
+        yield 0, ''
 
     def iter_line_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
+        if setting.use_debug and setting.use_line_scroll:
+            pls = panel.get_page_line_state(self.fileops)
+            x = str(pls)
+            if x:
+                if s:
+                    s += ' '
+                s += x
         x = self.get_status_common1()
         if x:
             if s:
@@ -254,7 +261,7 @@ class SingleStatusCanvas (StatusCanvas):
         s, attr = self.get_format_line(s)
         yield i, s, attr
 
-    def sync_cursor(self):
+    def sync_cursor(self, arg):
         self.repaint(None, False)
 
 def get_status_frame_class():

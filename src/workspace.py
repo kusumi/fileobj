@@ -76,10 +76,32 @@ class Workspace (object):
         else:
             i = self.__fileopss.index(self.__cur_fileops)
             self.__cur_console = self.__consoles[i]
+        # set window first which may result in capacity update
         self.__set_window(self.__cur_console)
+        assert len(self.__windows) > 1, self.__windows
+        # test if there is a window missing its buffer
+        is_missing_buffer = False
+        for o in self.__windows:
+            if o:
+                if not o.has_buffer():
+                    is_missing_buffer = True
+        # and then set buffer for each window
         for o in self.__windows:
             if o:
                 o.set_buffer(self.__cur_fileops)
+        # assert all windows have the same buffer
+        l = [o.get_buffer_repr() for o in self.__windows if o]
+        assert repr(None) not in l
+        assert len(set(l)) == 1, l
+        # XXX Explicitly reset pls for void.ExtConsole console if
+        # is_missing_buffer, as pls reset via capacity update from above
+        # requires capacity update with its buffer set, which is not the case
+        # with a new canvas.
+        # Other console types don't need this, as pls for a given buffer has
+        # already been initialized even if is_missing_buffer.
+        if is_missing_buffer and \
+            isinstance(self.__cur_console, void.ExtConsole):
+            self.reset_page_line_state() # not fail_fast
         def dispatch():
             self.require_full_repaint()
             return self.__cur_console.dispatch(arg)
@@ -96,6 +118,15 @@ class Workspace (object):
             self.__get_binary_window(cls), \
             self.__get_text_window(cls), \
             self.__get_status_window(cls)
+        # assert pls support for line scroll
+        if setting.use_line_scroll:
+            for i, o in enumerate(self.__windows):
+                if o:
+                    t = o.has_page_line_state_machine()
+                    if i == 1:
+                        assert t, (i, str(o))
+                    else:
+                        assert not t, (i, str(o))
 
     def disconnect_window(self):
         # only leave virtual window to disable repaint
@@ -113,6 +144,7 @@ class Workspace (object):
         return ret
 
     def add_buffer(self, i, fop, con):
+        # unlike remove_buffer(), page line state must be added via panel
         self.__fileopss.insert(i, fop)
         self.__consoles.insert(i, con)
         if len(self.__fileopss) == 1:
@@ -126,7 +158,9 @@ class Workspace (object):
                 self.switch_to_prev_buffer()
             else:
                 self.switch_to_next_buffer()
-        self.__fileopss.remove(self.__fileopss[i])
+        if setting.use_line_scroll:
+            panel.delete_page_line_state(o)
+        self.__fileopss.remove(o)
         self.__consoles.remove(self.__consoles[i])
 
     def switch_to_buffer(self, i):
@@ -545,100 +579,196 @@ class Workspace (object):
                 o.xrepaint(is_current)
 
     def go_up(self, n=1):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_up(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_down(self, n=1):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_down(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_left(self, n=1):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_left(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_right(self, n=1):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_right(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_pprev(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_pprev(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_hpprev(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_hpprev(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_pnext(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_pnext(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_hpnext(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_hpnext(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_head(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_head(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_tail(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_tail(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_lhead(self):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_lhead() == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_ltail(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_ltail(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_phead(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_phead(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_pcenter(self):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_pcenter() == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_ptail(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_ptail(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def go_to(self, n):
+        need_repaint = False
         for o in self.__windows:
             if o:
                 if o.go_to(n) == -1:
-                    return -1
+                    need_repaint = True
+                    # line scroll mode must go through all windows
+                    if not setting.use_line_scroll:
+                        break
+        if need_repaint:
+            return -1
 
     def get_bytes_per_line(self):
         return self.__bpl
@@ -665,3 +795,15 @@ class Workspace (object):
             if pos != -1:
                 return pos
         return -1
+
+    def reset_page_line_state(self, fail_fast=False):
+        if setting.use_line_scroll:
+            for o in self.__windows:
+                if o.has_page_line_state_machine():
+                    o.reset_page_line_state(fail_fast)
+
+    def set_pos(self, n):
+        if setting.use_line_scroll:
+            self.go_to(n) # set_pos() + pls update
+        else:
+            self.__cur_fileops.set_pos(n)

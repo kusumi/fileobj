@@ -61,6 +61,7 @@ def __cleanup(arg):
     arg.done = True
     setting.cleanup()
     kernel.cleanup()
+    panel.cleanup()
     console.cleanup(arg.e, arg.tb)
     screen.cleanup()
     literal.cleanup()
@@ -422,7 +423,7 @@ def __dispatch(optargs=None):
                         tot += siz
             s1 = "Required memory {0}".format(util.get_size_repr(tot))
             s2 = "use --force option to continue"
-            __log_info(s1)
+            __log_debug(s1)
             free_ram = kernel.get_free_ram()
             if free_ram != -1 and not opts.force and tot > free_ram:
                 __error("{0} exceeds free RAM size {1}, {2}".format(

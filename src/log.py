@@ -146,5 +146,9 @@ def has_error():
             return True
     return False
 
+def debug_traceback(tb=None):
+    for x in util.iter_traceback(tb):
+        debug(x)
+
 _logger = None
 _logmsg = None

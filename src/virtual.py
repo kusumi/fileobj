@@ -25,6 +25,7 @@ from __future__ import division
 
 from . import panel
 from . import setting
+from . import util
 
 class NullFrame (panel.Frame):
     def repaint(self, *arg):
@@ -36,7 +37,7 @@ class NullFrame (panel.Frame):
     def box(self, current):
         return
 
-class _canvas (panel.Canvas):
+class _canvas (panel.PageLineCanvas):
     def fill(self, low):
         super(_canvas, self).fill(low)
         pos = self.fileops.get_pos()
@@ -79,7 +80,7 @@ class _canvas (panel.Canvas):
             unitlen = setting.bytes_per_unit
             if pos % unitlen and n > 0:
                 pos += unitlen
-            pos = (pos // unitlen) * unitlen
+            pos = util.rounddown(pos, unitlen)
             pos += d * unitlen # don't set+add (do in 1 step)
             self.fileops.set_unit_pos(pos)
 
@@ -92,7 +93,7 @@ class _canvas (panel.Canvas):
             unitlen = setting.bytes_per_unit
             if pos % unitlen and n < 0:
                 pos += unitlen
-            pos = (pos // unitlen) * unitlen
+            pos = util.rounddown(pos, unitlen)
             pos += d * unitlen # don't set+add (do in 1 step)
             self.fileops.set_unit_pos(pos)
 

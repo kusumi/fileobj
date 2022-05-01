@@ -23,6 +23,8 @@
 
 from __future__ import division
 
+import sys
+
 from . import filebytes
 from . import log
 from . import screen
@@ -36,21 +38,36 @@ from . import util
 #         status.StatusFrame
 #             status.NullStatusFrame
 #     Canvas
-#         virtual._canvas
-#             virtual.BinaryCanvas
-#             virtual.ExtCanvas
-#         DisplayCanvas
-#             BinaryCanvas
-#                 edit.WriteBinaryCanvas
-#                 visual.BinaryCanvas
-#             TextCanvas
-#                 visual.TextCanvas
-#             extension.ExtBinaryCanvas
-#                 visual.ExtBinaryCanvas
-#             extension.ExtTextCanvas
+#         PageLineCanvas
+#             virtual._canvas
+#                 virtual.BinaryCanvas
+#                 virtual.ExtCanvas
+#             DisplayCanvas
+#                 BinaryCanvas [*]
+#                     edit.WriteBinaryCanvas [*]
+#                     visual.BinaryCanvas [*]
+#                 TextCanvas
+#                     visual.TextCanvas
+#                 extension.ExtBinaryCanvas [*]
+#                     visual.ExtBinaryCanvas [*]
+#                 extension.ExtTextCanvas
 #         status.StatusCanvas
 #             status.VerboseStatusCanvas
 #             status.SingleStatusCanvas
+# [*] has_page_line_state_machine
+
+class PageLineStateError (util.GenericError):
+    def get_pos(self):
+        return self.__get_args()[0]
+
+    def get_prev_pos(self):
+        return self.__get_args()[1]
+
+    def __get_args(self):
+        assert len(self.args) > 0, self.args
+        l = self.args[0]
+        assert len(l) >= 2, l # pos, ppos
+        return l
 
 class _panel (object):
     def __init__(self, siz, pos):
@@ -171,6 +188,10 @@ class text_attribute (_attribute):
     def get_bufmap(self, bytes_per_line):
         return self.get_size_y() - self.offset.y, bytes_per_line
 
+CAPACITY_INITIALIZED = 0
+CAPACITY_CHANGED     = 1
+CAPACITY_UNCHANGED   = 2
+
 class Canvas (_panel):
     def __init__(self, siz, pos):
         super(Canvas, self).__init__(siz, pos)
@@ -193,14 +214,29 @@ class Canvas (_panel):
         self.bufmap = util.Pair() # need update_capacity()
         self.require_full_repaint()
 
+    def has_buffer(self):
+        return self.fileops is not None
+
     def set_buffer(self, fileops):
         self.fileops = fileops
+
+    def get_buffer_repr(self):
+        return repr(self.fileops)
 
     def get_capacity(self):
         return self.bufmap.y * self.bufmap.x
 
     def update_capacity(self, bytes_per_line):
+        prev_y = self.bufmap.y
+        prev_x = self.bufmap.x
         self.bufmap.set(*self.get_bufmap(bytes_per_line))
+        if prev_y == self.bufmap.y and prev_x == self.bufmap.x:
+            return CAPACITY_UNCHANGED
+        else:
+            if prev_y == 0 and prev_x == 0:
+                return CAPACITY_INITIALIZED
+            else:
+                return CAPACITY_CHANGED
 
     def iter_line_buffer(self):
         yield 0, '', screen.A_NONE
@@ -270,13 +306,6 @@ class Canvas (_panel):
             if setting.use_debug:
                 raise
 
-    def get_coordinate(self, pos):
-        """Return coordinate of the position within the page"""
-        r = pos % self.get_capacity()
-        y = self.offset.y + r // self.bufmap.x
-        x = self.offset.x + self.get_cell_width(r % self.bufmap.x)
-        return y, x
-
     def get_page_offset(self):
         """Return offset of the current page"""
         pos = self.fileops.get_pos()
@@ -303,60 +332,310 @@ class Canvas (_panel):
         return self.fileops.read(self.get_page_offset(), self.get_capacity())
 
     def go_up(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_down(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_left(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_right(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_pprev(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_hpprev(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_pnext(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_hpnext(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_head(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_tail(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_lhead(self):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_ltail(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_phead(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_pcenter(self):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_ptail(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
     def go_to(self, n):
-        return self.sync_cursor()
+        return self.sync_cursor(None)
 
-    def sync_cursor(self):
+    def sync_cursor(self, arg):
         return
 
     def get_geom_pos(self, y, x):
         return -1
 
-class DisplayCanvas (Canvas):
+    def has_page_line_state_machine(self):
+        return False
+
+class PageLineCanvas (Canvas):
+    # must avoid calling this when !setting.use_line_scroll
+    def is_page_changed(self):
+        assert not setting.use_line_scroll
+        return super(PageLineCanvas, self).is_page_changed()
+
+    def in_same_page(self, pos1, pos2):
+        """Return True if two positions are in the same page"""
+        pgo = self.get_page_offset()
+        pos1 -= pgo
+        pos2 -= pgo
+        x = self.get_capacity()
+        while pos1 < 0 or pos2 < 0:
+            pos1 += x
+            pos2 += x
+        assert pos1 >= 0, pos1
+        assert pos2 >= 0, pos2
+        return pos1 // x == pos2 // x
+
+    def is_line_changed(self):
+        pos = self.fileops.get_pos()
+        ppos = self.fileops.get_prev_pos()
+        lno = pos // self.bufmap.x
+        plno = ppos // self.bufmap.x
+        return lno - plno # up if < 0, down if > 0, unchanged if 0
+
+    def get_page_offset(self):
+        """Return offset of the current page"""
+        if setting.use_line_scroll:
+            pls = self.get_page_line_state()
+            if pls.delta_line != 0:
+                pos = pls.base_offset + pls.delta_line * self.bufmap.x
+                assert pos >= 0, (pos, repr(self), self.fileops.get_path(),
+                    str(pls))
+                if pos > self.fileops.get_max_pos():
+                    self.raise_page_line_state_error(pos,
+                        self.fileops.get_prev_pos())
+                return pos
+        return super(PageLineCanvas, self).get_page_offset()
+
+    def get_coordinate(self, pos):
+        """Return coordinate of the position within the page"""
+        if setting.use_line_scroll:
+            pls = self.get_page_line_state()
+            if pls.delta_line != 0:
+                pos -= pls.delta_line * self.bufmap.x
+                if pos < 0:
+                    self.raise_page_line_state_error(pos,
+                        self.fileops.get_prev_pos())
+                elif pos > self.fileops.get_max_pos():
+                    self.raise_page_line_state_error(pos,
+                        self.fileops.get_prev_pos())
+        r = pos % self.get_capacity()
+        y = self.offset.y + r // self.bufmap.x
+        x = self.offset.x + self.get_cell_width(r % self.bufmap.x)
+        return y, x
+
+    def in_first_page_line(self, pos=None):
+        """Return True if in the first page line"""
+        if pos is None:
+            pos = self.fileops.get_pos()
+        y, x = self.get_coordinate(pos)
+        return y == self.offset.y
+
+    def in_last_page_line(self, pos=None):
+        """Return True if in the last page line"""
+        if pos is None:
+            pos = self.fileops.get_pos()
+        y, x = self.get_coordinate(pos)
+        return y == self.offset.y + self.bufmap.y - 1
+
+    # to be called via super only when setting.use_line_scroll
+    def sync_cursor(self, reset_line_scroll):
+        assert setting.use_line_scroll
+        pls = self.get_page_line_state()
+        assert pls.sync != PAGE_SYNC_UNKNOWN
+        if pls.sync == PAGE_SYNC_UPDATE:
+            self.update_highlight(False, True)
+            self.noutrefresh()
+        elif pls.sync == PAGE_SYNC_REPAINT:
+            self.require_full_repaint()
+            return -1 # need repaint
+        else:
+            assert False, pls.sync
+
+    def __get_page_line_state_base_offset(self):
+        assert self.bufmap.x > 0
+        return util.rounddown(self.get_page_offset(), self.bufmap.x)
+
+    def get_page_line_state(self):
+        exists = has_page_line_state(self.fileops)
+        pls = get_page_line_state(self.fileops)
+        assert pls
+        if not exists:
+            assert pls.base_offset == 0, pls.base_offset
+            pls.base_offset = self.__get_page_line_state_base_offset()
+            log.debug("{0} add {1} {2}".format(self, self.fileops.get_path(),
+                pls))
+        return pls
+
+    def reset_page_line_state(self, fail_fast=False):
+        assert setting.use_line_scroll
+        assert self.has_page_line_state_machine(), repr(self)
+        cond1 = self.fileops is not None
+        cond2 = self.get_capacity() > 0
+        if fail_fast:
+            if not cond1:
+                return -1
+            if not cond2:
+                return -2
+        else:
+            assert cond1
+            assert cond2
+        pls = self.get_page_line_state()
+        pls.line = PAGE_LINE_UNKNOWN
+        pls.sync = PAGE_SYNC_REPAINT
+        pls.delta_line = 0 # before base_offset update
+        pls.base_offset = self.__get_page_line_state_base_offset()
+        self.__force_page_line_state()
+        log.debug("{0} reset {1} {2}".format(self, self.fileops.get_path(),
+            pls))
+
+    # may update pls line, but nothing else
+    def __force_page_line_state(self):
+        assert setting.use_line_scroll
+        assert self.has_page_line_state_machine(), repr(self)
+        assert self.fileops is not None, self
+        assert self.get_capacity() > 0, self
+        pls = self.get_page_line_state()
+        prev_line = pls.line
+        if self.in_first_page_line():
+            if pls.line != PAGE_LINE_FIRST:
+                pls.line = PAGE_LINE_FIRST
+        elif self.in_last_page_line():
+            if pls.line != PAGE_LINE_LAST:
+                pls.line = PAGE_LINE_LAST
+        else:
+            if pls.line != PAGE_LINE_NONE:
+                pls.line = PAGE_LINE_NONE
+        if pls.line != prev_line:
+            log.debug("{0} force {1} {2} -> {3}".format(self,
+                self.fileops.get_path(), prev_line, pls.line))
+
+    def update_page_line_state(self, reset_line_scroll):
+        assert setting.use_line_scroll
+        assert self.has_page_line_state_machine(), repr(self)
+        pls = self.get_page_line_state()
+        if reset_line_scroll:
+            self.reset_page_line_state()
+        else:
+            self.__update_page_line_state(pls)
+        assert pls.line != PAGE_LINE_UNKNOWN
+        assert pls.sync != PAGE_SYNC_UNKNOWN
+
+    def __update_page_line_state(self, pls):
+        assert setting.use_line_scroll
+        assert self.has_page_line_state_machine(), repr(self)
+        # correct pls line state if unknown
+        delta_line_orig = pls.delta_line
+        if pls.line == PAGE_LINE_UNKNOWN:
+            self.__force_page_line_state()
+        assert pls.line != PAGE_LINE_UNKNOWN
+        assert pls.delta_line == delta_line_orig
+
+        # get pls line symbol for debug log
+        sym = _page_line_state_sym.get(pls.line)
+        assert sym is not None, (sym, _page_line_state_sym)
+
+        # handle possible line scroll cases first
+        # XXX pls.sync set to PAGE_SYNC_REPAINT is redundant unless
+        # pls.line is PAGE_LINE_FIRST and previously PAGE_LINE_FIRST or
+        # pls.line is PAGE_LINE_LAST and previously PAGE_LINE_LAST.
+        ldiff = self.is_line_changed()
+        if ldiff < 0:
+            pos = self.fileops.get_prev_pos()
+            ldiff_abs = -ldiff
+            for i in range(ldiff_abs + 1): # from 0 to ldiff_abs
+                if self.in_first_page_line(pos - self.bufmap.x * i):
+                    # does not apply when exiting edit console with barrier
+                    #t = pls.line == PAGE_LINE_FIRST
+                    #assert t if i == 0 else not t, (i, pos, pls.line, ldiff)
+                    pls.line = PAGE_LINE_FIRST
+                    pls.sync = PAGE_SYNC_REPAINT
+                    d = ldiff_abs - i
+                    assert 0 <= d <= ldiff_abs, d
+                    pls.delta_line -= d
+                    self.__log_plsx(sym, "F*", pls, ldiff)
+                    return # line scroll
+        elif ldiff > 0:
+            pos = self.fileops.get_prev_pos()
+            ldiff_abs = +ldiff
+            for i in range(ldiff_abs + 1): # from 0 to ldiff_abs
+                if self.in_last_page_line(pos + self.bufmap.x * i):
+                    # does not apply when exiting edit console with barrier
+                    #t = pls.line == PAGE_LINE_LAST
+                    #assert t if i == 0 else not t, (i, pos, pls.line, ldiff)
+                    pls.line = PAGE_LINE_LAST
+                    pls.sync = PAGE_SYNC_REPAINT
+                    d = ldiff_abs - i
+                    assert 0 <= d <= ldiff_abs, d
+                    pls.delta_line += d
+                    self.__log_plsx(sym, "L*", pls, ldiff)
+                    return # line scroll
+
+        # not line scroll
+        pls.delta_line = delta_line_orig # adjust back
+        if self.in_first_page_line():
+            pls.line = PAGE_LINE_FIRST
+            pls.sync = PAGE_SYNC_UPDATE
+            self.__log_plsx(sym, "F", pls, ldiff)
+        elif self.in_last_page_line():
+            pls.line = PAGE_LINE_LAST
+            pls.sync = PAGE_SYNC_UPDATE
+            self.__log_plsx(sym, "L", pls, ldiff)
+        else:
+            pls.line = PAGE_LINE_NONE
+            pls.sync = PAGE_SYNC_UPDATE
+            self.__log_plsx(sym, "N", pls, ldiff)
+
+    def __log_plsx(self, src, dst, pls, ldiff):
+        log.debug("{0} -> {1} base_offset={2} delta_line={3} ldiff={4}".format(
+            src, dst, pls.base_offset, pls.delta_line, ldiff))
+
+    def update_page_line_state_safe(self, reset_line_scroll):
+        try:
+            self.update_page_line_state(reset_line_scroll)
+        except PageLineStateError as e:
+            self.log_page_line_state_error(e)
+            self.reset_page_line_state()
+            self.update_page_line_state(reset_line_scroll)
+
+    def raise_page_line_state_error(self, pos, ppos):
+        assert setting.use_line_scroll
+        assert self.has_page_line_state_machine(), repr(self)
+        if setting.use_debug:
+            pls = self.get_page_line_state()
+            _ = pos, ppos, str(pls)
+        else:
+            _ = pos, ppos
+        raise PageLineStateError(_)
+
+    def log_page_line_state_error(self, e):
+        assert isinstance(e, PageLineStateError), repr(e)
+        log.debug(e)
+        if _page_line_state_debug:
+            log.debug_traceback()
+
+class DisplayCanvas (PageLineCanvas):
     def __init__(self, siz, pos):
         super(DisplayCanvas, self).__init__(siz, pos)
         if screen.use_alt_chgat():
@@ -378,9 +657,16 @@ class DisplayCanvas (Canvas):
         self.__unit_width = self.cell[2] * setting.bytes_per_unit + self.cell[1]
 
     def update_capacity(self, bytes_per_line):
-        super(DisplayCanvas, self).update_capacity(bytes_per_line)
+        updated = super(DisplayCanvas, self).update_capacity(bytes_per_line)
         # precalculate after bufmap update
         self.default_units_per_line = self.get_units_per_line(self.bufmap.x)
+        # for line scroll mode, simply reset pls whenever capacity gets changed
+        if setting.use_line_scroll and self.has_page_line_state_machine() and \
+            updated == CAPACITY_CHANGED: # but not CAPACITY_INITIALIZED
+            ret = self.reset_page_line_state(True)
+            if ret == -1:
+                log.debug("Failed to reset pls for {0} {1}".format(self, ret))
+        return updated
 
     def get_units_per_line(self, xlen):
         unitlen = setting.bytes_per_unit
@@ -464,7 +750,11 @@ class DisplayCanvas (Canvas):
             self.fileops.get_max_pos() < self.get_next_page_offset():
             self.scr.clear() # not scr.erase()
         # fill posstr if needed
-        if self.need_full_repaint or self.is_page_changed():
+        if self.need_full_repaint:
+            self.fill_posstr()
+        elif setting.use_line_scroll:
+            self.fill_posstr()
+        elif self.is_page_changed():
             self.fill_posstr()
 
     def __fill_post(self, low):
@@ -583,12 +873,78 @@ class DisplayCanvas (Canvas):
         self.chgat_posstr(pos, self.attr_posstr)
         self.chgat_cursor(pos, attr | l[0], attr | l[1], low)
 
-    def sync_cursor(self):
-        if not self.is_page_changed():
+    def sync_cursor(self, reset_line_scroll):
+        if setting.use_line_scroll:
+            return super(DisplayCanvas, self).sync_cursor(reset_line_scroll)
+        elif self.is_page_changed():
+            return -1 # need repaint
+        else:
             self.update_highlight(False, True)
             self.noutrefresh()
-        else:
-            return -1 # need repaint
+
+    def repaint(self, *arg):
+        try:
+            super(DisplayCanvas, self).repaint(*arg)
+        except PageLineStateError as e:
+            self.log_page_line_state_error(e)
+            self.reset_page_line_state()
+            super(DisplayCanvas, self).repaint(*arg)
+
+    def repaint_partial(self, *arg):
+        try:
+            super(DisplayCanvas, self).repaint_partial(*arg)
+        except PageLineStateError as e:
+            self.log_page_line_state_error(e)
+            self.reset_page_line_state()
+            super(DisplayCanvas, self).repaint_partial(*arg)
+
+    def go_up(self, n):
+        return self.sync_cursor(False)
+
+    def go_down(self, n):
+        return self.sync_cursor(False)
+
+    def go_left(self, n):
+        return self.sync_cursor(False)
+
+    def go_right(self, n):
+        return self.sync_cursor(False)
+
+    def go_pprev(self, n):
+        return self.sync_cursor(False)
+
+    def go_hpprev(self, n):
+        return self.sync_cursor(False)
+
+    def go_pnext(self, n):
+        return self.sync_cursor(False)
+
+    def go_hpnext(self, n):
+        return self.sync_cursor(False)
+
+    def go_head(self, n):
+        return self.sync_cursor(True)
+
+    def go_tail(self, n):
+        return self.sync_cursor(True)
+
+    def go_lhead(self):
+        return self.sync_cursor(False)
+
+    def go_ltail(self, n):
+        return self.sync_cursor(False)
+
+    def go_phead(self, n):
+        return self.sync_cursor(False)
+
+    def go_pcenter(self):
+        return self.sync_cursor(False)
+
+    def go_ptail(self, n):
+        return self.sync_cursor(False)
+
+    def go_to(self, n):
+        return self.sync_cursor(False)
 
     def get_geom_pos(self, y, x):
         if not self.has_geom(y, x):
@@ -829,6 +1185,19 @@ class BinaryCanvas (DisplayCanvas, binary_attribute):
             s = fmt.format(n + offset, n)
         return s[-(self.offset.x - 1):]
 
+    def has_page_line_state_machine(self):
+        return True
+
+    # pls update which affects binary canvas and everything after
+    # 1. virtual canvas updates position first
+    # 2. binary canvas updates pls based on position change
+    # 3. binary canvas syncs cursor
+    # 4. remaining canvases sync cursor
+    def sync_cursor(self, reset_line_scroll):
+        if setting.use_line_scroll:
+            self.update_page_line_state_safe(reset_line_scroll)
+        return super(BinaryCanvas, self).sync_cursor(reset_line_scroll)
+
 _text_cstr_fmt = {
     16: "{0:X}",
     10: "{0:d}",
@@ -938,9 +1307,105 @@ def get_min_position(cls):
         x -= _FRAME_MARGIN_X
     return y, x
 
+# page line state
+PAGE_LINE_FIRST   = None
+PAGE_LINE_LAST    = None
+PAGE_LINE_NONE    = None
+PAGE_LINE_UNKNOWN = None
+
+PAGE_SYNC_UPDATE  = None
+PAGE_SYNC_REPAINT = None
+PAGE_SYNC_UNKNOWN = None
+
+_page_line_state = None
+_page_line_state_sym = None
+
+_page_line_state_debug = True
+
+def init_page_line_state():
+    global PAGE_LINE_FIRST, PAGE_LINE_LAST, PAGE_LINE_NONE, PAGE_LINE_UNKNOWN
+    global PAGE_SYNC_UPDATE, PAGE_SYNC_REPAINT, PAGE_SYNC_UNKNOWN
+    global _page_line_state, _page_line_state_sym
+
+    # initialize pls line types
+    PAGE_LINE_FIRST   = 0
+    PAGE_LINE_LAST    = 1
+    PAGE_LINE_NONE    = 2
+    PAGE_LINE_UNKNOWN = -1
+
+    # initialize pls sync types
+    PAGE_SYNC_UPDATE  = 4
+    PAGE_SYNC_REPAINT = 5
+    PAGE_SYNC_UNKNOWN = -1
+
+    # initialize pls
+    _page_line_state = util.get_ordered_dict({})
+    _page_line_state_sym = {}
+
+def clear_page_line_state():
+    if setting.use_debug: # dump before delete
+        dump_page_line_state("clear")
+    _page_line_state.clear()
+    # don't clear a static symbol table _page_line_state_sym
+
+def has_page_line_state(ops):
+    return ops in _page_line_state
+
+def add_page_line_state(ops):
+    from . import fileops # to avoid circular dependency
+    assert setting.use_line_scroll is True
+    assert isinstance(ops, fileops.Fileops), ops
+    assert not has_page_line_state(ops)
+    pls = util.Namespace(line=PAGE_LINE_UNKNOWN, sync=PAGE_SYNC_UNKNOWN,
+        base_offset=0, delta_line=0)
+    _page_line_state[ops] = pls
+    assert has_page_line_state(ops)
+    if setting.use_debug: # dump after add
+        dump_page_line_state("add", ops)
+    return pls
+
+def delete_page_line_state(ops):
+    assert setting.use_line_scroll is True
+    assert has_page_line_state(ops)
+    if setting.use_debug: # dump before delete
+        dump_page_line_state("delete", ops)
+    del _page_line_state[ops]
+    assert not has_page_line_state(ops)
+
+# don't directly use this from page line canvas,
+# base_offset may need to be calculated
+def get_page_line_state(ops):
+    if not has_page_line_state(ops):
+        add_page_line_state(ops)
+    assert has_page_line_state(ops)
+    return _page_line_state.get(ops)
+
+def get_page_line_state_string(ops):
+    f = ops.get_path()
+    assert has_page_line_state(ops), f
+    pls = get_page_line_state(ops)
+    if f == "":
+        f = "\"\""
+    k = "{0}|{1}|{2}".format(f, ops.get_pos(), repr(ops))
+    v = str(pls)
+    return k, v
+
+def iter_page_line_state():
+    for k in _page_line_state.keys():
+        yield k, _page_line_state.get(k)
+
+def dump_page_line_state(prefix, ops=None):
+    log.debug("{0}: dump {1} page_line_state".format(prefix,
+        len(_page_line_state)))
+    for k, v in iter_page_line_state():
+        s = " -> ".join(get_page_line_state_string(k))
+        if k is ops:
+            s += " *"
+        log.debug(s)
+
 A_UNDERLINE = None
 def init():
-    global A_UNDERLINE, _clear_on_fill
+    global A_UNDERLINE, _clear_on_fill, _page_line_state, _page_line_state_sym
     assert screen.A_UNDERLINE is not None
     assert screen.A_COLOR_OFFSET is not None
     if screen.A_COLOR_OFFSET != screen.A_NONE or \
@@ -953,3 +1418,51 @@ def init():
     # terminal.get_type_orig() on import causes circular import
     terminal_was_not_screen = terminal.get_type_orig() != "screen"
     _clear_on_fill &= terminal_was_not_screen
+
+    # initialize pls
+    init_page_line_state()
+    assert len(_page_line_state) == 0, _page_line_state
+    assert len(_page_line_state_sym) == 0, _page_line_state_sym
+
+    # initialize PAGE_{LINE,SYNC}_xxx with string if debug mode
+    this = sys.modules[__name__]
+    if setting.use_debug:
+        for x in "FIRST", "LAST", "NONE", "UNKNOWN":
+            name = "PAGE_LINE_" + x
+            _ = getattr(this, name)
+            assert isinstance(_, int), _
+            setattr(this, name, x)
+            _ = getattr(this, name)
+            assert isinstance(_, str), _
+
+        for x in "UPDATE", "REPAINT", "UNKNOWN":
+            name = "PAGE_SYNC_" + x
+            _ = getattr(this, name)
+            assert isinstance(_, int), _
+            setattr(this, name, x)
+            _ = getattr(this, name)
+            assert isinstance(_, str), _
+
+    # assert PAGE_{LINE,SYNC}_xxx values
+    l = PAGE_LINE_FIRST, PAGE_LINE_LAST, PAGE_LINE_NONE, \
+        PAGE_SYNC_UPDATE, PAGE_SYNC_REPAINT
+    assert len(l) == len(set(l)), l
+    assert PAGE_LINE_UNKNOWN not in l
+    assert PAGE_SYNC_UNKNOWN not in l
+    assert PAGE_LINE_UNKNOWN == PAGE_SYNC_UNKNOWN
+
+    # initialize pls symbols
+    _page_line_state_sym = {
+        PAGE_LINE_FIRST : "F",
+        PAGE_LINE_LAST : "L",
+        PAGE_LINE_NONE : "N",
+        PAGE_LINE_UNKNOWN : "?",
+    }
+
+def cleanup():
+    assert isinstance(_page_line_state, dict), _page_line_state
+    assert isinstance(_page_line_state_sym, dict), _page_line_state_sym
+    clear_page_line_state()
+    _page_line_state_sym.clear()
+    assert len(_page_line_state) == 0, _page_line_state
+    assert len(_page_line_state_sym) == 0, _page_line_state_sym

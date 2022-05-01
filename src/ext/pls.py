@@ -1,4 +1,4 @@
-# Copyright (c) 2013, Tomohiro Kusumi
+# Copyright (c) 2022, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,32 +21,40 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# RELEASE is basically always 1.
-# It was added only to sync with RPM versioning.
-# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
-# RPM patches within the same fileobj version may or may not increment RELEASE.
+from .. import extension
+from .. import fileops
+from .. import panel
+from .. import util
 
-MAJOR = 0
-MINOR1 = 7
-MINOR2 = 108
-RELEASE = 1
+def get_text(co, fo, args):
+    l = list(panel.iter_page_line_state())
+    if not l:
+        return "No page line state"
+    title = '', "key", "value"
 
-def get_version():
-    return MAJOR, MINOR1, MINOR2
+    kl = []
+    vl = []
+    for i, x in enumerate(l):
+        assert isinstance(x, tuple), x
+        assert len(x) == 2, x
+        k, v = x
+        assert isinstance(k, fileops.Fileops), k
+        assert isinstance(v, util.Namespace), v
+        ks, vs = panel.get_page_line_state_string(k)
+        kl.append(ks)
+        vl.append(vs)
 
-def get_release():
-    return MAJOR, MINOR1, MINOR2, RELEASE
+    _ = [len(_) for _ in kl]
+    _.append(len(title[1]))
+    kn = max(_)
 
-def get_version_string():
-    return "{0}.{1}.{2}".format(*get_version())
+    _ = [len(_) for _ in vl]
+    _.append(len(title[2]))
+    vn = max(_)
 
-def get_release_string():
-    return "{0}.{1}.{2}-{3}".format(*get_release())
-
-def get_tag_string():
-    return "v" + get_version_string()
-
-try:
-    __version__ = get_version_string()
-except Exception:
-    __version__ = "???" # .format() unsupported
+    f = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}}".format(extension.get_index_width(kl),
+        kn, vn)
+    sl = [f.format(*title)]
+    for i in range(len(kl)):
+        sl.append(f.format(i + 1, kl[i], vl[i]))
+    return sl

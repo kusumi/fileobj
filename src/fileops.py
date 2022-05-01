@@ -25,14 +25,11 @@ from __future__ import division
 import os
 
 from . import allocator
-from . import blk
 from . import filebytes
 from . import fileobj
 from . import path
-from . import robuf
 from . import setting
 from . import util
-from . import vm
 
 class Fileops (object):
     def __init__(self, ref, o=None):
@@ -98,12 +95,15 @@ class Fileops (object):
         return self.__ref is None
 
     def is_buf(self):
+        from . import robuf
         return isinstance(self.__ref, robuf.Fileobj)
 
     def is_blk(self):
+        from . import blk
         return isinstance(self.__ref, blk.methods)
 
     def is_vm(self):
+        from . import vm
         return isinstance(self.__ref, vm.methods)
 
     def is_readonly(self):
@@ -162,8 +162,7 @@ class Fileops (object):
         if not setting.use_unit_based:
             return pos
         else:
-            unitlen = setting.bytes_per_unit
-            return (pos // unitlen) * unitlen
+            return util.rounddown(pos, setting.bytes_per_unit)
 
     def get_pos(self):
         return self.__pos
@@ -187,16 +186,13 @@ class Fileops (object):
             self.__pos = pos
 
     def get_unit_pos(self):
-        unitlen = setting.bytes_per_unit
-        return (self.get_pos() // unitlen) * unitlen
+        return util.rounddown(self.get_pos(), setting.bytes_per_unit)
 
     def add_unit_pos(self, d):
-        unitlen = setting.bytes_per_unit
-        self.set_pos(((self.__pos + d) // unitlen) * unitlen)
+        self.set_pos(util.rounddown(self.__pos + d, setting.bytes_per_unit))
 
     def set_unit_pos(self, n):
-        unitlen = setting.bytes_per_unit
-        self.set_pos((n // unitlen) * unitlen)
+        self.set_pos(util.rounddown(n, setting.bytes_per_unit))
 
     def open_eof_insert(self):
         self.__trail = self.test_insert() * 1
@@ -208,7 +204,12 @@ class Fileops (object):
         return self.__reg is not None
 
     def init_region(self, orig, type):
-        assert not self.__reg
+        if setting.use_debug:
+            # XXX Opening a new buffer in visual mode without using
+            # visual._queue_input() cleans up visual region of the new buffer,
+            # not the original one with visual region.
+            # e.g. v -> l -> :open_sha1 -> <TAB> -> v
+            assert self.__reg is None, self.__reg
         self.__reg = util.Namespace(orig=orig)
         self.set_region_type(type)
         self.set_region_range(None, None, None)

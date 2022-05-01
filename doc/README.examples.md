@@ -738,7 +738,7 @@
         ABCDEFGHIJKLMNOPQRSTUVWXYZ
         ...
 
-+ Modify .rodata section of a running *test1* process. *pid<PID>* syntax indicates to open process address space provided *<PID>* exists.
++ Modify .rodata section of a running *test1* process. *pid\<PID\>* syntax indicates to open process address space provided *\<PID\>* exists.
 
         # objdump -s -j .rodata ./test1
         

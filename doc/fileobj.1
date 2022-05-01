@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 12, 2022" "FILEOBJ 0.7.107"
+.TH FILEOBJ 1 "April 23, 2022" "FILEOBJ 0.7.108"
 .nh
 .ad l
 .SH NAME
@@ -248,6 +248,12 @@ If defined, allow \fB:truncate\fP to shrink truncate.
 Defaults to disallow.
 .RE
 .PP
+\fBFILEOBJ_USE_LINE_SCROLL\fP
+.RS 4
+If defined, enable line scroll mode.
+Defaults to page scroll mode.
+.RE
+.PP
 \fBFILEOBJ_BUFFER_SIZE\fP
 .RS 4
 Set custom buffer size if larger than 0.
@@ -404,7 +410,7 @@ Temporary backup file format.
 .SH DOCUMENTATION
 \fIhttps://github.com/kusumi/fileobj/blob/master/README.md\fP
 .SH COPYING
-Copyright (c) 2010\-2022, Tomohiro Kusumi.
+Copyright (c) 2009\-2022, Tomohiro Kusumi.
 Free use of this software is granted under the terms of the BSD License (2\-clause).
 .SH AUTHORS
 Tomohiro Kusumi <\fIkusumi.tomohiro@gmail.com\fP>

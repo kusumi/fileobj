@@ -870,7 +870,7 @@ def __set_bytes_per_unit(self, args):
         unitlen = setting.bytes_per_unit
         bpl = self.co.get_bytes_per_line()
         if bpl % unitlen:
-            nbpl = (bpl // unitlen) * unitlen
+            nbpl = util.rounddown(bpl, unitlen)
             if self.co.set_bytes_per_line(nbpl) == -1:
                 if self.co.set_bytes_per_line("max") == -1:
                     if setting.use_debug:
@@ -1053,133 +1053,25 @@ def show_args(self, amp, opc, args, raw):
     l[l.index(x)] = "[{0}]".format(x)
     self.co.show(' '.join(l))
 
-# md5
-def show_md5(self, amp, opc, args, raw):
-    __show_hash(self, "md5")
-
-def range_show_md5(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "md5")
-
-def block_show_md5(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "md5")
-
-# sha1
-def show_sha1(self, amp, opc, args, raw):
-    __show_hash(self, "sha1")
-
-def range_show_sha1(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha1")
-
-def block_show_sha1(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha1")
-
-# sha224
-def show_sha224(self, amp, opc, args, raw):
-    __show_hash(self, "sha224")
-
-def range_show_sha224(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha224")
-
-def block_show_sha224(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha224")
-
-# sha256
-def show_sha256(self, amp, opc, args, raw):
-    __show_hash(self, "sha256")
-
-def range_show_sha256(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha256")
-
-def block_show_sha256(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha256")
-
-# sha384
-def show_sha384(self, amp, opc, args, raw):
-    __show_hash(self, "sha384")
-
-def range_show_sha384(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha384")
-
-def block_show_sha384(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha384")
-
-# sha512
-def show_sha512(self, amp, opc, args, raw):
-    __show_hash(self, "sha512")
-
-def range_show_sha512(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha512")
-
-def block_show_sha512(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha512")
-
-# sha3_224
-def show_sha3_224(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_224")
-
-def range_show_sha3_224(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha3_224")
-
-def block_show_sha3_224(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha3_224")
-
-# sha3_256
-def show_sha3_256(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_256")
-
-def range_show_sha3_256(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha3_256")
-
-def block_show_sha3_256(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha3_256")
-
-# sha3_384
-def show_sha3_384(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_384")
-
-def range_show_sha3_384(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha3_384")
-
-def block_show_sha3_384(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha3_384")
-
-# sha3_512
-def show_sha3_512(self, amp, opc, args, raw):
-    __show_hash(self, "sha3_512")
-
-def range_show_sha3_512(self, amp, opc, args, raw):
-    __show_hash_partial(self, __range_read, "sha3_512")
-
-def block_show_sha3_512(self, amp, opc, args, raw):
-    __show_hash_partial(self, __block_read, "sha3_512")
-
-def __show_hash(self, s):
+def __show_hash(self, efn):
     try:
         buf = self.co.readall()
         if not buf:
             self.co.flash("No buffer")
             return
-        __print_hash(self, s, buf)
+        self.co.show(efn(buf))
     except Exception as e:
         self.co.flash(e)
 
-def __show_hash_partial(self, fn, s):
+def __show_hash_partial(self, fn, efn):
     try:
         buf = fn(self)
         if not buf:
             self.co.flash("No buffer selected")
             return
-        __print_hash(self, s, buf)
+        self.co.show(efn(buf))
     except Exception as e:
         self.co.flash(e)
-
-def __print_hash(self, s, buf):
-    try:
-        # XXX support hash object update
-        self.co.show(util.get_hash_string(s, buf))
-    except AttributeError:
-        self.co.flash("{0} unsupported by {1}".format(s,
-            util.get_python_string()))
 
 def __is_equal(a, b):
     return a == b
@@ -2810,250 +2702,6 @@ def escape(self, amp, opc, args, raw):
     self.co.clear_delayed_input()
     self.co.show('')
 
-def _md5(b):
-    return __get_hash_binary("md5", b)
-
-def _sha1(b):
-    return __get_hash_binary("sha1", b)
-
-def _sha224(b):
-    return __get_hash_binary("sha224", b)
-
-def _sha256(b):
-    return __get_hash_binary("sha256", b)
-
-def _sha384(b):
-    return __get_hash_binary("sha384", b)
-
-def _sha512(b):
-    return __get_hash_binary("sha512", b)
-
-def _sha3_224(b):
-    return __get_hash_binary("sha3_224", b)
-
-def _sha3_256(b):
-    return __get_hash_binary("sha3_256", b)
-
-def _sha3_384(b):
-    return __get_hash_binary("sha3_384", b)
-
-def _sha3_512(b):
-    return __get_hash_binary("sha3_512", b)
-
-def __get_hash_binary(name, b):
-    try:
-        # XXX support hash object update
-        return util.get_hash_binary(name, b)
-    except AttributeError:
-        raise Exception("{0} unsupported by {1}".format(name,
-            util.get_python_string()))
-
-def _b64encode(b):
-    return base64.standard_b64encode(b)
-
-def _b64decode(b):
-    return base64.standard_b64decode(b)
-
-def _b32encode(b):
-    return base64.b32encode(b)
-
-def _b32decode(b):
-    return base64.b32decode(b)
-
-def _b16encode(b):
-    return base64.b16encode(b)
-
-def _b16decode(b):
-    return base64.b16decode(b)
-
-def _b85encode(b):
-    try:
-        return base64.b85encode(b) # Python 3.4+
-    except AttributeError:
-        raise Exception("Base85 unsupported by " + util.get_python_string())
-
-def _b85decode(b):
-    try:
-        return base64.b85decode(b) # Python 3.4+
-    except AttributeError:
-        raise Exception("Base85 unsupported by " + util.get_python_string())
-
-# md5
-def open_md5(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _md5)
-
-def range_open_md5(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _md5)
-
-def block_open_md5(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _md5)
-
-# sha1
-def open_sha1(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha1)
-
-def range_open_sha1(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha1)
-
-def block_open_sha1(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha1)
-
-# sha224
-def open_sha224(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha224)
-
-def range_open_sha224(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha224)
-
-def block_open_sha224(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha224)
-
-# sha256
-def open_sha256(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha256)
-
-def range_open_sha256(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha256)
-
-def block_open_sha256(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha256)
-
-# sha384
-def open_sha384(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha384)
-
-def range_open_sha384(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha384)
-
-def block_open_sha384(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha384)
-
-# sha512
-def open_sha512(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha512)
-
-def range_open_sha512(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha512)
-
-def block_open_sha512(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha512)
-
-# sha3_224
-def open_sha3_224(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha3_224)
-
-def range_open_sha3_224(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_224)
-
-def block_open_sha3_224(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_224)
-
-# sha3_256
-def open_sha3_256(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha3_256)
-
-def range_open_sha3_256(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_256)
-
-def block_open_sha3_256(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_256)
-
-# sha3_384
-def open_sha3_384(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha3_384)
-
-def range_open_sha3_384(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_384)
-
-def block_open_sha3_384(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_384)
-
-# sha3_512
-def open_sha3_512(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _sha3_512)
-
-def range_open_sha3_512(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _sha3_512)
-
-def block_open_sha3_512(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _sha3_512)
-
-# base64
-def open_base64_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b64encode)
-
-def open_base64_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b64decode)
-
-def range_open_base64_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b64encode)
-
-def range_open_base64_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b64decode)
-
-def block_open_base64_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b64encode)
-
-def block_open_base64_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b64decode)
-
-# base32
-def open_base32_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b32encode)
-
-def open_base32_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b32decode)
-
-def range_open_base32_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b32encode)
-
-def range_open_base32_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b32decode)
-
-def block_open_base32_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b32encode)
-
-def block_open_base32_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b32decode)
-
-# base16
-def open_base16_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b16encode)
-
-def open_base16_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b16decode)
-
-def range_open_base16_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b16encode)
-
-def range_open_base16_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b16decode)
-
-def block_open_base16_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b16encode)
-
-def block_open_base16_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b16decode)
-
-# base85
-def open_base85_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b85encode)
-
-def open_base85_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer(self, args, _b85decode)
-
-def range_open_base85_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b85encode)
-
-def range_open_base85_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __range_read, _b85decode)
-
-def block_open_base85_encode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b85encode)
-
-def block_open_base85_decode(self, amp, opc, args, raw):
-    __open_inmemory_buffer_partial(self, args, __block_read, _b85decode)
-
 def __open_inmemory_buffer(self, args, efn):
     # returns -1 if not written
     f = __get_inmemory_buffer_path(self, args, efn)
@@ -3192,3 +2840,101 @@ def truncate(self, amp, opc, args, raw):
             self.co.get_path(), util.get_size_repr(tgtsiz),
             util.get_size_repr(newsiz)))
     self.co.lrepaintf()
+
+# keep this separated from init()
+def __register_hashlib_methods(hash_algo):
+    def _s(b):
+        try:
+            # XXX support hash object update
+            return util.get_hash_string(hash_algo, b)
+        except AttributeError:
+            raise Exception("{0} unsupported by {1}".format(hash_algo,
+                util.get_python_string()))
+
+    def fn(self, amp, opc, args, raw):
+        __show_hash(self, _s)
+    setattr(this, "show_{0}".format(hash_algo), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __show_hash_partial(self, __range_read, _s)
+    setattr(this, "range_show_{0}".format(hash_algo), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __show_hash_partial(self, __block_read, _s)
+    setattr(this, "block_show_{0}".format(hash_algo), fn)
+
+    def _b(b):
+        try:
+            # XXX support hash object update
+            return util.get_hash_binary(hash_algo, b)
+        except AttributeError:
+            raise Exception("{0} unsupported by {1}".format(hash_algo,
+                util.get_python_string()))
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer(self, args, _b)
+    setattr(this, "open_{0}".format(hash_algo), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __range_read, _b)
+    setattr(this, "range_open_{0}".format(hash_algo), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __block_read, _b)
+    setattr(this, "block_open_{0}".format(hash_algo), fn)
+
+# keep this separated from init()
+def __register_base64_methods(n):
+    try:
+        # base85 supported by Python 3.4+
+        _enc = getattr(base64, "b{0}encode".format(n))
+    except AttributeError:
+        def _enc(b):
+            raise Exception("base{0} encode unsupported by {1}".format(n,
+                util.get_python_string()))
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer(self, args, _enc)
+    setattr(this, "open_base{0}_encode".format(n), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __range_read, _enc)
+    setattr(this, "range_open_base{0}_encode".format(n), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __block_read, _enc)
+    setattr(this, "block_open_base{0}_encode".format(n), fn)
+
+    try:
+        # base85 supported by Python 3.4+
+        _dec = getattr(base64, "b{0}decode".format(n))
+    except AttributeError:
+        def _dec(b):
+            raise Exception("base{0} decode unsupported by {1}".format(n,
+                util.get_python_string()))
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer(self, args, _dec)
+    setattr(this, "open_base{0}_decode".format(n), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __range_read, _dec)
+    setattr(this, "range_open_base{0}_decode".format(n), fn)
+
+    def fn(self, amp, opc, args, raw):
+        __open_inmemory_buffer_partial(self, args, __block_read, _dec)
+    setattr(this, "block_open_base{0}_decode".format(n), fn)
+
+# see consoles' init_method()
+def init():
+    # https://docs.python.org//3/library/hashlib.html
+    # Python version < 3.6 doesn't have sha3_*, but still must register
+    for x in ("md5", "sha1", "sha224", "sha256", "sha384", "sha512",
+        "blake2b", "blake2s", "sha3_224", "sha3_256", "sha3_384", "sha3_512"):
+        __register_hashlib_methods(x)
+
+    for x in (64, 32, 16, 85):
+        __register_base64_methods(x)
+
+this = sys.modules[__name__]
+init()
