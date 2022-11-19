@@ -27,8 +27,8 @@
 # RPM patches within the same fileobj version may or may not increment RELEASE.
 
 MAJOR = 0
-MINOR1 = 7
-MINOR2 = 108
+MINOR1 = 8
+MINOR2 = 0
 RELEASE = 1
 
 def get_version():

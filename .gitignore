@@ -5,6 +5,7 @@
 
 dist
 build
+fileobj.egg-info
 
 unittest
 MANIFEST

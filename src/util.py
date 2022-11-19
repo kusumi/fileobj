@@ -778,16 +778,8 @@ def get_available_hash_algorithms():
 def get_guaranteed_hash_algorithms():
     return tuple(sorted(hashlib.algorithms_guaranteed))
 
-_hash_buffer_thresh = MiB
 def update_hash_object(m, b):
-    siz = _hash_buffer_thresh
-    i = 0
-    while True:
-        tmp = b[i:i+siz]
-        if not tmp:
-            break
-        m.update(tmp)
-        i += len(tmp)
+    m.update(b)
     return m
 
 def execute(shell, *l):

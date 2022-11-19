@@ -127,9 +127,16 @@ class _panel (object):
 
     def resize(self, siz, pos):
         if siz:
-            self.scr.resize(*siz)
+            try:
+                self.scr.resize(*siz)
+            except screen.Error as e:
+                log.error(self.scr.resize, e, siz)
         if pos:
-            self.scr.mvwin(*pos)
+            try:
+                self.scr.mvwin(*pos)
+            except screen.Error as e:
+                # this happens with recent gnome-terminal on maximizing size
+                log.error(self.scr.mvwin, e, pos)
         self.update()
 
     def has_geom(self, y, x):
@@ -744,17 +751,21 @@ class DisplayCanvas (PageLineCanvas):
         # erase if needed
         # XXX self.clrl() via super's fill() may not work against consecutive
         # lines in final page with some terminals, so clear the screen.
+        need_fill_posstr = False
         if self.need_full_repaint:
             self.scr.erase()
         elif _clear_on_fill and \
             self.fileops.get_max_pos() < self.get_next_page_offset():
             self.scr.clear() # not scr.erase()
+            need_fill_posstr = True
         # fill posstr if needed
         if self.need_full_repaint:
             self.fill_posstr()
         elif setting.use_line_scroll:
             self.fill_posstr()
         elif self.is_page_changed():
+            self.fill_posstr()
+        elif need_fill_posstr: # re-fill if intentionally cleared
             self.fill_posstr()
 
     def __fill_post(self, low):
@@ -1255,7 +1266,9 @@ class TextCanvas (DisplayCanvas, text_attribute):
     def __get_column_posstr(self, n):
         return _text_cstr_fmt[setting.address_radix].format(n)[-1]
 
+# not sure if this flag is still needed
 _clear_on_fill = terminal.in_tmux_tmux() and not terminal.is_screen()
+
 _bytes_is_int = util.is_python3()
 _xrange = util.get_xrange
 

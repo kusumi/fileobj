@@ -287,12 +287,18 @@ def __alt_chgat(x, s, attr):
     addstr(x, c, attr)
 
 def resize():
+    set_message('')
     try:
-        set_message('')
-        _scr.resize(get_size_y(), get_size_x())
-        _scr.mvwin(get_position_y(), get_position_x())
+        l = get_size_y(), get_size_x()
+        _scr.resize(*l)
     except screen.Error as e:
-        log.error(resize, e)
+        log.error(_scr.resize, e, l)
+    try:
+        l = get_position_y(), get_position_x()
+        _scr.mvwin(*l)
+    except screen.Error as e:
+        # this happens with recent gnome-terminal on maximizing size
+        log.error(_scr.mvwin, e, l)
 
 def addstr(x, s, attr=screen.A_NONE):
     if len(s) > get_size_x():

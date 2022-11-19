@@ -538,11 +538,13 @@ def handle_mouse_event_visual(self, amp, opc, args, raw):
 
 def __show_mouse_event(self, devid, x, y, z, bstate):
     if setting.use_debug:
-        self.co.show((devid, x, y, z, screen.get_mouse_event_name(bstate)))
+        self.co.show((__show_mouse_event, devid, x, y, z,
+            screen.get_mouse_event_name(bstate)))
 
 def __flash_mouse_event(self, devid, x, y, z, bstate):
     if setting.use_debug:
-        self.co.flash((devid, x, y, z, screen.get_mouse_event_name(bstate)))
+        self.co.flash((__flash_mouse_event, devid, x, y, z,
+            screen.get_mouse_event_name(bstate)))
     else:
         self.co.flash()
 

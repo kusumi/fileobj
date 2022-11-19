@@ -151,7 +151,7 @@ def autogen_release():
             s = o.stdout.rstrip()
             if s.endswith(" total"):
                 s = s[:-len(" total")]
-            return s
+            return s.strip().rstrip().split(" ")
 
         cmd = "git rev-parse --abbrev-ref HEAD"
         o = kernel.execute_sh(cmd)
@@ -171,6 +171,7 @@ def autogen_release():
 
         regex = re.compile(r"^\s+\(.*refs/tags/(v\d\.\d\.\d+).*\)\s+(\d\d\d\d-\d\d-\d\d)\s")
         f = "./RELEASES"
+        nl = [len("release"), len("date"), len("loc"), len("bytes")]
         l = []
         for x in sl:
             m = regex.match(x)
@@ -180,10 +181,28 @@ def autogen_release():
                     checkout("HEAD")
                 else:
                     checkout(tag)
-                l.append("{0} {1} {2}".format(tag, date, wc()))
+                wcl, wcc = wc()
+                l.append((tag, date, wcl, wcc))
+                if len(tag) > nl[0]:
+                    nl[0] = len(tag)
+                if len(date) > nl[1]:
+                    nl[1] = len(date)
+                if len(wcl) > nl[2]:
+                    nl[2] = len(wcl)
+                if len(wcc) > nl[3]:
+                    nl[3] = len(wcc)
         checkout(orig)
         assert l, l
-        writel(f, l)
+        with open(f, "w") as fd:
+            fmt = "{{0:<{0}}} {{1:<{1}}} {{2:<{2}}} {{3:<{3}}}".format(*nl)
+            fd.write(fmt.format("release", "date", "loc", "bytes").rstrip())
+            fd.write("\n")
+            fd.write("=" * 40)
+            fd.write("\n")
+            fmt = "{{0:<{0}}} {{1:<{1}}} {{2:>{2}}} {{3:>{3}}}".format(*nl)
+            for x in l:
+                fd.write(fmt.format(*x).rstrip())
+                fd.write("\n")
     except Exception as e:
         sys.stderr.write("{0}\n".format(e))
         sys.exit(1)

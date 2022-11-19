@@ -253,18 +253,7 @@ FILES
        ~/.fileobj/.YYYY-MM-DD-HH-MM-SS.name.bak
            Temporary backup file format.
 
-RESOURCE
-       https://sourceforge.net/projects/fileobj/
-       https://github.com/kusumi/fileobj/
-
-DOCUMENTATION
-       https://github.com/kusumi/fileobj/blob/master/README.md
-
-COPYING
-       Copyright (c) 2009-2022, Tomohiro Kusumi.  Free use of this software is
-       granted under the terms of the BSD License (2-clause).
-
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.7.108                 April 23, 2022                      FILEOBJ(1)
+FILEOBJ 0.8.0                  November 14, 2022                    FILEOBJ(1)

@@ -1,6 +1,6 @@
 ## NetBSD pkgsrc
 
-+ Maintained, but a recent change(s) to ncurses seems to have broke fileobj as of July 2020.
++ Maintained.
 
 + [https://pkgsrc.se/editors/fileobj](https://pkgsrc.se/editors/fileobj)
 
@@ -13,7 +13,7 @@ source package
         $ cd /usr/pkgsrc/editors/fileobj/
         $ make install
         $ pkg_info | grep fileobj
-        fileobj-0.7.96      Curses based hex editor with vi interface
+        fileobj-0.7.108     Curses based hex editor with vi interface
 
 binary package
 
@@ -21,19 +21,36 @@ binary package
         NetBSD
         $ pkg_add fileobj
         $ pkg_info | grep fileobj
-        fileobj-0.7.96      Curses based hex editor with vi interface
+        fileobj-0.7.108     Curses based hex editor with vi interface
 
 ## FreeBSD ports
 
-+ Unmaintained, use latest upstream code instead.
++ Maintained.
 
 + [https://www.freebsd.org/cgi/ports.cgi?query=fileobj](https://www.freebsd.org/cgi/ports.cgi?query=fileobj)
 
 + [https://www.freshports.org/editors/fileobj](https://www.freshports.org/editors/fileobj)
 
+source package
+
+        $ uname
+        FreeBSD
+        $ cd /usr/ports/editors/fileobj/
+        $ make install
+        $ pkg info | grep fileobj
+        fileobj-0.7.108                Portable hex editor with vi like interface
+
+binary package
+
+        $ uname
+        FreeBSD
+        $ pkg install fileobj
+        $ pkg info | grep fileobj
+        fileobj-0.7.108                Portable hex editor with vi like interface
+
 ## DragonFlyBSD dports
 
-+ Unmaintained, use latest upstream code instead.
++ Maintained.
 
 + [https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj](https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj)
 

@@ -1,12 +1,12 @@
-# fileobj ([v0.7.108](https://github.com/kusumi/fileobj/releases/tag/v0.7.108))
+# fileobj ([v0.8.0](https://github.com/kusumi/fileobj/releases/tag/v0.8.0))
 
 ## About
 
 + Ncurses based hex editor with vi interface.
 
-![fileobj-linux](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.90/linux.png)
+![fileobj-linux](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.8.0/linux.png)
 
-![fileobj-windows](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.7.85/windows.png)
+![fileobj-windows](https://raw.githubusercontent.com/kusumi/__misc/master/fileobj/v0.8.0/windows.png)
 
 ## Supported platforms
 
@@ -45,12 +45,12 @@
         $ fileobj [options]... [paths[@offset:length]]...
         $ fileobj [options]... [paths[@offset-(offset+length)]]...
 
-+ Run with below to test appearance of ncurses.
++ Run with following option to test appearance of ncurses.
 
         $ fileobj --test_screen
         $ fileobj --test_color
 
-+ Run with below to test mouse actions on ncurses.
++ Run with following option to test mouse actions on ncurses.
 
         $ fileobj --test_mouse
 

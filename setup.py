@@ -29,7 +29,12 @@ if __name__ == '__main__':
     import os
     import shutil
     import sys
-    from distutils.core import setup, Extension
+    try:
+        from setuptools import setup, Extension
+    except ImportError:
+        e = sys.exc_info()[1]
+        sys.stderr.write("%s\n" % e)
+        from distutils.core import setup, Extension
 
     man_section = 1
     man_file = "./doc/fileobj.{0}".format(man_section)
