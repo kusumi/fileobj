@@ -29,12 +29,12 @@ from . import setting
 from . import vm
 
 class Fileobj (rrbuf.Fileobj, vm.methods):
-    _insert  = False
-    _replace = True
-    _delete  = False
-    _truncate= False
-    _enabled = vm.enabled
-    _partial = True
+    _insert   = False
+    _replace  = True
+    _delete   = False
+    _truncate = False
+    _enabled  = vm.enabled
+    _partial  = True
 
     def __str__(self):
         return super(Fileobj, self).__str__() + "\n\n" + self.get_string()

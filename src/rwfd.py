@@ -29,12 +29,12 @@ from . import rofd
 from . import util
 
 class Fileobj (rofd.Fileobj):
-    _insert  = False
-    _replace = True
-    _delete  = False
-    _truncate= False
-    _enabled = True
-    _partial = True
+    _insert   = False
+    _replace  = True
+    _delete   = False
+    _truncate = False
+    _enabled  = True
+    _partial  = True
 
     def __init__(self, f, offset=0, length=0):
         super(Fileobj, self).__init__(f, offset, length)

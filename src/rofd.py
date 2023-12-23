@@ -32,12 +32,12 @@ from . import setting
 from . import util
 
 class Fileobj (fileobj.Fileobj):
-    _insert  = False
-    _replace = False
-    _delete  = False
-    _truncate= False
-    _enabled = True
-    _partial = True
+    _insert   = False
+    _replace  = False
+    _delete   = False
+    _truncate = False
+    _enabled  = True
+    _partial  = True
 
     def __init__(self, f, offset=0, length=0):
         self.fd = None

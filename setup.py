@@ -34,7 +34,12 @@ if __name__ == '__main__':
     except ImportError:
         e = sys.exc_info()[1]
         sys.stderr.write("%s\n" % e)
-        from distutils.core import setup, Extension
+        try:
+            from distutils.core import setup, Extension
+        except ImportError:
+            e = sys.exc_info()[1]
+            sys.stderr.write("%s\n" % e)
+            sys.exit(1)
 
     man_section = 1
     man_file = "./doc/fileobj.{0}".format(man_section)
@@ -122,15 +127,11 @@ if __name__ == '__main__':
         if os.path.isfile(f):
             man_existed = True
 
-    #long_description = open("./README.md").read()
-
     setup(name      = "fileobj",
         version     = src.version.__version__,
         author      = "Tomohiro Kusumi",
         url         = "https://sourceforge.net/projects/fileobj/",
         description = "Ncurses based hex editor with vi interface",
-        #long_description = long_description,
-        #long_description_content_type = "text/markdown",
         license     = "BSD License (2-clause)",
         scripts     = [executable],
         packages    = [pkg, pkg + ".ext"],
@@ -142,7 +143,6 @@ if __name__ == '__main__':
             "Programming Language :: C",
             "License :: OSI Approved :: BSD License",
             "Operating System :: OS Independent",],)
-        #python_requires = ">=3.2",)
 
     man_installed = False
     if data_files:

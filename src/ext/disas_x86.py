@@ -41,8 +41,8 @@ def get_text(co, fo, args):
         return "Empty buffer"
 
     if not disas_x86.is_supported():
-        return "Unsupported, install {0}".format(
-            disas_x86.get_module_name())
+        return "Unsupported, install {0} (e.g. {1})".format(
+            disas_x86.get_module_name(), disas_x86.get_module_install_cmd())
 
     arg_pos = args.pop()
     buf, beg, rem, typ = extension.parse_region(co, fo, arg_pos)

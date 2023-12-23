@@ -25,6 +25,7 @@ import sys
 
 from . import log
 from . import setting
+from . import util
 
 valid_mode = 16, 32, 64
 default_mode = 64
@@ -47,6 +48,10 @@ def get_module_name():
         return distorm.__name__
     else:
         return "distorm3"
+
+def get_module_install_cmd():
+    return "{0} -m pip install {1}".format(util.get_python_string(),
+        get_module_name())
 
 def is_supported():
     return get_module() is not None

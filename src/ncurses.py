@@ -434,8 +434,9 @@ def get_size():
         return -1, -1
 
 def is_resize_supported():
-    if kernel.is_linux() and util.is_wsl():
-        return False
+    # recent WSL seems to support this as of 2023
+    #if kernel.is_linux() and util.is_wsl():
+    #    return False
     return True
 
 def has_chgat():

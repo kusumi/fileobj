@@ -51,12 +51,12 @@ _has_right_mapping_length = \
 """
 
 class Fileobj (fileobj.Fileobj):
-    _insert  = False
-    _replace = False
-    _delete  = False
-    _truncate= False
-    _enabled = kernel.has_mmap()
-    _partial = _has_mmap_offset
+    _insert   = False
+    _replace  = False
+    _delete   = False
+    _truncate = False
+    _enabled  = kernel.has_mmap()
+    _partial  = _has_mmap_offset
 
     def __init__(self, f, offset=0, length=0):
         self.__set_delta(0, 0)

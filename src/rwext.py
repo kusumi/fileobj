@@ -25,12 +25,12 @@ from . import extension
 from . import rwbuf
 
 class Fileobj (rwbuf.Fileobj, extension.methods):
-    _insert  = True
-    _replace = True
-    _delete  = True
-    _truncate= False
-    _enabled = True
-    _partial = False
+    _insert   = True
+    _replace  = True
+    _delete   = True
+    _truncate = False
+    _enabled  = True
+    _partial  = False
 
     def __init__(self, raw):
         super(Fileobj, self).__init__(repr(self), 0, 0)

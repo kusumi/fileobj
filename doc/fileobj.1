@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "November 14, 2022" "FILEOBJ 0.8.0"
+.TH FILEOBJ 1 "December 18, 2023" "FILEOBJ 0.8.1"
 .nh
 .ad l
 .SH NAME
@@ -206,8 +206,8 @@ Defaults to 2^10(Ki) if undefined.
 .PP
 \fBFILEOBJ_USE_WRAPSCAN\fP
 .RS 4
-If defined, search wraps around the end of the buffer (equivalent to \fB:set ws\fP).
-Defaults to no wrap around if undefined.
+If set to "false", search does not wrap around the end of the buffer (equivalent to \fB:set nows\fP).
+Defaults to wrap around if undefined.
 .RE
 .PP
 \fBFILEOBJ_USE_TEXT_WINDOW\fP
@@ -250,8 +250,8 @@ Defaults to disallow.
 .PP
 \fBFILEOBJ_USE_LINE_SCROLL\fP
 .RS 4
-If defined, enable line scroll mode.
-Defaults to page scroll mode.
+If set to "false", enable page scroll mode.
+Defaults to line scroll mode.
 .RE
 .PP
 \fBFILEOBJ_BUFFER_SIZE\fP

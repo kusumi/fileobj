@@ -39,7 +39,7 @@ def __iter_env():
     yield "FILEOBJ_USE_UNIT_BASED", False
     yield "FILEOBJ_USE_BACKUP", False
     yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
-    yield "FILEOBJ_USE_LINE_SCROLL", False
+    yield "FILEOBJ_USE_LINE_SCROLL", True
     yield "FILEOBJ_BUFFER_SIZE", 0
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address

@@ -30,12 +30,12 @@ from . import setting
 from . import util
 
 class Fileobj (romap.Fileobj):
-    _insert  = False
-    _replace = True
-    _delete  = False
-    _truncate= False
-    _enabled = romap.Fileobj._enabled
-    _partial = romap.Fileobj._partial
+    _insert   = False
+    _replace  = True
+    _delete   = False
+    _truncate = False
+    _enabled  = romap.Fileobj._enabled
+    _partial  = romap.Fileobj._partial
 
     def __init__(self, f, offset=0, length=0):
         self.__dirty = False

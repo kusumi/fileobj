@@ -1563,6 +1563,7 @@ def generic_backspace(self, amp, opc, args, raw):
             self.co.left_add_delete_buffer(buf)
     __exec_lrepaint(self, fn)
 
+@_cleanup
 def delete_till_end(self, amp, opc, args, raw):
     x = self.co.get_size() - self.co.get_pos()
     if x > 0:
@@ -2775,8 +2776,8 @@ def disas(self, amp, opc, args, raw):
 
 def __disas_x86(self, amp, opc, args, raw):
     if not disas_x86.is_supported():
-        self.co.flash("Unsupported, install {0}".format(
-            disas_x86.get_module_name()))
+        self.co.flash("Unsupported, install {0} (e.g. {1})".format(
+            disas_x86.get_module_name(), disas_x86.get_module_install_cmd()))
         return
 
     priv = setting.disas_private

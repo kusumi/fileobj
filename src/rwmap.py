@@ -33,12 +33,12 @@ from . import setting
 from . import util
 
 class Fileobj (rrmap.Fileobj):
-    _insert  = True
-    _replace = True
-    _delete  = True
-    _truncate= True
-    _enabled = kernel.has_mremap()
-    _partial = False
+    _insert   = True
+    _replace  = True
+    _delete   = True
+    _truncate = True
+    _enabled  = kernel.has_mremap()
+    _partial  = False
 
     def __init__(self, f, offset=0, length=0):
         self.__dead = False

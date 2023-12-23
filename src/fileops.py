@@ -258,23 +258,23 @@ class Fileops (object):
 
     def __init_ops(self):
         if setting.use_debug:
-            self.read    = self.__debug_read
-            self.insert  = self.__debug_insert
-            self.replace = self.__debug_replace
-            self.delete  = self.__debug_delete
-            self.truncate= self.__debug_truncate
+            self.read     = self.__debug_read
+            self.insert   = self.__debug_insert
+            self.replace  = self.__debug_replace
+            self.delete   = self.__debug_delete
+            self.truncate = self.__debug_truncate
         else:
-            self.read    = self.__read
-            self.insert  = self.__insert
-            self.replace = self.__replace
-            self.delete  = self.__delete
-            self.truncate= self.__truncate
+            self.read     = self.__read
+            self.insert   = self.__insert
+            self.replace  = self.__replace
+            self.delete   = self.__delete
+            self.truncate = self.__truncate
         if _not_builtin_script and setting.use_auto_fileops_adjust:
-            self.read    = self.__decorate_read(self.read)
-            self.insert  = self.__decorate_insert(self.insert)
-            self.replace = self.__decorate_replace(self.replace)
-            self.delete  = self.__decorate_delete(self.delete)
-            self.truncate= self.__decorate_truncate(self.truncate)
+            self.read     = self.__decorate_read(self.read)
+            self.insert   = self.__decorate_insert(self.insert)
+            self.replace  = self.__decorate_replace(self.replace)
+            self.delete   = self.__decorate_delete(self.delete)
+            self.truncate = self.__decorate_truncate(self.truncate)
 
     def __decorate_read(self, fn):
         def _(x, n):
@@ -541,9 +541,11 @@ else:
 def bulk_alloc(args, readonly, printf, printe):
     # allow None for print functions
     if printf is None:
-        printf = lambda o: None
+        def printf(o):
+            pass
     if printe is None:
-        printe = lambda o: None
+        def printe(o):
+            pass
 
     # disallow buf as default at this point
     cls = allocator.get_default_class()

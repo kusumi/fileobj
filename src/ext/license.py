@@ -21,7 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-_terms = """Copyright (c) 2009-2022, Tomohiro Kusumi
+_terms = """Copyright (c) 2009-2023, Tomohiro Kusumi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

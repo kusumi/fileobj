@@ -31,12 +31,12 @@ from . import robuf
 from . import util
 
 class Fileobj (robuf.Fileobj):
-    _insert  = False
-    _replace = True
-    _delete  = False
-    _truncate= False
-    _enabled = True
-    _partial = True
+    _insert   = False
+    _replace  = True
+    _delete   = False
+    _truncate = False
+    _enabled  = True
+    _partial  = True
 
     def __init__(self, f, offset=0, length=0):
         self.__dirty = False

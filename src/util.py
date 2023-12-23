@@ -148,7 +148,13 @@ def is_running_script_perf():
     return is_running_script("perf.py")
 
 def is_wsl():
-    return "Microsoft" in platform.release()
+    return is_wsl() or is_wsl2()
+
+def is_wsl1():
+    return "Microsoft" in platform.release() # really ?
+
+def is_wsl2():
+    return "microsoft-standard" in platform.release() # really ?
 
 def get_os_name():
     # e.g. 'Linux'

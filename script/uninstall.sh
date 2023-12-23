@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 2018, Tomohiro Kusumi
+# Copyright (c) 2023, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,21 +23,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-USER_DIR=~/.fileobj
+PYTHON=$1
+if [ "${PYTHON}" = "" ]; then
+	PYTHON=python3
+	which ${PYTHON} >/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		PYTHON=python
+	fi
+fi
 
-if [ ! -d ${USER_DIR} ]; then
-	echo "No ${USER_DIR} directory"
+which ${PYTHON}
+if [ $? -ne 0 ]; then
+	echo "${PYTHON} does not exist"
 	exit 1
 fi
 
-dump_json() {
-	USER_FILE=$1
-	if [ -f "${USER_FILE}" ]; then
-		echo ${USER_FILE}
-		cat ${USER_FILE} | python -m json.tool
-	fi
-}
-
-dump_json ${USER_DIR}/history
-dump_json ${USER_DIR}/marks
-dump_json ${USER_DIR}/session
+if [ "${SETUP_PY}" = "" ]; then
+	${PYTHON} -m pip uninstall -y fileobj
+else
+	echo "XXX Nothing to do"
+	false
+fi
+if [ $? -ne 0 ]; then
+	echo "Failed to uninstall"
+	exit 1
+fi

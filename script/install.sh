@@ -32,19 +32,18 @@ if [ "${PYTHON}" = "" ]; then
 	fi
 fi
 
-which ${PYTHON} >/dev/null 2>&1
+which ${PYTHON}
 if [ $? -ne 0 ]; then
 	echo "${PYTHON} does not exist"
 	exit 1
 fi
 
-${PYTHON} ./setup.py clean --all
-if [ $? -ne 0 ]; then
-	echo "Failed to clean"
-	exit 1
+if [ "${SETUP_PY}" = "" ]; then
+	${PYTHON} -m pip install .
+else
+	${PYTHON} -m pip install setuptools
+	${PYTHON} ./setup.py install --force --record ./install.out
 fi
-
-${PYTHON} ./setup.py install --force --record ./install.out
 if [ $? -ne 0 ]; then
 	echo "Failed to install"
 	exit 1

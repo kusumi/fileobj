@@ -1,4 +1,4 @@
-# Copyright (c) 2022, Tomohiro Kusumi
+# Copyright (c) 2023, Tomohiro Kusumi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,11 +25,8 @@ Param(
     [String]$python = "python3"
 )
 
-Invoke-Expression "$python -m pip install windows-curses"
-
 if ($true) {
-    Invoke-Expression "$python -m pip install ."
+    Invoke-Expression "$python -m pip uninstall -y fileobj"
 } else {
-    Invoke-Expression "$python -m pip install setuptools"
-    Invoke-Expression "$python .\setup.py install --force --record .\install.out.txt"
+    Write-Host "XXX Nothing to do"
 }

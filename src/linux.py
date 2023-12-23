@@ -111,8 +111,8 @@ def get_meminfo(s):
         return -1
     try:
         # e.g. "Active(anon):      24116 kB"
-        s = s.replace("(", "\(")
-        s = s.replace(")", "\)")
+        s = s.replace("(", r"\(")
+        s = s.replace(")", r"\)")
         for l in fopen_text(f):
             m = re.match(r"^{0}.*\s+(\d+)".format(s), l)
             if m:
@@ -149,7 +149,7 @@ def has_mmap():
 # (False, '[Errno 22] Invalid argument')
 
 def has_mremap():
-    if util.is_wsl():
+    if util.is_wsl1():
         return False
     return True
 

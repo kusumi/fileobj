@@ -24,16 +24,17 @@
 # Don't replace "\n" with " ".
 # usage.help needs exact format to be printed.
 def _(s):
+    assert r"\&" not in s, s
+    assert r"\fB" not in s, s
+    assert r"\fI" not in s, s
+    assert r"\fP" not in s, s
+    assert r"\fR" not in s, s
+    assert r"\-" not in s, s
+    assert r"\|" not in s, s
+
     s = s.replace("\n\n", "\n")
     if s.startswith("\n"):
         s = s[1:]
-    s = s.replace("\&", "")
-    s = s.replace("\fB", "")
-    s = s.replace("\fI", "")
-    s = s.replace("\fP", "")
-    s = s.replace("\fR", "")
-    s = s.replace("\-", "-")
-    s = s.replace("\|", "")
     if not s.endswith("\n"):
         s += "\n"
     return s
@@ -43,13 +44,13 @@ def _metavar(s):
 
 help = _("""
 \n
-  \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP]...
-  \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset:length\fP]]...
-  \fBfileobj\fP [\fIoptions\fP]... [\fIpaths\fP[\fI@offset\-(offset+length)\fP]]...
+  fileobj [options]... [paths]...
+  fileobj [options]... [paths[@offset:length]]...
+  fileobj [options]... [paths[@offset-(offset+length)]]...
 """)[:-1]
 
 R = _("""
-Use read\-only mode.
+Use read-only mode.
 """)
 
 B = _("""
@@ -58,21 +59,21 @@ This option is required to insert or delete bytes on some platforms.
 """)
 
 o = _("""
-Initially assign buffers given by \fIpaths\fP to horizontally splitted windows.
-When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
+Initially assign buffers given by paths to horizontally splitted windows.
+When <number_of_windows> is omitted, assign one window for each buffer.
 """)
 o_metavar = _metavar("number_of_windows")
 
 O = _("""
-Initially assign buffers given by \fIpaths\fP to vertically splitted windows.
-When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
+Initially assign buffers given by paths to vertically splitted windows.
+When <number_of_windows> is omitted, assign one window for each buffer.
 """)
 O_metavar = _metavar("number_of_windows")
 
 bytes_per_line = _("""
 Set number of bytes printed per line.
-Each line prints \fI<bytes_per_line>\fP bytes.
-Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
+Each line prints <bytes_per_line> bytes.
+Available formats for <bytes_per_line> are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
 "auto" is used by default.
 """)
@@ -80,8 +81,8 @@ bytes_per_line_metavar = _metavar("bytes_per_line")
 
 bytes_per_window = _("""
 Set number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes, using the current number of bytes per line.
-Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
+Each window prints <bytes_per_window> bytes, using the current number of bytes per line.
+Available formats for <bytes_per_window> are digit, "even" and "auto".
 "even" sets all windows to have the same size.
 "auto" is used by default.
 """)
@@ -89,7 +90,7 @@ bytes_per_window_metavar = _metavar("bytes_per_window")
 
 bytes_per_unit = _("""
 Set number of bytes printed per unit.
-Each unit prints \fI<bytes_per_unit>\fP bytes.
+Each unit prints <bytes_per_unit> bytes.
 "1" is used by default.
 """)
 bytes_per_unit_metavar = _metavar("bytes_per_unit")
@@ -115,15 +116,15 @@ Enable verbose mode.
 """)
 
 test_screen = _("""
-Enter \fBncurses\fP\|(3) screen test mode.
+Enter ncurses(3) screen test mode.
 """)
 
 test_mouse = _("""
-Enter \fBncurses\fP\|(3) mouse test mode.
+Enter ncurses(3) mouse test mode.
 """)
 
 test_color = _("""
-Enter \fBncurses\fP\|(3) color test mode.
+Enter ncurses(3) color test mode.
 """)
 
 list_color = _("""
@@ -136,11 +137,11 @@ Print list of environment variables and exit.
 """)
 
 command = _("""
-Print list of editor commands and exit. Also see \fB:help\fP.
+Print list of editor commands and exit. Also see :help.
 """)
 
 sitepkg = _("""
-Print \fBpython\fP\|(1) site\-package directory and exit.
+Print python(1) site-package directory and exit.
 """)
 
 cmp = _("""
@@ -148,7 +149,7 @@ Compare contents of files and exit.
 """)
 
 md = _("""
-Print message digest of files using \fI<hash_algorithm>\fP and exit.
+Print message digest of files using <hash_algorithm> and exit.
 Defaults to use SHA256.
 """)
 md_metavar = _metavar("hash_algorithm")
@@ -163,31 +164,31 @@ Show program's version number and exit.
 """)
 
 FILEOBJ_USE_READONLY = _("""
-If defined, use read\-only mode (equivalent to \fB\-R\fP).
+If defined, use read-only mode (equivalent to -R).
 """)
 
 FILEOBJ_USE_BYTES_BUFFER = _("""
-If defined, use Python bytes based buffer for regular files (equivalent to \fB\-B\fP).
+If defined, use Python bytes based buffer for regular files (equivalent to -B).
 """)
 
 FILEOBJ_USE_ASCII_EDIT = _("""
-If defined, use ASCII edit mode (equivalent to \fB:set ascii\fP).
+If defined, use ASCII edit mode (equivalent to :set ascii).
 Defaults to binary edit mode if undefined.
 """)
 
 FILEOBJ_USE_IGNORECASE = _("""
-If defined, search operation is case-insensitive (equivalent to \fB:set ic\fP).
+If defined, search operation is case-insensitive (equivalent to :set ic).
 Defaults to case-sensitive if undefined.
 """)
 
 FILEOBJ_USE_SIPREFIX = _("""
-If defined, use 10^3(K) for kilo (equivalent to \fB:set si\fP).
+If defined, use 10^3(K) for kilo (equivalent to :set si).
 Defaults to 2^10(Ki) if undefined.
 """)
 
 FILEOBJ_USE_WRAPSCAN = _("""
-If defined, search wraps around the end of the buffer (equivalent to \fB:set ws\fP).
-Defaults to no wrap around if undefined.
+If set to "false", search does not wrap around the end of the buffer (equivalent to :set nows).
+Defaults to wrap around if undefined.
 """)
 
 FILEOBJ_USE_TEXT_WINDOW = _("""
@@ -201,8 +202,8 @@ Defaults to use mouse events if undefined.
 """)
 
 FILEOBJ_USE_COLOR = _("""
-If set to "false", do not use color for buffer contents (equivalent to \fB\-\-no_color\fP).
-This set to "false" is equivalent to \fBFILEOBJ_COLOR_ZERO\fP, \fBFILEOBJ_COLOR_FF\fP, \fBFILEOBJ_COLOR_PRINT\fP, \fBFILEOBJ_COLOR_DEFAULT\fP, \fBFILEOBJ_COLOR_OFFSET\fP set to "none" or "white".
+If set to "false", do not use color for buffer contents (equivalent to --no_color).
+This set to "false" is equivalent to FILEOBJ_COLOR_ZERO, FILEOBJ_COLOR_FF, FILEOBJ_COLOR_PRINT, FILEOBJ_COLOR_DEFAULT, FILEOBJ_COLOR_OFFSET set to "none" or "white".
 Defaults to use color if undefined.
 """)
 
@@ -212,19 +213,19 @@ Defaults to on per byte basis.
 """)
 
 FILEOBJ_USE_BACKUP = _("""
-If defined, create backup files under \fI~/.fileobj\fP.
+If defined, create backup files under ~/.fileobj.
 Backup files start with '.'.
 Only applies to regular files.
 """)
 
 FILEOBJ_USE_TRUNCATE_SHRINK = _("""
-If defined, allow \fB:truncate\fP to shrink truncate.
+If defined, allow :truncate to shrink truncate.
 Defaults to disallow.
 """)
 
 FILEOBJ_USE_LINE_SCROLL = _("""
-If defined, enable line scroll mode.
-Defaults to page scroll mode.
+If set to "false", enable page scroll mode.
+Defaults to line scroll mode.
 """)
 
 FILEOBJ_BUFFER_SIZE = _("""
@@ -233,80 +234,80 @@ Defaults to 0.
 """)
 
 FILEOBJ_ENDIANNESS = _("""
-If set to "little" or "big", set endianness for multi-bytes data (equivalent to \fB:set le\fP and \fB:set be\fP).
+If set to "little" or "big", set endianness for multi-bytes data (equivalent to :set le and :set be).
 Defaults to host endian if undefined.
 """)
 
 FILEOBJ_ADDRESS_RADIX = _("""
-If set to "16", "10" or "8", show address in either hexadecimal, decimal or octal (equivalent to \fB:set address\fP).
+If set to "16", "10" or "8", show address in either hexadecimal, decimal or octal (equivalent to :set address).
 Defaults to "16" if undefined.
 """)
 
 FILEOBJ_BYTES_PER_LINE = _("""
-Set number of bytes printed per line (equivalent to \fB\-\-bytes_per_line\fP and \fB:set bytes_per_line\fP).
+Set number of bytes printed per line (equivalent to --bytes_per_line and :set bytes_per_line).
 """)
 
 FILEOBJ_BYTES_PER_WINDOW = _("""
-Set number of bytes printed per window (equivalent to \fB\-\-bytes_per_window\fP and \fB:set bytes_per_window\fP).
+Set number of bytes printed per window (equivalent to --bytes_per_window and :set bytes_per_window).
 """)
 
 FILEOBJ_BYTES_PER_UNIT = _("""
-Set number of bytes printed per unit (equivalent to \fB\-\-bytes_per_unit\fP and \fB:set bytes_per_unit\fP).
+Set number of bytes printed per unit (equivalent to --bytes_per_unit and :set bytes_per_unit).
 """)
 
 FILEOBJ_COLOR_CURRENT = _("""
 Set current cursor and window color.
 Defaults to "black,green" if undefined.
 Set blank string to disable.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_ZERO = _("""
 Set color for zero (0) bytes within buffer contents.
 Defaults to "green" if undefined.
 Set blank string to disable.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_FF = _("""
 Set color for 0xff bytes within buffer contents.
 Defaults to "magenta" if undefined.
 Set blank string to disable.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_PRINT = _("""
 Set color for printable bytes within buffer contents.
 Defaults to "cyan" if undefined.
 Set blank string to disable.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_DEFAULT = _("""
 Set default color for buffer contents.
 Defaults to "none" if undefined.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_VISUAL = _("""
 Set color for visual region.
 Defaults to "red,yellow" if undefined.
 Set blank string to disable.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_COLOR_OFFSET = _("""
 Set color for offsets in editor windows.
 Defaults to "none" if undefined.
-See \fB\-\-list_color\fP for available colors.
+See --list_color for available colors.
 """)
 
 FILEOBJ_DISAS_ARCH = _("""
-Set architecture name to use for \fBd\fP command.
+Set architecture name to use for d command.
 Defaults to "x86" if undefined, and currently only "x86" is supported.
 """)
 
 FILEOBJ_DISAS_PRIVATE = _("""
-Set \fBFILEOBJ_DISAS_ARCH\fP specific data for \fBd\fP command.
+Set FILEOBJ_DISAS_ARCH specific data for d command.
 Defaults to use 64 bit mode on x86 if undefined.
 """)

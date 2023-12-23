@@ -25,12 +25,12 @@ from . import blk
 from . import rofd
 
 class Fileobj (rofd.Fileobj, blk.methods):
-    _insert  = False
-    _replace = False
-    _delete  = False
-    _truncate= False
-    _enabled = blk.enabled
-    _partial = True
+    _insert   = False
+    _replace  = False
+    _delete   = False
+    _truncate = False
+    _enabled  = blk.enabled
+    _partial  = True
 
     def __str__(self):
         return super(Fileobj, self).__str__() + "\n\n" + self.get_string()

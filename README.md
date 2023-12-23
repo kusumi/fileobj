@@ -1,4 +1,4 @@
-# fileobj ([v0.8.0](https://github.com/kusumi/fileobj/releases/tag/v0.8.0))
+# fileobj ([v0.8.1](https://github.com/kusumi/fileobj/releases/tag/v0.8.1))
 
 ## About
 
@@ -24,18 +24,21 @@
 
 ## Install
 
-+ (Optionally define *__FILEOBJ_SETUP_USE_MAN* environment variable to make *setup.py* install *[fileobj(1)](doc/fileobj.1.txt)* man page. Unsupported on Windows.)
++ Run the command below.
 
-        $ export __FILEOBJ_SETUP_USE_MAN=
+        $ sudo python3 -m pip install /path/to/repository
 
-+ Run *setup.py* with following arguments.
++ Or run the commands below (recent Python versions will warn as deprecated).
 
-        $ python ./setup.py clean --all
-        $ python ./setup.py install --force --record ./install.out
+        $ cd /path/to/repository
+        $ sudo python3 -m pip install setuptools
+        $ sudo python3 ./setup.py install --force --record ./install.out
 
 ## Uninstall
 
-+ Remove files listed in *./install.out*.
++ Run the command below, or remove files listed in *install.out* from above.
+
+        $ sudo python3 -m pip uninstall -y fileobj
 
 ## Usage
 
@@ -45,12 +48,12 @@
         $ fileobj [options]... [paths[@offset:length]]...
         $ fileobj [options]... [paths[@offset-(offset+length)]]...
 
-+ Run with following option to test appearance of ncurses.
++ Run with the following options to test appearance of ncurses.
 
         $ fileobj --test_screen
         $ fileobj --test_color
 
-+ Run with following option to test mouse actions on ncurses.
++ Run with the following option to test mouse actions on ncurses.
 
         $ fileobj --test_mouse
 

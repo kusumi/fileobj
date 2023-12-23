@@ -51,17 +51,20 @@ def __test(version, name, allow_python2):
         __test_windows(version, name, allow_python2)
     else:
         __test_xnix(version, name, allow_python2)
-    import curses
-    curses
-    del curses
 
 def __test_xnix(version, name, allow_python2):
     if name.startswith("CYGWIN") and sys.executable[0] in "ABCDEFG":
         raise Exception("Cygwin Python is required on Cygwin")
     __test_common(version, name, allow_python2)
+    import curses
+    curses
+    del curses
 
 def __test_windows(version, name, allow_python2):
     __test_common(version, name, allow_python2)
+    # XXX Omit curses import test on Windows.
+    # pip installation via `python3 -m pip install .` fails with
+    # "No module named '_curses'" even when windows-curses is installed.
 
 def __test_common(version, name, allow_python2):
     if allow_python2:

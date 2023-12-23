@@ -25,12 +25,12 @@ from . import robuf
 from . import vm
 
 class Fileobj (robuf.Fileobj, vm.methods):
-    _insert  = False
-    _replace = False
-    _delete  = False
-    _truncate= False
-    _enabled = vm.enabled
-    _partial = True
+    _insert   = False
+    _replace  = False
+    _delete   = False
+    _truncate = False
+    _enabled  = vm.enabled
+    _partial  = True
 
     def __str__(self):
         return super(Fileobj, self).__str__() + "\n\n" + self.get_string()

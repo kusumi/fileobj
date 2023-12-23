@@ -122,8 +122,9 @@ ENVIRONMENT
            to 2^10(Ki) if undefined.
 
        FILEOBJ_USE_WRAPSCAN
-           If defined, search wraps around the end of the buffer (equivalent
-           to :set ws).  Defaults to no wrap around if undefined.
+           If set to "false", search does not wrap around the end of the
+           buffer (equivalent to :set nows).  Defaults to wrap around if
+           undefined.
 
        FILEOBJ_USE_TEXT_WINDOW
            If set to "false", do not use text window.  Defaults to use text
@@ -153,7 +154,8 @@ ENVIRONMENT
            disallow.
 
        FILEOBJ_USE_LINE_SCROLL
-           If defined, enable line scroll mode.  Defaults to page scroll mode.
+           If set to "false", enable page scroll mode.  Defaults to line
+           scroll mode.
 
        FILEOBJ_BUFFER_SIZE
            Set custom buffer size if larger than 0.  Defaults to 0.
@@ -256,4 +258,4 @@ FILES
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.8.0                  November 14, 2022                    FILEOBJ(1)
+FILEOBJ 0.8.1                  December 18, 2023                    FILEOBJ(1)

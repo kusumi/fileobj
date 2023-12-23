@@ -1379,7 +1379,8 @@ def add_page_line_state(ops):
 
 def delete_page_line_state(ops):
     assert setting.use_line_scroll is True
-    assert has_page_line_state(ops)
+    if not has_page_line_state(ops):
+        return # for unittest
     if setting.use_debug: # dump before delete
         dump_page_line_state("delete", ops)
     del _page_line_state[ops]
