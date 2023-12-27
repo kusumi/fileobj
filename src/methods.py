@@ -36,6 +36,7 @@ from . import kbd
 from . import kernel
 from . import literal
 from . import native
+from . import panel
 from . import path
 from . import screen
 from . import setting
@@ -187,11 +188,17 @@ def cursor_ptail(self, amp, opc, args, raw):
 def cursor_to(self, amp, opc, args, raw):
     go_to(self, amp)
 
-def __get_logical_sector_size(self):
+def __get_logical_block_size(self):
+    ret = setting.logical_block_size
+    if ret > 0:
+        assert ret % 512 == 0, ret
+        return ret
     ret = self.co.get_sector_size()
     if ret == -1:
-        ret = 512
-    return ret
+        return 512
+    else:
+        assert ret % 512 == 0, ret
+        return ret
 
 def cursor_sector_left(self, amp, opc, args, raw):
     n = get_int(amp) if amp else 1
@@ -210,7 +217,7 @@ def cursor_sector_right(self, amp, opc, args, raw):
         __cursor_sector_left(self, -n)
 
 def __cursor_sector_left(self, n):
-    sector_size = __get_logical_sector_size(self)
+    sector_size = __get_logical_block_size(self)
     cur = self.co.get_pos()
     if cur % sector_size == 0:
         pos = cur
@@ -222,7 +229,7 @@ def __cursor_sector_left(self, n):
     go_to(self, pos)
 
 def __cursor_sector_right(self, n):
-    sector_size = __get_logical_sector_size(self)
+    sector_size = __get_logical_block_size(self)
     cur = self.co.get_pos()
     if cur % sector_size == 0:
         pos = cur
@@ -234,13 +241,13 @@ def __cursor_sector_right(self, n):
     go_to(self, pos)
 
 def cursor_sector_shead(self, amp, opc, args, raw):
-    sector_size = __get_logical_sector_size(self)
+    sector_size = __get_logical_block_size(self)
     pos = util.align_head(self.co.get_pos(), sector_size)
     go_to(self, pos)
 
 def cursor_sector_stail(self, amp, opc, args, raw):
     n = get_int(amp) if amp else 1
-    sector_size = __get_logical_sector_size(self)
+    sector_size = __get_logical_block_size(self)
     pos = util.align_head(self.co.get_pos(), sector_size)
     pos += (sector_size - 1)
     if n > 1:
@@ -249,7 +256,7 @@ def cursor_sector_stail(self, amp, opc, args, raw):
 
 def cursor_sector_to(self, amp, opc, args, raw):
     n = get_int(amp) if amp else 0
-    sector_size = __get_logical_sector_size(self)
+    sector_size = __get_logical_block_size(self)
     go_to(self, sector_size * n)
 
 def go_up(self, amp=None):
@@ -434,6 +441,98 @@ def __cursor_prev_matched_goto(self, pos, end, cnt, fn):
             d += 1
         if pos <= end:
             return -1, cnt
+        if screen.test_signal():
+            self.co.flash("Search interrupted")
+            return None, None
+
+def cursor_next_zero_sector(self, amp, opc, args, raw):
+    n = __get_logical_block_size(self)
+    z = filebytes.ZERO * n
+    def fn(b):
+        return b == z
+    __cursor_next_matched_block(self, get_int(amp), fn, n)
+
+def cursor_next_non_zero_sector(self, amp, opc, args, raw):
+    n = __get_logical_block_size(self)
+    z = filebytes.ZERO * n
+    def fn(b):
+        return b != z
+    __cursor_next_matched_block(self, get_int(amp), fn, n)
+
+def cursor_prev_zero_sector(self, amp, opc, args, raw):
+    n = __get_logical_block_size(self)
+    z = filebytes.ZERO * n
+    def fn(b):
+        return b == z
+    __cursor_prev_matched_block(self, get_int(amp), fn, n)
+
+def cursor_prev_non_zero_sector(self, amp, opc, args, raw):
+    n = __get_logical_block_size(self)
+    z = filebytes.ZERO * n
+    def fn(b):
+        return b != z
+    __cursor_prev_matched_block(self, get_int(amp), fn, n)
+
+def __cursor_next_matched_block(self, cnt, fn, n):
+    if self.co.get_size() < n:
+        self.co.flash("Search failed")
+        return
+    # both pos / end inclusive
+    pos = util.align_tail(self.co.get_pos() + 1, n) # next sector head
+    end = util.align_head(self.co.get_max_pos(), n) # last sector head
+    ret, cnt = __cursor_next_matched_block_goto(self, pos, end, cnt, fn, n)
+    if ret == -1:
+        if not setting.use_wrapscan or __cursor_next_matched_block_goto(self, 0,
+            pos - n, cnt, fn, n)[0] == -1:
+            self.co.flash("Search failed")
+
+def __cursor_next_matched_block_goto(self, pos, end, cnt, fn, n):
+    assert end % n == 0, end
+    while True:
+        assert pos % n == 0, pos
+        if pos > end:
+            return -1, cnt
+        b = self.co.read(pos, n)
+        if len(b) < n:
+            return -1, cnt
+        if fn(b):
+            cnt -= 1
+            if not cnt:
+                go_to(self, pos)
+                return None, None
+        pos += len(b)
+        if screen.test_signal():
+            self.co.flash("Search interrupted")
+            return None, None
+
+def __cursor_prev_matched_block(self, cnt, fn, n):
+    if self.co.get_size() < n:
+        self.co.flash("Search failed")
+        return
+    # both pos / end inclusive
+    pos = util.align_head(self.co.get_pos() - 1, n) # previous sector head
+    end = 0 # first sector head
+    ret, cnt = __cursor_prev_matched_block_goto(self, pos, end, cnt, fn, n)
+    if ret == -1:
+        beg = util.align_head(self.co.get_max_pos(), n) # last sector head
+        if not setting.use_wrapscan or __cursor_prev_matched_block_goto(self,
+            beg, pos + n, cnt, fn, n)[0] == -1:
+            self.co.flash("Search failed")
+
+def __cursor_prev_matched_block_goto(self, pos, end, cnt, fn, n):
+    assert end % n == 0, end
+    while True:
+        assert pos % n == 0, pos
+        if pos < end:
+            return -1, cnt
+        b = self.co.read(pos, n)
+        # len(b) < n can happen at last page of unaligned size buffer
+        if len(b) == n and fn(b):
+            cnt -= 1
+            if not cnt:
+                go_to(self, pos)
+                return None, None
+        pos -= n # not len(b)
         if screen.test_signal():
             self.co.flash("Search interrupted")
             return None, None
@@ -681,6 +780,9 @@ def refresh_container(self, amp, opc, args, raw):
     # frame issue which happens after once changing to a different terminal.
     # e.g. Frames disappear on *BSD, and corrupt on Cygwin.
     # Not confirmed on Linux and Solaris.
+    __refresh_container(self)
+
+def __refresh_container(self):
     if terminal.is_screen():
         self.co.resize()
     else:
@@ -898,6 +1000,25 @@ def __set_bytes_per_unit(self, args):
             self.co.build()
         self.co.repaint()
 
+def __set_scroll_mode(self, args):
+    if len(args) == 1:
+        if setting.use_line_scroll:
+            self.co.show("line")
+        else:
+            self.co.show("page")
+    else:
+        s = args[1]
+        if s == "line":
+            if setting.use_line_scroll:
+                return
+            setting.use_line_scroll = True
+        elif s == "page":
+            if not setting.use_line_scroll:
+                return
+            setting.use_line_scroll = False
+        panel.reset()
+        __refresh_container(self)
+
 def set_option(self, amp, opc, args, raw):
     _set_methods = {
         literal.s_set_binary.seq:  __set_binary,
@@ -913,7 +1034,8 @@ def set_option(self, amp, opc, args, raw):
         literal.s_set_address.seq: __set_address,
         literal.s_set_bpl.seq:     __set_bytes_per_line,
         literal.s_set_bpw.seq:     __set_bytes_per_window,
-        literal.s_set_bpu.seq:     __set_bytes_per_unit, }
+        literal.s_set_bpu.seq:     __set_bytes_per_unit,
+        literal.s_set_scroll.seq:  __set_scroll_mode, }
 
     if not args:
         self.co.flash("Argument required")

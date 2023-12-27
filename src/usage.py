@@ -233,6 +233,11 @@ Set custom buffer size if larger than 0.
 Defaults to 0.
 """)
 
+FILEOBJ_LOGICAL_BLOCK_SIZE = _("""
+Set custom logical block size if larger than 0.
+Defaults to 0.
+""")
+
 FILEOBJ_ENDIANNESS = _("""
 If set to "little" or "big", set endianness for multi-bytes data (equivalent to :set le and :set be).
 Defaults to host endian if undefined.

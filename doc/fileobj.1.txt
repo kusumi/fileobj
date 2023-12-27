@@ -160,6 +160,9 @@ ENVIRONMENT
        FILEOBJ_BUFFER_SIZE
            Set custom buffer size if larger than 0.  Defaults to 0.
 
+       FILEOBJ_LOGICAL_BLOCK_SIZE
+           Set custom logical block size if larger than 0.  Defaults to 0.
+
        FILEOBJ_ENDIANNESS
            If set to "little" or "big", set endianness for multi-bytes data
            (equivalent to :set le and :set be).  Defaults to host endian if
@@ -258,4 +261,4 @@ FILES
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.8.1                  December 18, 2023                    FILEOBJ(1)
+FILEOBJ 0.8.2                  December 26, 2023                    FILEOBJ(1)

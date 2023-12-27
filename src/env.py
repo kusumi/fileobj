@@ -41,6 +41,7 @@ def __iter_env():
     yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
     yield "FILEOBJ_USE_LINE_SCROLL", True
     yield "FILEOBJ_BUFFER_SIZE", 0
+    yield "FILEOBJ_LOGICAL_BLOCK_SIZE", 0
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
     yield "FILEOBJ_ADDRESS_RADIX", 16 # :set address
     yield "FILEOBJ_BYTES_PER_LINE", None # --bytes_per_line, :set bytes_per_line
@@ -182,6 +183,14 @@ def __get_setting_use_line_scroll():
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE")
+
+def __get_setting_logical_block_size():
+    s = "FILEOBJ_LOGICAL_BLOCK_SIZE"
+    ret = test_gt_zero(s)
+    if ret % 512 == 0:
+        return ret
+    else:
+        return get_default(s)
 
 def __get_setting_endianness():
     s = "FILEOBJ_ENDIANNESS"

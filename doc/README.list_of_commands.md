@@ -128,6 +128,7 @@
             noic               Unset ic mode
             le                 Set endianness to little (unset big endian if set)
             be                 Set endianness to big (unset little endian if set)
+            scroll             Set scroll mode to {"line","page"}
             si                 Set SI prefix mode (kilo equals 10^3)
             nosi               Unset SI prefix mode (kilo equals 2^10)
             ws                 Set wrapscan mode (search wraps around the end of the buffer)
@@ -191,6 +192,7 @@
         q                      Stop recording
         s$                     Go to the end of the sector. If a count is given go [count]-1 sectors downward
         s0                     Go to the first character of the sector
+        sZ                     Go to the [count] previous zero filled sector
         sb                     Swap byte order of [count] characters
         sgo                    Go to [count] sector in the buffer (default first sector)
         sh                     Go [count] sectors to the left
@@ -198,6 +200,9 @@
         s<BACKSPACE>           Go [count] sectors to the left
         sl                     Go [count] sectors to the right
         s<SPACE>               Go [count] sectors to the right
+        snZ                    Go to the [count] previous non-zero filled sector
+        snz                    Go to the [count] next non-zero filled sector
+        sz                     Go to the [count] next zero filled sector
         t?                     Search character forward until before occurrence
         T?                     Search character backward until before occurrence
         u                      Undo changes

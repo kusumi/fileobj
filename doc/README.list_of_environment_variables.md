@@ -16,6 +16,7 @@
         FILEOBJ_DISAS_ARCH          Set architecture name to use for d command. Defaults to "x86" if undefined, and currently only "x86" is supported.
         FILEOBJ_DISAS_PRIVATE       Set FILEOBJ_DISAS_ARCH specific data for d command. Defaults to use 64 bit mode on x86 if undefined.
         FILEOBJ_ENDIANNESS          If set to "little" or "big", set endianness for multi-bytes data (equivalent to :set le and :set be). Defaults to host endian if undefined.
+        FILEOBJ_LOGICAL_BLOCK_SIZE  Set custom logical block size if larger than 0. Defaults to 0.
         FILEOBJ_USE_ASCII_EDIT      If defined, use ASCII edit mode (equivalent to :set ascii). Defaults to binary edit mode if undefined.
         FILEOBJ_USE_BACKUP          If defined, create backup files under ~/.fileobj. Backup files start with '.'. Only applies to regular files.
         FILEOBJ_USE_BYTES_BUFFER    If defined, use Python bytes based buffer for regular files (equivalent to -B).

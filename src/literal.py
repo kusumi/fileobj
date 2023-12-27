@@ -342,6 +342,10 @@ def init():
     setattr(this, "szero", FastLiteral("s0", None, "Go to the first character of the sector"))
     setattr(this, "sdoller", FastLiteral("s$", None, "Go to the end of the sector. If a count is given go [count]-1 sectors downward"))
     setattr(this, "sgo", FastLiteral("sgo", None, "Go to [count] sector in the buffer (default first sector)"))
+    setattr(this, "sz", FastLiteral("sz", None, "Go to the [count] next zero filled sector"))
+    setattr(this, "snz", FastLiteral("snz", None, "Go to the [count] next non-zero filled sector"))
+    setattr(this, "sZ", FastLiteral("sZ", None, "Go to the [count] previous zero filled sector"))
+    setattr(this, "snZ", FastLiteral("snZ", None, "Go to the [count] previous non-zero filled sector"))
     setattr(this, "ctrlb", FastLiteral("<CTRL>b", (util.ctrl('b'),), "Scroll window [count] pages backward in the buffer"))
     setattr(this, "ctrlu", FastLiteral("<CTRL>u", (util.ctrl('u'),), "Scroll window [count] half pages backward in the buffer"))
     setattr(this, "ctrlf", FastLiteral("<CTRL>f", (util.ctrl('f'),), "Scroll window [count] pages forward in the buffer"))
@@ -545,6 +549,7 @@ def init():
     setattr(this, "s_set_bpw_", this.s_set_bpw.create_alias("bpw", None))
     setattr(this, "s_set_bpu", ArgLiteral("bytes_per_unit", None, "Set bytes_per_unit to {\"1\",\"2\",\"4\",\"8\"}"))
     setattr(this, "s_set_bpu_", this.s_set_bpu.create_alias("bpu", None))
+    setattr(this, "s_set_scroll", ArgLiteral("scroll", None, "Set scroll mode to {\"line\",\"page\"}"))
 
     for _ in util.iter_site_ext_module():
         fn = getattr(_, "get_text", None)
@@ -592,7 +597,7 @@ def init():
         (this.rsearchc, this.fsearchc),
         (this.rsearchcb, this.fsearchcb),
         (this.comma, this.semicolon),
-        ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu), this.s_set),)
+        ((this.s_set_ascii.refer(this.s_set_binary), this.s_set_be.refer(this.s_set_le), this.s_set_nows.refer(this.s_set_ws), this.s_set_noic.refer(this.s_set_ic), this.s_set_nosi.refer(this.s_set_si), this.s_set_status.refer(this.s_set_address), this.s_set_bpl, this.s_set_bpw, this.s_set_bpu, this.s_set_scroll), this.s_set),)
 
     def fn():
         yield this.s_e

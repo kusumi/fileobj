@@ -202,6 +202,13 @@ class VerboseStatusCanvas (StatusCanvas):
     def iter_line_buffer(self):
         g = self.iter_buffer_template()
         i, s = util.iter_next(g)
+        if setting.use_debug and setting.use_line_scroll:
+            pls = panel.get_page_line_state(self.fileops)
+            x = str(pls)
+            if x:
+                if s:
+                    s += ' '
+                s += x
         x = self.get_status_common1()
         if x:
             if s:

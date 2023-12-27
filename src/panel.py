@@ -57,6 +57,9 @@ from . import util
 # [*] has_page_line_state_machine
 
 class PageLineStateError (util.GenericError):
+    pass
+
+class PageLineStateException (util.GenericError):
     def get_pos(self):
         return self.__get_args()[0]
 
@@ -427,10 +430,11 @@ class PageLineCanvas (Canvas):
             pls = self.get_page_line_state()
             if pls.delta_line != 0:
                 pos = pls.base_offset + pls.delta_line * self.bufmap.x
-                assert pos >= 0, (pos, repr(self), self.fileops.get_path(),
-                    str(pls))
+                if pos < 0: # this shouldn't happen, but
+                    self.raise_page_line_state_exception(pos,
+                        self.fileops.get_prev_pos()) # XXX would this save ?
                 if pos > self.fileops.get_max_pos():
-                    self.raise_page_line_state_error(pos,
+                    self.raise_page_line_state_exception(pos,
                         self.fileops.get_prev_pos())
                 return pos
         return super(PageLineCanvas, self).get_page_offset()
@@ -442,11 +446,10 @@ class PageLineCanvas (Canvas):
             if pls.delta_line != 0:
                 pos -= pls.delta_line * self.bufmap.x
                 if pos < 0:
-                    self.raise_page_line_state_error(pos,
+                    self.raise_page_line_state_exception(pos,
                         self.fileops.get_prev_pos())
-                elif pos > self.fileops.get_max_pos():
-                    self.raise_page_line_state_error(pos,
-                        self.fileops.get_prev_pos())
+                # pos > self.fileops.get_max_pos() is not an error,
+                # it can happen at the last page with negative delta_line.
         r = pos % self.get_capacity()
         y = self.offset.y + r // self.bufmap.x
         x = self.offset.x + self.get_cell_width(r % self.bufmap.x)
@@ -480,19 +483,18 @@ class PageLineCanvas (Canvas):
         else:
             assert False, pls.sync
 
-    def __get_page_line_state_base_offset(self):
-        assert self.bufmap.x > 0
-        return util.rounddown(self.get_page_offset(), self.bufmap.x)
-
     def get_page_line_state(self):
         exists = has_page_line_state(self.fileops)
         pls = get_page_line_state(self.fileops)
         assert pls
         if not exists:
             assert pls.base_offset == 0, pls.base_offset
-            pls.base_offset = self.__get_page_line_state_base_offset()
+            assert pls.delta_line == 0, pls.delta_line
+            pls.base_offset = self.get_page_offset()
+            assert pls.base_offset >= 0, pls.base_offset
             log.debug("{0} add {1} {2}".format(self, self.fileops.get_path(),
                 pls))
+        self.__assert_plsx(pls)
         return pls
 
     def reset_page_line_state(self, fail_fast=False):
@@ -511,8 +513,9 @@ class PageLineCanvas (Canvas):
         pls = self.get_page_line_state()
         pls.line = PAGE_LINE_UNKNOWN
         pls.sync = PAGE_SYNC_REPAINT
-        pls.delta_line = 0 # before base_offset update
-        pls.base_offset = self.__get_page_line_state_base_offset()
+        pls.delta_line = 0 # must clear before base_offset update
+        pls.base_offset = self.get_page_offset()
+        assert pls.base_offset >= 0, pls.base_offset
         self.__force_page_line_state()
         log.debug("{0} reset {1} {2}".format(self, self.fileops.get_path(),
             pls))
@@ -553,11 +556,9 @@ class PageLineCanvas (Canvas):
         assert setting.use_line_scroll
         assert self.has_page_line_state_machine(), repr(self)
         # correct pls line state if unknown
-        delta_line_orig = pls.delta_line
         if pls.line == PAGE_LINE_UNKNOWN:
             self.__force_page_line_state()
         assert pls.line != PAGE_LINE_UNKNOWN
-        assert pls.delta_line == delta_line_orig
 
         # get pls line symbol for debug log
         sym = _page_line_state_sym.get(pls.line)
@@ -572,7 +573,11 @@ class PageLineCanvas (Canvas):
             pos = self.fileops.get_prev_pos()
             ldiff_abs = -ldiff
             for i in range(ldiff_abs + 1): # from 0 to ldiff_abs
-                if self.in_first_page_line(pos - self.bufmap.x * i):
+                try:
+                    t = self.in_first_page_line(pos - self.bufmap.x * i)
+                except PageLineStateException as e: # this shouldn't happen
+                    raise PageLineStateError(e)
+                if t:
                     # does not apply when exiting edit console with barrier
                     #t = pls.line == PAGE_LINE_FIRST
                     #assert t if i == 0 else not t, (i, pos, pls.line, ldiff)
@@ -587,7 +592,11 @@ class PageLineCanvas (Canvas):
             pos = self.fileops.get_prev_pos()
             ldiff_abs = +ldiff
             for i in range(ldiff_abs + 1): # from 0 to ldiff_abs
-                if self.in_last_page_line(pos + self.bufmap.x * i):
+                try:
+                    t = self.in_last_page_line(pos + self.bufmap.x * i)
+                except PageLineStateException as e: # this shouldn't happen
+                    raise PageLineStateError(e)
+                if t:
                     # does not apply when exiting edit console with barrier
                     #t = pls.line == PAGE_LINE_LAST
                     #assert t if i == 0 else not t, (i, pos, pls.line, ldiff)
@@ -600,44 +609,49 @@ class PageLineCanvas (Canvas):
                     return # line scroll
 
         # not line scroll
-        pls.delta_line = delta_line_orig # adjust back
-        if self.in_first_page_line():
-            pls.line = PAGE_LINE_FIRST
-            pls.sync = PAGE_SYNC_UPDATE
-            self.__log_plsx(sym, "F", pls, ldiff)
-        elif self.in_last_page_line():
-            pls.line = PAGE_LINE_LAST
-            pls.sync = PAGE_SYNC_UPDATE
-            self.__log_plsx(sym, "L", pls, ldiff)
-        else:
-            pls.line = PAGE_LINE_NONE
-            pls.sync = PAGE_SYNC_UPDATE
-            self.__log_plsx(sym, "N", pls, ldiff)
+        try:
+            if self.in_first_page_line():
+                pls.line = PAGE_LINE_FIRST
+                pls.sync = PAGE_SYNC_UPDATE
+                self.__log_plsx(sym, "F", pls, ldiff)
+            elif self.in_last_page_line():
+                pls.line = PAGE_LINE_LAST
+                pls.sync = PAGE_SYNC_UPDATE
+                self.__log_plsx(sym, "L", pls, ldiff)
+            else:
+                pls.line = PAGE_LINE_NONE
+                pls.sync = PAGE_SYNC_UPDATE
+                self.__log_plsx(sym, "N", pls, ldiff)
+        except PageLineStateException as e: # this shouldn't happen
+            raise PageLineStateError(e)
 
     def __log_plsx(self, src, dst, pls, ldiff):
         log.debug("{0} -> {1} base_offset={2} delta_line={3} ldiff={4}".format(
             src, dst, pls.base_offset, pls.delta_line, ldiff))
+        self.__assert_plsx(pls)
+
+    def __assert_plsx(self, pls):
+        x = pls.base_offset + pls.delta_line * self.bufmap.x
+        assert x >= 0, (x, self.fileops.get_path(), self.fileops.get_size(),
+            self.bufmap.x, str(pls))
 
     def update_page_line_state_safe(self, reset_line_scroll):
         try:
             self.update_page_line_state(reset_line_scroll)
-        except PageLineStateError as e:
-            self.log_page_line_state_error(e)
+        except PageLineStateException as e:
+            self.log_page_line_state_exception(e)
             self.reset_page_line_state()
             self.update_page_line_state(reset_line_scroll)
 
-    def raise_page_line_state_error(self, pos, ppos):
+    def raise_page_line_state_exception(self, pos, ppos):
         assert setting.use_line_scroll
         assert self.has_page_line_state_machine(), repr(self)
-        if setting.use_debug:
-            pls = self.get_page_line_state()
-            _ = pos, ppos, str(pls)
-        else:
-            _ = pos, ppos
-        raise PageLineStateError(_)
+        pls = self.get_page_line_state()
+        _ = pos, ppos, str(pls)
+        raise PageLineStateException(_)
 
-    def log_page_line_state_error(self, e):
-        assert isinstance(e, PageLineStateError), repr(e)
+    def log_page_line_state_exception(self, e):
+        assert isinstance(e, PageLineStateException), repr(e)
         log.debug(e)
         if _page_line_state_debug:
             log.debug_traceback()
@@ -896,16 +910,16 @@ class DisplayCanvas (PageLineCanvas):
     def repaint(self, *arg):
         try:
             super(DisplayCanvas, self).repaint(*arg)
-        except PageLineStateError as e:
-            self.log_page_line_state_error(e)
+        except PageLineStateException as e:
+            self.log_page_line_state_exception(e)
             self.reset_page_line_state()
             super(DisplayCanvas, self).repaint(*arg)
 
     def repaint_partial(self, *arg):
         try:
             super(DisplayCanvas, self).repaint_partial(*arg)
-        except PageLineStateError as e:
-            self.log_page_line_state_error(e)
+        except PageLineStateException as e:
+            self.log_page_line_state_exception(e)
             self.reset_page_line_state()
             super(DisplayCanvas, self).repaint_partial(*arg)
 
@@ -1480,3 +1494,7 @@ def cleanup():
     _page_line_state_sym.clear()
     assert len(_page_line_state) == 0, _page_line_state
     assert len(_page_line_state_sym) == 0, _page_line_state_sym
+
+def reset():
+    cleanup()
+    init()
