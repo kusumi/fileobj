@@ -97,6 +97,10 @@ OPTIONS
            Print message digest of files using <hash_algorithm> and exit.
            Defaults to use SHA256.
 
+       --blkscan=[<scan_type>]
+           Print file offsets of matched logical blocks and exit.  Defaults to
+           use zero.
+
        --lsblk
            Print list of block devices and exit.  This prints character
            devices on some platforms.
@@ -261,4 +265,4 @@ FILES
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.8.2                  December 26, 2023                    FILEOBJ(1)
+FILEOBJ 0.8.3                   January 4, 2024                     FILEOBJ(1)

@@ -53,13 +53,12 @@ def _md(args, hash_algo, verbose, printf, printe):
     if m is None:
         printe("No such hash algorithm \"{0}\", "
             "supported hash algorithms are as follows".format(hash_algo))
-        printe("{0}".format(" ".join(
-            util.get_available_hash_algorithms())))
+        printe("{0}".format(" ".join(util.get_available_hash_algorithms())))
         return -1
 
     # determine block size
-    if setting.buffer_size > 0:
-        blksiz = setting.buffer_size
+    if setting.logical_block_size > 0:
+        blksiz = setting.logical_block_size
     else:
         blksiz = 1 << 16
 

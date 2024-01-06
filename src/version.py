@@ -21,14 +21,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# RELEASE is basically always 1.
+# RELEASE is basically always 1 in the upstream.
 # It was added only to sync with RPM versioning.
-# Everytime a batch of new commits is pushed to GitHub, MINOR2 gets incremented.
-# RPM patches within the same fileobj version may or may not increment RELEASE.
 
 MAJOR = 0
 MINOR1 = 8
-MINOR2 = 2
+MINOR2 = 3
 RELEASE = 1
 
 def get_version():

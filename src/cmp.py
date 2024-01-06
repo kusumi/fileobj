@@ -44,8 +44,8 @@ def _cmp(args, verbose, printf, printe):
         return -1
 
     # determine block size
-    if setting.buffer_size > 0:
-        blksiz = setting.buffer_size
+    if setting.logical_block_size > 0:
+        blksiz = setting.logical_block_size
     else:
         blksiz = 1 << 16
 

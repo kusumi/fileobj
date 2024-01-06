@@ -4,12 +4,6 @@
 
         Python.h: No such file or directory
 
-+ Can not install the missing header file *Python.h*. -> **Run *setup.py* with *__FILEOBJ_SETUP_USE_NO_NATIVE* environment variable defined. This option provides almost the same functionality without using C extension.**
-
-        $ export __FILEOBJ_SETUP_USE_NO_NATIVE=
-        $ python ./setup.py clean --all
-        $ python ./setup.py install --force --record ./install.out
-
 + A directory *${HOME}/.fileobj* appeared after running *fileobj* for the first time. -> ***fileobj* automatically creates *${HOME}/.fileobj* and some files under the directory if they do not exist.**
 
 + Can not enter block visual mode via *CTRL-v*. -> **Some terminals require *CTRL-v CTRL-v* if *CTRL-v* does not work, but some terminals do not support *CTRL-V*.**
@@ -34,10 +28,6 @@
 
 + Can not install due to a missing module *_curses*. -> **NetBSD may require *py-curses* package. The binary package name would be for example *py37-curses* for Python 3.7.**
 
-        $ uname
-        NetBSD
-        $ python ./setup.py install --force --record ./install.out
-        No module named _curses
         $ cd /usr/pkgsrc/devel/py-curses
         $ make install
 
@@ -45,8 +35,6 @@
 
 + Can not install due to a missing module *_curses*. -> **Install *windows-curses*.**
 
-        > python ./setup.py install --force --record ./install.out.txt
-        No module named '_curses'
         > pip install windows-curses
 
 + *CTRL-c* can not interrupt ongoing editor command. -> ***windows-curses* module can not handle Unix signals, whereas regular Python applications on Windows can handle some Unix signals.**
@@ -59,6 +47,6 @@
 
 ## Windows Terminal
 
-+ Can not enter block visual mode via *CTRL-v*. -> **Go to terminal settings (which opens *settings.json* file) and comment out *"{ "command": "paste", "keys": "ctrl+v" },"* line. Note that this disables pasting of copied buffer.**
++ Can not enter block visual mode via *CTRL-v*. -> **Windows Terminal does not seem to support *CTRL-V*.**
 
-+ Mouse events are ignored. -> **Windows Terminal does not seem to support mouse events. Instead it receives irrelevant bytes.**
++ Mouse events are ignored. -> **Windows Terminal does not seem to support mouse events.**

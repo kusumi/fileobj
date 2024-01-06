@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "December 26, 2023" "FILEOBJ 0.8.2"
+.TH FILEOBJ 1 "January 4, 2024" "FILEOBJ 0.8.3"
 .nh
 .ad l
 .SH NAME
@@ -166,6 +166,12 @@ Compare contents of files and exit.
 .RS 4
 Print message digest of files using \fI<hash_algorithm>\fP and exit.
 Defaults to use SHA256.
+.RE
+.PP
+\fB\-\-blkscan\fP=[\fI<scan_type>\fP]
+.RS 4
+Print file offsets of matched logical blocks and exit.
+Defaults to use \fBzero\fP.
 .RE
 .PP
 \fB\-\-lsblk\fP

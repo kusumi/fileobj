@@ -478,8 +478,8 @@ def __cursor_next_matched_block(self, cnt, fn, n):
         self.co.flash("Search failed")
         return
     # both pos / end inclusive
-    pos = util.align_tail(self.co.get_pos() + 1, n) # next sector head
-    end = util.align_head(self.co.get_max_pos(), n) # last sector head
+    pos = util.align_tail(self.co.get_pos() + 1, n) # next block head
+    end = util.align_head(self.co.get_max_pos(), n) # last block head
     ret, cnt = __cursor_next_matched_block_goto(self, pos, end, cnt, fn, n)
     if ret == -1:
         if not setting.use_wrapscan or __cursor_next_matched_block_goto(self, 0,
@@ -510,11 +510,11 @@ def __cursor_prev_matched_block(self, cnt, fn, n):
         self.co.flash("Search failed")
         return
     # both pos / end inclusive
-    pos = util.align_head(self.co.get_pos() - 1, n) # previous sector head
-    end = 0 # first sector head
+    pos = util.align_head(self.co.get_pos() - 1, n) # previous block head
+    end = 0 # first block head
     ret, cnt = __cursor_prev_matched_block_goto(self, pos, end, cnt, fn, n)
     if ret == -1:
-        beg = util.align_head(self.co.get_max_pos(), n) # last sector head
+        beg = util.align_head(self.co.get_max_pos(), n) # last block head
         if not setting.use_wrapscan or __cursor_prev_matched_block_goto(self,
             beg, pos + n, cnt, fn, n)[0] == -1:
             self.co.flash("Search failed")

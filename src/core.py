@@ -28,6 +28,7 @@ import signal
 import sys
 
 from . import allocator
+from . import blkscan
 from . import cmp
 from . import console
 from . import container
@@ -165,6 +166,7 @@ def __dispatch(optargs=None):
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
     parser.add_argument("--cmp", action="store_true", default=False, help=usage.cmp)
     parser.add_argument("--md", nargs="?", type=str, const="sha256", metavar=usage.md_metavar, help=usage.md)
+    parser.add_argument("--blkscan", nargs="?", type=str, const="zero", metavar=usage.blkscan_metavar, help=usage.blkscan)
     if kernel.is_xnix():
         parser.add_argument("--lsblk", action="store_true", default=False, help=usage.lsblk)
     if __test_wait_for_input():
@@ -236,6 +238,11 @@ def __dispatch(optargs=None):
         if opts.md == "":
             opts.md = "sha256"
         md.md(args, opts.md, opts.verbose)
+        return _DID_PRINT_MESSAGE
+    if opts.blkscan is not None:
+        if opts.blkscan == "":
+            opts.blkscan = "zero"
+        blkscan.blkscan(args, opts.blkscan, opts.verbose)
         return _DID_PRINT_MESSAGE
     # "lsblk" exists only if running on *nix
     if hasattr(opts, "lsblk") and opts.lsblk:

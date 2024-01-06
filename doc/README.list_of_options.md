@@ -55,6 +55,9 @@
           --md [<hash_algorithm>]
                                 Print message digest of files using <hash_algorithm>
                                 and exit. Defaults to use SHA256.
+          --blkscan [<scan_type>]
+                                Print file offsets of matched logical blocks and exit.
+                                Defaults to use zero.
           --lsblk               Print list of block devices and exit. This prints
                                 character devices on some platforms.
           --version             show program's version number and exit

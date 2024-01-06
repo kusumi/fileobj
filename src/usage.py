@@ -154,6 +154,12 @@ Defaults to use SHA256.
 """)
 md_metavar = _metavar("hash_algorithm")
 
+blkscan = _("""
+Print file offsets of matched logical blocks and exit.
+Defaults to use zero.
+""")
+blkscan_metavar = _metavar("scan_type")
+
 lsblk = _("""
 Print list of block devices and exit.
 This prints character devices on some platforms.

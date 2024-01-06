@@ -1,7 +1,5 @@
 ## NetBSD pkgsrc
 
-+ Maintained.
-
 + [https://pkgsrc.se/editors/fileobj](https://pkgsrc.se/editors/fileobj)
 
 + [http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html](http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/editors/fileobj/README.html)
@@ -24,8 +22,6 @@ binary package
         fileobj-0.7.108     Curses based hex editor with vi interface
 
 ## FreeBSD ports
-
-+ Maintained.
 
 + [https://www.freebsd.org/cgi/ports.cgi?query=fileobj](https://www.freebsd.org/cgi/ports.cgi?query=fileobj)
 
@@ -50,18 +46,4 @@ binary package
 
 ## DragonFlyBSD dports
 
-+ Maintained.
-
 + [https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj](https://github.com/DragonFlyBSD/DPorts/tree/master/editors/fileobj)
-
-## Arch Linux AUR
-
-+ Unmaintained, use latest upstream code instead.
-
-+ [https://aur.archlinux.org/packages/fileobj](https://aur.archlinux.org/packages/fileobj)
-
-## Exherbo
-
-+ Unmaintained, use latest upstream code instead.
-
-+ [http://git.exherbo.org/summer/packages/app-editors/fileobj](http://git.exherbo.org/summer/packages/app-editors/fileobj)
