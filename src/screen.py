@@ -138,8 +138,8 @@ def __log_debug():
     log.debug("screen: {0}".format(l))
     log.debug("screen: has_color={0} has_extended_color={1} "
         "can_change_color={2} use_color={3} use_mouse={4}".format(
-        has_color(), has_extended_color(), can_change_color(), use_color(),
-        use_mouse()))
+            has_color(), has_extended_color(), can_change_color(), use_color(),
+            use_mouse()))
     log.debug("screen: buf_attr {0}".format(set(sorted(buf_attr.values()))))
 
 def cleanup():

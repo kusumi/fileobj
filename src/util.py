@@ -933,7 +933,12 @@ def __fprintf(o, error, verbose):
     else:
         fd = sys.stdout
     s = obj_to_string(o, verbose)
-    print(s, file=fd)
+    try:
+        print(s, file=fd)
+    except BrokenPipeError:
+        nfd = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(nfd, fd.fileno())
+        sys.exit(1)
 
 def printf(o):
     __fprintf(o, False, True)
@@ -1086,3 +1091,36 @@ def iter_directory(d, expand_symlink=False):
                 f = os.path.normpath(f)
             assert os.path.exists(f), f
             yield f
+
+def get_offset_format(max_size):
+    if setting.address_radix == 16:
+        radix = "x"
+    elif setting.address_radix == 10:
+        radix = "d"
+    elif setting.address_radix == 8:
+        radix = "o"
+    else:
+        assert False, setting.address_radix
+
+    if max_size > 0:
+        max_size -= 1
+    fmt = "{{:{0}}}".format(radix)
+    s = fmt.format(max_size)
+
+    min_width = 4
+    l = [2 * i for i in get_xrange(100)] # max 200 (large enough)
+    l = [x for x in l if x >= min_width]
+    width = 0
+    for x in l:
+        if x > len(s):
+            width = x
+            break
+    assert width > 0, width
+
+    fmt = "{{:0{0}{1}}}".format(width, radix)
+    if setting.address_radix == 16:
+        return "0x" + fmt
+    elif setting.address_radix == 8:
+        return "o" + fmt
+    else:
+        return fmt

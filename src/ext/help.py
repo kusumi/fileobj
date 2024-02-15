@@ -22,12 +22,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from .. import literal
-from .. import url
 
 def get_text(co, fo, args):
-    l = [url.get_doc_url("list_of_commands")]
-    l.extend(literal.get_lines())
-    return l
+    return literal.get_lines()
 
 def get_description():
     return "Show list of commands"

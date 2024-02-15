@@ -136,13 +136,13 @@ class methods (object):
             self.__detach_vm()
 
     def __poke_vm(self, addr, buf):
-        ret = 0
+        cnt = 0
         for data in buf:
             ret, err = ptrace.poketext(self.pid, addr, data)
             if ret == ptrace.ERROR:
                 raise fileobj.Error(
                     "Failed to poke pid {0} at 0x{1:X}: {2}".format(self.pid,
                         addr, os.strerror(err)))
-            ret += 1
+            cnt += 1
             addr += self.word
-        return ret
+        return cnt

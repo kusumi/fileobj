@@ -894,7 +894,7 @@
          8 /dev/sdb2 0x30fff00000 0x200       195.999023[GiB] 512[B]      -     -
          9 /dev/sr0  -            -           -               -           -     [Errno 123] No medium found: '/dev/sr0'
 
-+ *--md* option prints message digest of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_BUFFER_SIZE* environment variable.
++ *--md* option prints message digest of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
 
         $ fileobj ./a.out ./b.out ./c.out --md=sha256 --verbose
         blake2b blake2s md4 md5 md5-sha1 ripemd160 sha1 sha224 [sha256] sha384 sha3_224 sha3_256 sha3_384 sha3_512 sha512 sha512_224 sha512_256 shake_128 shake_256 sm3 whirlpool
@@ -908,7 +908,7 @@
         62c81971892dcb0ca2c0d58b4811b6bf  /path/to/b.out
         d3c205dbb1777dc60486ccfedc93cbe6  /path/to/c.out
 
-+ *--cmp* option compares contents of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_BUFFER_SIZE* environment variable.
++ *--cmp* option compares contents of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
 
         $ fileobj ./a.out ./b.out ./c.out --cmp
         #0 0.0% 0x000000 -> 0 0x000000 (141, 21, 174) 1 65533/65536 100.0%
@@ -921,13 +921,40 @@
         #7 92.9% 0x070000 -> 0 0x070000 (128, 200, 240) 0 35048/35048 100.0%
         scanned 8 blocks
 
-        $ fileobj ./a.out@1024:0x10000 ./b.out ./c.out@0x1000-0x2000 --cmp
-        #0 0.0% 0x000400|0x000000|0x001000 -> 0 0x000400|0x000000|0x001000 (2, 21, 27) 0 65536/65536 100.0%
-        #1 13.3% 0x010400|0x010000|0x011000 -> 0 0x010400|0x010000|0x011000 (None, 158, None) 0 65536/65536 100.0%
-        #2 26.5% 0x020400|0x020000|0x021000 -> 0 0x020400|0x020000|0x021000 (None, (98, 'b'), None) 0 65536/65536 100.0%
-        #3 39.8% 0x030400|0x030000|0x031000 -> 0 0x030400|0x030000|0x031000 (None, (97, 'a'), None) 0 65536/65536 100.0%
-        #4 53.1% 0x040400|0x040000|0x041000 -> 0 0x040400|0x040000|0x041000 (None, 217, None) 0 65536/65536 100.0%
-        #5 66.4% 0x050400|0x050000|0x051000 -> 0 0x050400|0x050000|0x051000 (None, 217, None) 0 65536/65536 100.0%
-        #6 79.6% 0x060400|0x060000|0x061000 -> 0 0x060400|0x060000|0x061000 (None, 218, None) 0 65536/65536 100.0%
-        #7 92.9% 0x070400|0x070000|0x071000 -> 0 0x070400|0x070000|0x071000 (None, 200, None) 0 35048/35048 100.0%
-        scanned 8 blocks
+        $ fileobj ./img1 ./img2@1024:0x40000 --cmp | head -10
+        #0 0.0% 0x0000000000|[0x0000000400|0x0000000000] -> 0 0x0000000000|[0x0000000400|0x0000000000] (0, 175) 63107 382/65536 0.6%
+        #1 0.0% 0x0000010000|[0x0000010400|0x0000010000] -> 0 0x0000010000|[0x0000010400|0x0000010000] (248, 0) 65516 20/65536 0.0%
+        #2 0.0% 0x0000020000|[0x0000020400|0x0000020000] -> 64512 0x000002fc00|[0x0000030000|0x000002fc00] (0, 255) 64512 52/65536 0.1%
+        #3 0.0% 0x0000030000|[0x0000030400|0x0000030000] -> 0 0x0000030000|[0x0000030400|0x0000030000] (255, 0) 31694 6206/65536 9.5%
+        #4 0.0% 0x0000040000|[0x0000040400|0x0000040000] -> 0 0x0000040000|[0x0000040400|0x0000040000] (3, None) 0 65536/65536 100.0%
+        #5 0.0% 0x0000050000|[0x0000050400|0x0000050000] -> 0 0x0000050000|[0x0000050400|0x0000050000] (0, None) 0 65536/65536 100.0%
+        #6 0.0% 0x0000060000|[0x0000060400|0x0000060000] -> 0 0x0000060000|[0x0000060400|0x0000060000] ((35, '#'), None) 0 65536/65536 100.0%
+        #7 0.0% 0x0000070000|[0x0000070400|0x0000070000] -> 0 0x0000070000|[0x0000070400|0x0000070000] ((35, '#'), None) 0 65536/65536 100.0%
+        #8 0.0% 0x0000080000|[0x0000080400|0x0000080000] -> 0 0x0000080000|[0x0000080400|0x0000080000] ((35, '#'), None) 0 65536/65536 100.0%
+        #9 0.1% 0x0000090000|[0x0000090400|0x0000090000] -> 0 0x0000090000|[0x0000090400|0x0000090000] ((35, '#'), None) 0 65536/65536 100.0%
+
++ *--blkscan* option prints file offsets of matched logical blocks using a speficied method (defaults to "zero"). A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
+
+        $ fileobj ./img1@0x10000 --blkscan=nonzero | head -10
+        0x0000010000|0x0000000000
+        0x0000030000|0x0000020000
+        0x0000040000|0x0000030000
+        0x0000050000|0x0000040000
+        0x0000060000|0x0000050000
+        0x0000070000|0x0000060000
+        0x0000080000|0x0000070000
+        0x0000090000|0x0000080000
+        0x00000a0000|0x0000090000
+        0x00000b0000|0x00000a0000
+
+        $ fileobj ./img1 --blkscan=sha256 | head -10
+        0x0000000000 287929a3d00bf80e7c773dec7f1384be23d3d905ac49b3d9b33c1e511c0339a9
+        0x0000010000 66438ce150257546926c2f7c5f06959e2e7737413f66b965fd138a37e6850f57
+        0x0000020000 de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31
+        0x0000030000 f306d0ad1a78f73a28e16dba189cae0674433ad8ee5e5a95da77a808fe5c4350
+        0x0000040000 0f0ae1b7fb36c0da65ba00f28222556c6e7f01eb5589ac9346a28809b5495342
+        0x0000050000 54f2b5c6491d4d527d79359bbcaf62df7cbaff8ef77e3abc7ca8863fd14d9d24
+        0x0000060000 cbc3bd03ac237aa649fc713320e77a5ded7c58eec224d93e5a96d3c57ed401eb
+        0x0000070000 19874dc886d589feb8ed01b0ff4bec35c4e5406436ed588de932e609e74bfad8
+        0x0000080000 8e8b8d118df5c5cf4d3cb85b7c1e6910d0632d9b4f1d628fd08683758706980d
+        0x0000090000 0144d2e852b5c927b17430de2e213c6b4aa2c110403c7c5ab532db09121c5281

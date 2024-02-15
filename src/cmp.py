@@ -25,17 +25,18 @@ from __future__ import division
 
 from . import filebytes
 from . import fileops
-from . import setting
 from . import util
 
 def cmp(args, verbose):
-    printf = util.printf
-    printe = util.printe
-    ret = _cmp(args, verbose, printf, printe)
-    if ret == -1:
+    try:
+        ret = _cmp(args, verbose, util.printf, util.printe)
+        if ret == -1:
+            return -1
+        assert ret in (0, 1), ret
+        return ret
+    except KeyboardInterrupt as e:
+        util.printe(e)
         return -1
-    assert ret in (0, 1), ret
-    return ret
 
 def _cmp(args, verbose, printf, printe):
     # require minimum 2 paths
@@ -43,41 +44,24 @@ def _cmp(args, verbose, printf, printe):
         printe("Not enough paths {0}".format(args))
         return -1
 
-    # determine block size
-    if setting.logical_block_size > 0:
-        blksiz = setting.logical_block_size
-    else:
-        blksiz = 1 << 16
-
     # allocate fileops
-    fileopsl, bulk_cleanup = fileops.bulk_alloc(args, True, printf, printe)
-    if fileopsl is None:
+    opsl, cleanup, blksiz = fileops.bulk_alloc_blk(args, True, printf, printe)
+    if opsl is None:
         return -1
-    for ops in fileopsl:
-        if ops.is_blk():
-            if blksiz & (ops.get_sector_size() - 1):
-                printe("Invalid block size {0} for {1}".format(blksiz,
-                    ops.get_path()))
-                bulk_cleanup()
-                return -1
 
     # test if paths are unique
-    l = [ops.get_path() for ops in fileopsl]
+    l = [ops.get_path() for ops in opsl]
     if len(set(l)) != len(l):
         printe("Not unique paths {0}".format(l))
-        bulk_cleanup()
+        cleanup()
         return -1
 
     # determine output format
-    n = max([ops.get_mapping_offset() + ops.get_size() for ops in fileopsl])
-    fmt = get_offset_format(n)
-
-    if setting.use_debug:
-        printf("block size {0} 0x{1:x}".format(blksiz, blksiz))
-        printf("-" * 50)
+    n = max([ops.get_mapping_offset() + ops.get_size() for ops in opsl])
+    fmt = util.get_offset_format(n)
 
     # start comparison
-    cmpsiz = max([ops.get_size() for ops in fileopsl])
+    cmpsiz = max([ops.get_size() for ops in opsl])
     resid = cmpsiz
     offset = 0
     mismatch = False
@@ -86,14 +70,25 @@ def _cmp(args, verbose, printf, printe):
         # collect block buffers
         bufl = []
         shal = []
-        real_offsetl = []
-        for ops in fileopsl:
-            buf = read_fileops(ops, offset, blksiz)
+        phyl = [] # physical
+        rell = [] # relative (nonexistent unless with @)
+        for ops in opsl:
+            mapping_offset = ops.get_mapping_offset()
+            if offset <= ops.get_max_pos():
+                buf = ops.read(offset, blksiz)
+            else:
+                buf = filebytes.BLANK # for debug mode
             bufl.append(buf)
             shal.append(util.get_sha256(buf))
-            real_offsetl.append(ops.get_mapping_offset() + offset)
-        if not verbose and len(set(real_offsetl)) == 1:
-            real_offsetl = real_offsetl[:1]
+            phyl.append(mapping_offset + offset)
+            if mapping_offset:
+                rell.append(offset)
+            else:
+                rell.append(None)
+        if not verbose and len(set(phyl)) == 1:
+            phyl = phyl[:1]
+            rell = rell[:1]
+        assert len(phyl) == len(rell), (len(phyl), len(rell))
 
         maxsiz = max([len(buf) for buf in bufl])
         assert maxsiz <= blksiz, (blksiz, maxsiz)
@@ -105,82 +100,42 @@ def _cmp(args, verbose, printf, printe):
             blkper = offset / cmpsiz * 100
             l = []
             l.append("#{0} {1:.1f}% ".format(blkidx, blkper))
-            l.append(concat_offsets(fmt, real_offsetl, 0))
+            l.append(concat_offsets(fmt, phyl, rell, 0))
             l.append(" -> ")
             index, values, contig, count = scan_buffer_list(bufl)
             l.append("{0} ".format(index))
-            l.append(concat_offsets(fmt, real_offsetl, index))
+            l.append(concat_offsets(fmt, phyl, rell, index))
             misper = count / maxsiz * 100
-            l.append(" {0} {1} {2}/{3} {4:.1f}%".format(values, contig,
-                count, maxsiz, misper))
+            l.append(" {0} {1} {2}/{3} {4:.1f}%".format(values, contig, count,
+                maxsiz, misper))
             printf("".join(l))
 
         # must be last if maxsiz != blksiz
         offset += maxsiz
         resid -= maxsiz
-        _ = offset, resid, cmpsiz, blksiz, maxsiz
         if maxsiz != blksiz:
-            assert resid == 0, _
-        elif not setting.use_debug:
-            assert resid >= 0, _ # could be < 0 if debug mode
+            assert resid == 0, (offset, resid, cmpsiz, blksiz, maxsiz)
 
     printf("scanned {0} blocks".format(util.howmany(cmpsiz, blksiz)))
     if not mismatch:
         printf("success")
 
     # done
-    bulk_cleanup()
+    cleanup()
     return 1 if mismatch else 0
 
-def read_fileops(ops, offset, size):
-    if setting.use_debug:
-        try:
-            return ops.read(offset, size)
-        except AssertionError:
-            return filebytes.ZERO * size
-    else:
-        return ops.read(offset, size)
-
-def concat_offsets(fmt, offsetl, delta):
+def concat_offsets(fmt, phyl, rell, delta):
     l = []
-    for i, x in enumerate(offsetl):
-        l.append(fmt.format(x + delta))
-        if i != len(offsetl) - 1:
+    for i, phy in enumerate(phyl):
+        rel = rell[i]
+        if rel is not None:
+            l.append("[{0}|{1}]".format(fmt.format(phy + delta),
+                fmt.format(rel + delta)))
+        else:
+            l.append(fmt.format(phy + delta))
+        if i != len(phyl) - 1:
             l.append("|")
     return "".join(l)
-
-def get_offset_format(n):
-    if setting.address_radix == 16:
-        radix = "x"
-    elif setting.address_radix == 10:
-        radix = "d"
-    elif setting.address_radix == 8:
-        radix = "o"
-    else:
-        assert False, setting.address_radix
-
-    if n > 0:
-        n -= 1
-    fmt = "{{:{0}}}".format(radix)
-    s = fmt.format(n)
-
-    min_width = 4
-    l = [2 * i for i in util.get_xrange(100)] # max 200 (large enough)
-    l = [x for x in l if x >= min_width]
-    width = 0
-    for x in l:
-        if x > len(s):
-            width = x
-            break
-    assert width > 0, width
-
-    fmt = "{{:0{0}{1}}}".format(width, radix)
-    if setting.address_radix == 16:
-        return "0x" + fmt
-    elif setting.address_radix == 8:
-        return "o" + fmt
-    else:
-        return fmt
 
 def scan_buffer_list(bufl):
     maxsiz = max([len(buf) for buf in bufl])

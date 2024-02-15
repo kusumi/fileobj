@@ -1,4 +1,4 @@
-# fileobj ([v0.8.3](https://github.com/kusumi/fileobj/releases/tag/v0.8.3))
+# fileobj ([v0.8.4](https://github.com/kusumi/fileobj/releases/tag/v0.8.4))
 
 ## About
 
@@ -40,7 +40,7 @@
 
         $ sudo python3 -m pip uninstall -y fileobj
 
-## Usage
+## [Usage](doc/fileobj.1.txt)
 
 + *[paths]* are usually regular files or block devices. *[paths]* can be partially loaded via *offset* and/or *length* specification. Run *fileobj.py* on Windows.
 
@@ -56,12 +56,6 @@
 + Run with the following option to test mouse actions on ncurses.
 
         $ fileobj --test_mouse
-
-## Resource
-
-+ [https://sourceforge.net/projects/fileobj/](https://sourceforge.net/projects/fileobj/)
-
-+ [https://github.com/kusumi/fileobj/](https://github.com/kusumi/fileobj/)
 
 ## [Notes](doc/README.notes.md)
 

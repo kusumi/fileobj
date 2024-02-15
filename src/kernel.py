@@ -27,7 +27,6 @@ import re
 from . import filebytes
 from . import log
 from . import native
-from . import objdump
 from . import setting
 from . import util
 
@@ -493,9 +492,31 @@ def __parse_objdump_path(f):
             else:
                 log.error("Can't find path for {0}".format(elf))
         if os.path.isfile(elf):
-            l = objdump.get_elf_section_info(elf, section)
+            l = __get_elf_section_info(elf, section)
             if l is not None:
                 return "pid{0}".format(pid), l[0], l[1]
+
+def __get_elf_section_info(f, section):
+    args = "-h", "-j", section, f
+    cmd = ["objdump"]
+    cmd.extend(args)
+    ret = execute(*cmd)
+    if ret.retval:
+        log.error("Failed to execute objdump {0}".format(args))
+        return
+    pattern = r"^\s+[0-9]+\s+{0}\s+(\S+)\s+(\S+)".format(section)
+    start = False
+    for l in ret.stdout.split("\n"):
+        if l.startswith("Idx Name"):
+            start = True
+            continue
+        if not start:
+            continue
+        m = re.match(pattern, l)
+        if m:
+            length = int(m.group(1), 16)
+            offset = int(m.group(2), 16)
+            return offset, length
 
 def has_ptrace():
     """Return True if ptrace(2) is supported"""

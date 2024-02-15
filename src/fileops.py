@@ -556,9 +556,9 @@ def bulk_alloc(args, readonly, printf, printe):
         return None, None
 
     # define cleanup closure
-    fileopsl = []
-    def bulk_cleanup():
-        for ops in fileopsl:
+    opsl = []
+    def cleanup():
+        for ops in opsl:
             __cleanup((ops, printf))
 
     # allocate fileops
@@ -567,7 +567,7 @@ def bulk_alloc(args, readonly, printf, printe):
             ops = __alloc(f, readonly)
         except Exception as e:
             printe(e)
-            bulk_cleanup()
+            cleanup()
             return None, None
         assert isinstance(ops, Fileops), ops
         if setting.use_debug:
@@ -578,19 +578,36 @@ def bulk_alloc(args, readonly, printf, printe):
             printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
             x = ops.get_mapping_length()
             printf("\tmapping length: {0} 0x{1:x}".format(x, x))
-        fileopsl.append(ops)
+        opsl.append(ops)
 
     # sanity checks
-    for ops in fileopsl:
+    for ops in opsl:
         f = ops.get_path()
         if not os.path.exists(f):
             printe("No such file {0}".format(f))
-            bulk_cleanup()
+            cleanup()
             return None, None
         assert os.path.exists(f), f
         assert not readonly or ops.is_readonly()
-        if ops.get_size() > 0 and ops.is_buf(): # XXX vm is also buf
-            printe("Invalid class {0} for {1}".format(ops.get_type(), f))
-            bulk_cleanup()
-            return None, None
-    return tuple(fileopsl), bulk_cleanup
+    return tuple(opsl), cleanup
+
+def bulk_alloc_blk(args, readonly, printf, printe):
+    # determine block size
+    if setting.logical_block_size > 0:
+        blksiz = setting.logical_block_size
+    else:
+        blksiz = 1 << 16
+    assert blksiz % 512 == 0, blksiz
+
+    # allocate fileops
+    opsl, cleanup = bulk_alloc(args, readonly, printf, printe)
+    if opsl is None:
+        return None, None, None
+    for ops in opsl:
+        if ops.is_blk():
+            if blksiz & (ops.get_sector_size() - 1):
+                printe("Invalid block size {0} for {1}".format(blksiz,
+                    ops.get_path()))
+                cleanup()
+                return None, None, None
+    return opsl, cleanup, blksiz

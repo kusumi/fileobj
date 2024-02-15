@@ -62,10 +62,16 @@ except ImportError:
         _KEY_MOUSE  = 409
         _KEY_RESIZE = 410
 
+# XXX since which 3.x and why ?
+if util.is_python2():
+    _key_s_x_enter = ascii.LF
+else:
+    _key_s_x_enter = ascii.CR
+
 #                  *nix            Windows
 _keys_stdout = (
     ("TAB",        ascii.HT,       ascii.HT),
-    ("ENTER",      ascii.LF,       ascii.LF),
+    ("ENTER",      _key_s_x_enter, ascii.LF),
     ("ESCAPE",     ascii.ESC,      ascii.ESC),
     ("SPACE",      ascii.SP,       ascii.SP),
     ("DOWN",       util.gen_key(), util.gen_key()),

@@ -528,13 +528,13 @@ def __print_blkdev(g, print_error, verbose):
 
     fmt = "{{0:{0}}} {{1:<{1}}} {{2:<{2}}} {{3:<{3}}} {{4:<{4}}} {{5:<{5}}} " \
         "{{6:<{6}}} {{7}}".format(
-        extension.get_index_width(l1),
-        max([len(_) for _ in l1]),
-        max([len(_) for _ in l2]),
-        max([len(_) for _ in l3]),
-        max([len(_) for _ in l4]),
-        max([len(_) for _ in l5]),
-        max([len(_) for _ in l6]))
+            extension.get_index_width(l1),
+            max([len(_) for _ in l1]),
+            max([len(_) for _ in l2]),
+            max([len(_) for _ in l3]),
+            max([len(_) for _ in l4]),
+            max([len(_) for _ in l5]),
+            max([len(_) for _ in l6]))
     for i, o in enumerate(l1):
         util.printf(fmt.format(i if i > 0 else "", l1[i], l2[i], l3[i], l4[i],
             l5[i], l6[i], l7[i]))
