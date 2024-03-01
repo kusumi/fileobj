@@ -908,9 +908,9 @@
         62c81971892dcb0ca2c0d58b4811b6bf  /path/to/b.out
         d3c205dbb1777dc60486ccfedc93cbe6  /path/to/c.out
 
-+ *--cmp* option compares contents of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
++ *--blkcmp* option compares contents of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
 
-        $ fileobj ./a.out ./b.out ./c.out --cmp
+        $ fileobj ./a.out ./b.out ./c.out --blkcmp
         #0 0.0% 0x000000 -> 0 0x000000 (141, 21, 174) 1 65533/65536 100.0%
         #1 13.3% 0x010000 -> 0 0x010000 (215, 158, 230) 1 65535/65536 100.0%
         #2 26.5% 0x020000 -> 0 0x020000 (243, (98, 'b'), 214) 1 65535/65536 100.0%
@@ -921,7 +921,7 @@
         #7 92.9% 0x070000 -> 0 0x070000 (128, 200, 240) 0 35048/35048 100.0%
         scanned 8 blocks
 
-        $ fileobj ./img1 ./img2@1024:0x40000 --cmp | head -10
+        $ fileobj ./img1 ./img2@1024:0x40000 --blkcmp | head -10
         #0 0.0% 0x0000000000|[0x0000000400|0x0000000000] -> 0 0x0000000000|[0x0000000400|0x0000000000] (0, 175) 63107 382/65536 0.6%
         #1 0.0% 0x0000010000|[0x0000010400|0x0000010000] -> 0 0x0000010000|[0x0000010400|0x0000010000] (248, 0) 65516 20/65536 0.0%
         #2 0.0% 0x0000020000|[0x0000020400|0x0000020000] -> 64512 0x000002fc00|[0x0000030000|0x000002fc00] (0, 255) 64512 52/65536 0.1%
@@ -958,3 +958,23 @@
         0x0000070000 19874dc886d589feb8ed01b0ff4bec35c4e5406436ed588de932e609e74bfad8
         0x0000080000 8e8b8d118df5c5cf4d3cb85b7c1e6910d0632d9b4f1d628fd08683758706980d
         0x0000090000 0144d2e852b5c927b17430de2e213c6b4aa2c110403c7c5ab532db09121c5281
+
++ *--blkdump* option prints contents of files using a specified method (defaults to "text"). A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable. The second example concatenates first 512 bytes of two files into a new file *./out.bin*.
+
+        $ FILEOBJ_BYTES_PER_LINE=16 fileobj --blkdump= ./img | head -10
+        0x0000000000| 06 E6 09 BB A2 17 79 2C FD 0D 9C 5E C7 89 49 91 ......y,...^..I.
+        0x0000000010| 41 84 46 33 39 62 5E 44 EA B3 0D CA F9 88 73 5E A.F39b^D......s^
+        0x0000000020| 63 1B 77 29 3A 7C A8 32 DC AD 8E 22 6E 9D 0C D7 c.w):|.2..."n...
+        0x0000000030| 09 A7 2D F7 EC 71 B4 19 DF E2 8B 70 3C 5C B9 B9 ..-..q.....p<\..
+        0x0000000040| B9 2C 53 A7 A5 96 92 36 C5 5B CF 6B 38 2E C3 32 .,S....6.[.k8..2
+        0x0000000050| 2F 26 AA 4C 54 28 35 A2 5F C5 34 B2 46 B1 D4 0E /&.LT(5._.4.F...
+        0x0000000060| 7A F8 91 3D B8 FF F4 9A 29 63 B0 83 5A 84 E2 64 z..=....)c..Z..d
+        0x0000000070| 4A BB 79 A8 DC 89 73 2B A3 EC 9B 83 E1 D4 F2 25 J.y...s+.......%
+        0x0000000080| 4E 62 F1 E9 5B E1 EB 7A 20 3E 51 3F 1B 21 78 37 Nb..[..z >Q?.!x7
+        0x0000000090| 47 E6 D1 26 CA F8 9E F2 ED 53 55 7D ED 05 F2 90 G..&.....SU}....
+
+        $ fileobj --blkdump=raw ./img1@0:512 ./img2@0:512 > ./out.bin
+        $ file ./out.bin
+        ./out.bin: data
+        $ wc -c ./out.bin
+        1024 ./out.bin

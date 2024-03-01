@@ -1,3 +1,12 @@
+v0.8.5
+======
+- Add FILEOBJ_USE_LOWER_CASE_HEX
+- Add __FILEOBJ_USE_FSYNC_CONFIG_FILE (default false)
+- Optimize mmap(2) based file objects
+- Rename --cmp to --blkcmp
+- Add --blkdump
+- Minor fixes and cleanups
+
 v0.8.4
 ======
 - --blkscan/cmp/md: Minor fixes

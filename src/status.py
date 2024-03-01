@@ -41,7 +41,7 @@ class NullStatusFrame (StatusFrame):
     def box(self):
         return
 
-_fmt_hex = "0x{0:X}"
+_fmt_hex = "0x{0:x}" if setting.use_lower_case_hex else "0x{0:X}"
 _fmt_dec = "{0:d}"
 _fmt_oct = "0{0:o}"
 

@@ -103,7 +103,6 @@ class Fileobj (rrmap.Fileobj):
 
     def __flush_anon(self):
         self.sync()
-        self.clear_dirty()
         assert self.__sync >= 1
         return self.__sync >= 2 # need copying
 
@@ -120,7 +119,7 @@ class Fileobj (rrmap.Fileobj):
             return 0
 
     def sync(self):
-        self.map.flush()
+        self.clear_dirty() # flush mmap
         self.update_fstat(self.__get_backing_path())
         self.__sync += 1
 

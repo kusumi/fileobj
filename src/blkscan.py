@@ -39,12 +39,21 @@ def _blkscan(args, scan_type, verbose, printf, printe):
         return -1
 
     # allocate fileops
-    opsl, cleanup, blksiz = fileops.bulk_alloc_blk(args, True, printf, printe)
+    s = scan_type.lower()
+    if s.endswith("x"):
+        afn = fileops.bulk_alloc_blk
+        s = s[:-1]
+    else:
+        afn = fileops.concat_alloc_blk
+
+    opsl, cleanup, blksiz = afn(args, True, printf, printe)
     if opsl is None:
         return -1
+    elif fileops.is_concatenated(opsl):
+        opsl = opsl,
+    assert isinstance(opsl, tuple), opsl
 
     # define callback
-    s = scan_type.lower()
     if s in ("z", "zero"):
         z = filebytes.ZERO * blksiz
         def fn(b):
@@ -74,12 +83,12 @@ def _blkscan(args, scan_type, verbose, printf, printe):
 
     # start block scan
     for i, ops in enumerate(opsl):
+        if len(opsl) > 1:
+            printf(ops.get_path())
         mapping_offset = ops.get_mapping_offset()
         fmt = util.get_offset_format(mapping_offset + ops.get_size())
-
-        resid = util.rounddown(ops.get_size(), blksiz)
-        assert resid % blksiz == 0, (resid, blksiz)
-        remain = ops.get_size() - resid
+        resid = ops.get_size()
+        remain = resid - util.rounddown(resid, blksiz)
         assert 0 <= remain < blksiz, (remain, blksiz)
         offset = 0
         match_blk = 0
@@ -87,17 +96,21 @@ def _blkscan(args, scan_type, verbose, printf, printe):
 
         while resid > 0:
             buf = ops.read(offset, blksiz)
-            assert len(buf) == blksiz, (offset, blksiz, len(buf))
             matched, extra = fn(buf)
             if matched:
                 if extra is None:
                     extra = ""
                 sp = fmt.format(mapping_offset + offset)
                 if mapping_offset:
-                    sr = fmt.format(offset)
-                    printf("{0}|{1} {2}".format(sp, sr, extra).rstrip())
+                    s = "{0}|{1} {2}".format(sp, fmt.format(offset), extra)
                 else:
-                    printf("{0} {1}".format(sp, extra).rstrip())
+                    s = "{0} {1}".format(sp, extra)
+                s = s.rstrip()
+                if len(buf) != blksiz:
+                    assert len(buf) == resid, (offset, blksiz, len(buf))
+                    assert len(buf) == remain, (offset, blksiz, len(buf))
+                    s += " *"
+                printf(s)
                 match_blk += 1
             resid -= len(buf)
             offset += len(buf)
@@ -107,7 +120,7 @@ def _blkscan(args, scan_type, verbose, printf, printe):
         printf("{0}/{1} {2} bytes blocks matched".format(match_blk, total_blk,
             blksiz))
         if remain:
-            printf("last {0} bytes ignored".format(remain))
+            printf("last {0} bytes not block sized".format(remain))
         if len(opsl) > 1 and i != len(opsl) - 1:
             printf("")
 

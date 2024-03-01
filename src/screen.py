@@ -100,11 +100,7 @@ def init():
     _std.refresh()
     if update_size() == -1:
         return -1
-
-    chr_repr.clear()
-    for x in util.get_xrange(0, 256):
-        chr_repr[x] = chr(x) if util.isprint(x) else '.'
-
+    init_chr_repr()
     buf_attr.clear()
     for x in util.get_xrange(0, 256):
         if setting.has_buffer_attr():
@@ -121,6 +117,11 @@ def init():
         buf_attr[x] = _
     if setting.use_debug:
         __log_debug()
+
+def init_chr_repr():
+    chr_repr.clear()
+    for x in util.get_xrange(0, 256):
+        chr_repr[x] = chr(x) if util.isprint(x) else '.'
 
 def __log_debug():
     this = sys.modules[__name__]

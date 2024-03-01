@@ -75,7 +75,7 @@ Set number of bytes printed per line.
 Each line prints <bytes_per_line> bytes.
 Available formats for <bytes_per_line> are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
-"auto" is used by default.
+Defaults to "auto".
 """)
 bytes_per_line_metavar = _metavar("bytes_per_line")
 
@@ -84,14 +84,14 @@ Set number of bytes printed per window.
 Each window prints <bytes_per_window> bytes, using the current number of bytes per line.
 Available formats for <bytes_per_window> are digit, "even" and "auto".
 "even" sets all windows to have the same size.
-"auto" is used by default.
+Defaults to "auto".
 """)
 bytes_per_window_metavar = _metavar("bytes_per_window")
 
 bytes_per_unit = _("""
 Set number of bytes printed per unit.
 Each unit prints <bytes_per_unit> bytes.
-"1" is used by default.
+Defaults to "1".
 """)
 bytes_per_unit_metavar = _metavar("bytes_per_unit")
 
@@ -144,19 +144,31 @@ sitepkg = _("""
 Print python(1) site-package directory and exit.
 """)
 
-cmp = _("""
-Compare contents of files and exit.
-""")
-
 md = _("""
 Print message digest of files using <hash_algorithm> and exit.
-Defaults to use SHA256.
+Defaults to "sha256".
 """)
 md_metavar = _metavar("hash_algorithm")
 
+blkcmp = _("""
+Compare contents of files and exit.
+""")
+
+blkdump = _("""
+Print contents of files to stdout and exit.
+Available options are "text" and "raw".
+Defaults to "text".
+If multiple files are specified, this command assumes a single concatenated file.
+To handle them separately, append "x" to option string (e.g. "textx").
+""")
+blkdump_metavar = _metavar("dump_type")
+
 blkscan = _("""
 Print file offsets of matched logical blocks and exit.
-Defaults to use zero.
+Available options are "zero", "nonzero", "ff", "nonff", "<hash_algorithm>:<value>" and "<hash_algorithm>".
+Defaults to "zero".
+If multiple files are specified, this command assumes a single concatenated file.
+To handle them separately, append "x" to option string (e.g. "zerox").
 """)
 blkscan_metavar = _metavar("scan_type")
 
@@ -232,6 +244,11 @@ Defaults to disallow.
 FILEOBJ_USE_LINE_SCROLL = _("""
 If set to "false", enable page scroll mode.
 Defaults to line scroll mode.
+""")
+
+FILEOBJ_USE_LOWER_CASE_HEX = _("""
+If defined, use lower case for alphabets in hexadecimal.
+Defaults to upper case.
 """)
 
 FILEOBJ_BUFFER_SIZE = _("""

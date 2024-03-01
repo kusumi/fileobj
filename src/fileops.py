@@ -275,6 +275,7 @@ class Fileops (object):
             self.replace  = self.__decorate_replace(self.replace)
             self.delete   = self.__decorate_delete(self.delete)
             self.truncate = self.__decorate_truncate(self.truncate)
+        self.raw_read = self.__read
 
     def __decorate_read(self, fn):
         def _(x, n):
@@ -533,11 +534,71 @@ else:
     def alloc_class(f, name=""):
         return __alloc_class(f, name)
 
-# bulk fileops allocation routine which fails if
-# 1. default class is of robuf
-# 2. underlying file path is nonexistent
-# 3. underlying >0 sized fileobj is of robuf
+class ConcatenatedFileops (object):
+    def __init__(self, opsl):
+        assert opsl, opsl
+        self.__opsl = tuple(opsl)
 
+    def cleanup(self):
+        for ops in self.__opsl:
+            ops.cleanup()
+
+    def get_size(self):
+        return sum([ops.get_size() for ops in self.__opsl])
+
+    def get_path(self):
+        return tuple(ops.get_path() for ops in self.__opsl)
+
+    def get_mapping_offset(self):
+        return self.__opsl[0].get_mapping_offset()
+
+    def get_mapping_length(self):
+        return self.__opsl[0].get_mapping_length()
+
+    def get_type(self):
+        return tuple(ops.get_type() for ops in self.__opsl)
+
+    def read(self, x, n):
+        read_next = False
+        ops_base = 0
+        l = []
+        for ops in self.__opsl:
+            if n <= 0:
+                assert n == 0, n
+                break
+            ops_size = ops.get_size()
+            if x >= ops_base or read_next:
+                pos = x - ops_base
+                siz = n
+                if siz > ops_size:
+                    siz = ops_size
+                b = ops.raw_read(pos, siz) # safe with debug mode
+                n -= len(b)
+                if n > 0:
+                    read_next = True
+                l.append(b)
+            ops_base += ops_size
+        return filebytes.BLANK.join(l)
+
+def is_concatenated(ops):
+    return isinstance(ops, ConcatenatedFileops)
+
+def __alloc_concatenated_fileops(opsl, printf):
+    ops = ConcatenatedFileops(opsl)
+    if setting.use_debug:
+        __debug_print_fileops(ops, printf)
+    return ops
+
+def __debug_print_fileops(ops, printf):
+    printf("{0} {1} {2}".format(repr(ops), ops.get_path(), ops.get_type()))
+    x = ops.get_size()
+    printf("\tsize: {0} 0x{1:x}".format(x, x))
+    x = ops.get_mapping_offset()
+    printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
+    x = ops.get_mapping_length()
+    printf("\tmapping length: {0} 0x{1:x}".format(x, x))
+
+# bulk fileops allocation used by non editor options
 def bulk_alloc(args, readonly, printf, printe):
     # allow None for print functions
     if printf is None:
@@ -560,8 +621,13 @@ def bulk_alloc(args, readonly, printf, printe):
     def cleanup():
         for ops in opsl:
             __cleanup((ops, printf))
+        setting.allow_dup_path = False
+
+    # allow dup paths for underlying fileobj's
+    setting.allow_dup_path = True
 
     # allocate fileops
+    assert args, args
     for f in args:
         try:
             ops = __alloc(f, readonly)
@@ -571,13 +637,7 @@ def bulk_alloc(args, readonly, printf, printe):
             return None, None
         assert isinstance(ops, Fileops), ops
         if setting.use_debug:
-            printf("{0} {1}".format(ops.get_path(), ops.get_type()))
-            x = ops.get_size()
-            printf("\tsize: {0} 0x{1:x}".format(x, x))
-            x = ops.get_mapping_offset()
-            printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
-            x = ops.get_mapping_length()
-            printf("\tmapping length: {0} 0x{1:x}".format(x, x))
+            __debug_print_fileops(ops, printf)
         opsl.append(ops)
 
     # sanity checks
@@ -591,6 +651,14 @@ def bulk_alloc(args, readonly, printf, printe):
         assert not readonly or ops.is_readonly()
     return tuple(opsl), cleanup
 
+def concat_alloc(args, readonly, printf, printe):
+    assert readonly
+    opsl, cleanup = bulk_alloc(args, readonly, printf, printe)
+    if opsl is None:
+        return None, None
+    return __alloc_concatenated_fileops(opsl, printf), cleanup
+
+# bulk_alloc variant
 def bulk_alloc_blk(args, readonly, printf, printe):
     # determine block size
     if setting.logical_block_size > 0:
@@ -611,3 +679,10 @@ def bulk_alloc_blk(args, readonly, printf, printe):
                 cleanup()
                 return None, None, None
     return opsl, cleanup, blksiz
+
+def concat_alloc_blk(args, readonly, printf, printe):
+    assert readonly
+    opsl, cleanup, blksiz = bulk_alloc_blk(args, readonly, printf, printe)
+    if opsl is None:
+        return None, None, None
+    return __alloc_concatenated_fileops(opsl, printf), cleanup, blksiz

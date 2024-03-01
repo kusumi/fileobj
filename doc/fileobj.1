@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "February 10, 2024" "FILEOBJ 0.8.4"
+.TH FILEOBJ 1 "February 26, 2024" "FILEOBJ 0.8.5"
 .nh
 .ad l
 .SH NAME
@@ -77,7 +77,7 @@ Set number of bytes printed per line.
 Each line prints \fI<bytes_per_line>\fP bytes.
 Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
 "auto" sets the value to the maximum 2^N that fits in the terminal width.
-"auto" is used by default.
+Defaults to "auto".
 .RE
 .PP
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
@@ -86,14 +86,14 @@ Set number of bytes printed per window.
 Each window prints \fI<bytes_per_window>\fP bytes, using the current number of bytes per line.
 Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
 "even" sets all windows to have the same size.
-"auto" is used by default.
+Defaults to "auto".
 .RE
 .PP
 \fB\-\-bytes_per_unit\fP=\fI<bytes_per_unit>\fP, \fB\-\-bpu\fP=\fI<bytes_per_unit>\fP
 .RS 4
 Set number of bytes printed per unit.
 Each unit prints \fI<bytes_per_unit>\fP bytes.
-"1" is used by default.
+Defaults to "1".
 .RE
 .PP
 \fB\-\-no_text\fP
@@ -157,21 +157,33 @@ Print list of editor commands and exit. Also see \fB:help\fP.
 Print \fBpython\fP\|(1) site\-package directory and exit.
 .RE
 .PP
-\fB\-\-cmp\fP
+\fB\-\-md\fP=[\fI<hash_algorithm>\fP]
+.RS 4
+Print message digest of files using \fI<hash_algorithm>\fP and exit.
+Defaults to "sha256".
+.RE
+.PP
+\fB\-\-blkcmp\fP
 .RS 4
 Compare contents of files and exit.
 .RE
 .PP
-\fB\-\-md\fP=[\fI<hash_algorithm>\fP]
+\fB\-\-blkdump\fP=[\fI<dump_type>\fP]
 .RS 4
-Print message digest of files using \fI<hash_algorithm>\fP and exit.
-Defaults to use SHA256.
+Print contents of files to stdout and exit.
+Available options are "text" and "raw".
+Defaults to "text".
+If multiple files are specified, this command assumes a single concatenated file.
+To handle them separately, append "x" to option string (e.g. "textx").
 .RE
 .PP
 \fB\-\-blkscan\fP=[\fI<scan_type>\fP]
 .RS 4
 Print file offsets of matched logical blocks and exit.
-Defaults to use \fBzero\fP.
+Available options are "zero", "nonzero", "ff", "nonff", "<hash_algorithm>:<value>" and "<hash_algorithm>".
+Defaults to "zero".
+If multiple files are specified, this command assumes a single concatenated file.
+To handle them separately, append "x" to option string (e.g. "zerox").
 .RE
 .PP
 \fB\-\-lsblk\fP
@@ -258,6 +270,12 @@ Defaults to disallow.
 .RS 4
 If set to "false", enable page scroll mode.
 Defaults to line scroll mode.
+.RE
+.PP
+\fBFILEOBJ_USE_LOWER_CASE_HEX\fP
+.RS 4
+If defined, use lower case for alphabets in hexadecimal.
+Defaults to upper case.
 .RE
 .PP
 \fBFILEOBJ_BUFFER_SIZE\fP

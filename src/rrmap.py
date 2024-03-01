@@ -56,13 +56,15 @@ class Fileobj (romap.Fileobj):
         self.update_mtime(self.get_path(), t)
 
     def clear_dirty(self):
-        self.__dirty = False
+        if self.is_dirty():
+            self.map.flush()
+            self.__dirty = False
 
     def is_dirty(self):
-        return self.__dirty
+        return self.__dirty # both buffer and mmap are dirty if True
 
     def sync(self):
-        self.map.flush()
+        self.clear_dirty() # flush mmap
         self.update_fstat(self.get_path())
 
     def utime(self):

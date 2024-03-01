@@ -64,7 +64,10 @@ class Fileobj (object):
     def __init__(self, f, offset, length):
         self.__id = -1
         self.__path = self.__init_path(f)
-        self.__attr = fileattr.get(self.get_path())
+        if setting.allow_dup_path: # editor must not use this
+            self.__attr = fileattr.alloc()
+        else: # default
+            self.__attr = fileattr.get(self.get_path())
         self.__attr.offset, self.__attr.length = \
             self.__parse_mapping_attributes(offset, length)
         self.__clear_barrier()

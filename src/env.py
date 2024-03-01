@@ -40,6 +40,7 @@ def __iter_env():
     yield "FILEOBJ_USE_BACKUP", False
     yield "FILEOBJ_USE_TRUNCATE_SHRINK", False
     yield "FILEOBJ_USE_LINE_SCROLL", True
+    yield "FILEOBJ_USE_LOWER_CASE_HEX", False
     yield "FILEOBJ_BUFFER_SIZE", 0
     yield "FILEOBJ_LOGICAL_BLOCK_SIZE", 0
     yield "FILEOBJ_ENDIANNESS", None # :set le,be
@@ -75,6 +76,7 @@ def __iter_env_private():
     yield "__FILEOBJ_USE_STATUS_WINDOW_FRAME", False
     yield "__FILEOBJ_USE_AUTO_FILEOPS_ADJUST", True # unittest (false)
     yield "__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP", True # unittest (false)
+    yield "__FILEOBJ_USE_FSYNC_CONFIG_FILE", False
     yield "__FILEOBJ_USE_VM_SYNC_ON_EDIT", False
     yield "__FILEOBJ_USE_DELETE_CONSOLE", True # unittest (false)
     yield "__FILEOBJ_USE_ALLOW_PYTHON2", False
@@ -180,6 +182,9 @@ def __get_setting_use_truncate_shrink():
 
 def __get_setting_use_line_scroll():
     return test_bool("FILEOBJ_USE_LINE_SCROLL")
+
+def __get_setting_use_lower_case_hex():
+    return test_bool("FILEOBJ_USE_LOWER_CASE_HEX")
 
 def __get_setting_buffer_size():
     return test_gt_zero("FILEOBJ_BUFFER_SIZE")
@@ -353,6 +358,9 @@ def __get_setting_use_auto_fileops_adjust():
 
 def __get_setting_use_auto_fileops_cleanup():
     return test_bool("__FILEOBJ_USE_AUTO_FILEOPS_CLEANUP")
+
+def __get_setting_use_fsync_config_file():
+    return test_bool("__FILEOBJ_USE_FSYNC_CONFIG_FILE")
 
 def __get_setting_use_vm_sync_on_edit():
     return test_bool("__FILEOBJ_USE_VM_SYNC_ON_EDIT")

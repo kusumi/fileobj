@@ -22,14 +22,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-
 import sys
 
 from . import filebytes
 from . import log
 from . import screen
 from . import setting
-from . import terminal
 from . import util
 
 # _panel
@@ -770,6 +768,7 @@ class DisplayCanvas (PageLineCanvas):
             self.scr.erase()
         elif _clear_on_fill and \
             self.fileops.get_max_pos() < self.get_next_page_offset():
+            assert False, _clear_on_fill
             self.scr.clear() # not scr.erase()
             need_fill_posstr = True
         # fill posstr if needed
@@ -1065,15 +1064,19 @@ class DisplayCanvas (PageLineCanvas):
         self.chgat_search(pos, attr1, attr2, here)
         return attr1, attr2
 
-def _get_binary_str_single():
+def get_binary_str_single():
+    if setting.use_lower_case_hex:
+        fmt = "{0:02x}"
+    else:
+        fmt = "{0:02X}"
     d = {}
     for x in util.get_xrange(0, 256):
-        d[x] = "{0:02X}".format(x)
+        d[x] = fmt.format(x)
     return d
 
-_binary_str_single = _get_binary_str_single()
+_binary_str_single = get_binary_str_single()
 _binary_cstr_fmt = {
-    16: "{0:02X}",
+    16: "{0:02x}" if setting.use_lower_case_hex else "{0:02X}",
     10: "{0:02d}",
     8 : "{0:02o}", }
 
@@ -1087,8 +1090,12 @@ class BinaryCanvas (DisplayCanvas, binary_attribute):
         self.__update()
 
     def __update(self):
+        if setting.use_lower_case_hex:
+            hex_lstr_fmt = ":0{0}x"
+        else:
+            hex_lstr_fmt = ":0{0}X"
         lstr_fmt = {
-            16: ":0{0}X".format(address_num_width),
+            16: hex_lstr_fmt.format(address_num_width),
             10: ":{0}d".format(address_num_width),
             8 : ":0{0}o".format(address_num_width), }
         self.__lstr = {
@@ -1224,7 +1231,7 @@ class BinaryCanvas (DisplayCanvas, binary_attribute):
         return super(BinaryCanvas, self).sync_cursor(reset_line_scroll)
 
 _text_cstr_fmt = {
-    16: "{0:X}",
+    16: "{0:x}" if setting.use_lower_case_hex else "{0:X}",
     10: "{0:d}",
     8 : "{0:o}", }
 
@@ -1280,10 +1287,10 @@ class TextCanvas (DisplayCanvas, text_attribute):
     def __get_column_posstr(self, n):
         return _text_cstr_fmt[setting.address_radix].format(n)[-1]
 
-# not sure if this flag is still needed
-_clear_on_fill = terminal.in_tmux_tmux() and not terminal.is_screen()
+# 2024-02-23: disabled and always false
+_clear_on_fill = False
 
-_bytes_is_int = util.is_python3()
+_bytes_is_int = not util.is_python2()
 _xrange = util.get_xrange
 
 def get_min_address_num_width():
@@ -1433,7 +1440,7 @@ def dump_page_line_state(prefix, ops=None):
 
 A_UNDERLINE = None
 def init():
-    global A_UNDERLINE, _clear_on_fill, _page_line_state, _page_line_state_sym
+    global A_UNDERLINE, _page_line_state, _page_line_state_sym
     assert screen.A_UNDERLINE is not None
     assert screen.A_COLOR_OFFSET is not None
     if screen.A_COLOR_OFFSET != screen.A_NONE or \
@@ -1442,10 +1449,6 @@ def init():
     else:
         A_UNDERLINE = screen.A_UNDERLINE
     assert A_UNDERLINE is not None
-
-    # terminal.get_type_orig() on import causes circular import
-    terminal_was_not_screen = terminal.get_type_orig() != "screen"
-    _clear_on_fill &= terminal_was_not_screen
 
     # initialize pls
     init_page_line_state()

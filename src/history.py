@@ -137,7 +137,10 @@ class History (object):
         assert _is_valid_path(self.__path)
         f = self.__path.path
         try:
-            fsync = kernel.fsync
+            if setting.use_fsync_config_file:
+                fsync = kernel.fsync
+            else:
+                fsync = None
             with util.do_atomic_write(f, binary=False, fsync=fsync) as fd:
                 self.__store_db(fd)
         except Exception as e:

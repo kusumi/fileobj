@@ -27,9 +27,9 @@ from . import filebytes
 from . import fileops
 from . import util
 
-def cmp(args, verbose):
+def blkcmp(args, verbose):
     try:
-        ret = _cmp(args, verbose, util.printf, util.printe)
+        ret = _blkcmp(args, verbose, util.printf, util.printe)
         if ret == -1:
             return -1
         assert ret in (0, 1), ret
@@ -38,7 +38,7 @@ def cmp(args, verbose):
         util.printe(e)
         return -1
 
-def _cmp(args, verbose, printf, printe):
+def _blkcmp(args, verbose, printf, printe):
     # require minimum 2 paths
     if len(args) < 2:
         printe("Not enough paths {0}".format(args))

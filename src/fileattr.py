@@ -41,9 +41,9 @@ def get(f):
     if has_key(f):
         return _attrd.get(f)
     else:
-        return _attrd.setdefault(f, __alloc())
+        return _attrd.setdefault(f, alloc())
 
-def __alloc():
+def alloc():
     return util.Namespace(
         magic = '',
         offset = 0,

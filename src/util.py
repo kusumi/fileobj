@@ -1094,7 +1094,7 @@ def iter_directory(d, expand_symlink=False):
 
 def get_offset_format(max_size):
     if setting.address_radix == 16:
-        radix = "x"
+        radix = "x" if setting.use_lower_case_hex else "X"
     elif setting.address_radix == 10:
         radix = "d"
     elif setting.address_radix == 8:

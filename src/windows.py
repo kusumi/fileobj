@@ -91,7 +91,10 @@ def __creat_file(f):
     return os.open(f, os.O_RDWR | os.O_CREAT | os.O_EXCL, 420) # 0644
 
 # https://docs.python.org/3/library/os.html#os.symlink
-if util.is_python3():
+if util.is_python2():
+    def symlink(source, link_name):
+        return -1 # os.symlink unsupported, and so is Python 2.x
+else:
     def symlink(source, link_name):
         if os.path.exists(link_name):
             return -1
@@ -103,9 +106,6 @@ if util.is_python3():
             return -1
         if not os.path.islink(link_name):
             return -1
-else:
-    def symlink(source, link_name):
-        return -1 # os.symlink unsupported, and so is Python 2.x
 
 def fsync(fd):
     if fd and not fd.closed:

@@ -28,15 +28,17 @@ from . import util
 
 def md(args, hash_algo, verbose):
     try:
-        if _md(args, hash_algo, verbose, util.printf, util.printe) == -1:
+        ret = _md(args, hash_algo, verbose, False, util.printf, util.printe)
+        if ret == -1:
             return -1
-        else: # tuple
-            return None
+        assert isinstance(ret, tuple), ret
+        assert len(ret) == 0, len(ret)
+        return None
     except KeyboardInterrupt as e:
         util.printe(e)
         return -1
 
-def _md(args, hash_algo, verbose, printf, printe):
+def _md(args, hash_algo, verbose, get_result, printf, printe):
     # require minimum 1 paths
     if len(args) < 1:
         printe("Not enough paths {0}".format(args))
@@ -69,13 +71,15 @@ def _md(args, hash_algo, verbose, printf, printe):
                 l = print_md(f, hash_algo, printf, printe)
                 if l == -1:
                     return -1
-                ret.append(l)
+                elif get_result:
+                    ret.append(l)
         else:
             l = print_md(x, hash_algo, printf, printe)
             if l == -1:
                 return -1
-            ret.append(l)
-    return tuple(ret) # unittest
+            elif get_result:
+                ret.append(l)
+    return tuple(ret)
 
 def print_md(f, hash_algo, printf, printe):
     opsl, cleanup, blksiz, = fileops.bulk_alloc_blk((f,), True, printf, printe)

@@ -28,8 +28,9 @@ import signal
 import sys
 
 from . import allocator
+from . import blkcmp
+from . import blkdump
 from . import blkscan
-from . import cmp
 from . import console
 from . import container
 from . import env
@@ -164,8 +165,9 @@ def __dispatch(optargs=None):
     parser.add_argument("--env", action="store_true", default=False, help=usage.env)
     parser.add_argument("--command", action="store_true", default=False, help=usage.command)
     parser.add_argument("--sitepkg", action="store_true", default=False, help=usage.sitepkg)
-    parser.add_argument("--cmp", action="store_true", default=False, help=usage.cmp)
     parser.add_argument("--md", nargs="?", type=str, const="sha256", metavar=usage.md_metavar, help=usage.md)
+    parser.add_argument("--blkcmp", action="store_true", default=False, help=usage.blkcmp)
+    parser.add_argument("--blkdump", nargs="?", type=str, const="text", metavar=usage.blkdump_metavar, help=usage.blkdump)
     parser.add_argument("--blkscan", nargs="?", type=str, const="zero", metavar=usage.blkscan_metavar, help=usage.blkscan)
     if kernel.is_xnix():
         parser.add_argument("--lsblk", action="store_true", default=False, help=usage.lsblk)
@@ -231,13 +233,18 @@ def __dispatch(optargs=None):
         for x in package.get_paths():
             util.printf(x)
         return _DID_PRINT_MESSAGE
-    if opts.cmp:
-        cmp.cmp(args, opts.verbose)
-        return _DID_PRINT_MESSAGE
     if opts.md is not None:
         if opts.md == "":
             opts.md = "sha256"
         md.md(args, opts.md, opts.verbose)
+        return _DID_PRINT_MESSAGE
+    if opts.blkcmp:
+        blkcmp.blkcmp(args, opts.verbose)
+        return _DID_PRINT_MESSAGE
+    if opts.blkdump is not None:
+        if opts.blkdump == "":
+            opts.blkdump = "text"
+        blkdump.blkdump(args, opts.blkdump, opts.verbose)
         return _DID_PRINT_MESSAGE
     if opts.blkscan is not None:
         if opts.blkscan == "":
@@ -387,8 +394,8 @@ def __dispatch(optargs=None):
     signal.signal(signal.SIGTERM, __sigterm_handler)
 
     try:
-        util.init_elapsed_time()
         co = None
+        util.init_elapsed_time()
         if not kernel.get_kernel_module():
             __error(kernel.get_status_string())
 
@@ -462,13 +469,22 @@ def __dispatch(optargs=None):
                 break # only the first one (highest priority)
         co.xrepaint()
         co.dispatch()
+        co.cleanup()
+        co = None
     except BaseException as e: # not Exception (note this can catch sys.exit)
         tb = sys.exc_info()[2]
         targs.e = e
         targs.tb = util.get_traceback(tb)
     finally:
         if co:
-            co.cleanup()
+            try:
+                co.cleanup() # last resort
+            except Exception as e:
+                log.error("finally: {0}".format(e))
+                if targs.e is None:
+                    tb = sys.exc_info()[2]
+                    targs.e = e
+                    targs.tb = util.get_traceback(tb)
 
     if not util.is_running_script_fileobj():
         __cleanup(targs)

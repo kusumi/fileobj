@@ -251,6 +251,7 @@ def restore_unit_based():
 
 # non env based settings
 use_even_size_window = False
+allow_dup_path = False
 
 _home_dir = os.path.expanduser("~")
 _user_dir = os.path.join(_home_dir, ".fileobj")

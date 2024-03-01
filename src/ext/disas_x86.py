@@ -22,7 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import division
-
 import datetime
 import timeit
 
