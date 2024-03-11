@@ -553,7 +553,19 @@ class ConcatenatedFileops (object):
         return self.__opsl[0].get_mapping_offset()
 
     def get_mapping_length(self):
-        return self.__opsl[0].get_mapping_length()
+        has_valid_mlen = False
+        total_mlen = 0
+        for ops in self.__opsl:
+            mlen = ops.get_mapping_length()
+            if mlen > 0:
+                has_valid_mlen = True
+                total_mlen += mlen
+            else:
+                total_mlen += ops.get_size()
+        if has_valid_mlen:
+            return total_mlen
+        else:
+            return self.get_size()
 
     def get_type(self):
         return tuple(ops.get_type() for ops in self.__opsl)

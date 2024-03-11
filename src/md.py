@@ -28,30 +28,61 @@ from . import util
 
 def md(args, hash_algo, verbose):
     try:
-        ret = _md(args, hash_algo, verbose, False, util.printf, util.printe)
+        ret = _md(args, hash_algo, verbose, util.printf, util.printe)
         if ret == -1:
             return -1
         assert isinstance(ret, tuple), ret
-        assert len(ret) == 0, len(ret)
         return None
     except KeyboardInterrupt as e:
         util.printe(e)
         return -1
 
-def _md(args, hash_algo, verbose, get_result, printf, printe):
+def _md(args, s, verbose, printf, printe):
     # require minimum 1 paths
     if len(args) < 1:
         printe("Not enough paths {0}".format(args))
         return -1
 
+    # extract option string
+    s = s.lower()
+    if "," in s:
+        l = s.split(",")
+        hash_algo = l[0]
+        if hash_algo == "":
+            hash_algo = "sha256"
+        opt = l[1]
+    else:
+        hash_algo = s
+        opt = ""
+
     # test if hash_algo exists
-    hash_algo = hash_algo.lower()
     m = util.get_hash_object(hash_algo)
     if m is None:
         printe("No such hash algorithm \"{0}\", "
             "supported hash algorithms are as follows".format(hash_algo))
         printe("{0}".format(" ".join(util.get_available_hash_algorithms())))
         return -1
+
+    # define callback
+    if opt == "get":
+        ll = []
+        def fn(l):
+            ll.append(l)
+        def retfn():
+            return tuple(ll)
+    elif opt == "sort":
+        ll = []
+        def fn(l):
+            ll.append(l)
+        def retfn():
+            for l in sorted(ll):
+                print_md(l, printf)
+            return tuple()
+    else:
+        def fn(l):
+            print_md(l, printf)
+        def retfn():
+            return tuple()
 
     if verbose:
         l = []
@@ -64,24 +95,19 @@ def _md(args, hash_algo, verbose, get_result, printf, printe):
         printf(" ".join(l))
 
     # walk if args contains directory
-    ret = []
     for x in args:
         if os.path.isdir(x):
             for f in util.iter_directory(x):
-                l = print_md(f, hash_algo, printf, printe)
+                l = process_md(f, hash_algo, fn, printf, printe)
                 if l == -1:
                     return -1
-                elif get_result:
-                    ret.append(l)
         else:
-            l = print_md(x, hash_algo, printf, printe)
+            l = process_md(x, hash_algo, fn, printf, printe)
             if l == -1:
                 return -1
-            elif get_result:
-                ret.append(l)
-    return tuple(ret)
+    return retfn()
 
-def print_md(f, hash_algo, printf, printe):
+def process_md(f, hash_algo, fn, printf, printe):
     opsl, cleanup, blksiz, = fileops.bulk_alloc_blk((f,), True, printf, printe)
     if opsl is None:
         return -1
@@ -99,8 +125,9 @@ def print_md(f, hash_algo, printf, printe):
         resid -= len(buf)
         offset += len(buf)
 
-    l = ops.get_path(), m.hexdigest()
+    fn((ops.get_path(), m.hexdigest()))
     cleanup()
+
+def print_md(l, printf):
     fmt = "{0}  {1}" # shaXsum compatible, but with abs path
     printf(fmt.format(l[1], l[0]))
-    return l

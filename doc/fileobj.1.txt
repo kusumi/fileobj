@@ -278,4 +278,4 @@ FILES
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.8.5                  February 26, 2024                    FILEOBJ(1)
+FILEOBJ 0.8.6                    March 4, 2024                      FILEOBJ(1)

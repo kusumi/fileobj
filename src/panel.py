@@ -872,9 +872,11 @@ class DisplayCanvas (PageLineCanvas):
     def update_highlight(self, low, range_update):
         pos = self.fileops.get_pos()
         ppos = self.fileops.get_prev_pos()
+        # can and need to assume same page if line scroll mode
+        in_same_page = setting.use_line_scroll or self.in_same_page(pos, ppos)
         # update previous position first
         self.chgat_posstr(ppos, screen.A_NONE)
-        if self.in_same_page(pos, ppos):
+        if in_same_page:
             if ppos <= self.fileops.get_max_pos(): # may be invalid after delete
                 b = self.fileops.read(ppos, 1)
                 attr = screen.buf_attr[filebytes.ord(b)] if b else screen.A_NONE
@@ -882,7 +884,7 @@ class DisplayCanvas (PageLineCanvas):
             else:
                 self.chgat_cursor(ppos, screen.A_NONE, screen.A_NONE, low)
         # update search strings before update current position
-        if not self.in_same_page(pos, ppos):
+        if not in_same_page:
             ppos = self.get_page_offset()
         if range_update:
             d = self.range_update_search(pos, ppos, pos)

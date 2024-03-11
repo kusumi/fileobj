@@ -802,6 +802,15 @@ class Workspace (object):
                 if o.has_page_line_state_machine():
                     o.reset_page_line_state(fail_fast)
 
+    # e.g. for self.co.add_pos() from src/methods.py functions
+    def add_pos(self, d):
+        if setting.use_line_scroll:
+            n = self.__cur_fileops.get_pos() + d
+            self.go_to(n) # add_pos() + pls update
+        else:
+            self.__cur_fileops.add_pos(d)
+
+    # e.g. for self.co.set_pos() from src/methods.py functions
     def set_pos(self, n):
         if setting.use_line_scroll:
             self.go_to(n) # set_pos() + pls update

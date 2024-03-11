@@ -2416,7 +2416,7 @@ def block_logical_bit_operation(self, amp, opc, args, raw):
     test_empty_raise(self)
     mask = (int(opc[1], 16) << 4) | int(opc[2], 16)
     assert 0 <= mask <= 255
-    bops = _get_bit_ops.get(opc[0])(mask)
+    bops = _get_bit_ops().get(opc[0])(mask)
     beg, end, mapx, siz, cnt = __get_block(self)
     self.co.set_pos(beg)
     def fn(_):

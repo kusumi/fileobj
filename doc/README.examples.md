@@ -894,7 +894,7 @@
          8 /dev/sdb2 0x30fff00000 0x200       195.999023[GiB] 512[B]      -     -
          9 /dev/sr0  -            -           -               -           -     [Errno 123] No medium found: '/dev/sr0'
 
-+ *--md* option prints message digest of specified files. A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
++ *--md* option prints message digest of files using a specified hash algorithm (defaults to "sha256"). A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
 
         $ fileobj ./a.out ./b.out ./c.out --md=sha256 --verbose
         blake2b blake2s md4 md5 md5-sha1 ripemd160 sha1 sha224 [sha256] sha384 sha3_224 sha3_256 sha3_384 sha3_512 sha512 sha512_224 sha512_256 shake_128 shake_256 sm3 whirlpool
@@ -933,7 +933,7 @@
         #8 0.0% 0x0000080000|[0x0000080400|0x0000080000] -> 0 0x0000080000|[0x0000080400|0x0000080000] ((35, '#'), None) 0 65536/65536 100.0%
         #9 0.1% 0x0000090000|[0x0000090400|0x0000090000] -> 0 0x0000090000|[0x0000090400|0x0000090000] ((35, '#'), None) 0 65536/65536 100.0%
 
-+ *--blkscan* option prints file offsets of matched logical blocks using a speficied method (defaults to "zero"). A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
++ *--blkscan* option prints file offsets of matched logical blocks using a specified method (defaults to "zero"). A block size defaults to 64KiB, and is tunable via *FILEOBJ_LOGICAL_BLOCK_SIZE* environment variable.
 
         $ fileobj ./img1@0x10000 --blkscan=nonzero | head -10
         0x0000010000|0x0000000000
