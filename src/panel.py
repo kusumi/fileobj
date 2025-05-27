@@ -1442,7 +1442,7 @@ def dump_page_line_state(prefix, ops=None):
 
 A_UNDERLINE = None
 def init():
-    global A_UNDERLINE, _page_line_state, _page_line_state_sym
+    global A_UNDERLINE, _page_line_state_sym
     assert screen.A_UNDERLINE is not None
     assert screen.A_COLOR_OFFSET is not None
     if screen.A_COLOR_OFFSET != screen.A_NONE or \

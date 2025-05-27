@@ -1,21 +1,5 @@
 ## Examples
 
-### Note
-
-+ There are many options not mentioned in here, see *[List of options](README.list_of_options.md)* for details.
-
-+ There are many environment variables not mentioned in here, see *[List of environment variables](README.list_of_environment_variables.md)* for details.
-
-+ There are many commands not mentioned in here, see *[List of commands](README.list_of_commands.md)* for details.
-
-+ Some commands can take *[count]* prefix, see *[List of commands](README.list_of_commands.md)* for details.
-
-+ *offset 0* means first byte of a buffer.
-
-+ *sector 0* means first sector of a buffer.
-
-+ Sector based commands assume 512 bytes sector if a buffer is not of block device.
-
 ### Command line options
 
 + Print help message and exit.
@@ -502,11 +486,11 @@
 
 ### Multiple windows
 
-+ Open two files *./a.out* and *./b.out* with horizontally splitted windows for each file respectively.
++ Open two files *./a.out* and *./b.out* with horizontally split windows for each file respectively.
 
         $ fileobj ./a.out ./b.out -o
 
-+ Open two files *./a.out* and *./b.out* with vertically splitted windows for each file respectively.
++ Open two files *./a.out* and *./b.out* with vertically split windows for each file respectively.
 
         $ fileobj ./a.out ./b.out -O
 

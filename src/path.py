@@ -139,11 +139,11 @@ def _get_short_path(f):
     if f == cwd:
         return '.'
     if f.startswith(cwd + _sep): # no os.path.join here
-        return f.replace(cwd, '.')
+        return f.replace(cwd, '.', 1)
     if f == _home:
         return '~'
     if f.startswith(_home + _sep): # no os.path.join here
-        return f.replace(_home, '~')
+        return f.replace(_home, '~', 1)
     if _has_relpath:
         rel = os.path.relpath(f, cwd)
         if len(rel) < len(f):

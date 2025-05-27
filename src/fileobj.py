@@ -199,39 +199,43 @@ class Fileobj (object):
     def get_mapping_length(self):
         return self.__attr.length
 
-    def get_buffer_size(self):
-        # heuristic
-        ret = kernel.get_buffer_size()
-        siz = self.get_size()
-        if ret >= siz:
-            return ret
-        elif siz > util.MiB: # ret < siz
-            return util.MiB
-        else:
-            return ret
-
     def __parse_mapping_attributes(self, offset, length):
         f = self.get_path()
         try:
-            bufsiz = kernel.get_size(f)
+            size = kernel.get_size(f)
         except Exception:
-            bufsiz = -1
-        if bufsiz == -1:
-            if os.path.isfile(f):
-                log.error("Failed to stat {0}, using 0/0".format(f))
-            return 0, 0
+            size = -1
+        if size == -1:
+            if setting.allow_out_of_range_mapping:
+                if os.path.isfile(f):
+                    log.error("Failed to stat {0}, using 0/0".format(f))
+                return 0, 0
+            else:
+                raise Error("Failed to stat {0}".format(f))
 
-        if offset <= 0:
-            _offset = 0
-        elif offset >= bufsiz:
-            _offset = 0
+        if offset < 0:
+            if setting.allow_out_of_range_mapping:
+                _offset = 0
+            else:
+                raise Error("Invalid offset {0} for {1}".format(offset, f))
+        elif size > 0 and offset >= size: # offset can't be beyond eof
+            if setting.allow_out_of_range_mapping:
+                _offset = 0
+            else:
+                raise Error("Invalid offset {0} for {1}".format(offset, f))
         else:
             _offset = offset
 
-        if length <= 0:
-            _length = 0
-        elif _offset + length > bufsiz:
-            _length = bufsiz - _offset
+        if length < 0:
+            if setting.allow_out_of_range_mapping:
+                _length = 0
+            else:
+                raise Error("Invalid length {0} for {1}".format(length, f))
+        elif _offset + length > size: # length can't be beyond eof
+            if setting.allow_out_of_range_mapping:
+                _length = size - _offset
+            else:
+                raise Error("Invalid length {0} for {1}".format(length, f))
         else:
             _length = length
         return _offset, _length
@@ -297,7 +301,7 @@ class Fileobj (object):
 
     def creat(self, f):
         with kernel.fcreat(f) as fd:
-            siz = self.get_buffer_size()
+            siz = get_buffer_size(self)
             pos = 0
             while True:
                 b = self.read(pos, siz)
@@ -323,24 +327,10 @@ class Fileobj (object):
         return self.rfind(x, s, end)
 
     def iter_search(self, x, word):
-        while True:
-            ret = self.search(x, word)
-            if ret == NOTFOUND or ret == INTERRUPT:
-                break
-            yield ret
-            x = ret + 1
-            if x >= self.get_size():
-                break
+        return generic_iter_search(self, x, word)
 
     def iter_rsearch(self, x, word):
-        while True:
-            ret = self.rsearch(x, word)
-            if ret == NOTFOUND or ret == INTERRUPT:
-                break
-            yield ret
-            x = ret - 1
-            if x < 0:
-                break
+        return generic_iter_rsearch(self, x, word)
 
     def init_buffer(self, b):
         assert not self.is_dirty()
@@ -386,14 +376,7 @@ class Fileobj (object):
     binary = property(lambda self: filebytes.ords(self.buffer))
 
     def iter_read(self, x, n):
-        while True:
-            ret = self.read(x, n)
-            if not ret:
-                break
-            yield ret
-            x += len(ret)
-            if x >= self.get_size():
-                break
+        return generic_iter_read(self, x, n)
 
     def raise_no_support(self, s):
         if setting.use_readonly and s in \
@@ -630,6 +613,81 @@ class Fileobj (object):
 
     def ioctl(self, arg):
         return
+
+def get_buffer_size(obj):
+    # heuristic
+    ret = kernel.get_buffer_size()
+    siz = obj.get_size()
+    if ret >= siz:
+        return ret
+    elif siz > util.MiB: # ret < siz
+        return util.MiB
+    else:
+        return ret
+
+def generic_find(obj, x, s, end):
+    n = get_buffer_size(obj)
+    while True:
+        if end != -1 and x >= end:
+            return NOTFOUND
+        b = obj.read(x, n)
+        pos = util.find_string(b, s)
+        if pos >= 0:
+            return x + pos
+        elif x + len(b) >= obj.get_size():
+            return NOTFOUND
+        x += (n - len(s))
+        if screen.test_signal():
+            return INTERRUPT
+
+def generic_rfind(obj, x, s, end):
+    bufsiz = get_buffer_size(obj)
+    while True:
+        if end != -1 and x <= end:
+            return NOTFOUND
+        n = bufsiz
+        i = x + 1 - n
+        if i < 0:
+            i = 0
+            n = x + 1
+        pos = util.rfind_string(obj.read(i, n), s)
+        if pos >= 0:
+            return i + pos
+        elif not i:
+            return NOTFOUND
+        x -= (n - len(s))
+        if screen.test_signal():
+            return INTERRUPT
+
+def generic_iter_search(obj, x, word):
+    while True:
+        ret = obj.search(x, word)
+        if ret == NOTFOUND or ret == INTERRUPT:
+            break
+        yield ret
+        x = ret + 1
+        if x >= obj.get_size():
+            break
+
+def generic_iter_rsearch(obj, x, word):
+    while True:
+        ret = obj.rsearch(x, word)
+        if ret == NOTFOUND or ret == INTERRUPT:
+            break
+        yield ret
+        x = ret - 1
+        if x < 0:
+            break
+
+def generic_iter_read(obj, x, n):
+    while True:
+        ret = obj.read(x, n)
+        if not ret:
+            break
+        yield ret
+        x += len(ret)
+        if x >= obj.get_size():
+            break
 
 def is_subclass(cls, s):
     return util.is_subclass(cls, get_class(s))

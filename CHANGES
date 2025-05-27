@@ -1,3 +1,11 @@
+v0.8.7
+======
+- Add Python 3.13 support
+- Drop Python 3.2, 3.3 support
+- --blkscan: Add "file:", "FILE:" scan type
+- Add --concatenate
+- Minor bug fix
+
 v0.8.6
 ======
 - Fix line scroll mode bug (since v0.7.108)

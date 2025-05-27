@@ -14,29 +14,24 @@
                                 platforms.
           -o [<number_of_windows>]
                                 Initially assign buffers given by paths to
-                                horizontally splitted windows. When
-                                <number_of_windows> is omitted, assign one window for
-                                each buffer.
+                                horizontally split windows. When <number_of_windows>
+                                is omitted, assign one window for each buffer.
           -O [<number_of_windows>]
                                 Initially assign buffers given by paths to vertically
-                                splitted windows. When <number_of_windows> is omitted,
+                                split windows. When <number_of_windows> is omitted,
                                 assign one window for each buffer.
-          --bytes_per_line <bytes_per_line>, --bpl <bytes_per_line>
-                                Set number of bytes printed per line. Each line prints
-                                <bytes_per_line> bytes. Available formats for
-                                <bytes_per_line> are digit, "max", "min" and "auto".
-                                "auto" sets the value to the maximum 2^N that fits in
-                                the terminal width. Defaults to "auto".
-          --bytes_per_window <bytes_per_window>, --bpw <bytes_per_window>
-                                Set number of bytes printed per window. Each window
-                                prints <bytes_per_window> bytes, using the current
-                                number of bytes per line. Available formats for
-                                <bytes_per_window> are digit, "even" and "auto".
-                                "even" sets all windows to have the same size.
+          --bytes_per_line, --bpl <bytes_per_line>
+                                Set number of bytes printed per line. Available
+                                <bytes_per_line> formats are digit, "max", "min" and
+                                "auto". "auto" sets the value to maximum 2^N that fits
+                                in the terminal width. Defaults to "auto".
+          --bytes_per_window, --bpw <bytes_per_window>
+                                Set number of bytes printed per window. Available
+                                <bytes_per_window> formats are digit, "even" and
+                                "auto". "even" sets all windows to have the same size.
                                 Defaults to "auto".
-          --bytes_per_unit <bytes_per_unit>, --bpu <bytes_per_unit>
-                                Set number of bytes printed per unit. Each unit prints
-                                <bytes_per_unit> bytes. Defaults to "1".
+          --bytes_per_unit, --bpu <bytes_per_unit>
+                                Set number of bytes printed per unit. Defaults to "1".
           --no_text             Disable text window.
           --no_mouse            Disable mouse events.
           --no_color            Disable color for buffer contents.
@@ -57,18 +52,17 @@
           --blkcmp              Compare contents of files and exit.
           --blkdump [<dump_type>]
                                 Print contents of files to stdout and exit. Available
-                                options are "text" and "raw". Defaults to "text". If
-                                multiple files are specified, this command assumes a
-                                single concatenated file. To handle them separately,
-                                append "x" to option string (e.g. "textx").
+                                <dump_type> options are "text" and "raw". Defaults to
+                                "text".
           --blkscan [<scan_type>]
                                 Print file offsets of matched logical blocks and exit.
-                                Available options are "zero", "nonzero", "ff",
-                                "nonff", "<hash_algorithm>:<value>" and
-                                "<hash_algorithm>". Defaults to "zero". If multiple
-                                files are specified, this command assumes a single
-                                concatenated file. To handle them separately, append
-                                "x" to option string (e.g. "zerox").
+                                Available <scan_type> options are "zero", "nonzero",
+                                "ff", "nonff", "file:</path/to/file>",
+                                "FILE:</path/to/file>", "<hash_algorithm>:<value>" and
+                                "<hash_algorithm>". Defaults to "zero".
+          --concatenate         Handle paths as a single concatenated file in a given
+                                order. Currently supported by --md, --blkdump and
+                                --blkscan.
           --lsblk               Print list of block devices and exit. This prints
                                 character devices on some platforms.
           --version             show program's version number and exit

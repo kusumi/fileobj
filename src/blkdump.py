@@ -24,6 +24,7 @@
 from __future__ import division
 import sys
 
+from . import cfileops
 from . import filebytes
 from . import fileops
 from . import panel
@@ -31,33 +32,24 @@ from . import screen
 from . import setting
 from . import util
 
-def blkdump(args, dump_type, verbose):
+def blkdump(args, s, verbose, concat):
     try:
-        return _blkdump(args, dump_type, verbose, util.printf, util.printe)
+        return _blkdump(args, s, verbose, concat, util.printf, util.printe)
     except KeyboardInterrupt as e:
         util.printe(e)
         return -1
 
-def _blkdump(args, dump_type, verbose, printf, printe):
+def _blkdump(args, s, verbose, concat, printf, printe):
     # require minimum 1 paths
     if len(args) < 1:
         printe("Not enough paths {0}".format(args))
         return -1
 
     # allocate fileops
-    s = dump_type.lower()
-    if s.endswith("x"):
-        afn = fileops.bulk_alloc_blk
-        s = s[:-1]
-    else:
-        afn = fileops.concat_alloc_blk
-
+    afn = cfileops.bulk_alloc_blk if concat else fileops.bulk_alloc_blk
     opsl, cleanup, blksiz = afn(args, True, printf, printe)
     if opsl is None:
         return -1
-    elif fileops.is_concatenated(opsl):
-        opsl = opsl,
-    assert isinstance(opsl, tuple), opsl
 
     if s == "text":
         blkdump_text(opsl, blksiz, verbose, printf, printe)

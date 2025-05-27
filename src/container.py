@@ -630,11 +630,11 @@ class Container (object):
         if len(self) > 1:
             if vertical:
                 if not self.__in_vertical:
-                    self.flash("Already splitted horizontally, can't mix both")
+                    self.flash("Already split horizontally, can't mix both")
                     return -1
             else:
                 if self.__in_vertical:
-                    self.flash("Already splitted vertically, can't mix both")
+                    self.flash("Already split vertically, can't mix both")
                     return -1
         i = self.__get_buffer_index(self.get_path())
         cur_workspace = self.__cur_workspace

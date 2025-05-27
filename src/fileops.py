@@ -60,8 +60,8 @@ class Fileops (object):
         else:
             assert False, arg
         assert self.__trail == 0
-        pos = self.__get_normalized_pos(pos)
-        siz = self.__get_normalized_size(siz)
+        pos = get_adjusted_pos(self, pos)
+        siz = get_adjusted_size(self, siz)
         return self.read(pos, siz)
 
     def __str__(self):
@@ -248,10 +248,10 @@ class Fileops (object):
         return self.__ref.rsearch(x, word, end)
 
     def iter_search(self, x, word):
-        return self.__ref.iter_search(self.__get_normalized_pos(x), word)
+        return self.__ref.iter_search(get_adjusted_pos(self, x), word)
 
     def iter_rsearch(self, x, word):
-        return self.__ref.iter_rsearch(self.__get_normalized_pos(x), word)
+        return self.__ref.iter_rsearch(get_adjusted_pos(self, x), word)
 
     def init_buffer(self, b):
         return self.__ref.init_buffer(b)
@@ -269,83 +269,13 @@ class Fileops (object):
             self.replace  = self.__replace
             self.delete   = self.__delete
             self.truncate = self.__truncate
-        if _not_builtin_script and setting.use_auto_fileops_adjust:
-            self.read     = self.__decorate_read(self.read)
-            self.insert   = self.__decorate_insert(self.insert)
-            self.replace  = self.__decorate_replace(self.replace)
-            self.delete   = self.__decorate_delete(self.delete)
-            self.truncate = self.__decorate_truncate(self.truncate)
+        if not_builtin_script and setting.use_auto_fileops_adjust:
+            self.read     = adjust_read(self, self.read)
+            self.insert   = adjust_insert(self, self.insert)
+            self.replace  = adjust_replace(self, self.replace)
+            self.delete   = adjust_delete(self, self.delete)
+            self.truncate = adjust_truncate(self, self.truncate)
         self.raw_read = self.__read
-
-    def __decorate_read(self, fn):
-        def _(x, n):
-            x = self.__get_normalized_pos(x)
-            n = self.__get_normalized_size(n)
-            return fn(x, n)
-        return _
-
-    def __decorate_insert(self, fn):
-        def _(x, l, rec=True):
-            try:
-                self.open_eof_insert()
-                x = self.__get_normalized_pos(x)
-                l = self.__get_normalized_input(l)
-                fn(x, l, rec)
-            finally:
-                self.close_eof_insert()
-        return _
-
-    def __decorate_replace(self, fn):
-        def _(x, l, rec=True):
-            x = self.__get_normalized_pos(x)
-            l = self.__get_normalized_input(l)
-            fn(x, l, rec)
-        return _
-
-    def __decorate_delete(self, fn):
-        def _(x, n, rec=True):
-            x = self.__get_normalized_pos(x)
-            n = self.__get_normalized_size(n)
-            fn(x, n, rec)
-        return _
-
-    def __decorate_truncate(self, fn):
-        def _(n, rec=True):
-            n = self.__get_normalized_size(n)
-            fn(n, rec)
-        return _
-
-    def __get_normalized_pos(self, pos):
-        _ = self.get_max_pos()
-        if pos < 0:
-            pos = _ + 1 + pos
-        if pos < 0:
-            return 0
-        elif pos > _:
-            return _
-        else:
-            return pos
-
-    def __get_normalized_size(self, siz):
-        if siz < 0:
-            return 0
-        elif siz > self.get_size():
-            return self.get_size()
-        else:
-            return siz
-
-    def __get_normalized_input(self, arg):
-        if util.is_seq(arg):
-            if isinstance(arg[0], str):
-                arg = ''.join(arg)
-            elif isinstance(arg[0], filebytes.TYPE):
-                arg = filebytes.join(arg)
-        if isinstance(arg, str):
-            arg = util.str_to_bytes(arg)
-        if isinstance(arg, filebytes.TYPE):
-            arg = filebytes.bytes_to_input(arg)
-        assert isinstance(arg[0], int), arg
-        return arg
 
     def readall(self):
         return self.__ref.readall()
@@ -490,6 +420,86 @@ class Fileops (object):
     def put_barrier(self):
         return self.__ref.put_barrier()
 
+def adjust_read(ops, fn):
+    def _(x, n):
+        x = get_adjusted_pos(ops, x)
+        n = get_adjusted_size(ops, n)
+        return fn(x, n)
+    return _
+
+def adjust_insert(ops, fn):
+    def _(x, l, rec=True):
+        try:
+            ops.open_eof_insert()
+            x = get_adjusted_pos(ops, x)
+            l = get_adjusted_input(ops, l)
+            fn(x, l, rec)
+        finally:
+            ops.close_eof_insert()
+    return _
+
+def adjust_replace(ops, fn):
+    def _(x, l, rec=True):
+        x = get_adjusted_pos(ops, x)
+        l = get_adjusted_input(ops, l)
+        fn(x, l, rec)
+    return _
+
+def adjust_delete(ops, fn):
+    def _(x, n, rec=True):
+        x = get_adjusted_pos(ops, x)
+        n = get_adjusted_size(ops, n)
+        fn(x, n, rec)
+    return _
+
+def adjust_truncate(ops, fn):
+    def _(n, rec=True):
+        n = get_adjusted_size(ops, n)
+        fn(n, rec)
+    return _
+
+def get_adjusted_pos(ops, pos):
+    _ = ops.get_max_pos()
+    if pos < 0:
+        pos = _ + 1 + pos
+    if pos < 0:
+        return 0
+    elif pos > _:
+        return _
+    else:
+        return pos
+
+def get_adjusted_size(ops, siz):
+    if siz < 0:
+        return 0
+    elif siz > ops.get_size():
+        return ops.get_size()
+    else:
+        return siz
+
+def get_adjusted_input(ops, arg):
+    if util.is_seq(arg):
+        if isinstance(arg[0], str):
+            arg = ''.join(arg)
+        elif isinstance(arg[0], filebytes.TYPE):
+            arg = filebytes.join(arg)
+    if isinstance(arg, str):
+        arg = util.str_to_bytes(arg)
+    if isinstance(arg, filebytes.TYPE):
+        arg = filebytes.bytes_to_input(arg)
+    assert isinstance(arg[0], int), arg
+    return arg
+
+def print_fileops(ops, printf):
+    printf("{0} {1} {2}".format(repr(ops), ops.get_path(), ops.get_type()))
+    x = ops.get_size()
+    printf("\tsize: {0} 0x{1:x}".format(x, x))
+    x = ops.get_mapping_offset()
+    printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
+    x = ops.get_mapping_length()
+    printf("\tmapping length: {0} 0x{1:x}".format(x, x))
+    #printf("{0}".format(ops))
+
 def __alloc(f, readonly):
     f = path.get_path(f)
     obj = allocator.alloc(f, readonly)
@@ -505,7 +515,7 @@ def __alloc_class(f, name):
         obj = allocator.alloc(f)
     return Fileops(obj)
 
-_not_builtin_script = not util.is_running_script_fileobj() and \
+not_builtin_script = not util.is_running_script_fileobj() and \
     not util.is_running_script_perf()
 
 def __cleanup(args):
@@ -515,7 +525,7 @@ def __cleanup(args):
         if ops.cleanup() != -1 and setting.use_debug:
             printf("cleanup {0} {1}".format(*l))
 
-if _not_builtin_script and setting.use_auto_fileops_cleanup:
+if not_builtin_script and setting.use_auto_fileops_cleanup:
     import atexit
 
     def alloc(f, readonly=False):
@@ -533,82 +543,6 @@ else:
 
     def alloc_class(f, name=""):
         return __alloc_class(f, name)
-
-class ConcatenatedFileops (object):
-    def __init__(self, opsl):
-        assert opsl, opsl
-        self.__opsl = tuple(opsl)
-
-    def cleanup(self):
-        for ops in self.__opsl:
-            ops.cleanup()
-
-    def get_size(self):
-        return sum([ops.get_size() for ops in self.__opsl])
-
-    def get_path(self):
-        return tuple(ops.get_path() for ops in self.__opsl)
-
-    def get_mapping_offset(self):
-        return self.__opsl[0].get_mapping_offset()
-
-    def get_mapping_length(self):
-        has_valid_mlen = False
-        total_mlen = 0
-        for ops in self.__opsl:
-            mlen = ops.get_mapping_length()
-            if mlen > 0:
-                has_valid_mlen = True
-                total_mlen += mlen
-            else:
-                total_mlen += ops.get_size()
-        if has_valid_mlen:
-            return total_mlen
-        else:
-            return self.get_size()
-
-    def get_type(self):
-        return tuple(ops.get_type() for ops in self.__opsl)
-
-    def read(self, x, n):
-        read_next = False
-        ops_base = 0
-        l = []
-        for ops in self.__opsl:
-            if n <= 0:
-                assert n == 0, n
-                break
-            ops_size = ops.get_size()
-            if x >= ops_base or read_next:
-                pos = x - ops_base
-                siz = n
-                if siz > ops_size:
-                    siz = ops_size
-                b = ops.raw_read(pos, siz) # safe with debug mode
-                n -= len(b)
-                if n > 0:
-                    read_next = True
-                l.append(b)
-            ops_base += ops_size
-        return filebytes.BLANK.join(l)
-
-def is_concatenated(ops):
-    return isinstance(ops, ConcatenatedFileops)
-
-def __alloc_concatenated_fileops(opsl, printf):
-    ops = ConcatenatedFileops(opsl)
-    if setting.use_debug:
-        __debug_print_fileops(ops, printf)
-    return ops
-
-def __debug_print_fileops(ops, printf):
-    printf("{0} {1} {2}".format(repr(ops), ops.get_path(), ops.get_type()))
-    x = ops.get_size()
-    printf("\tsize: {0} 0x{1:x}".format(x, x))
-    x = ops.get_mapping_offset()
-    printf("\tmapping offset: {0} 0x{1:x}".format(x, x))
-    x = ops.get_mapping_length()
-    printf("\tmapping length: {0} 0x{1:x}".format(x, x))
 
 # bulk fileops allocation used by non editor options
 def bulk_alloc(args, readonly, printf, printe):
@@ -634,9 +568,10 @@ def bulk_alloc(args, readonly, printf, printe):
         for ops in opsl:
             __cleanup((ops, printf))
         setting.allow_dup_path = False
+        setting.allow_out_of_range_mapping = True
 
-    # allow dup paths for underlying fileobj's
     setting.allow_dup_path = True
+    setting.allow_out_of_range_mapping = False
 
     # allocate fileops
     assert args, args
@@ -649,7 +584,7 @@ def bulk_alloc(args, readonly, printf, printe):
             return None, None
         assert isinstance(ops, Fileops), ops
         if setting.use_debug:
-            __debug_print_fileops(ops, printf)
+            print_fileops(ops, printf)
         opsl.append(ops)
 
     # sanity checks
@@ -662,13 +597,6 @@ def bulk_alloc(args, readonly, printf, printe):
         assert os.path.exists(f), f
         assert not readonly or ops.is_readonly()
     return tuple(opsl), cleanup
-
-def concat_alloc(args, readonly, printf, printe):
-    assert readonly
-    opsl, cleanup = bulk_alloc(args, readonly, printf, printe)
-    if opsl is None:
-        return None, None
-    return __alloc_concatenated_fileops(opsl, printf), cleanup
 
 # bulk_alloc variant
 def bulk_alloc_blk(args, readonly, printf, printe):
@@ -691,10 +619,3 @@ def bulk_alloc_blk(args, readonly, printf, printe):
                 cleanup()
                 return None, None, None
     return opsl, cleanup, blksiz
-
-def concat_alloc_blk(args, readonly, printf, printe):
-    assert readonly
-    opsl, cleanup, blksiz = bulk_alloc_blk(args, readonly, printf, printe)
-    if opsl is None:
-        return None, None, None
-    return __alloc_concatenated_fileops(opsl, printf), cleanup, blksiz

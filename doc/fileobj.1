@@ -21,7 +21,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 .\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH FILEOBJ 1 "March 4, 2024" "FILEOBJ 0.8.6"
+.TH FILEOBJ 1 "May 12, 2025" "FILEOBJ 0.8.7"
 .nh
 .ad l
 .SH NAME
@@ -61,30 +61,28 @@ This option is required to insert or delete bytes on some platforms.
 .PP
 \fB\-o\fP=[\fI<number_of_windows>\fP]
 .RS 4
-Initially assign buffers given by \fIpaths\fP to horizontally splitted windows.
+Initially assign buffers given by \fIpaths\fP to horizontally split windows.
 When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 .RE
 .PP
 \fB\-O\fP=[\fI<number_of_windows>\fP]
 .RS 4
-Initially assign buffers given by \fIpaths\fP to vertically splitted windows.
+Initially assign buffers given by \fIpaths\fP to vertically split windows.
 When \fI<number_of_windows>\fP is omitted, assign one window for each buffer.
 .RE
 .PP
 \fB\-\-bytes_per_line\fP=\fI<bytes_per_line>\fP, \fB\-\-bpl\fP=\fI<bytes_per_line>\fP
 .RS 4
 Set number of bytes printed per line.
-Each line prints \fI<bytes_per_line>\fP bytes.
-Available formats for \fI<bytes_per_line>\fP are digit, "max", "min" and "auto".
-"auto" sets the value to the maximum 2^N that fits in the terminal width.
+Available \fI<bytes_per_line>\fP formats are digit, "max", "min" and "auto".
+"auto" sets the value to maximum 2^N that fits in the terminal width.
 Defaults to "auto".
 .RE
 .PP
 \fB\-\-bytes_per_window\fP=\fI<bytes_per_window>\fP, \fB\-\-bpw\fP=\fI<bytes_per_window>\fP
 .RS 4
 Set number of bytes printed per window.
-Each window prints \fI<bytes_per_window>\fP bytes, using the current number of bytes per line.
-Available formats for \fI<bytes_per_window>\fP are digit, "even" and "auto".
+Available \fI<bytes_per_window>\fP formats are digit, "even" and "auto".
 "even" sets all windows to have the same size.
 Defaults to "auto".
 .RE
@@ -92,7 +90,6 @@ Defaults to "auto".
 \fB\-\-bytes_per_unit\fP=\fI<bytes_per_unit>\fP, \fB\-\-bpu\fP=\fI<bytes_per_unit>\fP
 .RS 4
 Set number of bytes printed per unit.
-Each unit prints \fI<bytes_per_unit>\fP bytes.
 Defaults to "1".
 .RE
 .PP
@@ -171,19 +168,21 @@ Compare contents of files and exit.
 \fB\-\-blkdump\fP=[\fI<dump_type>\fP]
 .RS 4
 Print contents of files to stdout and exit.
-Available options are "text" and "raw".
+Available \fI<dump_type>\fP options are "text" and "raw".
 Defaults to "text".
-If multiple files are specified, this command assumes a single concatenated file.
-To handle them separately, append "x" to option string (e.g. "textx").
 .RE
 .PP
 \fB\-\-blkscan\fP=[\fI<scan_type>\fP]
 .RS 4
 Print file offsets of matched logical blocks and exit.
-Available options are "zero", "nonzero", "ff", "nonff", "<hash_algorithm>:<value>" and "<hash_algorithm>".
+Available \fI<scan_type>\fP options are "zero", "nonzero", "ff", "nonff", "file:</path/to/file>", "FILE:</path/to/file>", "<hash_algorithm>:<value>" and "<hash_algorithm>".
 Defaults to "zero".
-If multiple files are specified, this command assumes a single concatenated file.
-To handle them separately, append "x" to option string (e.g. "zerox").
+.RE
+.PP
+\fB\-\-concatenate\fP
+.RS 4
+Handle paths as a single concatenated file in a given order.
+Currently supported by \fB\-\-md\fP, \fB\-\-blkdump\fP and \fB\-\-blkscan\fP.
 .RE
 .PP
 \fB\-\-lsblk\fP
@@ -319,7 +318,7 @@ Set number of bytes printed per unit (equivalent to \fB\-\-bytes_per_unit\fP and
 .PP
 \fBFILEOBJ_COLOR_CURRENT\fP
 .RS 4
-Set current cursor and window color.
+Set color for current cursor and window.
 Defaults to "black,green" if undefined.
 Set blank string to disable.
 See \fB\-\-list_color\fP for available colors.
@@ -327,7 +326,7 @@ See \fB\-\-list_color\fP for available colors.
 .PP
 \fBFILEOBJ_COLOR_ZERO\fP
 .RS 4
-Set color for zero (0) bytes within buffer contents.
+Set color for bytes with a value of 0x00.
 Defaults to "green" if undefined.
 Set blank string to disable.
 See \fB\-\-list_color\fP for available colors.
@@ -335,7 +334,7 @@ See \fB\-\-list_color\fP for available colors.
 .PP
 \fBFILEOBJ_COLOR_FF\fP
 .RS 4
-Set color for 0xff bytes within buffer contents.
+Set color for bytes with a value of 0xff.
 Defaults to "magenta" if undefined.
 Set blank string to disable.
 See \fB\-\-list_color\fP for available colors.
@@ -343,7 +342,7 @@ See \fB\-\-list_color\fP for available colors.
 .PP
 \fBFILEOBJ_COLOR_PRINT\fP
 .RS 4
-Set color for printable bytes within buffer contents.
+Set color for printable bytes.
 Defaults to "cyan" if undefined.
 Set blank string to disable.
 See \fB\-\-list_color\fP for available colors.
@@ -398,32 +397,32 @@ Automatically created.
 .PP
 \fI~/.fileobj/env\fP
 .RS 4
-A file to specify environment variables via file on runtime.
+A file to specify environment variables via file at runtime.
 Existing environment variables take precedence over the file contents.
 Automatically created.
 .RE
 .PP
 \fI~/.fileobj/history\fP
 .RS 4
-A JSON file contains history of executed editor commands.
+A JSON file which contains history of executed editor commands.
 Automatically created.
 .RE
 .PP
 \fI~/.fileobj/log\fP
 .RS 4
-A text file contains logged messages.
+A text file which contains logged messages.
 Automatically created.
 .RE
 .PP
 \fI~/.fileobj/marks\fP
 .RS 4
-A JSON file contains per\-file marks marked by an editor command.
+A JSON file which contains per\-file marks marked by an editor command.
 Automatically created.
 .RE
 .PP
 \fI~/.fileobj/session\fP
 .RS 4
-A JSON file contains session information.
+A JSON file which contains session information.
 Automatically created.
 .RE
 .PP

@@ -169,6 +169,7 @@ def __dispatch(optargs=None):
     parser.add_argument("--blkcmp", action="store_true", default=False, help=usage.blkcmp)
     parser.add_argument("--blkdump", nargs="?", type=str, const="text", metavar=usage.blkdump_metavar, help=usage.blkdump)
     parser.add_argument("--blkscan", nargs="?", type=str, const="zero", metavar=usage.blkscan_metavar, help=usage.blkscan)
+    parser.add_argument("--concatenate", action="store_true", default=False, help=usage.concatenate)
     if kernel.is_xnix():
         parser.add_argument("--lsblk", action="store_true", default=False, help=usage.lsblk)
     if __test_wait_for_input():
@@ -236,7 +237,7 @@ def __dispatch(optargs=None):
     if opts.md is not None:
         if opts.md == "":
             opts.md = "sha256"
-        md.md(args, opts.md, opts.verbose)
+        md.md(args, opts.md, opts.verbose, opts.concatenate)
         return _DID_PRINT_MESSAGE
     if opts.blkcmp:
         blkcmp.blkcmp(args, opts.verbose)
@@ -244,12 +245,12 @@ def __dispatch(optargs=None):
     if opts.blkdump is not None:
         if opts.blkdump == "":
             opts.blkdump = "text"
-        blkdump.blkdump(args, opts.blkdump, opts.verbose)
+        blkdump.blkdump(args, opts.blkdump, opts.verbose, opts.concatenate)
         return _DID_PRINT_MESSAGE
     if opts.blkscan is not None:
         if opts.blkscan == "":
             opts.blkscan = "zero"
-        blkscan.blkscan(args, opts.blkscan, opts.verbose)
+        blkscan.blkscan(args, opts.blkscan, opts.verbose, opts.concatenate)
         return _DID_PRINT_MESSAGE
     # "lsblk" exists only if running on *nix
     if hasattr(opts, "lsblk") and opts.lsblk:

@@ -6,13 +6,13 @@
         FILEOBJ_BYTES_PER_LINE      Set number of bytes printed per line (equivalent to --bytes_per_line and :set bytes_per_line).
         FILEOBJ_BYTES_PER_UNIT      Set number of bytes printed per unit (equivalent to --bytes_per_unit and :set bytes_per_unit).
         FILEOBJ_BYTES_PER_WINDOW    Set number of bytes printed per window (equivalent to --bytes_per_window and :set bytes_per_window).
-        FILEOBJ_COLOR_CURRENT       Set current cursor and window color. Defaults to "black,green" if undefined. Set blank string to disable. See --list_color for available colors.
+        FILEOBJ_COLOR_CURRENT       Set color for current cursor and window. Defaults to "black,green" if undefined. Set blank string to disable. See --list_color for available colors.
         FILEOBJ_COLOR_DEFAULT       Set default color for buffer contents. Defaults to "none" if undefined. See --list_color for available colors.
-        FILEOBJ_COLOR_FF            Set color for 0xff bytes within buffer contents. Defaults to "magenta" if undefined. Set blank string to disable. See --list_color for available colors.
+        FILEOBJ_COLOR_FF            Set color for bytes with a value of 0xff. Defaults to "magenta" if undefined. Set blank string to disable. See --list_color for available colors.
         FILEOBJ_COLOR_OFFSET        Set color for offsets in editor windows. Defaults to "none" if undefined. See --list_color for available colors.
-        FILEOBJ_COLOR_PRINT         Set color for printable bytes within buffer contents. Defaults to "cyan" if undefined. Set blank string to disable. See --list_color for available colors.
+        FILEOBJ_COLOR_PRINT         Set color for printable bytes. Defaults to "cyan" if undefined. Set blank string to disable. See --list_color for available colors.
         FILEOBJ_COLOR_VISUAL        Set color for visual region. Defaults to "red,yellow" if undefined. Set blank string to disable. See --list_color for available colors.
-        FILEOBJ_COLOR_ZERO          Set color for zero (0) bytes within buffer contents. Defaults to "green" if undefined. Set blank string to disable. See --list_color for available colors.
+        FILEOBJ_COLOR_ZERO          Set color for bytes with a value of 0x00. Defaults to "green" if undefined. Set blank string to disable. See --list_color for available colors.
         FILEOBJ_DISAS_ARCH          Set architecture name to use for d command. Defaults to "x86" if undefined, and currently only "x86" is supported.
         FILEOBJ_DISAS_PRIVATE       Set FILEOBJ_DISAS_ARCH specific data for d command. Defaults to use 64 bit mode on x86 if undefined.
         FILEOBJ_ENDIANNESS          If set to "little" or "big", set endianness for multi-bytes data (equivalent to :set le and :set be). Defaults to host endian if undefined.

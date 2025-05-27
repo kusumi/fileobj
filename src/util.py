@@ -761,7 +761,7 @@ def get_hash_string(name, b):
         b = _(b)
     if b:
         m = get_hash_object(name)
-        m = update_hash_object(m, b)
+        m.update(b)
         return m.hexdigest()
 
 def get_hash_binary(name, b):
@@ -769,7 +769,7 @@ def get_hash_binary(name, b):
         b = _(b)
     if b:
         m = get_hash_object(name)
-        m = update_hash_object(m, b)
+        m.update(b)
         return m.digest()
 
 def get_hash_object(name):
@@ -783,10 +783,6 @@ def get_available_hash_algorithms():
 
 def get_guaranteed_hash_algorithms():
     return tuple(sorted(hashlib.algorithms_guaranteed))
-
-def update_hash_object(m, b):
-    m.update(b)
-    return m
 
 def execute(shell, *l):
     p = subprocess.Popen(l, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

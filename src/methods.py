@@ -392,7 +392,7 @@ def __cursor_next_matched(self, cnt, fn):
             self.co.flash("Search failed")
 
 def __cursor_next_matched_goto(self, pos, end, cnt, fn):
-    n = self.co.get_buffer_size()
+    n = fileobj.get_buffer_size(self.co)
     while True:
         if pos > end:
             return -1, cnt
@@ -423,7 +423,7 @@ def __cursor_prev_matched(self, cnt, fn):
             self.co.flash("Search failed")
 
 def __cursor_prev_matched_goto(self, pos, end, cnt, fn):
-    n = self.co.get_buffer_size()
+    n = fileobj.get_buffer_size(self.co)
     while True:
         if pos < n:
             n = pos
@@ -1113,7 +1113,7 @@ def show_fileobj_object(self, amp, opc, args, raw):
     self.co.show(self.co.get_repr())
 
 def show_buffer_size(self, amp, opc, args, raw):
-    self.co.show(self.co.get_buffer_size())
+    self.co.show(fileobj.get_buffer_size(self.co))
 
 def show_meminfo(self, amp, opc, args, raw):
     self.co.show(get_meminfo_string())

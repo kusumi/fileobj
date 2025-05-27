@@ -139,7 +139,7 @@ class Fileobj (fileobj.Fileobj):
 
     def find(self, x, s, end):
         if setting.use_ignorecase:
-            ret = self.__find(x, s, end)
+            ret = fileobj.generic_find(self, x, s, end)
         else:
             d = self.get_mmap_offset()
             ret = self.map.find(s, x + d)
@@ -150,24 +150,9 @@ class Fileobj (fileobj.Fileobj):
         screen.cli()
         return ret
 
-    def __find(self, x, s, end):
-        n = self.get_buffer_size()
-        while True:
-            if end != -1 and x >= end:
-                return fileobj.NOTFOUND
-            b = self.read(x, n)
-            pos = util.find_string(b, s)
-            if pos >= 0:
-                return x + pos
-            elif x + len(b) >= self.get_size():
-                return fileobj.NOTFOUND
-            x += (n - len(s))
-            if screen.test_signal():
-                return fileobj.INTERRUPT
-
     def rfind(self, x, s, end):
         if setting.use_ignorecase or not _has_mmap_rfind:
-            ret = self.__rfind(x, s, end)
+            ret = fileobj.generic_rfind(self, x, s, end)
         else:
             d = self.get_mmap_offset()
             ret = self.map.rfind(s, 0, x + d + 1)
@@ -177,25 +162,6 @@ class Fileobj (fileobj.Fileobj):
                 ret = fileobj.NOTFOUND
         screen.cli()
         return ret
-
-    def __rfind(self, x, s, end):
-        bufsiz = self.get_buffer_size()
-        while True:
-            if end != -1 and x <= end:
-                return fileobj.NOTFOUND
-            n = bufsiz
-            i = x + 1 - n
-            if i < 0:
-                i = 0
-                n = x + 1
-            pos = util.rfind_string(self.read(i, n), s)
-            if pos >= 0:
-                return i + pos
-            elif not i:
-                return fileobj.NOTFOUND
-            x -= (n - len(s))
-            if screen.test_signal():
-                return fileobj.INTERRUPT
 
     def read(self, x, n):
         x += self.get_mmap_offset()

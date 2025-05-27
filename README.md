@@ -1,4 +1,4 @@
-# fileobj ([v0.8.6](https://github.com/kusumi/fileobj/releases/tag/v0.8.6))
+# fileobj ([v0.8.7](https://github.com/kusumi/fileobj/releases/tag/v0.8.7))
 
 ## About
 
@@ -16,7 +16,7 @@
 
 ## Requirements
 
-+ Python 3.2+
++ Python 3.4+
 
 + ncurses (curses Python module)
 

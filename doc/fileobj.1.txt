@@ -1,4 +1,4 @@
-FILEOBJ(1)                  General Commands Manual                 FILEOBJ(1)
+FILEOBJ(1)                  General Commands Manual                  FILEOBJ(1)
 
 NAME
        fileobj - ncurses based hex editor with vi interface
@@ -26,31 +26,27 @@ OPTIONS
            required to insert or delete bytes on some platforms.
 
        -o=[<number_of_windows>]
-           Initially assign buffers given by paths to horizontally splitted
-           windows.  When <number_of_windows> is omitted, assign one window
-           for each buffer.
+           Initially assign buffers given by paths to horizontally split
+           windows.  When <number_of_windows> is omitted, assign one window for
+           each buffer.
 
        -O=[<number_of_windows>]
-           Initially assign buffers given by paths to vertically splitted
-           windows.  When <number_of_windows> is omitted, assign one window
-           for each buffer.
+           Initially assign buffers given by paths to vertically split windows.
+           When <number_of_windows> is omitted, assign one window for each
+           buffer.
 
        --bytes_per_line=<bytes_per_line>, --bpl=<bytes_per_line>
-           Set number of bytes printed per line.  Each line prints
-           <bytes_per_line> bytes.  Available formats for <bytes_per_line> are
-           digit, "max", "min" and "auto".  "auto" sets the value to the
-           maximum 2^N that fits in the terminal width.  Defaults to "auto".
+           Set number of bytes printed per line.  Available <bytes_per_line>
+           formats are digit, "max", "min" and "auto".  "auto" sets the value
+           to maximum 2^N that fits in the terminal width.  Defaults to "auto".
 
        --bytes_per_window=<bytes_per_window>, --bpw=<bytes_per_window>
-           Set number of bytes printed per window.  Each window prints
-           <bytes_per_window> bytes, using the current number of bytes per
-           line.  Available formats for <bytes_per_window> are digit, "even"
-           and "auto".  "even" sets all windows to have the same size.
-           Defaults to "auto".
+           Set number of bytes printed per window.  Available
+           <bytes_per_window> formats are digit, "even" and "auto".  "even"
+           sets all windows to have the same size.  Defaults to "auto".
 
        --bytes_per_unit=<bytes_per_unit>, --bpu=<bytes_per_unit>
-           Set number of bytes printed per unit.  Each unit prints
-           <bytes_per_unit> bytes.  Defaults to "1".
+           Set number of bytes printed per unit.  Defaults to "1".
 
        --no_text
            Disable text window.
@@ -97,22 +93,23 @@ OPTIONS
            Compare contents of files and exit.
 
        --blkdump=[<dump_type>]
-           Print contents of files to stdout and exit.  Available options are
-           "text" and "raw".  Defaults to "text".  If multiple files are
-           specified, this command assumes a single concatenated file.  To
-           handle them separately, append "x" to option string (e.g. "textx").
+           Print contents of files to stdout and exit.  Available <dump_type>
+           options are "text" and "raw".  Defaults to "text".
 
        --blkscan=[<scan_type>]
            Print file offsets of matched logical blocks and exit.  Available
-           options are "zero", "nonzero", "ff", "nonff",
+           <scan_type> options are "zero", "nonzero", "ff", "nonff",
+           "file:</path/to/file>", "FILE:</path/to/file>",
            "<hash_algorithm>:<value>" and "<hash_algorithm>".  Defaults to
-           "zero".  If multiple files are specified, this command assumes a
-           single concatenated file.  To handle them separately, append "x" to
-           option string (e.g. "zerox").
+           "zero".
+
+       --concatenate
+           Handle paths as a single concatenated file in a given order.
+           Currently supported by --md, --blkdump and --blkscan.
 
        --lsblk
-           Print list of block devices and exit.  This prints character
-           devices on some platforms.
+           Print list of block devices and exit.  This prints character devices
+           on some platforms.
 
 ENVIRONMENT
        FILEOBJ_USE_READONLY
@@ -127,17 +124,16 @@ ENVIRONMENT
            Defaults to binary edit mode if undefined.
 
        FILEOBJ_USE_IGNORECASE
-           If defined, search operation is case-insensitive (equivalent to
-           :set ic).  Defaults to case-sensitive if undefined.
+           If defined, search operation is case-insensitive (equivalent to :set
+           ic).  Defaults to case-sensitive if undefined.
 
        FILEOBJ_USE_SIPREFIX
            If defined, use 10^3(K) for kilo (equivalent to :set si).  Defaults
            to 2^10(Ki) if undefined.
 
        FILEOBJ_USE_WRAPSCAN
-           If set to "false", search does not wrap around the end of the
-           buffer (equivalent to :set nows).  Defaults to wrap around if
-           undefined.
+           If set to "false", search does not wrap around the end of the buffer
+           (equivalent to :set nows).  Defaults to wrap around if undefined.
 
        FILEOBJ_USE_TEXT_WINDOW
            If set to "false", do not use text window.  Defaults to use text
@@ -167,8 +163,8 @@ ENVIRONMENT
            disallow.
 
        FILEOBJ_USE_LINE_SCROLL
-           If set to "false", enable page scroll mode.  Defaults to line
-           scroll mode.
+           If set to "false", enable page scroll mode.  Defaults to line scroll
+           mode.
 
        FILEOBJ_USE_LOWER_CASE_HEX
            If defined, use lower case for alphabets in hexadecimal.  Defaults
@@ -191,45 +187,43 @@ ENVIRONMENT
            undefined.
 
        FILEOBJ_BYTES_PER_LINE
-           Set number of bytes printed per line (equivalent to
-           --bytes_per_line and :set bytes_per_line).
+           Set number of bytes printed per line (equivalent to --bytes_per_line
+           and :set bytes_per_line).
 
        FILEOBJ_BYTES_PER_WINDOW
            Set number of bytes printed per window (equivalent to
            --bytes_per_window and :set bytes_per_window).
 
        FILEOBJ_BYTES_PER_UNIT
-           Set number of bytes printed per unit (equivalent to
-           --bytes_per_unit and :set bytes_per_unit).
+           Set number of bytes printed per unit (equivalent to --bytes_per_unit
+           and :set bytes_per_unit).
 
        FILEOBJ_COLOR_CURRENT
-           Set current cursor and window color.  Defaults to "black,green" if
-           undefined.  Set blank string to disable.  See --list_color for
+           Set color for current cursor and window.  Defaults to "black,green"
+           if undefined.  Set blank string to disable.  See --list_color for
            available colors.
 
        FILEOBJ_COLOR_ZERO
-           Set color for zero (0) bytes within buffer contents.  Defaults to
-           "green" if undefined.  Set blank string to disable.  See
-           --list_color for available colors.
+           Set color for bytes with a value of 0x00.  Defaults to "green" if
+           undefined.  Set blank string to disable.  See --list_color for
+           available colors.
 
        FILEOBJ_COLOR_FF
-           Set color for 0xff bytes within buffer contents.  Defaults to
-           "magenta" if undefined.  Set blank string to disable.  See
-           --list_color for available colors.
+           Set color for bytes with a value of 0xff.  Defaults to "magenta" if
+           undefined.  Set blank string to disable.  See --list_color for
+           available colors.
 
        FILEOBJ_COLOR_PRINT
-           Set color for printable bytes within buffer contents.  Defaults to
-           "cyan" if undefined.  Set blank string to disable.  See
-           --list_color for available colors.
+           Set color for printable bytes.  Defaults to "cyan" if undefined.
+           Set blank string to disable.  See --list_color for available colors.
 
        FILEOBJ_COLOR_DEFAULT
            Set default color for buffer contents.  Defaults to "none" if
            undefined.  See --list_color for available colors.
 
        FILEOBJ_COLOR_VISUAL
-           Set color for visual region.  Defaults to "red,yellow" if
-           undefined.  Set blank string to disable.  See --list_color for
-           available colors.
+           Set color for visual region.  Defaults to "red,yellow" if undefined.
+           Set blank string to disable.  See --list_color for available colors.
 
        FILEOBJ_COLOR_OFFSET
            Set color for offsets in editor windows.  Defaults to "none" if
@@ -240,8 +234,8 @@ ENVIRONMENT
            undefined, and currently only "x86" is supported.
 
        FILEOBJ_DISAS_PRIVATE
-           Set FILEOBJ_DISAS_ARCH specific data for d command.  Defaults to
-           use 64 bit mode on x86 if undefined.
+           Set FILEOBJ_DISAS_ARCH specific data for d command.  Defaults to use
+           64 bit mode on x86 if undefined.
 
 FILES
        ~/.fileobj
@@ -254,23 +248,24 @@ FILES
            created.
 
        ~/.fileobj/env
-           A file to specify environment variables via file on runtime.
+           A file to specify environment variables via file at runtime.
            Existing environment variables take precedence over the file
            contents.  Automatically created.
 
        ~/.fileobj/history
-           A JSON file contains history of executed editor commands.
+           A JSON file which contains history of executed editor commands.
            Automatically created.
 
        ~/.fileobj/log
-           A text file contains logged messages.  Automatically created.
+           A text file which contains logged messages.  Automatically created.
 
        ~/.fileobj/marks
-           A JSON file contains per-file marks marked by an editor command.
-           Automatically created.
+           A JSON file which contains per-file marks marked by an editor
+           command.  Automatically created.
 
        ~/.fileobj/session
-           A JSON file contains session information.  Automatically created.
+           A JSON file which contains session information.  Automatically
+           created.
 
        ~/.fileobj/.YYYY-MM-DD-HH-MM-SS.name.bak
            Temporary backup file format.
@@ -278,4 +273,4 @@ FILES
 AUTHORS
        Tomohiro Kusumi <kusumi.tomohiro@gmail.com>
 
-FILEOBJ 0.8.6                    March 4, 2024                      FILEOBJ(1)
+FILEOBJ 0.8.7                     May 12, 2025                       FILEOBJ(1)

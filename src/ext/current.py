@@ -22,4 +22,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 def get_text(co, fo, args):
-    return str(fo)
+    l = []
+    l.append("{0}".format(fo.get_repr()))
+    l.append("path {0}".format(fo.get_path()))
+    l.append("mapping_offset {0}".format(fo.get_mapping_offset()))
+    l.append("mapping_length {0}".format(fo.get_mapping_length()))
+    l.append("")
+    l.append(str(fo))
+    return '\n'.join(l)

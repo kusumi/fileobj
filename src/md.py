@@ -23,12 +23,14 @@
 
 import os
 
+from . import cfileops
 from . import fileops
+from . import setting
 from . import util
 
-def md(args, hash_algo, verbose):
+def md(args, s, verbose, concat):
     try:
-        ret = _md(args, hash_algo, verbose, util.printf, util.printe)
+        ret = _md(args, s, verbose, concat, util.printf, util.printe)
         if ret == -1:
             return -1
         assert isinstance(ret, tuple), ret
@@ -37,7 +39,7 @@ def md(args, hash_algo, verbose):
         util.printe(e)
         return -1
 
-def _md(args, s, verbose, printf, printe):
+def _md(args, s, verbose, concat, printf, printe):
     # require minimum 1 paths
     if len(args) < 1:
         printe("Not enough paths {0}".format(args))
@@ -46,7 +48,7 @@ def _md(args, s, verbose, printf, printe):
     # extract option string
     s = s.lower()
     if "," in s:
-        l = s.split(",")
+        l = s.split(",", 1)
         hash_algo = l[0]
         if hash_algo == "":
             hash_algo = "sha256"
@@ -70,17 +72,10 @@ def _md(args, s, verbose, printf, printe):
             ll.append(l)
         def retfn():
             return tuple(ll)
-    elif opt == "sort":
-        ll = []
-        def fn(l):
-            ll.append(l)
-        def retfn():
-            for l in sorted(ll):
-                print_md(l, printf)
-            return tuple()
     else:
         def fn(l):
-            print_md(l, printf)
+            fmt = "{0}  {1}" # shaXsum compatible, but with abs path
+            printf(fmt.format(l[1], l[0]))
         def retfn():
             return tuple()
 
@@ -94,40 +89,37 @@ def _md(args, s, verbose, printf, printe):
             l.append(x)
         printf(" ".join(l))
 
-    # walk if args contains directory
+    # collect paths first
+    fl = []
     for x in args:
         if os.path.isdir(x):
             for f in util.iter_directory(x):
-                l = process_md(f, hash_algo, fn, printf, printe)
-                if l == -1:
-                    return -1
+                fl.append(f)
         else:
-            l = process_md(x, hash_algo, fn, printf, printe)
-            if l == -1:
-                return -1
-    return retfn()
+            fl.append(x)
+    if opt == "sort":
+        fl.sort()
 
-def process_md(f, hash_algo, fn, printf, printe):
-    opsl, cleanup, blksiz, = fileops.bulk_alloc_blk((f,), True, printf, printe)
+    # allocate fileops
+    afn = cfileops.bulk_alloc_blk if concat else fileops.bulk_alloc_blk
+    opsl, cleanup, blksiz = afn(fl, True, printf, printe)
     if opsl is None:
         return -1
-    assert len(opsl) == 1, opsl
-    ops = opsl[0]
 
-    resid = ops.get_size()
-    offset = 0
-    m = util.get_hash_object(hash_algo)
-    while resid > 0:
-        buf = ops.read(offset, blksiz)
-        if not buf:
-            break
-        m = util.update_hash_object(m, buf)
-        resid -= len(buf)
-        offset += len(buf)
-
-    fn((ops.get_path(), m.hexdigest()))
+    for ops in opsl:
+        resid = ops.get_size()
+        offset = 0
+        m = util.get_hash_object(hash_algo)
+        while resid > 0:
+            buf = ops.read(offset, blksiz)
+            if not buf:
+                break
+            m.update(buf)
+            resid -= len(buf)
+            offset += len(buf)
+        if not concat or setting.use_debug:
+            fn((ops.get_path(), m.hexdigest()))
+        else:
+            fn(("-", m.hexdigest()))
     cleanup()
-
-def print_md(l, printf):
-    fmt = "{0}  {1}" # shaXsum compatible, but with abs path
-    printf(fmt.format(l[1], l[0]))
+    return retfn()

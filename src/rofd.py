@@ -27,7 +27,6 @@ import os
 from . import fileobj
 from . import kernel
 from . import log
-from . import screen
 from . import setting
 from . import util
 
@@ -119,38 +118,10 @@ class Fileobj (fileobj.Fileobj):
         self.__ra_window = beg, end
 
     def find(self, x, s, end):
-        n = self.get_buffer_size()
-        while True:
-            if end != -1 and x >= end:
-                return fileobj.NOTFOUND
-            b = self.read(x, n)
-            pos = util.find_string(b, s)
-            if pos >= 0:
-                return x + pos
-            elif x + len(b) >= self.get_size():
-                return fileobj.NOTFOUND
-            x += (n - len(s))
-            if screen.test_signal():
-                return fileobj.INTERRUPT
+        return fileobj.generic_find(self, x, s, end)
 
     def rfind(self, x, s, end):
-        bufsiz = self.get_buffer_size()
-        while True:
-            if end != -1 and x <= end:
-                return fileobj.NOTFOUND
-            n = bufsiz
-            i = x + 1 - n
-            if i < 0:
-                i = 0
-                n = x + 1
-            pos = util.rfind_string(self.read(i, n), s)
-            if pos >= 0:
-                return i + pos
-            elif not i:
-                return fileobj.NOTFOUND
-            x -= (n - len(s))
-            if screen.test_signal():
-                return fileobj.INTERRUPT
+        return fileobj.generic_rfind(self, x, s, end)
 
     def read(self, x, n):
         x += self.get_mapping_offset()
